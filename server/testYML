@@ -1,0 +1,51 @@
+test:
+- qid: A
+  question: Which of the following is true about HTTP?
+  correct: [A1]
+  opt: 
+  - uid: A1
+    str: O(N * log(NK)), O(N^3)
+  - uid: B1
+    str: O(K * N^2 * log(N)), O(K * N^2)
+  score: 5
+  tag: Easy
+
+- qid: B 
+  question: |
+   Which of  
+   the following is true 
+   about "HTTP"?
+  correct: [A2, B2]
+  opt: 
+  - uid: A2
+    str: O(N * log("N*K")), O(N^3)
+  - uid: B2
+    str: O(K * N^2 * log(N)), O(K * N^2)
+  score: 5
+  tag: Easy
+
+- qid: outpu
+  question: |
+   What is the output of following program?
+   #include <stdio.h>
+   void fun(int x)
+   {x = 30;} 
+   int main()
+   {
+    int y = 20;
+    fun(y);
+    printf("%d", y);
+    return 0;
+   }
+  correct: [B3]
+  opt:
+   - uid: A3
+     str: 30
+   - uid: B3
+     str: 20
+   - uid: C3
+     str: Compile error
+   - uid: D3
+     str: Runtime error
+  score: 10
+  tag: Easy 
