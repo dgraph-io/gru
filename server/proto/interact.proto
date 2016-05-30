@@ -1,0 +1,21 @@
+syntax="proto3";
+package interact;
+
+service DgraphQuiz {
+  rpc SendQuestion () returns (Question) {}
+}
+
+message Question {
+	string qid = 1
+	string question = 2
+	repeated Answer options = 3
+	bool isMultiple = 4
+	bool score = 5
+}
+
+message Answer {
+	string id = 1
+	string ans = 2
+}
+
+
