@@ -30,7 +30,7 @@ type answer struct {
 	str string
 }
 
-// for the questions screen.
+// Elements for the questions page.
 var instructions *termui.Par
 var timeLeft *termui.Par
 var que *termui.Par
@@ -38,13 +38,14 @@ var score *termui.Par
 var s *termui.Par
 var a *termui.Par
 
-// For the home screen
+// Elements for the home page.
 var demo *termui.Par
 var terminal *termui.Par
 var general *termui.Par
 var scoring *termui.Par
 var contact *termui.Par
 
+// These are the questions and answers used for the demo.
 var q1 = question{`What is the capital of France?`, false}
 
 var q2 = question{`Which among the following were originally developed at Google?`, true}
@@ -72,223 +73,31 @@ var a3 = []answer{
 	{"4", "Arctic"},
 }
 
+// Question number for the demo.
 var currentQn = 1
 
 type State int
 
 const (
+	// Denotes if user is seeing the options.
 	options State = iota
+	// User is being asked to confirm an answer.
 	confirmAnswer
+	// User is being asked to confirm if they want to skip answering the
+	// question.
 	confirmSkip
 )
 
-var state State
+// To mantain the state of user while he is answering a question.
+var status State
 
-func renderHomeScreen() {
-	termui.Render(instructions)
-	// Adding an offset so that all these boxes come inside the instructions box.
-	termui.Body.Y = 2
-	termui.Body.AddRows(
-		termui.NewRow(
-			termui.NewCol(10, 1, terminal)),
-		termui.NewRow(
-			termui.NewCol(10, 1, general)),
-		termui.NewRow(
-			termui.NewCol(10, 1, scoring)),
-		termui.NewRow(
-			termui.NewCol(10, 1, contact)),
-		termui.NewRow(
-			termui.NewCol(10, 1, demo)))
-
-	termui.Body.Align()
-	termui.Render(termui.Body)
-}
-
-func renderSelectedAnswers(selected []string, m map[string]answer) {
-	check := "Selected:\n\n"
-	for _, k := range selected {
-		check += m[string(k)].str + "\n"
-	}
-	check += "\nPress ENTER to confirm. Press any other key to cancel."
-	a.Text = check
-	state = confirmAnswer
-	termui.Render(termui.Body)
-}
-
-func populate(q question, answers []answer) {
-	que.Text = q.str
-
-	// Selected contains the options user has already selected.
-	selected := []string{}
-	aBody := ""
-	// State stores the state of the user, whether he is shown the options
-	// for a question, or is being asked to confirm his answer/skip.
-	state = options
-	m := make(map[string]answer)
-	start := 'a'
-	var buf bytes.Buffer
-
-	if q.multiple {
-		buf.WriteString("This question could have multiple correct answers.\n\n")
-	} else {
-		buf.WriteString("This question only has a single correct answer.\n\n")
-	}
-
-	for _, ans := range answers {
-		buf.WriteRune(start)
-		buf.WriteRune(')')
-		buf.WriteRune(' ')
-		buf.WriteString(ans.str)
-		buf.WriteRune('\n')
-
-		// This is the handler for pressing keys which represent an answer.
-		termui.Handle(fmt.Sprintf("/sys/kbd/%c", start),
-			func(e termui.Event) {
-				k := e.Data.(termui.EvtKbd).KeyStr
-
-				// For single correct answer qn we just render
-				// the selected answer.
-				if !q.multiple {
-					if state != options {
-						return
-					}
-					selected = append(selected, k)
-					renderSelectedAnswers(selected, m)
-					return
-				} else {
-					// For multiple choice questions we check
-					// if the user has already selected the answer before.
-					exists := false
-					for _, key := range selected {
-						if key == k {
-							exists = true
-						}
-					}
-					// If he hasn't selected the answer before, we display
-					// it below the options now.
-					if !exists && state == options {
-						selected = append(selected, k)
-						sort.StringSlice(selected).Sort()
-						a.Text = aBody + strings.Join(selected, ", ")
-						a.Text += "\nPress Enter to see chosen options."
-						// fmt.Println(a.Text)
-						termui.Render(termui.Body)
-					}
-				}
-			})
-
-		m[string(start)] = ans
-		start++
-	}
-	buf.WriteString("\ns) Skip question\n\n")
-
-	aBody = buf.String()
-	a.Text = aBody
-
-	termui.Handle("/sys/kbd/s", func(e termui.Event) {
-		a.Text = "Are you sure you want to skip the question? \n\nPress ENTER to confirm. Press any other key to cancel."
-		termui.Render(termui.Body)
-		state = confirmSkip
-	})
-
-	termui.Handle("/sys/kbd/<enter>", func(e termui.Event) {
-		// If the user presses enter after selecting options
-		// for a multiple choice question.
-		// fmt.Println(state)
-		if len(selected) > 0 && state == options {
-			renderSelectedAnswers(selected, m)
-		} else if state == confirmAnswer || state == confirmSkip {
-			if currentQn == 0 {
-				populate(q1, a1)
-			}
-			if currentQn == 1 {
-				populate(q2, a2)
-			} else if currentQn == 2 {
-				populate(q3, a3)
-			} else if currentQn == 3 {
-				termui.Clear()
-				termui.Body.Rows = termui.Body.Rows[:0]
-				renderHomeScreen()
-				currentQn = -1
-			}
-			currentQn += 1
-		}
-	})
-
-	termui.Handle("/sys/kbd", func(e termui.Event) {
-		a.Text = aBody
-		selected = selected[:0]
-		state = options
-		termui.Render(termui.Body)
-	})
-
-	termui.Render(termui.Body)
-}
-
-func demoInit() {
-	timeLeft = termui.NewPar(fmt.Sprintf("%d mins", testDur))
-	timeLeft.Height = 3
-	timeLeft.BorderLabel = "Time Left"
-
-	ts := 0.0
-	score = termui.NewPar(fmt.Sprintf("%.1f", ts))
-	score.BorderLabel = "Total Score"
-	score.Height = 3
-
-	que = termui.NewPar("")
-	que.BorderLabel = "Question"
-	que.PaddingLeft = 1
-	que.PaddingRight = 1
-	que.PaddingBottom = 1
-	que.Height = 33
-
-	s = termui.NewPar("Right answer => +5.0\n\nWrong answer => -2.5")
-	s.BorderLabel = "Scoring"
-	s.PaddingTop = 1
-	s.PaddingLeft = 1
-	s.Height = 33
-
-	a = termui.NewPar("")
-	a.TextFgColor = termui.ColorCyan
-	a.BorderLabel = "Answers"
-	a.PaddingLeft = 1
-	a.PaddingRight = 1
-	a.PaddingBottom = 1
-	a.Height = 14
-
-	termui.Body.AddRows(
-		termui.NewRow(
-			termui.NewCol(6, 0, timeLeft),
-			termui.NewCol(6, 0, score)),
-		termui.NewRow(
-			termui.NewCol(10, 0, que),
-			termui.NewCol(2, 0, s)),
-		termui.NewRow(
-			termui.NewCol(12, 0, a)))
-
-	termui.Body.Align()
-	termui.Render(termui.Body)
-	populate(q1, a1)
-}
-
-func main() {
-	flag.Parse()
-	err := termui.Init()
-	if err != nil {
-		panic(err)
-	}
-	defer termui.Close()
-
-	th = termui.TermHeight()
-	tw = termui.TermWidth()
-
+func setupInstructionsPage() {
 	instructions = termui.NewPar("")
 	instructions.BorderLabel = "Instructions"
 	instructions.Height = 50
 	instructions.Width = tw
 	instructions.PaddingTop = 2
 
-	// TODO - Take duration from constant.
 	terminal = termui.NewPar(`
 		- Please ensure that you can see all the 4 borders of the Instructions box.
 		- If you can't see them, you need to increase the size of your terminal or adjust the font-size to a smaller value.
@@ -339,24 +148,225 @@ func main() {
 	demo.TextFgColor = termui.ColorCyan
 	demo.PaddingLeft = 2
 	demo.PaddingTop = 1
+}
 
-	renderHomeScreen()
+func setupQuestionsPage() {
+	timeLeft = termui.NewPar(fmt.Sprintf("%d mins", testDur))
+	timeLeft.Height = 3
+	timeLeft.BorderLabel = "Time Left"
 
-	draw := func(t int) {
+	ts := 0.0
+	score = termui.NewPar(fmt.Sprintf("%.1f", ts))
+	score.BorderLabel = "Total Score"
+	score.Height = 3
+
+	que = termui.NewPar("")
+	que.BorderLabel = "Question"
+	que.PaddingLeft = 1
+	que.PaddingRight = 1
+	que.PaddingBottom = 1
+	que.Height = 33
+
+	s = termui.NewPar("Right answer => +5.0\n\nWrong answer => -2.5")
+	s.BorderLabel = "Scoring"
+	s.PaddingTop = 1
+	s.PaddingLeft = 1
+	s.Height = 33
+
+	a = termui.NewPar("")
+	a.TextFgColor = termui.ColorCyan
+	a.BorderLabel = "Answers"
+	a.PaddingLeft = 1
+	a.PaddingRight = 1
+	a.PaddingBottom = 1
+	a.Height = 14
+}
+
+func renderInstructionsPage() {
+	termui.Render(instructions)
+	// Adding an offset so that all these boxes come inside the instructions box.
+	termui.Body.Y = 2
+	termui.Body.AddRows(
+		termui.NewRow(
+			termui.NewCol(10, 1, terminal)),
+		termui.NewRow(
+			termui.NewCol(10, 1, general)),
+		termui.NewRow(
+			termui.NewCol(10, 1, scoring)),
+		termui.NewRow(
+			termui.NewCol(10, 1, contact)),
+		termui.NewRow(
+			termui.NewCol(10, 1, demo)))
+
+	termui.Body.Align()
+	termui.Render(termui.Body)
+
+	termui.Handle("/sys/kbd/s", func(e termui.Event) {
+		// To clear the instructions box that was rendered.
+		termui.Clear()
+		// To clear elements of the body.
+		termui.Body.Rows = termui.Body.Rows[:0]
+		initializeDemo()
+	})
+}
+
+func renderSelectedAnswers(selected []string, m map[string]answer) {
+	check := "Selected:\n\n"
+	for _, k := range selected {
+		check += m[string(k)].str + "\n"
 	}
+	check += "\nPress ENTER to confirm. Press any other key to cancel."
+	a.Text = check
+	status = confirmAnswer
+	termui.Render(termui.Body)
+}
+
+func populateQuestionsPage(q question, answers []answer) {
+	que.Text = q.str
+
+	// Selected contains the options user has already selected.
+	selected := []string{}
+	// This is the body of the answer which has all the options.
+	ansBody := ""
+	// Map m contains a map of the key to select an answer and the answer
+	// corresponding to it.
+	m := make(map[string]answer)
+	var buf bytes.Buffer
+
+	status = options
+	if q.multiple {
+		buf.WriteString("This question could have multiple correct answers.\n\n")
+	} else {
+		buf.WriteString("This question only has a single correct answer.\n\n")
+	}
+	opt := 'a'
+	for _, ans := range answers {
+		buf.WriteRune(opt)
+		buf.WriteRune(')')
+		buf.WriteRune(' ')
+		buf.WriteString(ans.str)
+		buf.WriteRune('\n')
+		m[string(opt)] = ans
+		opt++
+	}
+	buf.WriteString("\ns) Skip question\n\n")
+	// We store this so that this can be rendered later based on different
+	// key press.
+	ansBody = buf.String()
+	a.Text = ansBody
+	termui.Render(termui.Body)
+
+	// Attaching event handlers on the options for a answer.
+	for i := 'a'; i < opt; i++ {
+		termui.Handle(fmt.Sprintf("/sys/kbd/%c", i),
+			func(e termui.Event) {
+				k := e.Data.(termui.EvtKbd).KeyStr
+
+				// For single correct answer qn we just render
+				// the selected answer.
+				if !q.multiple {
+					if status != options {
+						return
+					}
+					// We append the selected answer and render it.
+					selected = append(selected, k)
+					renderSelectedAnswers(selected, m)
+					return
+				} else {
+					// For multiple choice questions we check
+					// if the user has already selected the answer before.
+					exists := false
+					for _, key := range selected {
+						if key == k {
+							exists = true
+						}
+					}
+					// If he hasn't selected the answer before, we display
+					// it below the options now.
+					if !exists && status == options {
+						selected = append(selected, k)
+						sort.StringSlice(selected).Sort()
+						a.Text = ansBody + strings.Join(selected, ", ")
+						a.Text += "\nPress Enter to see chosen options."
+						termui.Render(termui.Body)
+					}
+				}
+			})
+	}
+
+	termui.Handle("/sys/kbd/s", func(e termui.Event) {
+		a.Text = "Are you sure you want to skip the question? \n\nPress ENTER to confirm. Press any other key to cancel."
+		termui.Render(termui.Body)
+		status = confirmSkip
+	})
+
+	termui.Handle("/sys/kbd/<enter>", func(e termui.Event) {
+		// If the user presses enter after selecting options for a
+		// multiple choice question.
+		if q.multiple && len(selected) > 0 && status == options {
+			renderSelectedAnswers(selected, m)
+		} else if status == confirmAnswer || status == confirmSkip {
+			if currentQn == 0 {
+				populateQuestionsPage(q1, a1)
+			}
+			if currentQn == 1 {
+				populateQuestionsPage(q2, a2)
+			} else if currentQn == 2 {
+				populateQuestionsPage(q3, a3)
+			} else if currentQn == 3 {
+				termui.Clear()
+				termui.Body.Rows = termui.Body.Rows[:0]
+				renderInstructionsPage()
+				currentQn = -1
+			}
+			currentQn += 1
+		}
+	})
+
+	// On any other keypress we reset the answer text and the selected answers.
+	termui.Handle("/sys/kbd", func(e termui.Event) {
+		a.Text = ansBody
+		selected = selected[:0]
+		status = options
+		termui.Render(termui.Body)
+	})
+}
+
+func initializeDemo() {
+	setupQuestionsPage()
+	termui.Body.Y = 0
+	termui.Body.AddRows(
+		termui.NewRow(
+			termui.NewCol(6, 0, timeLeft),
+			termui.NewCol(6, 0, score)),
+		termui.NewRow(
+			termui.NewCol(10, 0, que),
+			termui.NewCol(2, 0, s)),
+		termui.NewRow(
+			termui.NewCol(12, 0, a)))
+
+	termui.Body.Align()
+	termui.Render(termui.Body)
+	populateQuestionsPage(q1, a1)
+}
+
+func main() {
+	flag.Parse()
+	err := termui.Init()
+	if err != nil {
+		panic(err)
+	}
+	defer termui.Close()
+
+	th = termui.TermHeight()
+	tw = termui.TermWidth()
+
+	setupInstructionsPage()
+	renderInstructionsPage()
+
 	// Pressing q terminates the ui.
 	termui.Handle("/sys/kbd/C-q", func(termui.Event) {
 		termui.StopLoop()
-	})
-	termui.Handle("/sys/kbd/s", func(e termui.Event) {
-		termui.Clear()
-		termui.Body.Y = 0
-		termui.Body.Rows = termui.Body.Rows[:0]
-		demoInit()
-	})
-	termui.Handle("/timer/1s", func(e termui.Event) {
-		t := e.Data.(termui.EvtTimer)
-		draw(int(t.Count))
 	})
 	termui.Loop()
 }
