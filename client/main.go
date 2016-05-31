@@ -130,6 +130,8 @@ func populate(q question, answers []answer) {
 
 	if q.multiple {
 		buf.WriteString("This question could have multiple correct answers.\n\n")
+	} else {
+		buf.WriteString("This question only has a single correct answer.\n\n")
 	}
 
 	for _, ans := range answers {
@@ -242,7 +244,6 @@ func demoInit() {
 
 	s = termui.NewPar("Right answer => +5.0\n\nWrong answer => -2.5")
 	s.BorderLabel = "Scoring"
-	s.BorderBottom = false
 	s.PaddingTop = 1
 	s.PaddingLeft = 1
 	s.Height = 33
