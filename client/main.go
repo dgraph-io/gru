@@ -17,12 +17,11 @@ const (
 	testDur = 60
 )
 
-var th int
-var tw int
-
 type question struct {
 	str      string
 	multiple bool
+	positive float64
+	negative float64
 }
 
 type answer struct {
@@ -46,11 +45,12 @@ var scoring *termui.Par
 var contact *termui.Par
 
 // These are the questions and answers used for the demo.
-var q1 = question{`What is the capital of France?`, false}
+var q1 = question{`What is the capital of France?`, false, 5.0, 2.5}
 
-var q2 = question{`Which among the following were originally developed at Google?`, true}
+var q2 = question{`Which among the following were originally developed at Google?`,
+	true, 5.0, 2.5}
 
-var q3 = question{`Which one is the largest ocean in the world?`, false}
+var q3 = question{`Which one is the largest ocean in the world?`, false, 5.0, 2.5}
 
 var a1 = []answer{
 	{"1", "Berlin"},
@@ -74,6 +74,7 @@ var a3 = []answer{
 }
 
 // Question number for the demo.
+// TODO(pawan) - Remove this hack.
 var currentQn = 1
 
 type State int
@@ -91,7 +92,7 @@ const (
 // To mantain the state of user while he is answering a question.
 var status State
 
-func setupInstructionsPage() {
+func setupInstructionsPage(th, tw int) {
 	instructions = termui.NewPar("")
 	instructions.BorderLabel = "Instructions"
 	instructions.Height = 50
@@ -167,7 +168,7 @@ func setupQuestionsPage() {
 	que.PaddingBottom = 1
 	que.Height = 33
 
-	s = termui.NewPar("Right answer => +5.0\n\nWrong answer => -2.5")
+	s = termui.NewPar("")
 	s.BorderLabel = "Scoring"
 	s.PaddingTop = 1
 	s.PaddingLeft = 1
@@ -223,6 +224,8 @@ func renderSelectedAnswers(selected []string, m map[string]answer) {
 
 func populateQuestionsPage(q question, answers []answer) {
 	que.Text = q.str
+	s.Text = fmt.Sprintf("Right answer => +%1.1f\n\nWrong answer => -%1.1f",
+		q.positive, q.negative)
 
 	// Selected contains the options user has already selected.
 	selected := []string{}
@@ -358,10 +361,10 @@ func main() {
 	}
 	defer termui.Close()
 
-	th = termui.TermHeight()
-	tw = termui.TermWidth()
+	th := termui.TermHeight()
+	tw := termui.TermWidth()
 
-	setupInstructionsPage()
+	setupInstructionsPage(th, tw)
 	renderInstructionsPage()
 
 	// Pressing Ctrl-q terminates the ui.
