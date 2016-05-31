@@ -364,7 +364,7 @@ func main() {
 	setupInstructionsPage()
 	renderInstructionsPage()
 
-	// Pressing q terminates the ui.
+	// Pressing Ctrl-q terminates the ui.
 	termui.Handle("/sys/kbd/C-q", func(termui.Event) {
 		termui.StopLoop()
 	})
