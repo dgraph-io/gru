@@ -222,6 +222,73 @@ func renderSelectedAnswers(selected []string, m map[string]answer) {
 	termui.Render(termui.Body)
 }
 
+func optionHandler(e termui.Event, q question, selected []string,
+	m map[string]answer, ansBody string) []string {
+	k := e.Data.(termui.EvtKbd).KeyStr
+
+	// For single correct answer qn we just render
+	// the selected answer.
+	if !q.multiple {
+		if status != options {
+			return []string{}
+		}
+		// We append the selected answer and render it.
+		selected = append(selected, k)
+		renderSelectedAnswers(selected, m)
+		return selected
+	}
+	// For multiple choice questions we check
+	// if the user has already selected the answer before.
+	exists := false
+	for _, key := range selected {
+		if key == k {
+			exists = true
+		}
+	}
+	// If he hasn't selected the answer before, we display
+	// it below the options now.
+	if !exists && status == options {
+		selected = append(selected, k)
+		sort.StringSlice(selected).Sort()
+		a.Text = ansBody + strings.Join(selected, ", ")
+		a.Text += "\nPress Enter to see chosen options."
+		termui.Render(termui.Body)
+	}
+	return selected
+}
+
+func enterHandler(e termui.Event, q question, selected []string,
+	m map[string]answer) {
+	// If the user presses enter after selecting options for a
+	// multiple choice question.
+	if q.multiple && len(selected) > 0 && status == options {
+		renderSelectedAnswers(selected, m)
+	} else if status == confirmAnswer || status == confirmSkip {
+		if currentQn == 0 {
+			populateQuestionsPage(q1, a1)
+		}
+		if currentQn == 1 {
+			populateQuestionsPage(q2, a2)
+		} else if currentQn == 2 {
+			populateQuestionsPage(q3, a3)
+		} else if currentQn == 3 {
+			termui.Clear()
+			termui.Body.Rows = termui.Body.Rows[:0]
+			renderInstructionsPage()
+			currentQn = -1
+		}
+		currentQn += 1
+	}
+}
+
+func keyHandler(ansBody string, selected []string) []string {
+	a.Text = ansBody
+	selected = selected[:0]
+	status = options
+	termui.Render(termui.Body)
+	return selected
+}
+
 func populateQuestionsPage(q question, answers []answer) {
 	que.Text = q.str
 	s.Text = fmt.Sprintf("Right answer => +%1.1f\n\nWrong answer => -%1.1f",
@@ -263,37 +330,8 @@ func populateQuestionsPage(q question, answers []answer) {
 	for i := 'a'; i < opt; i++ {
 		termui.Handle(fmt.Sprintf("/sys/kbd/%c", i),
 			func(e termui.Event) {
-				k := e.Data.(termui.EvtKbd).KeyStr
-
-				// For single correct answer qn we just render
-				// the selected answer.
-				if !q.multiple {
-					if status != options {
-						return
-					}
-					// We append the selected answer and render it.
-					selected = append(selected, k)
-					renderSelectedAnswers(selected, m)
-					return
-				} else {
-					// For multiple choice questions we check
-					// if the user has already selected the answer before.
-					exists := false
-					for _, key := range selected {
-						if key == k {
-							exists = true
-						}
-					}
-					// If he hasn't selected the answer before, we display
-					// it below the options now.
-					if !exists && status == options {
-						selected = append(selected, k)
-						sort.StringSlice(selected).Sort()
-						a.Text = ansBody + strings.Join(selected, ", ")
-						a.Text += "\nPress Enter to see chosen options."
-						termui.Render(termui.Body)
-					}
-				}
+				selected = optionHandler(e, q, selected, m,
+					ansBody)
 			})
 	}
 
@@ -304,34 +342,12 @@ func populateQuestionsPage(q question, answers []answer) {
 	})
 
 	termui.Handle("/sys/kbd/<enter>", func(e termui.Event) {
-		// If the user presses enter after selecting options for a
-		// multiple choice question.
-		if q.multiple && len(selected) > 0 && status == options {
-			renderSelectedAnswers(selected, m)
-		} else if status == confirmAnswer || status == confirmSkip {
-			if currentQn == 0 {
-				populateQuestionsPage(q1, a1)
-			}
-			if currentQn == 1 {
-				populateQuestionsPage(q2, a2)
-			} else if currentQn == 2 {
-				populateQuestionsPage(q3, a3)
-			} else if currentQn == 3 {
-				termui.Clear()
-				termui.Body.Rows = termui.Body.Rows[:0]
-				renderInstructionsPage()
-				currentQn = -1
-			}
-			currentQn += 1
-		}
+		enterHandler(e, q, selected, m)
 	})
 
 	// On any other keypress we reset the answer text and the selected answers.
 	termui.Handle("/sys/kbd", func(e termui.Event) {
-		a.Text = ansBody
-		selected = selected[:0]
-		status = options
-		termui.Render(termui.Body)
+		selected = keyHandler(ansBody, selected)
 	})
 }
 
