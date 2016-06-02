@@ -1,0 +1,40 @@
+syntax="proto3";
+package interact;
+
+service GruQuiz {
+  rpc SendQuestion (Req) returns (Question) {}
+	rpc SendAnswer (Response) returns (Status) {}
+}
+
+message Req {
+	bool repeat = 1;
+	string ssid = 2;
+	string token = 3;
+}
+
+message Question {
+	string qid = 1;
+	string question = 2;
+	repeated Answer options = 3;
+	bool isMultiple = 4;
+  float positive = 6;
+	float negative = 7;
+	float totscore = 8;
+}
+
+message Answer {
+	string id = 1;
+	string ans = 2;
+}
+
+message Response {
+  string qid = 1;
+	repeated string aid = 2;
+	string ssid = 3;
+	string token = 4;
+}
+
+message Status {
+	int64 status = 1; // 0 - end test | 1 - right answer | 2 - wrong answer
+}
+
