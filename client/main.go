@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/gizak/termui"
 )
@@ -92,6 +93,8 @@ const (
 // To mantain the state of user while he is answering a question.
 var status State
 
+var startTime time.Time
+
 func setupInstructionsPage(th, tw int) {
 	instructions = termui.NewPar("")
 	instructions.BorderLabel = "Instructions"
@@ -152,7 +155,7 @@ func setupInstructionsPage(th, tw int) {
 }
 
 func setupQuestionsPage() {
-	timeLeft = termui.NewPar(fmt.Sprintf("%d mins", testDur))
+	timeLeft = termui.NewPar(fmt.Sprintf("%dm", testDur))
 	timeLeft.Height = 3
 	timeLeft.BorderLabel = "Time Left"
 
@@ -366,6 +369,22 @@ func initializeDemo() {
 
 	termui.Body.Align()
 	termui.Render(termui.Body)
+
+	startTime = time.Now()
+	termui.Handle("/timer/1s", func(e termui.Event) {
+		elapsed := time.Since(startTime)
+		left := testDur*time.Minute - elapsed
+		// Changing precision to seconds
+		r := left % time.Second
+		left = left - r
+
+		// Changing the display only every 10 seconds.
+		if (left/time.Second)%10 == 0 {
+			timeLeft.Text = fmt.Sprintf("%v", left)
+			termui.Render(termui.Body)
+		}
+	})
+
 	populateQuestionsPage(q1, a1)
 }
 
