@@ -35,6 +35,32 @@ func (s *server) SendQuestion(ctx context.Context,
 	var err error
 
 	//	que = getNextQuestion()
+	que = &interact.Question{
+		Qid:      "AB",
+		Question: "What is your\nname?",
+		Options: []*interact.Answer{
+			&interact.Answer{
+				Id:  "A",
+				Ans: "Alice",
+			},
+			&interact.Answer{
+				Id:  "B",
+				Ans: "BoB",
+			},
+			&interact.Answer{
+				Id:  "C",
+				Ans: "A\nB",
+			},
+			&interact.Answer{
+				Id:  "D",
+				Ans: "Mallory",
+			},
+		},
+		IsMultiple: true,
+		Positive:   5.0,
+		Negative:   2.5,
+		Totscore:   12.5,
+	}
 
 	return que, err
 }
@@ -47,15 +73,15 @@ func (s *server) SendAnswer(ctx context.Context,
 
 	fmt.Println(resp.Aid)
 
-	status.Status, err = isCorrectAnswer(resp.Qid, resp.Aid)
+	status.Status, err = isCorrectAnswer(resp.Qid, resp.Aid, resp.Token)
 
 	// Check for end of test and change status
 	return status, err
 }
 
-func isCorrectAnswer(qid string, opts []string) (int64, error) {
+func isCorrectAnswer(qid string, opts []string, token string) (int64, error) {
 
-	for _, que := range quizInfo[candidateInfo["tname"]] {
+	for _, que := range quizInfo[candidateInfo[token].tname] {
 		if que.Qid == qid {
 			if reflect.DeepEqual(opts, que.Correct) {
 				return 1, nil
@@ -108,6 +134,7 @@ type candidate struct {
 	candidateEmail string
 	valid          time.Duration
 	invitorEmail   string
+	tname          string
 }
 
 type session struct {
