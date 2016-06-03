@@ -4,18 +4,25 @@ import (
 	"bytes"
 	"flag"
 	"fmt"
+	"log"
 	"sort"
 	"strings"
 	"time"
 
+	"golang.org/x/net/context"
+
+	"google.golang.org/grpc"
+
+	"github.com/dgraph-io/gru/server/interact"
 	"github.com/gizak/termui"
 )
 
-var token = flag.String("token", "", "Authentication token")
+var token = flag.String("token", "testtoken", "Authentication token")
 
 const (
 	// Test duration in minutes
 	testDur = 60
+	address = "localhost:8888"
 )
 
 type question struct {
@@ -94,6 +101,7 @@ const (
 var status State
 
 var startTime time.Time
+var demoTaken = false
 
 func setupInstructionsPage(th, tw int) {
 	instructions = termui.NewPar("")
@@ -186,6 +194,26 @@ func setupQuestionsPage() {
 	a.Height = 14
 }
 
+func initializeTest() {
+	// Set up a connection to the server.
+	conn, err := grpc.Dial(address, grpc.WithInsecure())
+	if err != nil {
+		log.Fatalf("did not connect: %v", err)
+	}
+	defer conn.Close()
+	c := interact.NewGruQuizClient(conn)
+
+	// TODO(pawan) - Rename SendQuestion to GetQuestion
+	// TODO(pawan) - Have an authenticate method before GetQuestion() to get
+	// authenticate the token and get a session token.
+	r, err := c.SendQuestion(context.Background(),
+		&interact.Req{Repeat: false, Ssid: "testssid", Token: *token})
+	if err != nil {
+		log.Fatalf("could not greet: %v", err)
+	}
+	log.Printf("Greeting: %s", r.Qid)
+}
+
 func renderInstructionsPage() {
 	termui.Render(instructions)
 	// Adding an offset so that all these boxes come inside the instructions box.
@@ -202,6 +230,9 @@ func renderInstructionsPage() {
 		termui.NewRow(
 			termui.NewCol(10, 1, demo)))
 
+	if demoTaken {
+		demo.Text = "Press s to start the test."
+	}
 	termui.Body.Align()
 	termui.Render(termui.Body)
 
@@ -210,7 +241,12 @@ func renderInstructionsPage() {
 		termui.Clear()
 		// To clear elements of the body.
 		termui.Body.Rows = termui.Body.Rows[:0]
-		initializeDemo()
+		if !demoTaken {
+			initializeDemo()
+			return
+		}
+		initializeTest()
+
 	})
 }
 
@@ -277,6 +313,7 @@ func enterHandler(e termui.Event, q question, selected []string,
 		} else if currentQn == 3 {
 			termui.Clear()
 			termui.Body.Rows = termui.Body.Rows[:0]
+			demoTaken = true
 			renderInstructionsPage()
 			currentQn = -1
 		}
