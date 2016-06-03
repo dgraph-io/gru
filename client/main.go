@@ -25,18 +25,6 @@ const (
 	address = "localhost:8888"
 )
 
-type question struct {
-	str      string
-	multiple bool
-	positive float64
-	negative float64
-}
-
-type answer struct {
-	id  string
-	str string
-}
-
 // Elements for the questions page.
 var instructions *termui.Par
 var timeLeft *termui.Par
@@ -53,32 +41,44 @@ var scoring *termui.Par
 var contact *termui.Par
 
 // These are the questions and answers used for the demo.
-var q1 = question{`What is the capital of France?`, false, 5.0, 2.5}
-
-var q2 = question{`Which among the following were originally developed at Google?`,
-	true, 5.0, 2.5}
-
-var q3 = question{`Which one is the largest ocean in the world?`, false, 5.0, 2.5}
-
-var a1 = []answer{
-	{"1", "Berlin"},
-	{"2", "Paris"},
-	{"3", "Rome"},
-	{"4", "London"},
+var q1 = interact.Question{
+	Qid:      "1",
+	Question: `What is the capital of France?`,
+	Options: []*interact.Answer{
+		{"1", "Berlin"},
+		{"2", "Paris"},
+		{"3", "Rome"},
+		{"4", "London"},
+	},
+	Positive: 5.0,
+	Negative: 2.5,
 }
 
-var a2 = []answer{
-	{"1", "Go programming language"},
-	{"2", "Ruby"},
-	{"3", "Angular"},
-	{"4", "Rust"},
+var q2 = interact.Question{
+	Qid:      "1",
+	Question: `Which among the following were originally developed at Google?`,
+	Options: []*interact.Answer{
+		{"1", "Go programming language"},
+		{"2", "Ruby"},
+		{"3", "Angular"},
+		{"4", "Rust"},
+	},
+	IsMultiple: true,
+	Positive:   5.0,
+	Negative:   2.5,
 }
 
-var a3 = []answer{
-	{"1", "Indian"},
-	{"2", "Pacific"},
-	{"3", "Atlantic"},
-	{"4", "Arctic"},
+var q3 = interact.Question{
+	Qid:      "1",
+	Question: `Which one is the largest ocean in the world?`,
+	Options: []*interact.Answer{
+		{"1", "Indian"},
+		{"2", "Pacific"},
+		{"3", "Atlantic"},
+		{"4", "Arctic"},
+	},
+	Positive: 5.0,
+	Negative: 2.5,
 }
 
 // Question number for the demo.
@@ -206,12 +206,15 @@ func initializeTest() {
 	// TODO(pawan) - Rename SendQuestion to GetQuestion
 	// TODO(pawan) - Have an authenticate method before GetQuestion() to get
 	// authenticate the token and get a session token.
-	r, err := c.SendQuestion(context.Background(),
+	q, err := c.SendQuestion(context.Background(),
 		&interact.Req{Repeat: false, Ssid: "testssid", Token: *token})
 	if err != nil {
-		log.Fatalf("could not greet: %v", err)
+		log.Fatalf("Could not get question.Got err: %v", err)
 	}
-	log.Printf("Greeting: %s", r.Qid)
+
+	setupQuestionsPage()
+	renderQuestionsPage()
+	populateQuestionsPage(q)
 }
 
 func renderInstructionsPage() {
@@ -250,10 +253,41 @@ func renderInstructionsPage() {
 	})
 }
 
-func renderSelectedAnswers(selected []string, m map[string]answer) {
+func renderQuestionsPage() {
+	termui.Body.Y = 0
+	termui.Body.AddRows(
+		termui.NewRow(
+			termui.NewCol(6, 0, timeLeft),
+			termui.NewCol(6, 0, score)),
+		termui.NewRow(
+			termui.NewCol(10, 0, que),
+			termui.NewCol(2, 0, s)),
+		termui.NewRow(
+			termui.NewCol(12, 0, a)))
+
+	termui.Body.Align()
+	termui.Render(termui.Body)
+
+	startTime = time.Now()
+	termui.Handle("/timer/1s", func(e termui.Event) {
+		elapsed := time.Since(startTime)
+		left := testDur*time.Minute - elapsed
+		// Changing precision to seconds
+		r := left % time.Second
+		left = left - r
+
+		// Changing the display only every 10 seconds.
+		if (left/time.Second)%10 == 0 {
+			timeLeft.Text = fmt.Sprintf("%v", left)
+			termui.Render(termui.Body)
+		}
+	})
+}
+
+func renderSelectedAnswers(selected []string, m map[string]*interact.Answer) {
 	check := "Selected:\n\n"
 	for _, k := range selected {
-		check += m[string(k)].str + "\n"
+		check += m[string(k)].Ans + "\n"
 	}
 	check += "\nPress ENTER to confirm. Press any other key to cancel."
 	a.Text = check
@@ -261,13 +295,13 @@ func renderSelectedAnswers(selected []string, m map[string]answer) {
 	termui.Render(termui.Body)
 }
 
-func optionHandler(e termui.Event, q question, selected []string,
-	m map[string]answer, ansBody string) []string {
+func optionHandler(e termui.Event, q *interact.Question, selected []string,
+	m map[string]*interact.Answer, ansBody string) []string {
 	k := e.Data.(termui.EvtKbd).KeyStr
 
 	// For single correct answer qn we just render
 	// the selected answer.
-	if !q.multiple {
+	if !q.IsMultiple {
 		if status != options {
 			return []string{}
 		}
@@ -296,20 +330,20 @@ func optionHandler(e termui.Event, q question, selected []string,
 	return selected
 }
 
-func enterHandler(e termui.Event, q question, selected []string,
-	m map[string]answer) {
+func enterHandler(e termui.Event, q *interact.Question, selected []string,
+	m map[string]*interact.Answer) {
 	// If the user presses enter after selecting options for a
 	// multiple choice question.
-	if q.multiple && len(selected) > 0 && status == options {
+	if q.IsMultiple && len(selected) > 0 && status == options {
 		renderSelectedAnswers(selected, m)
 	} else if status == confirmAnswer || status == confirmSkip {
 		if currentQn == 0 {
-			populateQuestionsPage(q1, a1)
+			populateQuestionsPage(&q1)
 		}
 		if currentQn == 1 {
-			populateQuestionsPage(q2, a2)
+			populateQuestionsPage(&q2)
 		} else if currentQn == 2 {
-			populateQuestionsPage(q3, a3)
+			populateQuestionsPage(&q3)
 		} else if currentQn == 3 {
 			termui.Clear()
 			termui.Body.Rows = termui.Body.Rows[:0]
@@ -329,10 +363,10 @@ func keyHandler(ansBody string, selected []string) []string {
 	return selected
 }
 
-func populateQuestionsPage(q question, answers []answer) {
-	que.Text = q.str
+func populateQuestionsPage(q *interact.Question) {
+	que.Text = q.Question
 	s.Text = fmt.Sprintf("Right answer => +%1.1f\n\nWrong answer => -%1.1f",
-		q.positive, q.negative)
+		q.Positive, q.Negative)
 
 	// Selected contains the options user has already selected.
 	selected := []string{}
@@ -340,23 +374,23 @@ func populateQuestionsPage(q question, answers []answer) {
 	ansBody := ""
 	// Map m contains a map of the key to select an answer and the answer
 	// corresponding to it.
-	m := make(map[string]answer)
+	m := make(map[string]*interact.Answer)
 	var buf bytes.Buffer
 
 	status = options
-	if q.multiple {
+	if q.IsMultiple {
 		buf.WriteString("This question could have multiple correct answers.\n\n")
 	} else {
 		buf.WriteString("This question only has a single correct answer.\n\n")
 	}
 	opt := 'a'
-	for _, ans := range answers {
+	for _, o := range q.Options {
 		buf.WriteRune(opt)
 		buf.WriteRune(')')
 		buf.WriteRune(' ')
-		buf.WriteString(ans.str)
+		buf.WriteString(o.Ans)
 		buf.WriteRune('\n')
-		m[string(opt)] = ans
+		m[string(opt)] = o
 		opt++
 	}
 	buf.WriteString("\ns) Skip question\n\n")
@@ -393,36 +427,8 @@ func populateQuestionsPage(q question, answers []answer) {
 
 func initializeDemo() {
 	setupQuestionsPage()
-	termui.Body.Y = 0
-	termui.Body.AddRows(
-		termui.NewRow(
-			termui.NewCol(6, 0, timeLeft),
-			termui.NewCol(6, 0, score)),
-		termui.NewRow(
-			termui.NewCol(10, 0, que),
-			termui.NewCol(2, 0, s)),
-		termui.NewRow(
-			termui.NewCol(12, 0, a)))
-
-	termui.Body.Align()
-	termui.Render(termui.Body)
-
-	startTime = time.Now()
-	termui.Handle("/timer/1s", func(e termui.Event) {
-		elapsed := time.Since(startTime)
-		left := testDur*time.Minute - elapsed
-		// Changing precision to seconds
-		r := left % time.Second
-		left = left - r
-
-		// Changing the display only every 10 seconds.
-		if (left/time.Second)%10 == 0 {
-			timeLeft.Text = fmt.Sprintf("%v", left)
-			termui.Render(termui.Body)
-		}
-	})
-
-	populateQuestionsPage(q1, a1)
+	renderQuestionsPage()
+	populateQuestionsPage(&q1)
 }
 
 func main() {
