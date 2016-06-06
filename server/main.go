@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"math/rand"
 	"net"
 	"os"
 	"reflect"
@@ -34,33 +35,7 @@ func (s *server) SendQuestion(ctx context.Context,
 	var que *interact.Question
 	var err error
 
-	//	que = getNextQuestion()
-	que = &interact.Question{
-		Qid:      "AB",
-		Question: "What is your\nname?",
-		Options: []*interact.Answer{
-			&interact.Answer{
-				Id:  "A",
-				Ans: "Alice",
-			},
-			&interact.Answer{
-				Id:  "B",
-				Ans: "BoB",
-			},
-			&interact.Answer{
-				Id:  "C",
-				Ans: "A\nB",
-			},
-			&interact.Answer{
-				Id:  "D",
-				Ans: "Mallory",
-			},
-		},
-		IsMultiple: true,
-		Positive:   5.0,
-		Negative:   2.5,
-		Totscore:   12.5,
-	}
+	que = getNextQuestion()
 
 	return que, err
 }
@@ -94,9 +69,50 @@ func isCorrectAnswer(qid string, opts []string, token string) (int64, error) {
 	return -1, errors.New("No matching question")
 }
 
-/*
-func getNextQuestion() *interact.Question {}
-*/
+func getNextQuestion() *interact.Question {
+
+	idx := rand.Intn(3)
+
+	var opts []*interact.Answer
+
+	for _, mp := range quizInfo["test"][idx].Opt {
+		it := &interact.Answer{
+			Id:  mp["uid"],
+			Ans: mp["str"],
+		}
+
+		opts = append(opts, it)
+	}
+
+	que := &interact.Question{
+		Qid:      quizInfo["test"][idx].Qid,
+		Question: quizInfo["test"][idx].Question,
+		Options:  opts,
+		/*[]*interact.Answer{
+			&interact.Answer{
+				Id:  "A",
+				Ans: "Alice",
+			},
+			&interact.Answer{
+				Id:  "B",
+				Ans: "BoB",
+			},
+			&interact.Answer{
+				Id:  "C",
+				Ans: "A\nB",
+			},
+			&interact.Answer{
+				Id:  "D",
+				Ans: "Mallory",
+			},
+		},*/
+		IsMultiple: true,
+		Positive:   quizInfo["test"][idx].Score,
+		Negative:   quizInfo["test"][idx].Score,
+		Totscore:   15.0,
+	}
+	return que
+}
 
 func runGrpcServer(address string) {
 	ln, err := net.Listen("tcp", address)
@@ -124,7 +140,7 @@ type T struct {
 	Question string
 	Correct  []string
 	Opt      []map[string]string
-	Score    int
+	Score    float32
 	Tag      string
 }
 
@@ -141,7 +157,7 @@ type session struct {
 	id                string
 	questionSeq       []string
 	attemptedQuestion map[string]string
-	totScore          float64
+	totScore          float32
 }
 
 var (
