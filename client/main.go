@@ -101,7 +101,10 @@ const (
 var status State
 
 var startTime time.Time
-var demoTaken = false
+var demoTaken = true
+
+// Declaring connection as a global as can't reuse the client(its unexported)
+var conn *grpc.ClientConn
 
 func setupInstructionsPage(th, tw int) {
 	instructions = termui.NewPar("")
@@ -194,27 +197,32 @@ func setupQuestionsPage() {
 	a.Height = 14
 }
 
-func initializeTest() {
-	// Set up a connection to the server.
-	conn, err := grpc.Dial(address, grpc.WithInsecure())
-	if err != nil {
-		log.Fatalf("did not connect: %v", err)
-	}
-	defer conn.Close()
-	c := interact.NewGruQuizClient(conn)
-
+func fetchAndDisplayQn() {
 	// TODO(pawan) - Rename SendQuestion to GetQuestion
 	// TODO(pawan) - Have an authenticate method before GetQuestion() to get
 	// authenticate the token and get a session token.
-	q, err := c.SendQuestion(context.Background(),
+	client := interact.NewGruQuizClient(conn)
+	q, err := client.SendQuestion(context.Background(),
 		&interact.Req{Repeat: false, Ssid: "testssid", Token: *token})
 	if err != nil {
 		log.Fatalf("Could not get question.Got err: %v", err)
 	}
 
+	populateQuestionsPage(q)
+}
+
+func initializeTest() {
+	// Set up a connection to the server.
+	var err error
+	conn, err = grpc.Dial(address, grpc.WithInsecure())
+	if err != nil {
+		log.Fatalf("did not connect: %v", err)
+	}
+	// defer conn.Close()
+
 	setupQuestionsPage()
 	renderQuestionsPage()
-	populateQuestionsPage(q)
+	fetchAndDisplayQn()
 }
 
 func renderInstructionsPage() {
@@ -337,21 +345,45 @@ func enterHandler(e termui.Event, q *interact.Question, selected []string,
 	if q.IsMultiple && len(selected) > 0 && status == options {
 		renderSelectedAnswers(selected, m)
 	} else if status == confirmAnswer || status == confirmSkip {
-		if currentQn == 0 {
-			populateQuestionsPage(&q1)
+		if !demoTaken {
+			if currentQn == 0 {
+				populateQuestionsPage(&q1)
+			}
+			if currentQn == 1 {
+				populateQuestionsPage(&q2)
+			} else if currentQn == 2 {
+				populateQuestionsPage(&q3)
+			} else if currentQn == 3 {
+				termui.Clear()
+				termui.Body.Rows = termui.Body.Rows[:0]
+				demoTaken = true
+				renderInstructionsPage()
+				currentQn = -1
+			}
+			currentQn += 1
+			return
 		}
-		if currentQn == 1 {
-			populateQuestionsPage(&q2)
-		} else if currentQn == 2 {
-			populateQuestionsPage(&q3)
-		} else if currentQn == 3 {
-			termui.Clear()
-			termui.Body.Rows = termui.Body.Rows[:0]
-			demoTaken = true
-			renderInstructionsPage()
-			currentQn = -1
+		var answerIds []string
+		for _, s := range selected {
+			answerIds = append(answerIds, m[s].Id)
 		}
-		currentQn += 1
+		// TODO(pawan) - Check if there is separate handling required
+		// for the skip case.
+		resp := interact.Response{
+			Qid:   q.Qid,
+			Aid:   answerIds,
+			Ssid:  "testssid",
+			Token: *token,
+		}
+		client := interact.NewGruQuizClient(conn)
+		status, _ := client.SendAnswer(context.Background(), &resp)
+		// TODO(pawan) - Handle error
+		if status.Status == 0 {
+			// TODO(pawan) - Handle case to end test. Render final
+			// page
+			return
+		}
+		fetchAndDisplayQn()
 	}
 }
 
