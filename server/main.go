@@ -26,6 +26,7 @@ import (
 
 var data string
 var glog = x.Log("Gru Server")
+var totScore float32
 
 type server struct{}
 
@@ -43,20 +44,36 @@ func (s *server) SendQuestion(ctx context.Context,
 func (s *server) SendAnswer(ctx context.Context,
 	resp *interact.Response) (*interact.Status, error) {
 
-	var status *interact.Status
+	var status interact.Status
 	var err error
+	var idx int
 
 	fmt.Println(resp.Aid)
 
 	status.Status, err = isCorrectAnswer(resp.Qid, resp.Aid, resp.Token)
 
+
+	for i, que := range quizInfo["test"] {
+		if que.Qid == resp.Qid {
+			idx = i
+		}
+	}
+
+	if status.Status == 1 {
+		totScore += quizInfo["test"][idx].Score
+	} else {
+		totScore -= quizInfo["test"][idx].Score
+	}
+
+	fmt.Println(status.Status, totScore)
+	
 	// Check for end of test and change status
-	return status, err
+	return &status, err
 }
 
 func isCorrectAnswer(qid string, opts []string, token string) (int64, error) {
 
-	for _, que := range quizInfo[candidateInfo[token].tname] {
+	for _, que := range quizInfo["test"] {
 		if que.Qid == qid {
 			if reflect.DeepEqual(opts, que.Correct) {
 				return 1, nil
@@ -84,32 +101,20 @@ func getNextQuestion() *interact.Question {
 		opts = append(opts, it)
 	}
 
+	var isM bool
+
+	if len(quizInfo["test"][idx].Correct) > 1 {
+		isM = true
+	}
+
 	que := &interact.Question{
 		Qid:      quizInfo["test"][idx].Qid,
 		Question: quizInfo["test"][idx].Question,
 		Options:  opts,
-		/*[]*interact.Answer{
-			&interact.Answer{
-				Id:  "A",
-				Ans: "Alice",
-			},
-			&interact.Answer{
-				Id:  "B",
-				Ans: "BoB",
-			},
-			&interact.Answer{
-				Id:  "C",
-				Ans: "A\nB",
-			},
-			&interact.Answer{
-				Id:  "D",
-				Ans: "Mallory",
-			},
-		},*/
-		IsMultiple: true,
+		IsMultiple: isM,
 		Positive:   quizInfo["test"][idx].Score,
 		Negative:   quizInfo["test"][idx].Score,
-		Totscore:   15.0,
+		Totscore:   totScore,
 	}
 	return que
 }
