@@ -209,6 +209,19 @@ func setupQuestionsPage() {
 	a.Height = 14
 }
 
+func setupFinalPage(q *interact.Question) {
+	instructions = termui.NewPar(
+		fmt.Sprintf("Thank you for taking the test. Your final score was %2.1f. We will get in touch with you soon.",
+			q.Totscore))
+	instructions.BorderLabel = "Thank You"
+	instructions.Height = 10
+	instructions.Width = termui.TermWidth() / 2
+	instructions.Y = termui.TermHeight() / 4
+	instructions.X = termui.TermWidth() / 4
+	instructions.PaddingTop = 1
+	instructions.PaddingLeft = 1
+}
+
 func fetchAndDisplayQn() {
 	// TODO(pawan) - Rename SendQuestion to GetQuestion
 	// TODO(pawan) - Have an authenticate method before GetQuestion() to get
@@ -218,6 +231,14 @@ func fetchAndDisplayQn() {
 		&interact.Req{Repeat: false, Ssid: "testssid", Token: *token})
 	if err != nil {
 		log.Fatalf("Could not get question.Got err: %v", err)
+	}
+
+	if q.Qid == "END" {
+		termui.Clear()
+		termui.Body.Rows = termui.Body.Rows[:0]
+		setupFinalPage(q)
+		termui.Render(instructions)
+		return
 	}
 
 	populateQuestionsPage(q)
@@ -374,6 +395,10 @@ func enterHandler(e termui.Event, q *interact.Question, selected []string,
 		}
 		var answerIds []string
 		for _, s := range selected {
+			if s == "skip" {
+				answerIds = []string{"skip"}
+				break
+			}
 			answerIds = append(answerIds, m[s].Id)
 		}
 		// TODO(pawan) - Check if there is separate handling required
@@ -385,13 +410,7 @@ func enterHandler(e termui.Event, q *interact.Question, selected []string,
 			Token: *token,
 		}
 		client := interact.NewGruQuizClient(conn)
-		status, _ := client.SendAnswer(context.Background(), &resp)
-		// TODO(pawan) - Handle error
-		if status.Status == 0 {
-			// TODO(pawan) - Handle case to end test. Render final
-			// page
-			return
-		}
+		client.SendAnswer(context.Background(), &resp)
 		fetchAndDisplayQn()
 	}
 }
@@ -456,6 +475,8 @@ func populateQuestionsPage(q *interact.Question) {
 
 	termui.Handle("/sys/kbd/s", func(e termui.Event) {
 		a.Text = "Are you sure you want to skip the question? \n\nPress ENTER to confirm. Press any other key to cancel."
+		selected = selected[:0]
+		selected = append(selected, "skip")
 		termui.Render(termui.Body)
 		status = confirmSkip
 	})
