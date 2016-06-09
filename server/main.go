@@ -27,6 +27,7 @@ import (
 var data string
 var glog = x.Log("Gru Server")
 var totScore float32
+var qList []string
 
 type server struct{}
 
@@ -35,8 +36,23 @@ func (s *server) SendQuestion(ctx context.Context,
 
 	var que *interact.Question
 	var err error
+	
+	if len(qList) == len(quizInfo["test"]) {
+		que := &interact.Question{
+			Qid:      "END",
+			Question: "",
+			Options:  nil,
+			IsMultiple: false,
+			Positive:   0,
+			Negative:   0,
+			Totscore:   totScore,
+		}
+		return que, nil
+	}
 
 	que = getNextQuestion()
+	qList = append(qList, que.Qid)
+	fmt.Println(qList)
 
 	return que, err
 }
@@ -52,17 +68,22 @@ func (s *server) SendAnswer(ctx context.Context,
 
 	status.Status, err = isCorrectAnswer(resp.Qid, resp.Aid, resp.Token)
 
-
 	for i, que := range quizInfo["test"] {
 		if que.Qid == resp.Qid {
 			idx = i
 		}
 	}
 
-	if status.Status == 1 {
-		totScore += quizInfo["test"][idx].Score
+	if len(resp.Aid) > 0 && resp.Aid[0] != "skip" {
+		if	status.Status == 1 {
+			totScore += quizInfo["test"][idx].Score
+		} else {
+			totScore -= quizInfo["test"][idx].Score
+		}
 	} else {
-		totScore -= quizInfo["test"][idx].Score
+		if len(resp.Aid) > 1 {
+			glog.Error("Got extra optoins with SKIP")			
+		}
 	}
 
 	fmt.Println(status.Status, totScore)
@@ -192,8 +213,14 @@ func parseCandidateInfo(file string) error {
 			return err
 		}
 
-		cand := &candidate{}
-
+		cand := &candidate{
+							token: row[2],
+							name: row[0],
+							candidateEmail: row[1],
+							valid: time.Duration(10*time.Second),
+							tname: row[3],
+					}
+		candidateInfo[row[2]] = cand
 		fmt.Println(row, cand)
 		// store info in struct
 
@@ -209,12 +236,14 @@ func main() {
 	io.Copy(buf, f)
 	data := buf.Bytes()
 
+	candidateInfo = make(map[string]*candidate)
 	parseCandidateInfo(*candFile)
 
 	err := yaml.Unmarshal(data, &quizInfo)
 	if err != nil {
 		log.Fatalf("error: %v", err)
 	}
+	/*
 	fmt.Printf("--- m:\n%v\n\n", quizInfo["test"])
 
 	_, err = yaml.Marshal(&quizInfo)
@@ -222,6 +251,7 @@ func main() {
 		log.Fatalf("error: %v", err)
 	}
 	//fmt.Printf("--- m dump:\n%s\n\n", string(d))
-
+	*/
+	fmt.Println(candidateInfo)
 	runGrpcServer(*port)
 }
