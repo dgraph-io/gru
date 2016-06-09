@@ -28,6 +28,8 @@ var data string
 var glog = x.Log("Gru Server")
 var totScore float32
 var qList []string
+var logfile = "test_log"
+var f1 *os.File
 
 type server struct{}
 
@@ -87,8 +89,10 @@ func (s *server) SendAnswer(ctx context.Context,
 	}
 
 	fmt.Println(status.Status, totScore)
+	
+	log.SetOutput(f1)
+	log.Println(resp.Qid, resp.Aid, resp.Token, status.Status, totScore)
 
-	// Check for end of test and change status
 	return &status, err
 }
 
@@ -239,19 +243,22 @@ func main() {
 	candidateInfo = make(map[string]*candidate)
 	parseCandidateInfo(*candFile)
 
+	f1, _ = os.OpenFile("abc", os.O_RDWR | os.O_CREATE | os.O_APPEND, 0666)
+
 	err := yaml.Unmarshal(data, &quizInfo)
 	if err != nil {
-		log.Fatalf("error: %v", err)
+		glog.Fatalf("error: %v", err)
 	}
 	/*
 		fmt.Printf("--- m:\n%v\n\n", quizInfo["test"])
 
-		_, err = yaml.Marshal(&quizInfo)
-		if err != nil {
-			log.Fatalf("error: %v", err)
-		}
-		//fmt.Printf("--- m dump:\n%s\n\n", string(d))
+	_, err = yaml.Marshal(&quizInfo)
+	if err != nil {
+		glog.Fatalf("error: %v", err)
+	}
+	//fmt.Printf("--- m dump:\n%s\n\n", string(d))
 	*/
+	
 	fmt.Println(candidateInfo)
 	runGrpcServer(*port)
 }
