@@ -3,8 +3,8 @@
 package main
 
 import (
+	"bufio"
 	"bytes"
-	"encoding/csv"
 	"errors"
 	"flag"
 	"fmt"
@@ -14,6 +14,7 @@ import (
 	"net"
 	"os"
 	"reflect"
+	"strings"
 	"time"
 
 	"google.golang.org/grpc"
@@ -32,6 +33,24 @@ var logfile = "test_log"
 var f1 *os.File
 
 type server struct{}
+
+func checkToken(token string) bool {
+	for _, cand := range candInfo {
+		if cand.token == token && time.Now().Before(cand.validity) {
+			return true
+		}
+	}
+	return false
+}
+
+func (s *server) Authenticate(ctx context.Context,
+	t *interact.Token) (*interact.Session, error) {
+	if valid := checkToken(t.Id); !valid {
+		return nil, errors.New("Invalid token")
+	}
+	// TODO(pawan) - Generate session id and send that.
+	return &interact.Session{Id: "abc"}, nil
+}
 
 func (s *server) GetQuestion(ctx context.Context,
 	req *interact.Req) (*interact.Question, error) {
@@ -89,7 +108,7 @@ func (s *server) SendAnswer(ctx context.Context,
 	}
 
 	fmt.Println(status.Status, totScore)
-	
+
 	log.SetOutput(f1)
 	log.Println(resp.Qid, resp.Aid, resp.Token, status.Status, totScore)
 
@@ -191,43 +210,54 @@ type session struct {
 }
 
 var (
-	quizFile      = flag.String("quiz", "testYML", "Input question file")
-	port          = flag.String("port", ":8888", "Port on which server listens")
-	candFile      = flag.String("cand", "testCand.csv", "Candidate inforamation file")
-	quizInfo      map[interface{}][]T
-	candidateInfo map[string]*candidate
-	sessionInfo   map[string]*session
+	quizFile    = flag.String("quiz", "test.yml", "Input question file")
+	port        = flag.String("port", ":8888", "Port on which server listens")
+	candFile    = flag.String("cand", "testCand.csv", "Candidate inforamation file")
+	quizInfo    map[interface{}][]T
+	candInfo    []*Candidate
+	sessionInfo map[string]*session
 )
 
+type Candidate struct {
+	name     string
+	email    string
+	validity time.Time
+	token    string
+}
+
 func parseCandidateInfo(file string) error {
-	f, err := os.Open(file)
+	format := "2006/01/02 (MST)"
+	f, err := os.Open(*candFile)
 	if err != nil {
-		return err
+		log.Fatal(err)
+		return nil
 	}
 	defer f.Close()
 
-	csvr := csv.NewReader(f)
+	scanner := bufio.NewScanner(f)
+	for scanner.Scan() {
+		line := strings.TrimSpace(scanner.Text())
+		if line == "" || line[0] == ';' {
+			continue
+		}
 
-	for {
-		row, err := csvr.Read()
+		c := new(Candidate)
+		splits := strings.Split(line, " ")
+
+		if len(splits) < 6 {
+			continue
+		}
+
+		c.name = strings.Join(splits[:2], " ")
+		c.email = splits[3]
+		c.validity, err = time.Parse(format,
+			fmt.Sprintf("%s (%s)", splits[3], splits[4]))
 		if err != nil {
-			if err == io.EOF {
-				err = nil
-			}
-			return err
+			log.Fatal(err)
 		}
 
-		cand := &candidate{
-			token:          row[2],
-			name:           row[0],
-			candidateEmail: row[1],
-			valid:          time.Duration(10 * time.Second),
-			tname:          row[3],
-		}
-		candidateInfo[row[2]] = cand
-		fmt.Println(row, cand)
-		// store info in struct
-
+		c.token = splits[5]
+		candInfo = append(candInfo, c)
 	}
 	return nil
 }
@@ -240,25 +270,23 @@ func main() {
 	io.Copy(buf, f)
 	data := buf.Bytes()
 
-	candidateInfo = make(map[string]*candidate)
 	parseCandidateInfo(*candFile)
 
-	f1, _ = os.OpenFile("abc", os.O_RDWR | os.O_CREATE | os.O_APPEND, 0666)
+	f1, _ = os.OpenFile("abc", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 
 	err := yaml.Unmarshal(data, &quizInfo)
 	if err != nil {
 		glog.Fatalf("error: %v", err)
 	}
 	/*
-		fmt.Printf("--- m:\n%v\n\n", quizInfo["test"])
+			fmt.Printf("--- m:\n%v\n\n", quizInfo["test"])
 
-	_, err = yaml.Marshal(&quizInfo)
-	if err != nil {
-		glog.Fatalf("error: %v", err)
-	}
-	//fmt.Printf("--- m dump:\n%s\n\n", string(d))
+		_, err = yaml.Marshal(&quizInfo)
+		if err != nil {
+			glog.Fatalf("error: %v", err)
+		}
+		//fmt.Printf("--- m dump:\n%s\n\n", string(d))
 	*/
-	
-	fmt.Println(candidateInfo)
+	fmt.Println(candInfo)
 	runGrpcServer(*port)
 }

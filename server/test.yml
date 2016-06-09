@@ -2,7 +2,7 @@ test:
 - qid: A
   question: Which of the following is true about HTTP?
   correct: [A1]
-  opt: 
+  opt:
   - uid: A1
     str: O(N * log(NK)), O(N^3)
   - uid: B1
@@ -10,13 +10,13 @@ test:
   score: 5
   tag: Easy
 
-- qid: B 
+- qid: B
   question: |
-   Which of  
-   the following is true 
+   Which of
+   the following is true
    about "HTTP"?
   correct: [A2, B2]
-  opt: 
+  opt:
   - uid: A2
     str: O(N * log("N*K")), O(N^3)
   - uid: B2
@@ -29,7 +29,7 @@ test:
    What is the output of following program?
    #include <stdio.h>
    void fun(int x)
-   {x = 30;} 
+   {x = 30;}
    int main()
    {
     int y = 20;
@@ -48,4 +48,4 @@ test:
    - uid: D3
      str: Runtime error
   score: 10
-  tag: Easy 
+  tag: Easy

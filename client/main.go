@@ -103,7 +103,7 @@ const (
 var status State
 
 var startTime time.Time
-var demoTaken = true
+var demoTaken = false
 var timeTaken int
 var ts float32
 
@@ -253,13 +253,6 @@ func fetchAndDisplayQn() {
 }
 
 func initializeTest() {
-	// Set up a connection to the server.
-	var err error
-	conn, err = grpc.Dial(address, grpc.WithInsecure())
-	if err != nil {
-		log.Fatalf("did not connect: %v", err)
-	}
-
 	setupQuestionsPage()
 	renderQuestionsPage()
 	fetchAndDisplayQn()
@@ -497,6 +490,19 @@ func populateQuestionsPage(q *interact.Question) {
 }
 
 func initializeDemo() {
+	// Set up a connection to the server.
+	var err error
+	conn, err = grpc.Dial(address, grpc.WithInsecure())
+	if err != nil {
+		log.Fatalf("did not connect: %v", err)
+	}
+
+	client := interact.NewGruQuizClient(conn)
+	_, err = client.Authenticate(context.Background(), &interact.Token{Id: *token})
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	setupQuestionsPage()
 	renderQuestionsPage()
 	populateQuestionsPage(&q1)

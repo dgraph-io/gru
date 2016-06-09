@@ -4,8 +4,17 @@ syntax="proto3";
 package interact;
 
 service GruQuiz {
+	rpc Authenticate (Token) returns (Session) {}
 	rpc GetQuestion (Req) returns (Question) {}
 	rpc SendAnswer (Response) returns (Status) {}
+}
+
+message Token {
+	string id = 1;
+}
+
+message Session {
+	string id = 1;
 }
 
 message Req {
