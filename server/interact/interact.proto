@@ -1,8 +1,10 @@
+// Run protoc --go_out=plugins=grpc:. *.proto to generate the .pb.go from 
+// with the directory that contains the proto file
 syntax="proto3";
 package interact;
 
 service GruQuiz {
-  rpc SendQuestion (Req) returns (Question) {}
+	rpc GetQuestion (Req) returns (Question) {}
 	rpc SendAnswer (Response) returns (Status) {}
 }
 
@@ -17,7 +19,7 @@ message Question {
 	string question = 2;
 	repeated Answer options = 3;
 	bool isMultiple = 4;
-  float positive = 6;
+	float positive = 6;
 	float negative = 7;
 	float totscore = 8;
 }
@@ -28,7 +30,7 @@ message Answer {
 }
 
 message Response {
-  string qid = 1;
+	string qid = 1;
 	repeated string aid = 2;
 	string ssid = 3;
 	string token = 4;

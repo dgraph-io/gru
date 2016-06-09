@@ -209,7 +209,13 @@ func setupQuestionsPage() {
 	a.Height = 14
 }
 
-func setupFinalPage(q *interact.Question) {
+func resetHandlers() {
+	termui.Handle("/sys/kbd", func(e termui.Event) {})
+	termui.Handle("/sys/kbd/s", func(e termui.Event) {})
+	termui.Handle("/sys/kbd/<enter>", func(e termui.Event) {})
+}
+
+func showFinalPage(q *interact.Question) {
 	instructions = termui.NewPar(
 		fmt.Sprintf("Thank you for taking the test. Your final score was %2.1f. We will get in touch with you soon.",
 			q.Totscore))
@@ -220,14 +226,16 @@ func setupFinalPage(q *interact.Question) {
 	instructions.X = termui.TermWidth() / 4
 	instructions.PaddingTop = 1
 	instructions.PaddingLeft = 1
+
+	termui.Render(instructions)
+	resetHandlers()
 }
 
 func fetchAndDisplayQn() {
-	// TODO(pawan) - Rename SendQuestion to GetQuestion
 	// TODO(pawan) - Have an authenticate method before GetQuestion() to get
 	// authenticate the token and get a session token.
 	client := interact.NewGruQuizClient(conn)
-	q, err := client.SendQuestion(context.Background(),
+	q, err := client.GetQuestion(context.Background(),
 		&interact.Req{Repeat: false, Ssid: "testssid", Token: *token})
 	if err != nil {
 		log.Fatalf("Could not get question.Got err: %v", err)
@@ -236,8 +244,8 @@ func fetchAndDisplayQn() {
 	if q.Qid == "END" {
 		termui.Clear()
 		termui.Body.Rows = termui.Body.Rows[:0]
-		setupFinalPage(q)
-		termui.Render(instructions)
+		showFinalPage(q)
+		conn.Close()
 		return
 	}
 
@@ -251,7 +259,6 @@ func initializeTest() {
 	if err != nil {
 		log.Fatalf("did not connect: %v", err)
 	}
-	// defer conn.Close()
 
 	setupQuestionsPage()
 	renderQuestionsPage()
@@ -401,8 +408,6 @@ func enterHandler(e termui.Event, q *interact.Question, selected []string,
 			}
 			answerIds = append(answerIds, m[s].Id)
 		}
-		// TODO(pawan) - Check if there is separate handling required
-		// for the skip case.
 		resp := interact.Response{
 			Qid:   q.Qid,
 			Aid:   answerIds,

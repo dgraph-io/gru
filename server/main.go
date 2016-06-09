@@ -31,17 +31,17 @@ var qList []string
 
 type server struct{}
 
-func (s *server) SendQuestion(ctx context.Context,
+func (s *server) GetQuestion(ctx context.Context,
 	req *interact.Req) (*interact.Question, error) {
 
 	var que *interact.Question
 	var err error
-	
+
 	if len(qList) == len(quizInfo["test"]) {
 		que := &interact.Question{
-			Qid:      "END",
-			Question: "",
-			Options:  nil,
+			Qid:        "END",
+			Question:   "",
+			Options:    nil,
 			IsMultiple: false,
 			Positive:   0,
 			Negative:   0,
@@ -75,19 +75,19 @@ func (s *server) SendAnswer(ctx context.Context,
 	}
 
 	if len(resp.Aid) > 0 && resp.Aid[0] != "skip" {
-		if	status.Status == 1 {
+		if status.Status == 1 {
 			totScore += quizInfo["test"][idx].Score
 		} else {
 			totScore -= quizInfo["test"][idx].Score
 		}
 	} else {
 		if len(resp.Aid) > 1 {
-			glog.Error("Got extra optoins with SKIP")			
+			glog.Error("Got extra optoins with SKIP")
 		}
 	}
 
 	fmt.Println(status.Status, totScore)
-	
+
 	// Check for end of test and change status
 	return &status, err
 }
@@ -129,9 +129,9 @@ func getNextQuestion() *interact.Question {
 	}
 
 	que := &interact.Question{
-		Qid:      quizInfo["test"][idx].Qid,
-		Question: quizInfo["test"][idx].Question,
-		Options:  opts,
+		Qid:        quizInfo["test"][idx].Qid,
+		Question:   quizInfo["test"][idx].Question,
+		Options:    opts,
 		IsMultiple: isM,
 		Positive:   quizInfo["test"][idx].Score,
 		Negative:   quizInfo["test"][idx].Score,
@@ -187,9 +187,9 @@ type session struct {
 }
 
 var (
-	quizFile      = flag.String("quiz", "", "Input question file")
+	quizFile      = flag.String("quiz", "testYML", "Input question file")
 	port          = flag.String("port", ":8888", "Port on which server listens")
-	candFile      = flag.String("cand", "", "Candidate inforamation file")
+	candFile      = flag.String("cand", "testCand.csv", "Candidate inforamation file")
 	quizInfo      map[interface{}][]T
 	candidateInfo map[string]*candidate
 	sessionInfo   map[string]*session
@@ -214,12 +214,12 @@ func parseCandidateInfo(file string) error {
 		}
 
 		cand := &candidate{
-							token: row[2],
-							name: row[0],
-							candidateEmail: row[1],
-							valid: time.Duration(10*time.Second),
-							tname: row[3],
-					}
+			token:          row[2],
+			name:           row[0],
+			candidateEmail: row[1],
+			valid:          time.Duration(10 * time.Second),
+			tname:          row[3],
+		}
 		candidateInfo[row[2]] = cand
 		fmt.Println(row, cand)
 		// store info in struct
@@ -244,13 +244,13 @@ func main() {
 		log.Fatalf("error: %v", err)
 	}
 	/*
-	fmt.Printf("--- m:\n%v\n\n", quizInfo["test"])
+		fmt.Printf("--- m:\n%v\n\n", quizInfo["test"])
 
-	_, err = yaml.Marshal(&quizInfo)
-	if err != nil {
-		log.Fatalf("error: %v", err)
-	}
-	//fmt.Printf("--- m dump:\n%s\n\n", string(d))
+		_, err = yaml.Marshal(&quizInfo)
+		if err != nil {
+			log.Fatalf("error: %v", err)
+		}
+		//fmt.Printf("--- m dump:\n%s\n\n", string(d))
 	*/
 	fmt.Println(candidateInfo)
 	runGrpcServer(*port)
