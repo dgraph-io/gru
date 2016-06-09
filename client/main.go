@@ -28,8 +28,10 @@ const (
 // Elements for the questions page.
 var instructions *termui.Par
 var timeLeft *termui.Par
+var timeSpent *termui.Par
 var que *termui.Par
 var score *termui.Par
+var lastScore *termui.Par
 var s *termui.Par
 var a *termui.Par
 
@@ -102,6 +104,8 @@ var status State
 
 var startTime time.Time
 var demoTaken = true
+var timeTaken int
+var ts float32
 
 // Declaring connection as a global as can't reuse the client(its unexported)
 var conn *grpc.ClientConn
@@ -166,14 +170,22 @@ func setupInstructionsPage(th, tw int) {
 }
 
 func setupQuestionsPage() {
-	timeLeft = termui.NewPar(fmt.Sprintf("%dm", testDur))
+	timeLeft = termui.NewPar(fmt.Sprintf("%02d:00", testDur))
 	timeLeft.Height = 3
 	timeLeft.BorderLabel = "Time Left"
 
-	ts := 0.0
-	score = termui.NewPar(fmt.Sprintf("%.1f", ts))
+	timeSpent = termui.NewPar("00:00")
+	timeSpent.Height = 3
+	timeSpent.BorderLabel = "Time spent"
+
+	ts := 00.0
+	score = termui.NewPar(fmt.Sprintf("%2.1f", ts))
 	score.BorderLabel = "Total Score"
 	score.Height = 3
+
+	lastScore = termui.NewPar("0.0")
+	lastScore.BorderLabel = "Last Score"
+	lastScore.Height = 3
 
 	que = termui.NewPar("")
 	que.BorderLabel = "Question"
@@ -265,8 +277,10 @@ func renderQuestionsPage() {
 	termui.Body.Y = 0
 	termui.Body.AddRows(
 		termui.NewRow(
-			termui.NewCol(6, 0, timeLeft),
-			termui.NewCol(6, 0, score)),
+			termui.NewCol(3, 0, timeLeft),
+			termui.NewCol(3, 0, timeSpent),
+			termui.NewCol(3, 0, score),
+			termui.NewCol(3, 0, lastScore)),
 		termui.NewRow(
 			termui.NewCol(10, 0, que),
 			termui.NewCol(2, 0, s)),
@@ -276,19 +290,14 @@ func renderQuestionsPage() {
 	termui.Body.Align()
 	termui.Render(termui.Body)
 
-	startTime = time.Now()
+	secondsCount := 0
 	termui.Handle("/timer/1s", func(e termui.Event) {
-		elapsed := time.Since(startTime)
-		left := testDur*time.Minute - elapsed
-		// Changing precision to seconds
-		r := left % time.Second
-		left = left - r
-
-		// Changing the display only every 10 seconds.
-		if (left/time.Second)%10 == 0 {
-			timeLeft.Text = fmt.Sprintf("%v", left)
-			termui.Render(termui.Body)
-		}
+		secondsCount += 1
+		timeTaken += 1
+		left := testDur*time.Minute - time.Duration(secondsCount)*time.Second
+		timeSpent.Text = fmt.Sprintf("%02d:%02d", timeTaken/60, timeTaken%60)
+		timeLeft.Text = fmt.Sprintf("%02d:%02d", left/time.Minute, (left%time.Minute)/time.Second)
+		termui.Render(termui.Body)
 	})
 }
 
@@ -396,6 +405,7 @@ func keyHandler(ansBody string, selected []string) []string {
 }
 
 func populateQuestionsPage(q *interact.Question) {
+	timeTaken = 0
 	que.Text = q.Question
 	s.Text = fmt.Sprintf("Right answer => +%1.1f\n\nWrong answer => -%1.1f",
 		q.Positive, q.Negative)
@@ -426,6 +436,9 @@ func populateQuestionsPage(q *interact.Question) {
 		opt++
 	}
 	buf.WriteString("\ns) Skip question\n\n")
+	score.Text = fmt.Sprintf("%2.1f", q.Totscore)
+	lastScore.Text = fmt.Sprintf("%2.1f", q.Totscore-ts)
+	ts = q.Totscore
 	// We store this so that this can be rendered later based on different
 	// key press.
 	ansBody = buf.String()
