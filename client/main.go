@@ -503,6 +503,13 @@ func initializeDemo() {
 		log.Fatal(err)
 	}
 
+	stream, err := client.StreamChan(context.Background())
+	//waitC := make(chan struct{})
+
+	in, err := stream.Recv()
+
+	fmt.Println(in)
+
 	setupQuestionsPage()
 	renderQuestionsPage()
 	populateQuestionsPage(&q1)

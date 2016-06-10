@@ -52,6 +52,17 @@ func (s *server) Authenticate(ctx context.Context,
 	return &interact.Session{Id: "abc"}, nil
 }
 
+func (s *server) StreamChan(stream interact.GruQuiz_StreamChanServer) error {
+
+	stat := &interact.ServerStatus{
+		"10",
+	}
+	if err := stream.Send(stat); err != nil {
+		return err
+	}
+	return nil
+}
+
 func (s *server) GetQuestion(ctx context.Context,
 	req *interact.Req) (*interact.Question, error) {
 
