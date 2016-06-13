@@ -319,7 +319,7 @@ func renderQuestionsPage() {
 func renderSelectedAnswers(selected []string, m map[string]*interact.Answer) {
 	check := "Selected:\n\n"
 	for _, k := range selected {
-		check += m[string(k)].Ans + "\n"
+		check += m[string(k)].Str + "\n"
 	}
 	check += "\nPress ENTER to confirm. Press any other key to cancel."
 	a.Text = check
@@ -419,7 +419,7 @@ func populateQuestionsPage(q *interact.Question) {
 		buf.WriteRune(opt)
 		buf.WriteRune(')')
 		buf.WriteRune(' ')
-		buf.WriteString(o.Ans)
+		buf.WriteString(o.Str)
 		buf.WriteRune('\n')
 		m[string(opt)] = o
 		opt++

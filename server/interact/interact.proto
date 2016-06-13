@@ -45,7 +45,7 @@ message Question {
 
 message Answer {
 	string id = 1;
-	string ans = 2;
+	string str = 2;
 }
 
 message Response {

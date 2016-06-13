@@ -4,11 +4,10 @@ package main
 
 import (
 	"bufio"
-	"bytes"
 	"errors"
 	"flag"
 	"fmt"
-	"io"
+	"io/ioutil"
 	"log"
 	"math/rand"
 	"net"
@@ -26,16 +25,18 @@ import (
 )
 
 const (
-	DEMO = "demo"
-	TEST = "test"
-	END  = "END"
+	DEMO    = "demo"
+	TEST    = "test"
+	END     = "END"
+	CORRECT = 1
+	WRONG   = 2
 )
 
 var (
 	quizFile = flag.String("quiz", "test.yml", "Input question file")
 	port     = flag.String("port", ":8888", "Port on which server listens")
 	candFile = flag.String("cand", "testCand.txt", "Candidate inforamation file")
-	quizInfo map[interface{}][]Question
+	quizInfo map[string][]Question
 	cmap     map[string]Candidate
 	glog     = x.Log("Gru Server")
 	// List of question ids.
@@ -82,7 +83,7 @@ type Question struct {
 	Id       string
 	Str      string
 	Correct  []string
-	Opt      []map[string]string
+	Opt      []Option
 	Positive float32
 	Negative float32
 	Tag      string
@@ -98,15 +99,13 @@ func nextQuestion(c Candidate, testType string) (int, *interact.Question) {
 
 	idx := rand.Intn(len(list))
 	q := quizInfo[testType][idx]
-	var opts []*interact.Answer
 
-	for _, mp := range q.Opt {
-		it := &interact.Answer{
-			Id:  mp["uid"],
-			Ans: mp["str"],
-		}
-		opts = append(opts, it)
+	var opts []*interact.Answer
+	for _, o := range q.Opt {
+		a := &interact.Answer{Id: o.Uid, Str: o.Str}
+		opts = append(opts, a)
 	}
+
 	var isM bool
 	if len(q.Correct) > 1 {
 		isM = true
@@ -156,9 +155,9 @@ func isCorrectAnswer(resp *interact.Response) (int, int64, error) {
 	for i, que := range quizInfo[resp.TestType] {
 		if que.Id == resp.Qid {
 			if reflect.DeepEqual(resp.Aid, que.Correct) {
-				return i, 1, nil
+				return i, CORRECT, nil
 			} else {
-				return i, 2, nil
+				return i, WRONG, nil
 			}
 		}
 	}
@@ -285,16 +284,22 @@ func extractQids(testType string) []string {
 	return list
 }
 
+func extractQuizInfo(file string) map[string][]Question {
+	var info map[string][]Question
+	b, err := ioutil.ReadFile(file)
+	if err != nil {
+		glog.WithField("err", err).Fatal("Error while reading quiz info file")
+	}
+	err = yaml.Unmarshal(b, &info)
+	if err != nil {
+		glog.WithField("err", err).Fatal("Error while unmarshalling into yaml")
+	}
+	return info
+}
+
 func main() {
 	flag.Parse()
-	buf := bytes.NewBuffer(nil)
-	f, _ := os.Open(*quizFile)
-	io.Copy(buf, f)
-	data := buf.Bytes()
-	err := yaml.Unmarshal(data, &quizInfo)
-	if err != nil {
-		glog.Fatalf("error: %v", err)
-	}
+	quizInfo = extractQuizInfo(*quizFile)
 	qnList = extractQids(TEST)
 	demoQnList = extractQids(DEMO)
 	parseCandidateInfo(*candFile)
