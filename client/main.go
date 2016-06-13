@@ -106,6 +106,7 @@ var startTime time.Time
 var demoTaken = false
 var timeTaken int
 var ts float32
+var maxScore float32
 
 // Declaring connection as a global as can't reuse the client(its unexported)
 var conn *grpc.ClientConn
@@ -217,8 +218,8 @@ func resetHandlers() {
 
 func showFinalPage(q *interact.Question) {
 	instructions = termui.NewPar(
-		fmt.Sprintf("Thank you for taking the test. Your final score was %2.1f. We will get in touch with you soon.",
-			q.Totscore))
+		fmt.Sprintf("Thank you for taking the test. Your final score was %2.1f/%2.1f. We will get in touch with you soon.",
+			q.Totscore, maxScore))
 	instructions.BorderLabel = "Thank You"
 	instructions.Height = 10
 	instructions.Width = termui.TermWidth() / 2
@@ -241,6 +242,7 @@ func fetchAndDisplayQn() {
 		log.Fatalf("Could not get question.Got err: %v", err)
 	}
 
+	maxScore += q.Positive
 	if q.Id == "END" {
 		termui.Clear()
 		termui.Body.Rows = termui.Body.Rows[:0]
