@@ -97,8 +97,8 @@ func nextQuestion(c Candidate) (int, *interact.Question) {
 		Str:        q.Str,
 		Options:    opts,
 		IsMultiple: isM,
-		Positive:   q.Score,
-		Negative:   q.Score,
+		Positive:   q.Positive,
+		Negative:   q.Negative,
 		Totscore:   c.score,
 	}
 	return idx, que
@@ -155,9 +155,9 @@ func (s *server) SendAnswer(ctx context.Context,
 
 	if len(resp.Aid) > 0 && resp.Aid[0] != "skip" {
 		if status.Status == 1 {
-			c.score += quizInfo["test"][idx].Score
+			c.score += quizInfo["test"][idx].Positive
 		} else {
-			c.score -= quizInfo["test"][idx].Score
+			c.score -= quizInfo["test"][idx].Negative
 		}
 	} else {
 		if len(resp.Aid) > 1 {
@@ -209,12 +209,13 @@ type Option struct {
 }
 
 type Question struct {
-	Id      string
-	Str     string
-	Correct []string
-	Opt     []map[string]string
-	Score   float32
-	Tag     string
+	Id       string
+	Str      string
+	Correct  []string
+	Opt      []map[string]string
+	Positive float32
+	Negative float32
+	Tag      string
 }
 
 type Candidate struct {

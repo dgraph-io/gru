@@ -7,7 +7,8 @@ test:
     str: O(N * log(NK)), O(N^3)
   - uid: B1
     str: O(K * N^2 * log(N)), O(K * N^2)
-  score: 5
+  positive: 5
+  negative: 2.5
   tag: Easy
 
 - id: B
@@ -21,7 +22,8 @@ test:
     str: O(N * log("N*K")), O(N^3)
   - uid: B2
     str: O(K * N^2 * log(N)), O(K * N^2)
-  score: 5
+  positive: 5
+  negative: 2.5
   tag: Easy
 
 - id: outpu
@@ -47,5 +49,6 @@ test:
      str: Compile error
    - uid: D3
      str: Runtime error
-  score: 10
+  positive: 10
+  negative: 5
   tag: Easy
