@@ -44,8 +44,8 @@ var contact *termui.Par
 
 // These are the questions and answers used for the demo.
 var q1 = interact.Question{
-	Qid:      "1",
-	Question: `What is the capital of France?`,
+	Id:  "1",
+	Str: `What is the capital of France?`,
 	Options: []*interact.Answer{
 		{"1", "Berlin"},
 		{"2", "Paris"},
@@ -57,8 +57,8 @@ var q1 = interact.Question{
 }
 
 var q2 = interact.Question{
-	Qid:      "1",
-	Question: `Which among the following were originally developed at Google?`,
+	Id:  "1",
+	Str: `Which among the following were originally developed at Google?`,
 	Options: []*interact.Answer{
 		{"1", "Go programming language"},
 		{"2", "Ruby"},
@@ -71,8 +71,8 @@ var q2 = interact.Question{
 }
 
 var q3 = interact.Question{
-	Qid:      "1",
-	Question: `Which one is the largest ocean in the world?`,
+	Id:  "1",
+	Str: `Which one is the largest ocean in the world?`,
 	Options: []*interact.Answer{
 		{"1", "Indian"},
 		{"2", "Pacific"},
@@ -241,7 +241,7 @@ func fetchAndDisplayQn() {
 		log.Fatalf("Could not get question.Got err: %v", err)
 	}
 
-	if q.Qid == "END" {
+	if q.Id == "END" {
 		termui.Clear()
 		termui.Body.Rows = termui.Body.Rows[:0]
 		showFinalPage(q)
@@ -279,6 +279,12 @@ func renderInstructionsPage() {
 	}
 	termui.Body.Align()
 	termui.Render(termui.Body)
+
+	var err error
+	conn, err = grpc.Dial(address, grpc.WithInsecure())
+	if err != nil {
+		log.Fatalf("did not connect: %v", err)
+	}
 
 	termui.Handle("/sys/kbd/s", func(e termui.Event) {
 		// To clear the instructions box that was rendered.
@@ -402,7 +408,7 @@ func enterHandler(e termui.Event, q *interact.Question, selected []string,
 			answerIds = append(answerIds, m[s].Id)
 		}
 		resp := interact.Response{
-			Qid:   q.Qid,
+			Qid:   q.Id,
 			Aid:   answerIds,
 			Ssid:  "testssid",
 			Token: *token,
@@ -423,7 +429,7 @@ func keyHandler(ansBody string, selected []string) []string {
 
 func populateQuestionsPage(q *interact.Question) {
 	timeTaken = 0
-	que.Text = q.Question
+	que.Text = q.Str
 	s.Text = fmt.Sprintf("Right answer => +%1.1f\n\nWrong answer => -%1.1f",
 		q.Positive, q.Negative)
 
@@ -492,10 +498,6 @@ func populateQuestionsPage(q *interact.Question) {
 func initializeDemo() {
 	// Set up a connection to the server.
 	var err error
-	conn, err = grpc.Dial(address, grpc.WithInsecure())
-	if err != nil {
-		log.Fatalf("did not connect: %v", err)
-	}
 
 	client := interact.NewGruQuizClient(conn)
 	_, err = client.Authenticate(context.Background(), &interact.Token{Id: *token})
@@ -503,12 +505,9 @@ func initializeDemo() {
 		log.Fatal(err)
 	}
 
-	stream, err := client.StreamChan(context.Background())
-	//waitC := make(chan struct{})
+	// stream, err := client.StreamChan(context.Background())
 
-	in, err := stream.Recv()
-
-	fmt.Println(in)
+	// _, err = stream.Recv()
 
 	setupQuestionsPage()
 	renderQuestionsPage()

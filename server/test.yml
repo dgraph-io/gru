@@ -1,6 +1,6 @@
 test:
-- qid: A
-  question: Which of the following is true about HTTP?
+- id: A
+  str: Which of the following is true about HTTP?
   correct: [A1]
   opt:
   - uid: A1
@@ -10,8 +10,8 @@ test:
   score: 5
   tag: Easy
 
-- qid: B
-  question: |
+- id: B
+  str: |
    Which of
    the following is true
    about "HTTP"?
@@ -24,8 +24,8 @@ test:
   score: 5
   tag: Easy
 
-- qid: outpu
-  question: |
+- id: outpu
+  str: |
    What is the output of following program?
    #include <stdio.h>
    void fun(int x)
