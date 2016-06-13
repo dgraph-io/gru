@@ -1,3 +1,52 @@
+demo:
+- id: demo-1
+  str: What is the capital of France?
+  correct: [demo-1b]
+  opt:
+  - uid: demo-1a
+    str: Berlin
+  - uid: demo-1b
+    str: Paris
+  - uid: demo-1c
+    str: Rome
+  - uid: demo-1d
+    str: London
+  positive: 5
+  negative: 2.5
+  tag: Easy
+
+- id: demo-2
+  str: Which among the following were originally developed at Google?
+  correct: [demo-2a,demo-2c]
+  opt:
+  - uid: demo-2a
+    str: Go programming language
+  - uid: demo-2b
+    str: Ruby
+  - uid: demo-2c
+    str: Angular
+  - uid: demo-2d
+    str: Rust
+  positive: 10
+  negative: 5
+  tag: Easy
+
+- id: demo-3
+  str: Which one is the largest ocean in the world?
+  correct: [demo-3b]
+  opt:
+  - uid: demo-3a
+    str: Indian
+  - uid: demo-3b
+    str: Pacific
+  - uid: demo-3c
+    str: Atlantic
+  - uid: demo-3d
+    str: Arctic
+  positive: 5
+  negative: 2.5
+  tag: Easy
+
 test:
 - id: A
   str: Which of the following is true about HTTP?

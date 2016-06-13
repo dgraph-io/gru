@@ -42,51 +42,6 @@ var general *termui.Par
 var scoring *termui.Par
 var contact *termui.Par
 
-// These are the questions and answers used for the demo.
-var q1 = interact.Question{
-	Id:  "1",
-	Str: `What is the capital of France?`,
-	Options: []*interact.Answer{
-		{"1", "Berlin"},
-		{"2", "Paris"},
-		{"3", "Rome"},
-		{"4", "London"},
-	},
-	Positive: 5.0,
-	Negative: 2.5,
-}
-
-var q2 = interact.Question{
-	Id:  "1",
-	Str: `Which among the following were originally developed at Google?`,
-	Options: []*interact.Answer{
-		{"1", "Go programming language"},
-		{"2", "Ruby"},
-		{"3", "Angular"},
-		{"4", "Rust"},
-	},
-	IsMultiple: true,
-	Positive:   5.0,
-	Negative:   2.5,
-}
-
-var q3 = interact.Question{
-	Id:  "1",
-	Str: `Which one is the largest ocean in the world?`,
-	Options: []*interact.Answer{
-		{"1", "Indian"},
-		{"2", "Pacific"},
-		{"3", "Atlantic"},
-		{"4", "Arctic"},
-	},
-	Positive: 5.0,
-	Negative: 2.5,
-}
-
-// Question number for the demo.
-// TODO(pawan) - Remove this hack.
-var currentQn = 1
-
 type State int
 
 const (
@@ -104,8 +59,15 @@ var status State
 
 var startTime time.Time
 var demoTaken = false
+
+// timeTaken per question displayed on the top.
 var timeTaken int
 var ts float32
+
+// Last score
+var ls float32
+
+// max score that can be obtained by the user. Displayed on the final screen.
 var maxScore float32
 
 // Declaring connection as a global as can't reuse the client(its unexported)
@@ -232,25 +194,49 @@ func showFinalPage(q *interact.Question) {
 	resetHandlers()
 }
 
+func clear() {
+	termui.Clear()
+	termui.Body.Rows = termui.Body.Rows[:0]
+}
+
+func testType() string {
+	var testType string
+	if !demoTaken {
+		testType = "demo"
+	} else {
+		testType = "test"
+	}
+	return testType
+}
+
 func fetchAndDisplayQn() {
 	// TODO(pawan) - Have an authenticate method before GetQuestion() to get
 	// authenticate the token and get a session token.
 	client := interact.NewGruQuizClient(conn)
+
 	q, err := client.GetQuestion(context.Background(),
-		&interact.Req{Repeat: false, Ssid: "testssid", Token: *token})
+		&interact.Req{Repeat: false, Ssid: "testssid", Token: *token,
+			TestType: testType()})
 	if err != nil {
 		log.Fatalf("Could not get question.Got err: %v", err)
 	}
 
-	maxScore += q.Positive
 	if q.Id == "END" {
-		termui.Clear()
-		termui.Body.Rows = termui.Body.Rows[:0]
+		clear()
+		if !demoTaken {
+			ts = 0.0
+			ls = 0.0
+			demoTaken = true
+			renderInstructionsPage()
+			return
+		}
 		showFinalPage(q)
 		conn.Close()
 		return
 	}
-
+	if demoTaken {
+		maxScore += q.Positive
+	}
 	populateQuestionsPage(q)
 }
 
@@ -383,24 +369,6 @@ func enterHandler(e termui.Event, q *interact.Question, selected []string,
 	if q.IsMultiple && len(selected) > 0 && status == options {
 		renderSelectedAnswers(selected, m)
 	} else if status == confirmAnswer || status == confirmSkip {
-		if !demoTaken {
-			if currentQn == 0 {
-				populateQuestionsPage(&q1)
-			}
-			if currentQn == 1 {
-				populateQuestionsPage(&q2)
-			} else if currentQn == 2 {
-				populateQuestionsPage(&q3)
-			} else if currentQn == 3 {
-				termui.Clear()
-				termui.Body.Rows = termui.Body.Rows[:0]
-				demoTaken = true
-				renderInstructionsPage()
-				currentQn = -1
-			}
-			currentQn += 1
-			return
-		}
 		var answerIds []string
 		for _, s := range selected {
 			if s == "skip" {
@@ -409,12 +377,8 @@ func enterHandler(e termui.Event, q *interact.Question, selected []string,
 			}
 			answerIds = append(answerIds, m[s].Id)
 		}
-		resp := interact.Response{
-			Qid:   q.Id,
-			Aid:   answerIds,
-			Ssid:  "testssid",
-			Token: *token,
-		}
+		resp := interact.Response{Qid: q.Id, Aid: answerIds,
+			Ssid: "testssid", Token: *token, TestType: testType()}
 		client := interact.NewGruQuizClient(conn)
 		client.SendAnswer(context.Background(), &resp)
 		fetchAndDisplayQn()
@@ -462,7 +426,8 @@ func populateQuestionsPage(q *interact.Question) {
 	}
 	buf.WriteString("\ns) Skip question\n\n")
 	score.Text = fmt.Sprintf("%2.1f", q.Totscore)
-	lastScore.Text = fmt.Sprintf("%2.1f", q.Totscore-ts)
+	ls = q.Totscore - ts
+	lastScore.Text = fmt.Sprintf("%2.1f", ls)
 	ts = q.Totscore
 	// We store this so that this can be rendered later based on different
 	// key press.
@@ -513,7 +478,7 @@ func initializeDemo() {
 
 	setupQuestionsPage()
 	renderQuestionsPage()
-	populateQuestionsPage(&q1)
+	fetchAndDisplayQn()
 }
 
 func main() {

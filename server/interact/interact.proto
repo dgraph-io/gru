@@ -30,6 +30,7 @@ message Req {
 	bool repeat = 1;
 	string ssid = 2;
 	string token = 3;
+	string testType = 4;
 }
 
 message Question {
@@ -52,6 +53,7 @@ message Response {
 	repeated string aid = 2;
 	string ssid = 3;
 	string token = 4;
+	string testType = 5;
 }
 
 message Status {

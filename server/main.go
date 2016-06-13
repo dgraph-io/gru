@@ -25,6 +25,12 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+const (
+	DEMO = "demo"
+	TEST = "test"
+	END  = "END"
+)
+
 var (
 	quizFile = flag.String("quiz", "test.yml", "Input question file")
 	port     = flag.String("port", ":8888", "Port on which server listens")
@@ -33,7 +39,8 @@ var (
 	cmap     map[string]Candidate
 	glog     = x.Log("Gru Server")
 	// List of question ids.
-	qnList []string
+	qnList     []string
+	demoQnList []string
 )
 
 type server struct{}
@@ -54,6 +61,7 @@ func (s *server) Authenticate(ctx context.Context,
 		return nil, errors.New("Invalid token")
 	}
 	c.qnList = qnList[:]
+	c.demoQnList = demoQnList[:]
 	f, err := os.OpenFile(fmt.Sprintf("logs/cand-%s.log", t.Id),
 		os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
@@ -65,20 +73,31 @@ func (s *server) Authenticate(ctx context.Context,
 	return &interact.Session{Id: "abc"}, nil
 }
 
-func (s *server) StreamChan(stream interact.GruQuiz_StreamChanServer) error {
-
-	stat := &interact.ServerStatus{
-		"10",
-	}
-	if err := stream.Send(stat); err != nil {
-		return err
-	}
-	return nil
+type Option struct {
+	Uid string
+	Str string
 }
 
-func nextQuestion(c Candidate) (int, *interact.Question) {
-	idx := rand.Intn(len(c.qnList))
-	q := quizInfo["test"][idx]
+type Question struct {
+	Id       string
+	Str      string
+	Correct  []string
+	Opt      []map[string]string
+	Positive float32
+	Negative float32
+	Tag      string
+}
+
+func nextQuestion(c Candidate, testType string) (int, *interact.Question) {
+	var list []string
+	if testType == DEMO {
+		list = c.demoQnList
+	} else {
+		list = c.qnList
+	}
+
+	idx := rand.Intn(len(list))
+	q := quizInfo[testType][idx]
 	var opts []*interact.Answer
 
 	for _, mp := range q.Opt {
@@ -92,14 +111,9 @@ func nextQuestion(c Candidate) (int, *interact.Question) {
 	if len(q.Correct) > 1 {
 		isM = true
 	}
-	que := &interact.Question{
-		Id:         q.Id,
-		Str:        q.Str,
-		Options:    opts,
-		IsMultiple: isM,
-		Positive:   q.Positive,
-		Negative:   q.Negative,
-		Totscore:   c.score,
+	que := &interact.Question{Id: q.Id, Str: q.Str, Options: opts,
+		IsMultiple: isM, Positive: q.Positive, Negative: q.Negative,
+		Totscore: c.score,
 	}
 	return idx, que
 }
@@ -112,25 +126,43 @@ func (s *server) GetQuestion(ctx context.Context,
 		return nil, errors.New("Invalid token.")
 	}
 
+	testType := req.TestType
+	if testType == DEMO {
+		if len(c.demoQnList) == 0 {
+			// If demo qns are over, indicate end of demo to client.
+			q := &interact.Question{Id: END, Totscore: 0}
+			c.score = 0
+			cmap[req.Token] = c
+			return q, nil
+		}
+		idx, q := nextQuestion(c, testType)
+		c.demoQnList = append(c.demoQnList[:idx], c.demoQnList[idx+1:]...)
+		cmap[req.Token] = c
+		return q, nil
+	}
 	// TOOD(pawan) - Check if time is up
 	if len(c.qnList) == 0 {
-		que := &interact.Question{
-			Id:         "END",
-			Str:        "",
-			Options:    nil,
-			IsMultiple: false,
-			Positive:   0,
-			Negative:   0,
-			Totscore:   c.score,
-		}
+		q := &interact.Question{Id: END, Totscore: c.score}
 		c.logFile.Close()
-		return que, nil
+		return q, nil
 	}
-
-	idx, q := nextQuestion(c)
+	idx, q := nextQuestion(c, testType)
 	c.qnList = append(c.qnList[:idx], c.qnList[idx+1:]...)
 	cmap[req.Token] = c
 	return q, nil
+}
+
+func isCorrectAnswer(resp *interact.Response) (int, int64, error) {
+	for i, que := range quizInfo[resp.TestType] {
+		if que.Id == resp.Qid {
+			if reflect.DeepEqual(resp.Aid, que.Correct) {
+				return i, 1, nil
+			} else {
+				return i, 2, nil
+			}
+		}
+	}
+	return -1, -1, errors.New("No matching question")
 }
 
 func (s *server) SendAnswer(ctx context.Context,
@@ -145,19 +177,13 @@ func (s *server) SendAnswer(ctx context.Context,
 	var err error
 	var idx int
 
-	status.Status, err = isCorrectAnswer(resp.Qid, resp.Aid, resp.Token)
-
-	for i, que := range quizInfo["test"] {
-		if que.Id == resp.Qid {
-			idx = i
-		}
-	}
+	idx, status.Status, err = isCorrectAnswer(resp)
 
 	if len(resp.Aid) > 0 && resp.Aid[0] != "skip" {
 		if status.Status == 1 {
-			c.score += quizInfo["test"][idx].Positive
+			c.score += quizInfo[resp.TestType][idx].Positive
 		} else {
-			c.score -= quizInfo["test"][idx].Negative
+			c.score -= quizInfo[resp.TestType][idx].Negative
 		}
 	} else {
 		if len(resp.Aid) > 1 {
@@ -166,25 +192,24 @@ func (s *server) SendAnswer(ctx context.Context,
 	}
 
 	cmap[resp.Token] = c
-	log.SetOutput(c.logFile)
-	log.Println(resp.Qid, resp.Aid, status.Status, c.score)
+	// We log only if its a actual test question.
+	if resp.TestType == TEST {
+		log.SetOutput(c.logFile)
+		log.Println(resp.Qid, resp.Aid, status.Status, c.score)
+	}
 
 	return &status, err
 }
 
-func isCorrectAnswer(qid string, opts []string, token string) (int64, error) {
+func (s *server) StreamChan(stream interact.GruQuiz_StreamChanServer) error {
 
-	for _, que := range quizInfo["test"] {
-		if que.Id == qid {
-			if reflect.DeepEqual(opts, que.Correct) {
-				return 1, nil
-			} else {
-				return 2, nil
-			}
-		}
+	stat := &interact.ServerStatus{
+		"10",
 	}
-
-	return -1, errors.New("No matching question")
+	if err := stream.Send(stat); err != nil {
+		return err
+	}
+	return nil
 }
 
 func runGrpcServer(address string) {
@@ -203,29 +228,15 @@ func runGrpcServer(address string) {
 	return
 }
 
-type Option struct {
-	Uid string
-	Str string
-}
-
-type Question struct {
-	Id       string
-	Str      string
-	Correct  []string
-	Opt      []map[string]string
-	Positive float32
-	Negative float32
-	Tag      string
-}
-
 type Candidate struct {
 	name     string
 	email    string
 	validity time.Time
 	score    float32
-	// List of questions that have not been asked to the candidate yet
-	qnList  []string
-	logFile *os.File
+	// List of test questions that have not been asked to the candidate yet.
+	qnList     []string
+	demoQnList []string
+	logFile    *os.File
 }
 
 func parseCandidateInfo(file string) error {
@@ -266,6 +277,14 @@ func parseCandidateInfo(file string) error {
 	return nil
 }
 
+func extractQids(testType string) []string {
+	var list []string
+	for _, q := range quizInfo[testType] {
+		list = append(list, q.Id)
+	}
+	return list
+}
+
 func main() {
 	flag.Parse()
 	buf := bytes.NewBuffer(nil)
@@ -276,9 +295,8 @@ func main() {
 	if err != nil {
 		glog.Fatalf("error: %v", err)
 	}
-	for _, q := range quizInfo["test"] {
-		qnList = append(qnList, q.Id)
-	}
+	qnList = extractQids(TEST)
+	demoQnList = extractQids(DEMO)
 	parseCandidateInfo(*candFile)
 	runGrpcServer(*port)
 }
