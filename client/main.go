@@ -182,7 +182,7 @@ func resetHandlers() {
 
 func showFinalPage(q *interact.Question) {
 	instructions = termui.NewPar(
-		fmt.Sprintf("Thank you for taking the test. Your final score was %2.1f/%2.1f. We will get in touch with you soon.",
+		fmt.Sprintf("Thank you for taking the test. Your final score was %3.1f/%3.1f. We will get in touch with you soon.",
 			q.Totscore, maxScore))
 	instructions.BorderLabel = "Thank You"
 	instructions.Height = 10
@@ -424,7 +424,7 @@ func populateQuestionsPage(q *interact.Question) {
 		opt++
 	}
 	buf.WriteString("\ns) Skip question\n\n")
-	score.Text = fmt.Sprintf("%2.1f", q.Totscore)
+	score.Text = fmt.Sprintf("%3.1f", q.Totscore)
 	ls = q.Totscore - ts
 	lastScore.Text = fmt.Sprintf("%2.1f", ls)
 	ts = q.Totscore

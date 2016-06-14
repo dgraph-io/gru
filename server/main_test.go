@@ -1,8 +1,9 @@
 package main
 
 import (
-	"fmt"
+	"io/ioutil"
 	"os"
+	"reflect"
 	"testing"
 	"time"
 
@@ -87,35 +88,29 @@ func TestCheckToken(t *testing.T) {
 		testStart: time.Now().Add(-2 * time.Hour)}
 	cmap = make(map[string]Candidate)
 	cmap["test_token"] = c
-	cand, valid := checkToken("test_token")
+	valid, err := checkToken(c)
 
-	if cand.email != "pawan@dgraph.io" {
-		t.Errorf("Expected candidate email to be %s.Got: %s", "pawan@draph.io",
-			cand.email)
-	}
 	if valid != false {
-		t.Errorf("Expcted valid to be %t. Got: %t", false, valid)
+		t.Errorf("Expected valid to be %t. Got: %t", false, valid)
+	}
+	if err == nil {
+		t.Errorf("Expected non-nil error. Got: nil")
 	}
 
 	c.testStart = time.Now().Add(-1 * time.Minute)
 	c.validity = time.Now().AddDate(0, 0, -1)
 	cmap["test_token"] = c
-	cand, valid = checkToken("test_token")
-	if cand.email != "pawan@dgraph.io" {
-		t.Errorf("Expected candidate email to be %s.Got: %s", "pawan@draph.io",
-			cand.email)
-	}
+	valid, err = checkToken(c)
 	if valid != false {
-		t.Errorf("Expcted valid to be %t. Got: %t", false, valid)
+		t.Errorf("Expected valid to be %t. Got: %t", false, valid)
+	}
+	if err == nil {
+		t.Errorf("Expected non-nil error. Got: nil")
 	}
 
 	c.validity = time.Now().AddDate(0, 0, 7)
 	cmap["test_token"] = c
-	cand, valid = checkToken("test_token")
-	if cand.email != "pawan@dgraph.io" {
-		t.Errorf("Expected candidate email to be %s.Got: %s", "pawan@draph.io",
-			cand.email)
-	}
+	valid, err = checkToken(c)
 	if valid != true {
 		t.Errorf("Expcted valid to be %t. Got: %t", true, valid)
 	}
@@ -153,10 +148,80 @@ func TestAuthenticate(t *testing.T) {
 	if s.Id == "" {
 		t.Errorf("Expected non-empty sessionId. Got: %s", s.Id)
 	}
+}
 
-	// TODO(pawan) - Check auth token and sessionId is written to file.
-	err = os.Remove(fmt.Sprintf("logs/%s.log", tokenId))
+func TestLoadCandInfo(t *testing.T) {
+	tokenId := "test_token"
+	c := Candidate{email: "pawan@dgraph.io", validity: time.Now().AddDate(0, 0, 7)}
+	cmap = make(map[string]Candidate)
+
+	err := c.loadCandInfo(tokenId)
 	if err != nil {
 		t.Error(err)
+	}
+	c = cmap[tokenId]
+
+	if c.score != 30.0 {
+		t.Errorf("Expected score %f. Got: %f", 30.0, c.score)
+	}
+	if !reflect.DeepEqual(c.qnList, []string{"A", "B", "C"}) {
+		t.Error("Expected qn list doesn't match")
+	}
+}
+
+func TestSendAnswer(t *testing.T) {
+	quizInfo = extractQuizInfo("demo_test.yaml")
+	r := interact.Response{Qid: "demo-2", Aid: []string{"demo-2a", "demo-2c"},
+		TestType: DEMO, Token: "test_token"}
+	c := Candidate{email: "pawan@dgraph.io", validity: time.Now().AddDate(0, 0, 7),
+		testStart: time.Now().Add(-2 * time.Minute)}
+	f, err := ioutil.TempFile("", "test_token")
+	if err != nil {
+		t.Error(err)
+	}
+	defer os.Remove(f.Name())
+
+	c.logFile = f
+	cmap = make(map[string]Candidate)
+	cmap["test_token"] = c
+
+	s, err := sendAnswer(&r)
+	if err != nil {
+		t.Error("Expected error to be nil.")
+	}
+	if s.Status != 1 {
+		t.Errorf("Expected status to be 1. Got: %d", s.Status)
+	}
+	if cmap["test_token"].score <= 0.0 {
+		t.Errorf("Expected positive score. Got: -%f", cmap["test_token"].score)
+	}
+	c.score = 0.0
+	cmap["test_token"] = c
+
+	r.Aid = []string{"demo-2b"}
+	s, err = sendAnswer(&r)
+	if err != nil {
+		t.Error("Expected error to be nil.")
+	}
+	if s.Status != 2 {
+		t.Errorf("Expected status to be 2. Got: %d", s.Status)
+	}
+	if cmap["test_token"].score > 0.0 {
+		t.Errorf("Expected negative score. Got: %f", cmap["test_token"].score)
+	}
+
+	c.score = 0.0
+	cmap["test_token"] = c
+	r.Aid = []string{"skip"}
+	s, err = sendAnswer(&r)
+	if err != nil {
+		t.Error("Expected error to be nil.")
+	}
+	// TODO(pawan) - Have another status code for skip
+	if s.Status != 2 {
+		t.Errorf("Expected status to be 0. Got: %d", s.Status)
+	}
+	if cmap["test_token"].score != 0.0 {
+		t.Errorf("Expected 0.0 score. Got: %f", cmap["test_token"].score)
 	}
 }

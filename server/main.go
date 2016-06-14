@@ -11,6 +11,7 @@ import (
 	"net"
 	"os"
 	"reflect"
+	"strconv"
 	"strings"
 	"time"
 
@@ -45,19 +46,19 @@ var (
 
 type server struct{}
 
-func checkToken(token string) (Candidate, bool) {
-	var c Candidate
-	var ok bool
+func checkToken(c Candidate) (bool, error) {
 
-	if c, ok = cmap[token]; ok && time.Now().Before(c.validity) {
-		// Initially testStart is zero, but after candidate has taken the
-		// test once, it shouldn't be zero.
-		if !c.testStart.IsZero() && time.Now().After(c.testStart.Add(DURATION)) {
-			return c, false
-		}
-		return c, true
+	if time.Now().UTC().After(c.validity) {
+		return false, errors.New("Your token has expired.")
 	}
-	return c, false
+	// Initially testStart is zero, but after candidate has taken the
+	// test once, it shouldn't be zero.
+	if !c.testStart.IsZero() && time.Now().UTC().After(c.testStart.Add(DURATION)) {
+		return false,
+			errors.New(fmt.Sprintf("%v since you started the test for the first time are already over.",
+				DURATION))
+	}
+	return true, nil
 }
 
 const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -70,26 +71,84 @@ func RandStringBytes(n int) string {
 	return string(b)
 }
 
+func (c Candidate) loadCandInfo(token string) error {
+	f, err := os.Open(fmt.Sprintf("logs/%s.log", token))
+	if err != nil {
+		return err
+	}
+
+	var score float32
+	testQids := []string{}
+	format := "2006/01/02 15:04:05 MST"
+	scanner := bufio.NewScanner(f)
+	for scanner.Scan() {
+		line := strings.TrimSpace(scanner.Text())
+		splits := strings.Split(line, " ")
+		if splits[3] == "session_token" {
+			continue
+		}
+
+		switch splits[3] {
+		case "test_start":
+			c.testStart, err = time.Parse(format, fmt.Sprintf("%s %s %s",
+				splits[0], splits[1], splits[2]))
+			if err != nil {
+				return err
+			}
+		case "response":
+			s, err := strconv.ParseFloat(splits[6], 32)
+			if err != nil {
+				return err
+			}
+			score += float32(s)
+			if len(testQids) > 0 && splits[4] == testQids[len(testQids)-1] {
+				continue
+			}
+			testQids = append(testQids, splits[4])
+		case "ping":
+			if len(testQids) > 0 && splits[4] == testQids[len(testQids)-1] {
+				continue
+			}
+			testQids = append(testQids, splits[4])
+		}
+	}
+	c.score = score
+	c.logFile = f
+	c.demoQnList = demoQnList
+	c.qnList = testQids
+	cmap[token] = c
+	return nil
+}
+
 func authenticate(t *interact.Token) (*interact.Session, error) {
 	var c Candidate
-	var valid bool
+	var ok bool
 
-	if c, valid = checkToken(t.Id); !valid {
-		return nil, errors.New("Invalid token")
+	// This indicates there is no entry in the candidate file with this token.
+	if c, ok = cmap[t.Id]; !ok {
+		return nil, errors.New("Invalid token.")
+	}
+
+	if _, err := os.Stat(fmt.Sprintf("logs/%s.log", t.Id)); err == nil {
+		c.loadCandInfo(t.Id)
+	} else {
+		f, err := os.OpenFile(fmt.Sprintf("logs/%s.log", t.Id),
+			os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+		if err != nil {
+			log.Fatalf("error opening file: %v", err)
+		}
+		c.logFile = f
+		c.qnList = qnList[:]
+		c.demoQnList = demoQnList[:]
+	}
+
+	if ok, err := checkToken(c); !ok {
+		return nil, err
 	}
 
 	session := interact.Session{Id: RandStringBytes(36)}
-	c.qnList = qnList[:]
-	c.demoQnList = demoQnList[:]
-	f, err := os.OpenFile(fmt.Sprintf("logs/%s.log", t.Id),
-		os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
-	if err != nil {
-		log.Fatalf("error opening file: %v", err)
-	}
-	c.logFile = f
-	log.SetOutput(c.logFile)
-	log.Println("auth_token", t.Id)
-	log.Println("session_token", session.Id)
+	c.logFile.WriteString(fmt.Sprintf("%v session_token %s\n", UTCTime(),
+		session.Id))
 	cmap[t.Id] = c
 	return &session, nil
 }
@@ -171,8 +230,7 @@ func getQuestion(req *interact.Req) (*interact.Question, error) {
 	}
 	// This means its the first test question.
 	if len(c.qnList) == len(qnList) {
-		log.SetOutput(c.logFile)
-		log.Println("test_start")
+		c.logFile.WriteString(fmt.Sprintf("%v test_start\n", UTCTime()))
 		c.testStart = time.Now()
 	}
 	idx, q := nextQuestion(c, testType)
@@ -199,8 +257,11 @@ func isCorrectAnswer(resp *interact.Response) (int, int64, error) {
 	return -1, -1, errors.New("No matching question")
 }
 
-func (s *server) SendAnswer(ctx context.Context,
-	resp *interact.Response) (*interact.Status, error) {
+func UTCTime() string {
+	return time.Now().UTC().Format("2006/01/02 15:04:05 MST")
+}
+
+func sendAnswer(resp *interact.Response) (*interact.Status, error) {
 	var c Candidate
 	var ok bool
 	if c, ok = cmap[resp.Token]; !ok {
@@ -228,11 +289,15 @@ func (s *server) SendAnswer(ctx context.Context,
 	cmap[resp.Token] = c
 	// We log only if its a actual test question.
 	if resp.TestType == TEST {
-		log.SetOutput(c.logFile)
-		log.Println("response", resp.Qid, resp.Aid, c.score)
+		c.logFile.WriteString(fmt.Sprintf("%s response %s %s %.1f\n", UTCTime(),
+			resp.Qid, strings.Join(resp.Aid, ","), c.score))
 	}
-
 	return &status, err
+}
+
+func (s *server) SendAnswer(ctx context.Context,
+	resp *interact.Response) (*interact.Status, error) {
+	return sendAnswer(resp)
 }
 
 func (s *server) StreamChan(stream interact.GruQuiz_StreamChanServer) error {
@@ -272,6 +337,8 @@ type Candidate struct {
 	demoQnList []string
 	logFile    *os.File
 	testStart  time.Time
+	// session id of currently active session.
+	sid string
 }
 
 func parseCandidateInfo(file string) error {
