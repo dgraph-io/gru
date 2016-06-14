@@ -1,5 +1,3 @@
-// sample run : ./server --cand testCand.csv --quiz testYML
-
 package main
 
 import (
@@ -35,7 +33,7 @@ const (
 var (
 	quizFile = flag.String("quiz", "test.yml", "Input question file")
 	port     = flag.String("port", ":8888", "Port on which server listens")
-	candFile = flag.String("cand", "testCand.txt", "Candidate inforamation file")
+	candFile = flag.String("cand", "candidates.txt", "Candidate inforamation file")
 	quizInfo map[string][]Question
 	cmap     map[string]Candidate
 	glog     = x.Log("Gru Server")
@@ -117,8 +115,7 @@ func nextQuestion(c Candidate, testType string) (int, *interact.Question) {
 	return idx, que
 }
 
-func (s *server) GetQuestion(ctx context.Context,
-	req *interact.Req) (*interact.Question, error) {
+func getQuestion(req *interact.Req) (*interact.Question, error) {
 	var c Candidate
 	var ok bool
 	if c, ok = cmap[req.Token]; !ok {
@@ -149,6 +146,11 @@ func (s *server) GetQuestion(ctx context.Context,
 	c.qnList = append(c.qnList[:idx], c.qnList[idx+1:]...)
 	cmap[req.Token] = c
 	return q, nil
+}
+
+func (s *server) GetQuestion(ctx context.Context,
+	req *interact.Req) (*interact.Question, error) {
+	return getQuestion(req)
 }
 
 func isCorrectAnswer(resp *interact.Response) (int, int64, error) {

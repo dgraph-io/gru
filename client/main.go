@@ -275,14 +275,11 @@ func renderInstructionsPage() {
 	}
 
 	termui.Handle("/sys/kbd/s", func(e termui.Event) {
-		// To clear the instructions box that was rendered.
-		termui.Clear()
-		// To clear elements of the body.
-		termui.Body.Rows = termui.Body.Rows[:0]
 		if !demoTaken {
 			initializeDemo()
 			return
 		}
+		clear()
 		initializeTest()
 
 	})
@@ -469,9 +466,12 @@ func initializeDemo() {
 	client := interact.NewGruQuizClient(conn)
 	_, err = client.Authenticate(context.Background(), &interact.Token{Id: *token})
 	if err != nil {
-		log.Fatal(err)
+		demo.Text = err.Error() + ". Press Ctrl+Q to exit and try again."
+		demo.TextFgColor = termui.ColorRed
+		termui.Render(termui.Body)
+		return
 	}
-
+	clear()
 	// stream, err := client.StreamChan(context.Background())
 
 	// _, err = stream.Recv()
