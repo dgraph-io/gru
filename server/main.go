@@ -5,6 +5,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"math/rand"
@@ -12,6 +13,7 @@ import (
 	"os"
 	"reflect"
 	"strings"
+	"sync"
 	"time"
 
 	"google.golang.org/grpc"
@@ -34,7 +36,7 @@ const (
 var (
 	quizFile = flag.String("quiz", "test.yml", "Input question file")
 	port     = flag.String("port", ":8888", "Port on which server listens")
-	candFile = flag.String("cand", "candidates.txt", "Candidate inforamation file")
+	candFile = flag.String("cand", "candidates.txt", "Candidate inforamation")
 	quizInfo map[string][]Question
 	cmap     map[string]Candidate
 	glog     = x.Log("Gru Server")
@@ -237,15 +239,69 @@ func (s *server) SendAnswer(ctx context.Context,
 
 func (s *server) StreamChan(stream interact.GruQuiz_StreamChanServer) error {
 
-	stat := &interact.ServerStatus{
-		"10",
+	var stat interact.ServerStatus
+	var wg sync.WaitGroup
+
+	msg, err := stream.Recv()
+	if err != nil {
+		glog.Error(err)
 	}
-	if err := stream.Send(stat); err != nil {
-		return err
-	}
+	token := msg.Token
+
+	wg.Add(1)
+	go func() {
+		for {
+			stat.TimeLeft = time.Now().Sub(cmap[token].testStart).String()
+			if err := stream.Send(&stat); err != nil {
+				glog.Error(err)
+			}
+			time.Sleep(5 * time.Second)
+		}
+		wg.Done()
+	}()
+
+	wg.Add(1)
+	go func() {
+		for {
+			msg, err := stream.Recv()
+			if err != nil {
+				if err != io.EOF {
+					glog.Error(err)
+				} else {
+					break
+				}
+			}
+			log.SetOutput(cmap[token].logFile)
+			log.Println("ping", msg.CurrQuestion)
+		}
+		wg.Done()
+	}()
+
+	wg.Wait()
 	return nil
 }
 
+/*
+func (s *server) StreamChanClient(stream interact.GruQuiz_StreamChanClientClient) error {
+
+
+		go func() {
+			for {
+				msg, err := stream.Recv()
+				if err != nil {
+					if err != io.EOF {
+						glog.Error(err)
+					} else {
+						break
+					}
+				}
+				log.Println("ping", msg.CurrQuestion)
+			}
+		}()
+
+	return nil
+}
+*/
 func runGrpcServer(address string) {
 	ln, err := net.Listen("tcp", address)
 	if err != nil {

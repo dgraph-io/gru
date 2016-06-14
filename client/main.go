@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"flag"
 	"fmt"
+	"io"
 	"log"
 	"sort"
 	"strings"
@@ -18,6 +19,7 @@ import (
 )
 
 var token = flag.String("token", "testtoken", "Authentication token")
+var curQuestion *interact.Question
 
 const (
 	// Test duration in minutes
@@ -233,9 +235,11 @@ func fetchAndDisplayQn() {
 			return
 		}
 		showFinalPage(q)
-		conn.Close()
+		//conn.Close()
 		return
 	}
+	curQuestion = q
+
 	if demoTaken {
 		maxScore += q.Positive
 	}
@@ -246,6 +250,49 @@ func initializeTest() {
 	setupQuestionsPage()
 	renderQuestionsPage()
 	fetchAndDisplayQn()
+
+	client := interact.NewGruQuizClient(conn)
+	stream, err := client.StreamChan(context.Background())
+	if err != nil {
+		log.Fatalf("Error while creating stream: %v", err)
+	}
+
+	cliStat := &interact.ClientStatus{
+		"First",
+		*token,
+	}
+	if err := stream.Send(cliStat); err != nil {
+		log.Panic(err)
+	}
+
+	go func() {
+		for {
+			msg, err := stream.Recv()
+			if err != nil {
+				if err != io.EOF {
+					log.Fatal(err)
+				} else {
+					break
+				}
+			}
+			timeSpent.Text = msg.TimeLeft
+			termui.Render(termui.Body)
+		}
+	}()
+
+	go func() {
+		for {
+			cliStat := &interact.ClientStatus{
+				curQuestion.Id,
+				*token,
+			}
+			if err := stream.Send(cliStat); err != nil {
+				log.Panic(err)
+			}
+			time.Sleep(5 * time.Second)
+		}
+	}()
+
 }
 
 func renderInstructionsPage() {
