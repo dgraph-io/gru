@@ -317,12 +317,22 @@ func (s *server) StreamChan(stream interact.GruQuiz_StreamChanServer) error {
 	go func() {
 		for {
 			stat.TimeLeft = time.Now().Sub(cmap[token].testStart).String()
+			if time.Now().Sub(cmap[token].testStart) > time.Duration(10*time.Second) {
+				fmt.Println("End test based on time")
+				stat.Status = "END"
+			} else {
+				stat.Status = "ONGOING"
+			}
+
 			if err := stream.Send(&stat); err != nil {
 				glog.Error(err)
 			}
+
+			if stat.Status == "END" {
+				wg.Done()
+			}
 			time.Sleep(5 * time.Second)
 		}
-		wg.Done()
 	}()
 
 	wg.Add(1)

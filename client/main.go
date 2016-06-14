@@ -275,6 +275,10 @@ func initializeTest() {
 					break
 				}
 			}
+			if msg.Status == "END" {
+				clear()
+				showFinalPage(curQuestion)
+			}
 			timeSpent.Text = msg.TimeLeft
 			termui.Render(termui.Body)
 		}

@@ -13,6 +13,7 @@ service GruQuiz {
 
 message ServerStatus {
 	string timeLeft = 1;
+	string status = 2;
 }
 
 message ClientStatus {
