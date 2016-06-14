@@ -1,7 +1,10 @@
 package main
 
 import (
+	"fmt"
+	"os"
 	"testing"
+	"time"
 
 	"github.com/dgraph-io/gru/server/interact"
 )
@@ -76,5 +79,84 @@ func TestGetQuestion(t *testing.T) {
 	}
 	if q.Id != END {
 		t.Errorf("Expected q.Id to be %s. Got: %s", END, q.Id)
+	}
+}
+
+func TestCheckToken(t *testing.T) {
+	c := Candidate{email: "pawan@dgraph.io", validity: time.Now().AddDate(0, 0, 7),
+		testStart: time.Now().Add(-2 * time.Hour)}
+	cmap = make(map[string]Candidate)
+	cmap["test_token"] = c
+	cand, valid := checkToken("test_token")
+
+	if cand.email != "pawan@dgraph.io" {
+		t.Errorf("Expected candidate email to be %s.Got: %s", "pawan@draph.io",
+			cand.email)
+	}
+	if valid != false {
+		t.Errorf("Expcted valid to be %t. Got: %t", false, valid)
+	}
+
+	c.testStart = time.Now().Add(-1 * time.Minute)
+	c.validity = time.Now().AddDate(0, 0, -1)
+	cmap["test_token"] = c
+	cand, valid = checkToken("test_token")
+	if cand.email != "pawan@dgraph.io" {
+		t.Errorf("Expected candidate email to be %s.Got: %s", "pawan@draph.io",
+			cand.email)
+	}
+	if valid != false {
+		t.Errorf("Expcted valid to be %t. Got: %t", false, valid)
+	}
+
+	c.validity = time.Now().AddDate(0, 0, 7)
+	cmap["test_token"] = c
+	cand, valid = checkToken("test_token")
+	if cand.email != "pawan@dgraph.io" {
+		t.Errorf("Expected candidate email to be %s.Got: %s", "pawan@draph.io",
+			cand.email)
+	}
+	if valid != true {
+		t.Errorf("Expcted valid to be %t. Got: %t", true, valid)
+	}
+}
+
+func TestAuthenticate(t *testing.T) {
+	tokenId := "test_token"
+
+	quizInfo = extractQuizInfo("demo_test.yaml")
+	c := Candidate{email: "pawan@dgraph.io", validity: time.Now().AddDate(0, 0, 7),
+		demoQnList: extractQids(DEMO)[:]}
+	cmap = make(map[string]Candidate)
+	cmap[tokenId] = c
+	token := interact.Token{Id: tokenId}
+	s, err := authenticate(&token)
+	if err != nil {
+		t.Errorf("Expected nil error. Got: %s", err.Error())
+	}
+	if s.Id == "" {
+		t.Errorf("Expected non-empty sessionId. Got: %s", s.Id)
+	}
+
+	c.testStart = time.Now().Add(-2 * time.Hour)
+	cmap = make(map[string]Candidate)
+	cmap[tokenId] = c
+	token = interact.Token{Id: tokenId}
+	_, err = authenticate(&token)
+	if err == nil {
+		t.Errorf("Expected non-nil error. Got: %s", err.Error())
+	}
+
+	c.testStart = time.Now().Add(-1 * time.Minute)
+	cmap[tokenId] = c
+	s, err = authenticate(&token)
+	if s.Id == "" {
+		t.Errorf("Expected non-empty sessionId. Got: %s", s.Id)
+	}
+
+	// TODO(pawan) - Check auth token and sessionId is written to file.
+	err = os.Remove(fmt.Sprintf("logs/%s.log", tokenId))
+	if err != nil {
+		t.Error(err)
 	}
 }

@@ -73,6 +73,8 @@ var maxScore float32
 // Declaring connection as a global as can't reuse the client(its unexported)
 var conn *grpc.ClientConn
 
+var sessionId string
+
 func setupInstructionsPage(th, tw int) {
 	instructions = termui.NewPar("")
 	instructions.BorderLabel = "Instructions"
@@ -215,7 +217,7 @@ func fetchAndDisplayQn() {
 	client := interact.NewGruQuizClient(conn)
 
 	q, err := client.GetQuestion(context.Background(),
-		&interact.Req{Repeat: false, Ssid: "testssid", Token: *token,
+		&interact.Req{Repeat: false, Sid: sessionId, Token: *token,
 			TestType: testType()})
 	if err != nil {
 		log.Fatalf("Could not get question.Got err: %v", err)
@@ -375,7 +377,7 @@ func enterHandler(e termui.Event, q *interact.Question, selected []string,
 			answerIds = append(answerIds, m[s].Id)
 		}
 		resp := interact.Response{Qid: q.Id, Aid: answerIds,
-			Ssid: "testssid", Token: *token, TestType: testType()}
+			Sid: sessionId, Token: *token, TestType: testType()}
 		client := interact.NewGruQuizClient(conn)
 		client.SendAnswer(context.Background(), &resp)
 		fetchAndDisplayQn()
@@ -464,13 +466,14 @@ func initializeDemo() {
 	var err error
 
 	client := interact.NewGruQuizClient(conn)
-	_, err = client.Authenticate(context.Background(), &interact.Token{Id: *token})
+	session, err := client.Authenticate(context.Background(), &interact.Token{Id: *token})
 	if err != nil {
 		demo.Text = err.Error() + ". Press Ctrl+Q to exit and try again."
 		demo.TextFgColor = termui.ColorRed
 		termui.Render(termui.Body)
 		return
 	}
+	sessionId = session.Id
 	clear()
 	// stream, err := client.StreamChan(context.Background())
 

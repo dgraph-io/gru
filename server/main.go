@@ -23,11 +23,12 @@ import (
 )
 
 const (
-	DEMO    = "demo"
-	TEST    = "test"
-	END     = "END"
-	CORRECT = 1
-	WRONG   = 2
+	DEMO     = "demo"
+	TEST     = "test"
+	END      = "END"
+	CORRECT  = 1
+	WRONG    = 2
+	DURATION = 60 * time.Minute
 )
 
 var (
@@ -45,31 +46,57 @@ var (
 type server struct{}
 
 func checkToken(token string) (Candidate, bool) {
-	if c, ok := cmap[token]; ok && time.Now().Before(c.validity) {
+	var c Candidate
+	var ok bool
+
+	if c, ok = cmap[token]; ok && time.Now().Before(c.validity) {
+		// Initially testStart is zero, but after candidate has taken the
+		// test once, it shouldn't be zero.
+		if !c.testStart.IsZero() && time.Now().After(c.testStart.Add(DURATION)) {
+			return c, false
+		}
 		return c, true
 	}
-	return Candidate{}, false
+	return c, false
 }
 
-func (s *server) Authenticate(ctx context.Context,
-	t *interact.Token) (*interact.Session, error) {
+const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+
+func RandStringBytes(n int) string {
+	b := make([]byte, n)
+	for i := range b {
+		b[i] = letterBytes[rand.Intn(len(letterBytes))]
+	}
+	return string(b)
+}
+
+func authenticate(t *interact.Token) (*interact.Session, error) {
 	var c Candidate
 	var valid bool
 
 	if c, valid = checkToken(t.Id); !valid {
 		return nil, errors.New("Invalid token")
 	}
+
+	session := interact.Session{Id: RandStringBytes(36)}
 	c.qnList = qnList[:]
 	c.demoQnList = demoQnList[:]
-	f, err := os.OpenFile(fmt.Sprintf("logs/cand-%s.log", t.Id),
+	f, err := os.OpenFile(fmt.Sprintf("logs/%s.log", t.Id),
 		os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
 		log.Fatalf("error opening file: %v", err)
 	}
 	c.logFile = f
+	log.SetOutput(c.logFile)
+	log.Println("auth_token", t.Id)
+	log.Println("session_token", session.Id)
 	cmap[t.Id] = c
-	// TODO(pawan) - Generate session id and send that.
-	return &interact.Session{Id: "abc"}, nil
+	return &session, nil
+}
+
+func (s *server) Authenticate(ctx context.Context,
+	t *interact.Token) (*interact.Session, error) {
+	return authenticate(t)
 }
 
 type Option struct {
@@ -142,6 +169,12 @@ func getQuestion(req *interact.Req) (*interact.Question, error) {
 		c.logFile.Close()
 		return q, nil
 	}
+	// This means its the first test question.
+	if len(c.qnList) == len(qnList) {
+		log.SetOutput(c.logFile)
+		log.Println("test_start")
+		c.testStart = time.Now()
+	}
 	idx, q := nextQuestion(c, testType)
 	c.qnList = append(c.qnList[:idx], c.qnList[idx+1:]...)
 	cmap[req.Token] = c
@@ -196,7 +229,7 @@ func (s *server) SendAnswer(ctx context.Context,
 	// We log only if its a actual test question.
 	if resp.TestType == TEST {
 		log.SetOutput(c.logFile)
-		log.Println(resp.Qid, resp.Aid, status.Status, c.score)
+		log.Println("response", resp.Qid, resp.Aid, c.score)
 	}
 
 	return &status, err
@@ -238,6 +271,7 @@ type Candidate struct {
 	qnList     []string
 	demoQnList []string
 	logFile    *os.File
+	testStart  time.Time
 }
 
 func parseCandidateInfo(file string) error {
@@ -305,5 +339,6 @@ func main() {
 	qnList = extractQids(TEST)
 	demoQnList = extractQids(DEMO)
 	parseCandidateInfo(*candFile)
+	// TODO(pawan) - Read testStart timings for candidates.
 	runGrpcServer(*port)
 }

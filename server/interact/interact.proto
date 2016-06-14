@@ -28,7 +28,7 @@ message Session {
 
 message Req {
 	bool repeat = 1;
-	string ssid = 2;
+	string sid = 2;
 	string token = 3;
 	string testType = 4;
 }
@@ -51,7 +51,7 @@ message Answer {
 message Response {
 	string qid = 1;
 	repeated string aid = 2;
-	string ssid = 3;
+	string sid = 3;
 	string token = 4;
 	string testType = 5;
 }
