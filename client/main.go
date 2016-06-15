@@ -225,6 +225,7 @@ func fetchAndDisplayQn() {
 		log.Fatalf("Could not get question.Got err: %v", err)
 	}
 
+	// TODO(pawan) - If he has already taken the demo,don't show the screen again.
 	if q.Id == "END" {
 		clear()
 		if !demoTaken {
@@ -296,7 +297,6 @@ func initializeTest() {
 			time.Sleep(5 * time.Second)
 		}
 	}()
-
 }
 
 func renderInstructionsPage() {

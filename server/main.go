@@ -48,19 +48,17 @@ var (
 
 type server struct{}
 
-func checkToken(c Candidate) (bool, error) {
-
+func checkToken(c Candidate) error {
 	if time.Now().UTC().After(c.validity) {
-		return false, errors.New("Your token has expired.")
+		return errors.New("Your token has expired.")
 	}
 	// Initially testStart is zero, but after candidate has taken the
 	// test once, it shouldn't be zero.
 	if !c.testStart.IsZero() && time.Now().UTC().After(c.testStart.Add(DURATION)) {
-		return false,
-			errors.New(fmt.Sprintf("%v since you started the test for the first time are already over.",
-				DURATION))
+		return errors.New(fmt.Sprintf("%v since you started the test for the first time are already over.",
+			DURATION))
 	}
-	return true, nil
+	return nil
 }
 
 const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -73,6 +71,20 @@ func RandStringBytes(n int) string {
 	return string(b)
 }
 
+func sliceDiff(qnList, qnsAsked []string) []string {
+	qns := []string{}
+	qmap := make(map[string]bool)
+	for _, q := range qnsAsked {
+		qmap[q] = true
+	}
+	for _, q := range qnList {
+		if present := qmap[q]; !present {
+			qns = append(qns, q)
+		}
+	}
+	return qns
+}
+
 func (c Candidate) loadCandInfo(token string) error {
 	f, err := os.Open(fmt.Sprintf("logs/%s.log", token))
 	if err != nil {
@@ -80,7 +92,7 @@ func (c Candidate) loadCandInfo(token string) error {
 	}
 
 	var score float32
-	testQids := []string{}
+	qnsAsked := []string{}
 	format := "2006/01/02 15:04:05 MST"
 	scanner := bufio.NewScanner(f)
 	for scanner.Scan() {
@@ -103,23 +115,50 @@ func (c Candidate) loadCandInfo(token string) error {
 				return err
 			}
 			score += float32(s)
-			if len(testQids) > 0 && splits[4] == testQids[len(testQids)-1] {
+			if len(qnsAsked) > 0 && splits[4] == qnsAsked[len(qnsAsked)-1] {
 				continue
 			}
-			testQids = append(testQids, splits[4])
+			qnsAsked = append(qnsAsked, splits[4])
 		case "ping":
-			if len(testQids) > 0 && splits[4] == testQids[len(testQids)-1] {
+			if len(qnsAsked) > 0 && splits[4] == qnsAsked[len(qnsAsked)-1] {
 				continue
 			}
-			testQids = append(testQids, splits[4])
+			qnsAsked = append(qnsAsked, splits[4])
 		}
 	}
 	c.score = score
 	c.logFile = f
-	c.demoQnList = demoQnList
-	c.qnList = testQids
+	if len(qnsAsked) > 0 {
+		c.demoQnList = demoQnList[:]
+	}
+	c.qnList = sliceDiff(qnList, qnsAsked)
+	// TODO(pawan) - Extract timeLeft from logs too. Maybe send initial time
+	// from server when test starts
 	cmap[token] = c
 	return nil
+}
+
+func populateCandInfo(c Candidate, token string) {
+	// If file for the token doesn't exist means client is trying to connect
+	// for the first time. So we create a file
+	if _, err := os.Stat(fmt.Sprintf("logs/%s.log", token)); os.IsNotExist(err) {
+		f, err := os.OpenFile(fmt.Sprintf("logs/%s.log", token),
+			os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+		if err != nil {
+			log.Fatalf("error opening file: %v", err)
+		}
+		c.logFile = f
+		c.qnList = qnList[:]
+		c.demoQnList = demoQnList[:]
+		cmap[token] = c
+		return
+	}
+	// If file exists but the test start is zero means the server might have
+	// lost the data in memory, so we need to load it back from the file.
+	if c.testStart.IsZero() {
+		c.loadCandInfo(token)
+	}
+
 }
 
 func authenticate(t *interact.Token) (*interact.Session, error) {
@@ -131,20 +170,9 @@ func authenticate(t *interact.Token) (*interact.Session, error) {
 		return nil, errors.New("Invalid token.")
 	}
 
-	if _, err := os.Stat(fmt.Sprintf("logs/%s.log", t.Id)); err == nil {
-		c.loadCandInfo(t.Id)
-	} else {
-		f, err := os.OpenFile(fmt.Sprintf("logs/%s.log", t.Id),
-			os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
-		if err != nil {
-			log.Fatalf("error opening file: %v", err)
-		}
-		c.logFile = f
-		c.qnList = qnList[:]
-		c.demoQnList = demoQnList[:]
-	}
-
-	if ok, err := checkToken(c); !ok {
+	populateCandInfo(c, t.Id)
+	c = cmap[t.Id]
+	if err := checkToken(c); err != nil {
 		return nil, err
 	}
 
@@ -245,8 +273,25 @@ func getQuestion(req *interact.Req) (*interact.Question, error) {
 	return q, nil
 }
 
+func isValidSession(token string, sid string) error {
+	var c Candidate
+	var ok bool
+
+	if c, ok = cmap[token]; !ok {
+		return errors.New("Invalid token.")
+	}
+
+	if c.sid != "" && c.sid != sid {
+		return errors.New("You already have another session active.")
+	}
+	return nil
+}
+
 func (s *server) GetQuestion(ctx context.Context,
 	req *interact.Req) (*interact.Question, error) {
+	if err := isValidSession(req.Token, req.Sid); err != nil {
+		return &interact.Question{}, err
+	}
 	return getQuestion(req)
 }
 
@@ -303,9 +348,13 @@ func sendAnswer(resp *interact.Response) (*interact.Status, error) {
 
 func (s *server) SendAnswer(ctx context.Context,
 	resp *interact.Response) (*interact.Status, error) {
+	if err := isValidSession(resp.Token, resp.Sid); err != nil {
+		return &interact.Status{}, err
+	}
 	return sendAnswer(resp)
 }
 
+// TODO(ashwin) - Add authentication
 func (s *server) StreamChan(stream interact.GruQuiz_StreamChanServer) error {
 
 	var stat interact.ServerStatus
@@ -322,7 +371,7 @@ func (s *server) StreamChan(stream interact.GruQuiz_StreamChanServer) error {
 	go func() {
 		for {
 			stat.TimeLeft = time.Now().Sub(c.testStart).String()
-			if time.Now().Sub(c.testStart) > time.Duration(10*time.Second) {
+			if time.Now().Sub(c.testStart) > time.Duration(DURATION) {
 				// TODO(pawan) - Log this to candidate file.
 				fmt.Println("End test based on time")
 				stat.Status = "END"
@@ -439,6 +488,7 @@ func extractQids(testType string) []string {
 }
 
 func extractQuizInfo(file string) map[string][]Question {
+	// TODO - Error out if the qid or aid is repeated.
 	var info map[string][]Question
 	b, err := ioutil.ReadFile(file)
 	if err != nil {
