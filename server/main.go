@@ -304,6 +304,7 @@ func (s *server) SendAnswer(ctx context.Context,
 
 func (s *server) StreamChan(stream interact.GruQuiz_StreamChanServer) error {
 
+	endTT := make(chan int)
 	var stat interact.ServerStatus
 	var wg sync.WaitGroup
 
@@ -318,6 +319,7 @@ func (s *server) StreamChan(stream interact.GruQuiz_StreamChanServer) error {
 		for {
 			stat.TimeLeft = time.Now().Sub(cmap[token].testStart).String()
 			if time.Now().Sub(cmap[token].testStart) > time.Duration(10*time.Second) {
+				endTT <- 1
 				fmt.Println("End test based on time")
 				stat.Status = "END"
 			} else {
@@ -325,7 +327,7 @@ func (s *server) StreamChan(stream interact.GruQuiz_StreamChanServer) error {
 			}
 
 			if err := stream.Send(&stat); err != nil {
-				glog.Error(err)
+				glog.WithField("err", err).Error("While sending stream")
 			}
 
 			if stat.Status == "END" {
@@ -338,16 +340,24 @@ func (s *server) StreamChan(stream interact.GruQuiz_StreamChanServer) error {
 	wg.Add(1)
 	go func() {
 		for {
-			msg, err := stream.Recv()
-			if err != nil {
-				if err != io.EOF {
-					glog.Error(err)
-				} else {
-					break
+			select {
+			case _ = <-endTT:
+				glog.Info("Received End test token")
+				wg.Done()
+				return
+			default:
+				msg, err := stream.Recv()
+				if err != nil {
+					if err != io.EOF {
+						glog.WithField("err", err).Error("While receiving from stream")
+					} else {
+						break
+					}
 				}
+
+				log.SetOutput(cmap[token].logFile)
+				log.Println("ping", msg.CurrQuestion)
 			}
-			log.SetOutput(cmap[token].logFile)
-			log.Println("ping", msg.CurrQuestion)
 		}
 		wg.Done()
 	}()

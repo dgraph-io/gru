@@ -14,12 +14,14 @@ import (
 
 	"google.golang.org/grpc"
 
+	"github.com/dgraph-io/dgraph/x"
 	"github.com/dgraph-io/gru/server/interact"
 	"github.com/gizak/termui"
 )
 
 var token = flag.String("token", "testtoken", "Authentication token")
 var curQuestion *interact.Question
+var endTT chan *interact.ServerStatus
 
 const (
 	// Test duration in minutes
@@ -61,6 +63,7 @@ var status State
 
 var startTime time.Time
 var demoTaken = false
+var glog = x.Log("GRU client")
 
 // timeTaken per question displayed on the top.
 var timeTaken int
@@ -270,14 +273,17 @@ func initializeTest() {
 			msg, err := stream.Recv()
 			if err != nil {
 				if err != io.EOF {
-					log.Fatal(err)
+					glog.Error(err)
 				} else {
+					endTT <- msg
+					glog.Info("got end message")
 					break
 				}
 			}
 			if msg.Status == "END" {
 				clear()
 				showFinalPage(curQuestion)
+				break
 			}
 			timeSpent.Text = msg.TimeLeft
 			termui.Render(termui.Body)
@@ -290,10 +296,18 @@ func initializeTest() {
 				curQuestion.Id,
 				*token,
 			}
-			if err := stream.Send(cliStat); err != nil {
-				log.Panic(err)
+			select {
+			case _ = <-endTT:
+				glog.Info("breaking out")
+				break
+			default:
+				{
+					if err := stream.Send(cliStat); err != nil {
+						glog.WithField("err", err).Error("Error sending to stream")
+					}
+				}
+				time.Sleep(5 * time.Second)
 			}
-			time.Sleep(5 * time.Second)
 		}
 	}()
 
