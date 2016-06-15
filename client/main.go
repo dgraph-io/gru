@@ -228,6 +228,7 @@ func fetchAndDisplayQn() {
 		log.Fatalf("Could not get question.Got err: %v", err)
 	}
 
+	// TODO(pawan) - If he has already taken the demo,don't show the screen again.
 	if q.Id == "END" {
 		clear()
 		if !demoTaken {
@@ -310,7 +311,6 @@ func initializeTest() {
 			}
 		}
 	}()
-
 }
 
 func renderInstructionsPage() {
@@ -540,10 +540,6 @@ func initializeDemo() {
 	}
 	sessionId = session.Id
 	clear()
-	// stream, err := client.StreamChan(context.Background())
-
-	// _, err = stream.Recv()
-
 	setupQuestionsPage()
 	renderQuestionsPage()
 	fetchAndDisplayQn()
