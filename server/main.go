@@ -175,16 +175,19 @@ type Question struct {
 	Tag      string
 }
 
-func nextQuestion(c Candidate, testType string) (int, *interact.Question) {
-	var list []string
-	if testType == DEMO {
-		list = c.demoQnList
-	} else {
-		list = c.qnList
+func qnFromList(qid string, list []Question) Question {
+	for _, q := range list {
+		if q.Id == qid {
+			return q
+		}
 	}
+	return Question{}
+}
 
+func nextQuestion(c Candidate, list []string, testType string) (*interact.Question, []string) {
 	idx := rand.Intn(len(list))
-	q := quizInfo[testType][idx]
+	qid := list[idx]
+	q := qnFromList(qid, quizInfo[testType])
 
 	var opts []*interact.Answer
 	for _, o := range q.Opt {
@@ -200,7 +203,8 @@ func nextQuestion(c Candidate, testType string) (int, *interact.Question) {
 		IsMultiple: isM, Positive: q.Positive, Negative: q.Negative,
 		Totscore: c.score,
 	}
-	return idx, que
+	list = append(list[:idx], list[idx+1:]...)
+	return que, list
 }
 
 func getQuestion(req *interact.Req) (*interact.Question, error) {
@@ -219,8 +223,8 @@ func getQuestion(req *interact.Req) (*interact.Question, error) {
 			cmap[req.Token] = c
 			return q, nil
 		}
-		idx, q := nextQuestion(c, testType)
-		c.demoQnList = append(c.demoQnList[:idx], c.demoQnList[idx+1:]...)
+		q, list := nextQuestion(c, c.demoQnList, DEMO)
+		c.demoQnList = list
 		cmap[req.Token] = c
 		return q, nil
 	}
@@ -235,8 +239,8 @@ func getQuestion(req *interact.Req) (*interact.Question, error) {
 		c.logFile.WriteString(fmt.Sprintf("%v test_start\n", UTCTime()))
 		c.testStart = time.Now()
 	}
-	idx, q := nextQuestion(c, testType)
-	c.qnList = append(c.qnList[:idx], c.qnList[idx+1:]...)
+	q, list := nextQuestion(c, c.qnList, TEST)
+	c.qnList = list
 	cmap[req.Token] = c
 	return q, nil
 }
@@ -312,12 +316,14 @@ func (s *server) StreamChan(stream interact.GruQuiz_StreamChanServer) error {
 		glog.Error(err)
 	}
 	token := msg.Token
+	c := cmap[token]
 
 	wg.Add(1)
 	go func() {
 		for {
-			stat.TimeLeft = time.Now().Sub(cmap[token].testStart).String()
-			if time.Now().Sub(cmap[token].testStart) > time.Duration(10*time.Second) {
+			stat.TimeLeft = time.Now().Sub(c.testStart).String()
+			if time.Now().Sub(c.testStart) > time.Duration(10*time.Second) {
+				// TODO(pawan) - Log this to candidate file.
 				fmt.Println("End test based on time")
 				stat.Status = "END"
 			} else {
@@ -346,8 +352,8 @@ func (s *server) StreamChan(stream interact.GruQuiz_StreamChanServer) error {
 					break
 				}
 			}
-			log.SetOutput(cmap[token].logFile)
-			log.Println("ping", msg.CurrQuestion)
+			c.logFile.WriteString(fmt.Sprintf("%v ping %s\n",
+				UTCTime(), msg.CurrQuestion))
 		}
 		wg.Done()
 	}()
@@ -356,27 +362,6 @@ func (s *server) StreamChan(stream interact.GruQuiz_StreamChanServer) error {
 	return nil
 }
 
-/*
-func (s *server) StreamChanClient(stream interact.GruQuiz_StreamChanClientClient) error {
-
-
-		go func() {
-			for {
-				msg, err := stream.Recv()
-				if err != nil {
-					if err != io.EOF {
-						glog.Error(err)
-					} else {
-						break
-					}
-				}
-				log.Println("ping", msg.CurrQuestion)
-			}
-		}()
-
-	return nil
-}
-*/
 func runGrpcServer(address string) {
 	ln, err := net.Listen("tcp", address)
 	if err != nil {

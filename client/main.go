@@ -526,10 +526,6 @@ func initializeDemo() {
 	}
 	sessionId = session.Id
 	clear()
-	// stream, err := client.StreamChan(context.Background())
-
-	// _, err = stream.Recv()
-
 	setupQuestionsPage()
 	renderQuestionsPage()
 	fetchAndDisplayQn()

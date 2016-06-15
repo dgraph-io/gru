@@ -47,9 +47,10 @@ func TestNextQuestion(t *testing.T) {
 	c := Candidate{}
 	c.demoQnList = extractQids(DEMO)[:]
 
-	idx, q := nextQuestion(c, DEMO)
-	if idx >= 3 {
-		t.Errorf("Expected idx to be less than %d, Got: %d", 3, idx)
+	q, list := nextQuestion(c, c.demoQnList, DEMO)
+	if len(list) != 2 {
+		t.Errorf("Expected len of demoQnList to be %d, Got: %d", 2,
+			len(list))
 	}
 	if q == nil {
 		t.Errorf("Expected qn got nil")
@@ -65,16 +66,29 @@ func TestGetQuestion(t *testing.T) {
 	cmap["abcd1234"] = c
 
 	req := &interact.Req{TestType: DEMO, Token: "abcd1234"}
-	q, err := getQuestion(req)
+	q1, err := getQuestion(req)
 	if err != nil {
 		t.Error(err)
 	}
-	if q.Id == END {
+	if q1.Id == END {
 		t.Errorf("Expected q.Id not to be %s", END)
 	}
-	getQuestion(req)
-	getQuestion(req)
-	q, err = getQuestion(req)
+	q2, err := getQuestion(req)
+	if q2.Id == q1.Id {
+		t.Errorf("Expected %s to be different from %s", q2.Id, q1.Id)
+	}
+
+	q3, err := getQuestion(req)
+	if q3.Id == q1.Id || q3.Id == q2.Id {
+		t.Errorf("Expected %s to be different from %s and %s", q3.Id,
+			q1.Id, q2.Id)
+	}
+	if len(cmap["abcd1234"].demoQnList) != 0 {
+		t.Errorf("Expected demo qn list to be empty. Got: len %d",
+			len(cmap["abcd1234"].demoQnList))
+	}
+
+	q, err := getQuestion(req)
 	if err != nil {
 		t.Error(err)
 	}
