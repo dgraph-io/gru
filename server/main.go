@@ -372,7 +372,7 @@ func (s *server) StreamChan(stream interact.GruQuiz_StreamChanServer) error {
 	go func() {
 		for {
 			stat.TimeLeft = time.Now().Sub(cmap[token].testStart).String()
-			if time.Now().Sub(cmap[token].testStart) > time.Duration(10*time.Second) {
+			if time.Now().Sub(cmap[token].testStart) > time.Duration(DURATION) {
 				endTT <- 1
 				// TODO(pawan) - Log this to candidate file.
 				fmt.Println("End test based on time")
@@ -382,6 +382,7 @@ func (s *server) StreamChan(stream interact.GruQuiz_StreamChanServer) error {
 			}
 
 			if err := stream.Send(&stat); err != nil {
+				endTT <- 2
 				glog.WithField("err", err).Error("While sending stream")
 			}
 
@@ -396,14 +397,19 @@ func (s *server) StreamChan(stream interact.GruQuiz_StreamChanServer) error {
 	go func() {
 		for {
 			select {
-			case _ = <-endTT:
-				glog.Info("Received End test token")
+			case x := <-endTT:
+				if x == 1 {
+					glog.Info("Received End test token")
+				} else if x == 2 {
+					glog.Info("Possible Client crash")
+				}
 				wg.Done()
 				return
 			default:
 				msg, err := stream.Recv()
 				if err != nil {
 					if err != io.EOF {
+						break
 						glog.WithField("err", err).Error("While receiving from stream")
 					} else {
 						break
