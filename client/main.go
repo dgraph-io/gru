@@ -330,6 +330,7 @@ func initializeTest() {
 }
 
 func renderInstructionsPage() {
+	resetHandlers()
 	termui.Render(instructions)
 	// Adding an offset so that all these boxes come inside the instructions box.
 	termui.Body.Y = 2
@@ -532,6 +533,9 @@ func populateQuestionsPage(q *interact.Question) {
 	})
 
 	termui.Handle("/sys/kbd/<enter>", func(e termui.Event) {
+		if len(selected) == 0 {
+			return
+		}
 		enterHandler(e, q, selected, m)
 	})
 
