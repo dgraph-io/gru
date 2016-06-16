@@ -8,6 +8,7 @@ import (
 	"log"
 	"sort"
 	"strings"
+	"sync"
 	"time"
 
 	"golang.org/x/net/context"
@@ -31,6 +32,7 @@ const (
 
 // Elements for the questions page.
 var instructions *termui.Par
+var lck sync.Mutex
 var timeLeft *termui.Par
 var timeSpent *termui.Par
 var que *termui.Par
@@ -64,6 +66,7 @@ var status State
 var startTime time.Time
 var demoTaken = false
 var glog = x.Log("GRU client")
+var leftTime, servTime time.Duration
 
 // timeTaken per question displayed on the top.
 var timeTaken int
@@ -286,7 +289,16 @@ func initializeTest() {
 				showFinalPage(curQuestion)
 				break
 			}
-			timeSpent.Text = msg.TimeLeft
+			servTime, err = time.ParseDuration(msg.TimeLeft)
+			if err != nil {
+				glog.Error("Error parsing time from server")
+			}
+			if testDur*time.Second-leftTime-servTime > time.Second ||
+				testDur*time.Second-leftTime-servTime < time.Second {
+				lck.Lock()
+				leftTime = testDur*time.Minute - servTime
+				lck.Unlock()
+			}
 			termui.Render(termui.Body)
 		}
 	}()
@@ -370,12 +382,18 @@ func renderQuestionsPage() {
 	termui.Render(termui.Body)
 
 	secondsCount := 0
+	lck.Lock()
+	leftTime = testDur * time.Minute
+	lck.Unlock()
+
 	termui.Handle("/timer/1s", func(e termui.Event) {
 		secondsCount += 1
 		timeTaken += 1
-		left := testDur*time.Minute - time.Duration(secondsCount)*time.Second
+		lck.Lock()
+		leftTime = leftTime - time.Second
+		lck.Unlock()
 		timeSpent.Text = fmt.Sprintf("%02d:%02d", timeTaken/60, timeTaken%60)
-		timeLeft.Text = fmt.Sprintf("%02d:%02d", left/time.Minute, (left%time.Minute)/time.Second)
+		timeLeft.Text = fmt.Sprintf("%02d:%02d", leftTime/time.Minute, (leftTime%time.Minute)/time.Second)
 		termui.Render(termui.Body)
 	})
 }
