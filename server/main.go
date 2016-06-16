@@ -158,7 +158,6 @@ func populateCandInfo(c Candidate, token string) {
 	if c.testStart.IsZero() {
 		c.loadCandInfo(token)
 	}
-
 }
 
 func authenticate(t *interact.Token) (*interact.Session, error) {

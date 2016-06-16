@@ -200,8 +200,11 @@ func showFinalPage(q *interact.Question) {
 	instructions.PaddingTop = 1
 	instructions.PaddingLeft = 1
 
+	termui.Clear()
+	termui.Body.Rows = termui.Body.Rows[:0]
 	termui.Render(instructions)
 	resetHandlers()
+	conn.Close()
 }
 
 func clear() {
@@ -220,8 +223,6 @@ func testType() string {
 }
 
 func fetchAndDisplayQn() {
-	// TODO(pawan) - Have an authenticate method before GetQuestion() to get
-	// authenticate the token and get a session token.
 	client := interact.NewGruQuizClient(conn)
 
 	q, err := client.GetQuestion(context.Background(),
@@ -230,6 +231,7 @@ func fetchAndDisplayQn() {
 	if err != nil {
 		log.Fatalf("Could not get question.Got err: %v", err)
 	}
+	curQuestion = q
 
 	// TODO(pawan) - If he has already taken the demo,don't show the screen again.
 	if q.Id == "END" {
@@ -242,10 +244,8 @@ func fetchAndDisplayQn() {
 			return
 		}
 		showFinalPage(q)
-		//conn.Close()
 		return
 	}
-	curQuestion = q
 
 	if demoTaken {
 		maxScore += q.Positive
@@ -257,6 +257,10 @@ func initializeTest() {
 	setupQuestionsPage()
 	renderQuestionsPage()
 	fetchAndDisplayQn()
+
+	if curQuestion.Id == "END" {
+		return
+	}
 
 	client := interact.NewGruQuizClient(conn)
 	stream, err := client.StreamChan(context.Background())
@@ -347,12 +351,6 @@ func renderInstructionsPage() {
 	termui.Body.Align()
 	termui.Render(termui.Body)
 
-	var err error
-	conn, err = grpc.Dial(address, grpc.WithInsecure())
-	if err != nil {
-		log.Fatalf("did not connect: %v", err)
-	}
-
 	termui.Handle("/sys/kbd/s", func(e termui.Event) {
 		if !demoTaken {
 			initializeDemo()
@@ -360,7 +358,6 @@ func renderInstructionsPage() {
 		}
 		clear()
 		initializeTest()
-
 	})
 }
 
@@ -551,7 +548,7 @@ func initializeDemo() {
 	client := interact.NewGruQuizClient(conn)
 	session, err := client.Authenticate(context.Background(), &interact.Token{Id: *token})
 	if err != nil {
-		demo.Text = err.Error() + ". Press Ctrl+Q to exit and try again."
+		demo.Text = grpc.ErrorDesc(err) + " Press Ctrl+Q to exit and try again."
 		demo.TextFgColor = termui.ColorRed
 		termui.Render(termui.Body)
 		return
@@ -574,11 +571,17 @@ func main() {
 	th := termui.TermHeight()
 	tw := termui.TermWidth()
 
+	conn, err = grpc.Dial(address, grpc.WithInsecure())
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
 	setupInstructionsPage(th, tw)
 	renderInstructionsPage()
 
 	// Pressing Ctrl-q terminates the ui.
 	termui.Handle("/sys/kbd/C-q", func(termui.Event) {
+		conn.Close()
 		termui.StopLoop()
 	})
 	termui.Loop()
