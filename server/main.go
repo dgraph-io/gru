@@ -178,8 +178,6 @@ func authenticate(t *interact.Token) (*interact.Session, error) {
 
 	session := interact.Session{Id: RandStringBytes(36)}
 	writeLog(c, fmt.Sprintf("%v session_token %s\n", UTCTime(), session.Id))
-	//c.logFile.WriteString(fmt.Sprintf("%v session_token %s\n", UTCTime(),
-	//	session.Id))
 	cmap[t.Id] = c
 	return &session, nil
 }
@@ -266,7 +264,6 @@ func getQuestion(req *interact.Req) (*interact.Question, error) {
 	// This means its the first test question.
 	if len(c.qnList) == len(qnList) {
 		writeLog(c, fmt.Sprintf("%v test_start\n", UTCTime()))
-		//c.logFile.WriteString(fmt.Sprintf("%v test_start\n", UTCTime()))
 		c.testStart = time.Now()
 	}
 	q, list := nextQuestion(c, c.qnList, TEST)
@@ -350,8 +347,6 @@ func sendAnswer(resp *interact.Response) (*interact.Status, error) {
 	if resp.TestType == TEST {
 		writeLog(c, fmt.Sprintf("%s response %s %s %.1f\n", UTCTime(),
 			resp.Qid, strings.Join(resp.Aid, ","), c.score))
-		//c.logFile.WriteString(fmt.Sprintf("%s response %s %s %.1f\n", UTCTime(),
-		//	resp.Qid, strings.Join(resp.Aid, ","), c.score))
 	}
 	return &status, err
 }
@@ -427,8 +422,6 @@ func (s *server) StreamChan(stream interact.GruQuiz_StreamChanServer) error {
 				}
 				writeLog(c, fmt.Sprintf("%v ping %s\n",
 					UTCTime(), msg.CurrQuestion))
-				//c.logFile.WriteString(fmt.Sprintf("%v ping %s\n",
-				//	UTCTime(), msg.CurrQuestion))
 
 			}
 		}
