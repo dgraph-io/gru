@@ -199,7 +199,7 @@ type Question struct {
 	Opt      []Option
 	Positive float32
 	Negative float32
-	Tag      string
+	Tag      []string
 }
 
 func qnFromList(qid string, list []Question) Question {

@@ -13,7 +13,7 @@ demo:
     str: London
   positive: 5
   negative: 2.5
-  tag: Easy
+  tag: [Easy]
 
 - id: demo-2
   str: Which among the following were originally developed at Google?
@@ -29,7 +29,7 @@ demo:
     str: Rust
   positive: 10
   negative: 5
-  tag: Easy
+  tag: [Easy]
 
 - id: demo-3
   str: Which one is the largest ocean in the world?
@@ -45,7 +45,7 @@ demo:
     str: Arctic
   positive: 5
   negative: 2.5
-  tag: Easy
+  tag: [Easy]
 
 test:
 - id: A
@@ -58,7 +58,7 @@ test:
     str: O(K * N^2 * log(N)), O(K * N^2)
   positive: 5
   negative: 2.5
-  tag: Easy
+  tag: [Easy]
 
 - id: B
   str: |
@@ -73,7 +73,7 @@ test:
     str: O(K * N^2 * log(N)), O(K * N^2)
   positive: 5
   negative: 2.5
-  tag: Easy
+  tag: [Easy]
 
 - id: output
   str: |
@@ -100,7 +100,8 @@ test:
      str: Runtime error
   positive: 10
   negative: 5
-  tag: Easy
+  tag: [Easy]
+
 - id: C
   str: What is the capital of France?
   correct: [C-1b]
@@ -115,7 +116,7 @@ test:
     str: London
   positive: 5
   negative: 2.5
-  tag: Easy
+  tag: [Easy]
 
 - id: D
   str: Which among the following were originally developed at Google?
@@ -131,4 +132,4 @@ test:
     str: Rust
   positive: 10
   negative: 5
-  tag: Easy
+  tag: [Easy]
