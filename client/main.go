@@ -75,9 +75,6 @@ var ts float32
 // Last score
 var ls float32
 
-// max score that can be obtained by the user. Displayed on the final screen.
-var maxScore float32
-
 // Declaring connection as a global as can't reuse the client(its unexported)
 var conn *grpc.ClientConn
 
@@ -190,8 +187,8 @@ func resetHandlers() {
 
 func showFinalPage(q *interact.Question) {
 	instructions = termui.NewPar(
-		fmt.Sprintf("Thank you for taking the test. Your final score was %3.1f/%3.1f. We will get in touch with you soon.",
-			q.Totscore, maxScore))
+		fmt.Sprintf("Thank you for taking the test. Your final score was %3.1f. We will get in touch with you soon.",
+			q.Totscore))
 	instructions.BorderLabel = "Thank You"
 	instructions.Height = 10
 	instructions.Width = termui.TermWidth() / 2
@@ -247,9 +244,6 @@ func fetchAndDisplayQn() {
 		return
 	}
 
-	if demoTaken {
-		maxScore += q.Positive
-	}
 	populateQuestionsPage(q)
 }
 
@@ -282,6 +276,8 @@ func initializeTest() {
 			if err != nil {
 				if err != io.EOF {
 					glog.Error(err)
+					endTT <- msg
+					break
 				} else {
 					endTT <- msg
 					glog.Info("got end message")
@@ -315,12 +311,12 @@ func initializeTest() {
 			}
 			select {
 			case _ = <-endTT:
-				glog.Info("breaking out")
+				glog.Info("stop sending as receive stream has closed")
 				break
 			default:
 				{
 					if err := stream.Send(cliStat); err != nil {
-						glog.WithField("err", err).Error("Error sending to stream")
+						//glog.WithField("err", err).Error("Error sending to stream")
 					}
 				}
 				time.Sleep(5 * time.Second)
