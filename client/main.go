@@ -270,6 +270,8 @@ func initializeTest() {
 		log.Panic(err)
 	}
 
+	tickChan := time.NewTicker(time.Second * 5).C
+
 	go func() {
 		for {
 			msg, err := stream.Recv()
@@ -313,13 +315,13 @@ func initializeTest() {
 			case _ = <-endTT:
 				glog.Info("stop sending as receive stream has closed")
 				break
-			default:
+			case <-tickChan:
 				{
 					if err := stream.Send(cliStat); err != nil {
+						// TODO: Show error status in a separate box
 						//glog.WithField("err", err).Error("Error sending to stream")
 					}
 				}
-				time.Sleep(5 * time.Second)
 			}
 		}
 	}()

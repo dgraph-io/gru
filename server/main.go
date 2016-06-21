@@ -31,7 +31,7 @@ const (
 	END      = "END"
 	CORRECT  = 1
 	WRONG    = 2
-	DURATION = 60 * time.Minute
+	DURATION = 10 * time.Second
 )
 
 var (
@@ -373,28 +373,36 @@ func (s *server) StreamChan(stream interact.GruQuiz_StreamChanServer) error {
 	token := msg.Token
 	c := cmap[token]
 
+	endTimeChan := time.NewTimer(DURATION).C
+	tickChan := time.NewTicker(time.Second * 5).C
+
 	wg.Add(1)
 	go func() {
 		for {
 			stat.TimeLeft = time.Now().Sub(cmap[token].testStart).String()
-			if time.Now().Sub(cmap[token].testStart) > time.Duration(DURATION) {
-				endTT <- 1
-				// TODO(pawan) - Log this to candidate file.
-				fmt.Println("End test based on time")
-				stat.Status = "END"
-			} else {
-				stat.Status = "ONGOING"
-			}
 
-			if err := stream.Send(&stat); err != nil {
-				endTT <- 2
-				glog.WithField("err", err).Error("While sending stream")
+			select {
+			case <-endTimeChan:
+				{
+					endTT <- 1
+					stat.Status = "END"
+					fmt.Println("End test based on time")
+					writeLog(c, fmt.Sprintf("End of test. Time out\n"))
+					if err := stream.Send(&stat); err != nil {
+						endTT <- 2
+						glog.WithField("err", err).Error("While sending stream")
+					}
+					wg.Done()
+				}
+			case <-tickChan:
+				{
+					stat.Status = " ONGOING"
+					if err := stream.Send(&stat); err != nil {
+						endTT <- 2
+						glog.WithField("err", err).Error("While sending stream")
+					}
+				}
 			}
-
-			if stat.Status == "END" {
-				wg.Done()
-			}
-			time.Sleep(5 * time.Second)
 		}
 	}()
 

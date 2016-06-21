@@ -13,7 +13,7 @@ demo:
     str: London
   positive: 5
   negative: 2.5
-  tag: [Easy]
+  tag: [Easy,demo,test]
 
 - id: demo-2
   str: Which among the following were originally developed at Google?
