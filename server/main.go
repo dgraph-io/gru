@@ -31,7 +31,7 @@ const (
 	END      = "END"
 	CORRECT  = 1
 	WRONG    = 2
-	DURATION = 10 * time.Second
+	DURATION = 100 * time.Second
 )
 
 var (
@@ -359,11 +359,73 @@ func (s *server) SendAnswer(ctx context.Context,
 	return sendAnswer(resp)
 }
 
+func streamSend(wg *sync.WaitGroup, stream interact.GruQuiz_StreamChanServer,
+	c Candidate, endTT chan int) {
+	var stat interact.ServerStatus
+	endTimeChan := time.NewTimer(DURATION).C
+	tickChan := time.NewTicker(time.Second * 5).C
+
+	for {
+		stat.TimeLeft = time.Now().Sub(c.testStart).String()
+
+		select {
+		case <-endTimeChan:
+			{
+				endTT <- 1
+				stat.Status = "END"
+				fmt.Println("End test based on time")
+				writeLog(c, fmt.Sprintf("End of test. Time out\n"))
+				if err := stream.Send(&stat); err != nil {
+					endTT <- 2
+					glog.WithField("err", err).Error("While sending stream")
+				}
+				wg.Done()
+			}
+		case <-tickChan:
+			{
+				stat.Status = " ONGOING"
+				if err := stream.Send(&stat); err != nil {
+					endTT <- 2
+					glog.WithField("err", err).Error("While sending stream")
+				}
+			}
+		}
+	}
+}
+
+func streamRecv(wg *sync.WaitGroup, stream interact.GruQuiz_StreamChanServer,
+	c Candidate, endTT chan int) {
+	for {
+		select {
+		case x := <-endTT:
+			if x == 1 {
+				glog.Info("Received End test token")
+			} else if x == 2 {
+				glog.Info("Possible Client crash")
+			}
+			wg.Done()
+			return
+		default:
+			msg, err := stream.Recv()
+			if err != nil {
+				if err != io.EOF {
+					glog.WithField("err", err).Error("While receiving from stream")
+				}
+				wg.Done()
+				return
+			}
+			writeLog(c, fmt.Sprintf("%v ping %s\n",
+				UTCTime(), msg.CurrQuestion))
+
+		}
+	}
+	wg.Done()
+}
+
 // TODO(ashwin) - Add authentication
 func (s *server) StreamChan(stream interact.GruQuiz_StreamChanServer) error {
 
 	endTT := make(chan int)
-	var stat interact.ServerStatus
 	var wg sync.WaitGroup
 
 	msg, err := stream.Recv()
@@ -373,69 +435,10 @@ func (s *server) StreamChan(stream interact.GruQuiz_StreamChanServer) error {
 	token := msg.Token
 	c := cmap[token]
 
-	endTimeChan := time.NewTimer(DURATION).C
-	tickChan := time.NewTicker(time.Second * 5).C
-
 	wg.Add(1)
-	go func() {
-		for {
-			stat.TimeLeft = time.Now().Sub(cmap[token].testStart).String()
-
-			select {
-			case <-endTimeChan:
-				{
-					endTT <- 1
-					stat.Status = "END"
-					fmt.Println("End test based on time")
-					writeLog(c, fmt.Sprintf("End of test. Time out\n"))
-					if err := stream.Send(&stat); err != nil {
-						endTT <- 2
-						glog.WithField("err", err).Error("While sending stream")
-					}
-					wg.Done()
-				}
-			case <-tickChan:
-				{
-					stat.Status = " ONGOING"
-					if err := stream.Send(&stat); err != nil {
-						endTT <- 2
-						glog.WithField("err", err).Error("While sending stream")
-					}
-				}
-			}
-		}
-	}()
-
+	go streamSend(&wg, stream, c, endTT)
 	wg.Add(1)
-	go func() {
-		for {
-			select {
-			case x := <-endTT:
-				if x == 1 {
-					glog.Info("Received End test token")
-				} else if x == 2 {
-					glog.Info("Possible Client crash")
-				}
-				wg.Done()
-				return
-			default:
-				msg, err := stream.Recv()
-				if err != nil {
-					if err != io.EOF {
-						break
-						glog.WithField("err", err).Error("While receiving from stream")
-					} else {
-						break
-					}
-				}
-				writeLog(c, fmt.Sprintf("%v ping %s\n",
-					UTCTime(), msg.CurrQuestion))
-
-			}
-		}
-		wg.Done()
-	}()
-
+	go streamRecv(&wg, stream, c, endTT)
 	wg.Wait()
 	return nil
 }

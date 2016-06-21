@@ -247,6 +247,62 @@ func fetchAndDisplayQn() {
 	populateQuestionsPage(q)
 }
 
+func streamRecv(stream interact.GruQuiz_StreamChanClient) {
+	for {
+		msg, err := stream.Recv()
+		if err != nil {
+			if err != io.EOF {
+				glog.Error(err)
+				endTT <- msg
+				return
+			}
+			endTT <- msg
+			glog.Info("got end message")
+			return
+		}
+
+		if msg.Status == "END" {
+			clear()
+			showFinalPage(curQuestion)
+			return
+		}
+		servTime, err = time.ParseDuration(msg.TimeLeft)
+		if err != nil {
+			glog.Error("Error parsing time from server")
+		}
+		if testDur*time.Second-leftTime-servTime > time.Second ||
+			testDur*time.Second-leftTime-servTime < time.Second {
+			lck.Lock()
+			leftTime = testDur*time.Minute - servTime
+			lck.Unlock()
+		}
+		termui.Render(termui.Body)
+	}
+}
+
+func streamSend(stream interact.GruQuiz_StreamChanClient) {
+	tickChan := time.NewTicker(time.Second * 5).C
+
+	for {
+		select {
+		case _ = <-endTT:
+			glog.Info("stop sending as receive stream has closed")
+			return
+		case <-tickChan:
+			{
+				cliStat := &interact.ClientStatus{
+					curQuestion.Id,
+					*token,
+				}
+				if err := stream.Send(cliStat); err != nil {
+					// TODO: Show error status in a separate box
+					//glog.WithField("err", err).Error("Error sending to stream")
+				}
+			}
+		}
+	}
+}
+
 func initializeTest() {
 	setupQuestionsPage()
 	renderQuestionsPage()
@@ -270,61 +326,8 @@ func initializeTest() {
 		log.Panic(err)
 	}
 
-	tickChan := time.NewTicker(time.Second * 5).C
-
-	go func() {
-		for {
-			msg, err := stream.Recv()
-			if err != nil {
-				if err != io.EOF {
-					glog.Error(err)
-					endTT <- msg
-					break
-				} else {
-					endTT <- msg
-					glog.Info("got end message")
-					break
-				}
-			}
-			if msg.Status == "END" {
-				clear()
-				showFinalPage(curQuestion)
-				break
-			}
-			servTime, err = time.ParseDuration(msg.TimeLeft)
-			if err != nil {
-				glog.Error("Error parsing time from server")
-			}
-			if testDur*time.Second-leftTime-servTime > time.Second ||
-				testDur*time.Second-leftTime-servTime < time.Second {
-				lck.Lock()
-				leftTime = testDur*time.Minute - servTime
-				lck.Unlock()
-			}
-			termui.Render(termui.Body)
-		}
-	}()
-
-	go func() {
-		for {
-			cliStat := &interact.ClientStatus{
-				curQuestion.Id,
-				*token,
-			}
-			select {
-			case _ = <-endTT:
-				glog.Info("stop sending as receive stream has closed")
-				break
-			case <-tickChan:
-				{
-					if err := stream.Send(cliStat); err != nil {
-						// TODO: Show error status in a separate box
-						//glog.WithField("err", err).Error("Error sending to stream")
-					}
-				}
-			}
-		}
-	}()
+	go streamRecv(stream)
+	go streamSend(stream)
 }
 
 func renderInstructionsPage() {
