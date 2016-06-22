@@ -30,7 +30,7 @@ const (
 	END      = "END"
 	CORRECT  = 1
 	WRONG    = 2
-	DURATION = 100 * time.Second
+	DURATION = 60 * time.Minute
 )
 
 var (
@@ -491,9 +491,8 @@ func parseCandidateInfo(file string) error {
 
 		var c Candidate
 		splits := strings.Split(line, " ")
-
 		if len(splits) < 6 {
-			continue
+			log.Fatalf("Candidate info isn't sufficient for line %v", line)
 		}
 
 		c.name = strings.Join(splits[:2], " ")
