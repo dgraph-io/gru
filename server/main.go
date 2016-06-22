@@ -19,7 +19,6 @@ import (
 
 	"google.golang.org/grpc"
 
-	"github.com/dgraph-io/dgraph/x"
 	"github.com/dgraph-io/gru/server/interact"
 	"golang.org/x/net/context"
 	"gopkg.in/yaml.v2"
@@ -40,7 +39,6 @@ var (
 	candFile = flag.String("cand", "candidates.txt", "Candidate inforamation")
 	quizInfo map[string][]Question
 	cmap     map[string]Candidate
-	glog     = x.Log("Gru Server")
 	// List of question ids.
 	qnList     []string
 	demoQnList []string
@@ -338,7 +336,7 @@ func sendAnswer(resp *interact.Response) (*interact.Status, error) {
 		}
 	} else {
 		if len(resp.Aid) > 1 {
-			glog.Error("Got extra optoins with SKIP")
+			log.Println("Got extra optoins with SKIP")
 		}
 	}
 
@@ -377,7 +375,7 @@ func streamSend(wg *sync.WaitGroup, stream interact.GruQuiz_StreamChanServer,
 				writeLog(c, fmt.Sprintf("End of test. Time out\n"))
 				if err := stream.Send(&stat); err != nil {
 					endTT <- 2
-					glog.WithField("err", err).Error("While sending stream")
+					log.Printf("Error while sending stream: %v\n", err)
 				}
 				wg.Done()
 			}
@@ -386,7 +384,7 @@ func streamSend(wg *sync.WaitGroup, stream interact.GruQuiz_StreamChanServer,
 				stat.Status = " ONGOING"
 				if err := stream.Send(&stat); err != nil {
 					endTT <- 2
-					glog.WithField("err", err).Error("While sending stream")
+					log.Printf("Error while sending stream: %v\n", err)
 				}
 			}
 		}
@@ -399,9 +397,10 @@ func streamRecv(wg *sync.WaitGroup, stream interact.GruQuiz_StreamChanServer,
 		select {
 		case x := <-endTT:
 			if x == 1 {
-				glog.Info("Received End test token")
+				log.Println("Received End test token")
 			} else if x == 2 {
-				glog.Info("Possible Client crash")
+				log.Println("Possible Client crash")
+
 			}
 			wg.Done()
 			return
@@ -409,7 +408,7 @@ func streamRecv(wg *sync.WaitGroup, stream interact.GruQuiz_StreamChanServer,
 			msg, err := stream.Recv()
 			if err != nil {
 				if err != io.EOF {
-					glog.WithField("err", err).Error("While receiving from stream")
+					log.Printf("Error while receiving stream: %v\n", err)
 				}
 				wg.Done()
 				return
@@ -430,7 +429,7 @@ func (s *server) StreamChan(stream interact.GruQuiz_StreamChanServer) error {
 
 	msg, err := stream.Recv()
 	if err != nil {
-		glog.Error(err)
+		log.Printf("Error while receiving stream %v", err)
 	}
 	token := msg.Token
 	c := cmap[token]
@@ -446,15 +445,15 @@ func (s *server) StreamChan(stream interact.GruQuiz_StreamChanServer) error {
 func runGrpcServer(address string) {
 	ln, err := net.Listen("tcp", address)
 	if err != nil {
-		glog.WithField("err", err).Fatalf("Error running quiz server")
+		log.Printf("Error running quiz server %v", err)
 		return
 	}
-	glog.WithField("address", ln.Addr()).Info("Server listening")
+	log.Printf("Server listening on address: %v", ln.Addr())
 
 	s := grpc.NewServer()
 	interact.RegisterGruQuizServer(s, &server{})
 	if err = s.Serve(ln); err != nil {
-		glog.Fatalf("While serving gRpc requests", err)
+		log.Fatalf("While serving gRpc requests %v", err)
 	}
 	return
 }
@@ -524,11 +523,11 @@ func extractQuizInfo(file string) map[string][]Question {
 	var info map[string][]Question
 	b, err := ioutil.ReadFile(file)
 	if err != nil {
-		glog.WithField("err", err).Fatal("Error while reading quiz info file")
+		log.Fatalf("Error while reading quiz info file, %v", err)
 	}
 	err = yaml.Unmarshal(b, &info)
 	if err != nil {
-		glog.WithField("err", err).Fatal("Error while unmarshalling into yaml")
+		log.Fatalf("Error while unmarshalling into yaml, %v", err)
 	}
 	return info
 }

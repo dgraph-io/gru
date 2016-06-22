@@ -15,38 +15,43 @@ import (
 
 	"google.golang.org/grpc"
 
-	"github.com/dgraph-io/dgraph/x"
 	"github.com/dgraph-io/gru/server/interact"
 	"github.com/gizak/termui"
 )
 
 var token = flag.String("token", "testtoken", "Authentication token")
+
+//TODO(Pawan) - Change default address to our server.
+var address = flag.String("address", "localhost:8888", "Address of the server")
 var curQuestion *interact.Question
 var endTT chan *interact.ServerStatus
 
 const (
-	// Test duration in minutes
+	//TODO(pawan) - Get from server.
 	testDur = 60
-	address = "localhost:8888"
 )
 
 // Elements for the questions page.
 var instructions *termui.Par
 var lck sync.Mutex
-var timeLeft *termui.Par
-var timeSpent *termui.Par
-var que *termui.Par
-var score *termui.Par
-var lastScore *termui.Par
-var s *termui.Par
-var a *termui.Par
 
-// Elements for the home page.
-var demo *termui.Par
-var terminal *termui.Par
-var general *termui.Par
-var scoring *termui.Par
-var contact *termui.Par
+type QuestionsPage struct {
+	timeLeft    *termui.Par
+	timeSpent   *termui.Par
+	que         *termui.Par
+	score       *termui.Par
+	lastScore   *termui.Par
+	scoringInfo *termui.Par
+	answers     *termui.Par
+}
+
+type InformationPage struct {
+	demo     *termui.Par
+	terminal *termui.Par
+	general  *termui.Par
+	scoring  *termui.Par
+	contact  *termui.Par
+}
 
 type State int
 
@@ -65,7 +70,6 @@ var status State
 
 var startTime time.Time
 var demoTaken = false
-var glog = x.Log("GRU client")
 var leftTime, servTime time.Duration
 
 // timeTaken per question displayed on the top.
@@ -80,24 +84,26 @@ var conn *grpc.ClientConn
 
 var sessionId string
 
-func setupInstructionsPage(th, tw int) {
+var infoPage InformationPage
+
+func setupInfoPage(th, tw int) {
 	instructions = termui.NewPar("")
 	instructions.BorderLabel = "Instructions"
 	instructions.Height = 50
 	instructions.Width = tw
 	instructions.PaddingTop = 2
 
-	terminal = termui.NewPar(`
+	infoPage.terminal = termui.NewPar(`
 		- Please ensure that you can see all the 4 borders of the Instructions box.
 		- If you can't see them, you need to increase the size of your terminal or adjust the font-size to a smaller value.
 		- DO NOT proceed with the test, until you are able to see all 4 outer borders of the Instructions box.`)
-	terminal.BorderLabel = "Terminal"
-	terminal.Height = 8
-	terminal.Width = tw
-	terminal.PaddingLeft = 2
+	infoPage.terminal.BorderLabel = "Terminal"
+	infoPage.terminal.Height = 8
+	infoPage.terminal.Width = tw
+	infoPage.terminal.PaddingLeft = 2
 
 	// TODO - Take duration from constant.
-	general = termui.NewPar(`
+	infoPage.general = termui.NewPar(`
 		- By taking this test, you agree not to discuss/post the questions shown here.
 		- The duration of the test is 60 mins. Timing would be clearly shown.
 		- Once you start the test, the timer would not stop, irrespective of any client side issues.
@@ -106,77 +112,79 @@ func setupInstructionsPage(th, tw int) {
 		- You would be given the option to have a second attempt at a question if your first answer is wrong.
 		- The scoring for each attempt of a question, would be visible to you in a separate section.
 		- At point you can press Ctrl-q to end the test.`)
-	general.BorderLabel = "General"
-	general.Height = 15
-	general.Width = tw
-	general.PaddingLeft = 2
+	infoPage.general.BorderLabel = "General"
+	infoPage.general.Height = 15
+	infoPage.general.Width = tw
+	infoPage.general.PaddingLeft = 2
 
-	scoring = termui.NewPar(`
+	infoPage.scoring = termui.NewPar(`
 		- There is NEGATIVE scoring for wrong answers. So, please DO NOT GUESS.
 		- If you skip a question, the score awarded is always ZERO.
 		- You might be given the option to recover from negative score with a second attempt.
 		- In the above case, please note that another wrong answer would have further negative score.
-		- Scoring would be clearly marked in the question on the right hand side box.`)
-	scoring.BorderLabel = "Scoring"
-	scoring.Height = 10
-	scoring.Width = tw
-	scoring.PaddingLeft = 2
+		- scoring would be clearly marked in the question on the right hand side box.`)
+	infoPage.scoring.BorderLabel = "Scoring"
+	infoPage.scoring.Height = 10
+	infoPage.scoring.Width = tw
+	infoPage.scoring.PaddingLeft = 2
 
-	contact = termui.NewPar(`
+	infoPage.contact = termui.NewPar(`
 		- If there are any problems with the setup, or something is unclear, please DO NOT start the test.
 		- Send email to contact@dgraph.io and tell us the problem. So we can solve it before you take the test.`)
-	contact.BorderLabel = "Contact"
-	contact.Height = 10
-	contact.Width = tw
-	contact.PaddingLeft = 2
+	infoPage.contact.BorderLabel = "Contact"
+	infoPage.contact.Height = 10
+	infoPage.contact.Width = tw
+	infoPage.contact.PaddingLeft = 2
 
-	demo = termui.NewPar("We have a demo of the how the test would look like. Press s to start the demo.")
-	demo.Border = false
-	demo.Height = 3
-	demo.Width = tw
-	demo.TextFgColor = termui.ColorCyan
-	demo.PaddingLeft = 2
-	demo.PaddingTop = 1
+	infoPage.demo = termui.NewPar("We have a infoPage.demo of the how the test would look like. Press s to start the demo.")
+	infoPage.demo.Border = false
+	infoPage.demo.Height = 3
+	infoPage.demo.Width = tw
+	infoPage.demo.TextFgColor = termui.ColorCyan
+	infoPage.demo.PaddingLeft = 2
+	infoPage.demo.PaddingTop = 1
 }
 
-func setupQuestionsPage() {
-	timeLeft = termui.NewPar(fmt.Sprintf("%02d:00", testDur))
-	timeLeft.Height = 3
-	timeLeft.BorderLabel = "Time Left"
+var qp QuestionsPage
 
-	timeSpent = termui.NewPar("00:00")
-	timeSpent.Height = 3
-	timeSpent.BorderLabel = "Time spent"
+func setupQuestionsPage() {
+	qp.timeLeft = termui.NewPar(fmt.Sprintf("%02d:00", testDur))
+	qp.timeLeft.Height = 3
+	qp.timeLeft.BorderLabel = "Time Left"
+
+	qp.timeSpent = termui.NewPar("00:00")
+	qp.timeSpent.Height = 3
+	qp.timeSpent.BorderLabel = "Time spent"
 
 	ts := 00.0
-	score = termui.NewPar(fmt.Sprintf("%2.1f", ts))
-	score.BorderLabel = "Total Score"
-	score.Height = 3
+	qp.score = termui.NewPar(fmt.Sprintf("%2.1f", ts))
+	qp.score.BorderLabel = "Total Score"
+	qp.score.Height = 3
 
-	lastScore = termui.NewPar("0.0")
-	lastScore.BorderLabel = "Last Score"
-	lastScore.Height = 3
+	qp.lastScore = termui.NewPar("0.0")
+	qp.lastScore.BorderLabel = "Last Score"
+	qp.lastScore.Height = 3
 
-	que = termui.NewPar("")
-	que.BorderLabel = "Question"
-	que.PaddingLeft = 1
-	que.PaddingRight = 1
-	que.PaddingBottom = 1
-	que.Height = 33
+	qp.que = termui.NewPar("")
+	qp.que.BorderLabel = "Question"
+	qp.que.PaddingLeft = 1
+	qp.que.PaddingRight = 1
+	qp.que.PaddingBottom = 1
+	qp.que.Height = 33
 
-	s = termui.NewPar("")
-	s.BorderLabel = "Scoring"
-	s.PaddingTop = 1
-	s.PaddingLeft = 1
-	s.Height = 33
+	qp.scoringInfo = termui.NewPar("")
+	qp.scoringInfo.BorderLabel = "Scoring"
+	qp.scoringInfo.PaddingTop = 1
+	qp.scoringInfo.PaddingLeft = 1
+	qp.scoringInfo.Height = 33
 
-	a = termui.NewPar("")
-	a.TextFgColor = termui.ColorCyan
-	a.BorderLabel = "Answers"
-	a.PaddingLeft = 1
-	a.PaddingRight = 1
-	a.PaddingBottom = 1
-	a.Height = 14
+	qp.answers = termui.NewPar("")
+	qp.answers.TextFgColor = termui.ColorCyan
+	qp.answers.BorderLabel = "Answers"
+	qp.answers.PaddingLeft = 1
+	qp.answers.PaddingRight = 1
+	qp.answers.PaddingBottom = 1
+	qp.answers.Height = 14
 }
 
 func resetHandlers() {
@@ -252,12 +260,12 @@ func streamRecv(stream interact.GruQuiz_StreamChanClient) {
 		msg, err := stream.Recv()
 		if err != nil {
 			if err != io.EOF {
-				glog.Error(err)
+				log.Printf("Error while receiving stream, %v", err)
 				endTT <- msg
 				return
 			}
 			endTT <- msg
-			glog.Info("got end message")
+			log.Println("got end message")
 			return
 		}
 
@@ -268,7 +276,7 @@ func streamRecv(stream interact.GruQuiz_StreamChanClient) {
 		}
 		servTime, err = time.ParseDuration(msg.TimeLeft)
 		if err != nil {
-			glog.Error("Error parsing time from server")
+			log.Printf("Error parsing time from server, %v", err)
 		}
 		if testDur*time.Second-leftTime-servTime > time.Second ||
 			testDur*time.Second-leftTime-servTime < time.Second {
@@ -286,7 +294,6 @@ func streamSend(stream interact.GruQuiz_StreamChanClient) {
 	for {
 		select {
 		case _ = <-endTT:
-			glog.Info("stop sending as receive stream has closed")
 			return
 		case <-tickChan:
 			{
@@ -337,18 +344,18 @@ func renderInstructionsPage() {
 	termui.Body.Y = 2
 	termui.Body.AddRows(
 		termui.NewRow(
-			termui.NewCol(10, 1, terminal)),
+			termui.NewCol(10, 1, infoPage.terminal)),
 		termui.NewRow(
-			termui.NewCol(10, 1, general)),
+			termui.NewCol(10, 1, infoPage.general)),
 		termui.NewRow(
-			termui.NewCol(10, 1, scoring)),
+			termui.NewCol(10, 1, infoPage.scoring)),
 		termui.NewRow(
-			termui.NewCol(10, 1, contact)),
+			termui.NewCol(10, 1, infoPage.contact)),
 		termui.NewRow(
-			termui.NewCol(10, 1, demo)))
+			termui.NewCol(10, 1, infoPage.demo)))
 
 	if demoTaken {
-		demo.Text = "Press s to start the test."
+		infoPage.demo.Text = "Press s to start the test."
 	}
 	termui.Body.Align()
 	termui.Render(termui.Body)
@@ -367,15 +374,15 @@ func renderQuestionsPage() {
 	termui.Body.Y = 0
 	termui.Body.AddRows(
 		termui.NewRow(
-			termui.NewCol(3, 0, timeLeft),
-			termui.NewCol(3, 0, timeSpent),
-			termui.NewCol(3, 0, score),
-			termui.NewCol(3, 0, lastScore)),
+			termui.NewCol(3, 0, qp.timeLeft),
+			termui.NewCol(3, 0, qp.timeSpent),
+			termui.NewCol(3, 0, qp.score),
+			termui.NewCol(3, 0, qp.lastScore)),
 		termui.NewRow(
-			termui.NewCol(10, 0, que),
-			termui.NewCol(2, 0, s)),
+			termui.NewCol(10, 0, qp.que),
+			termui.NewCol(2, 0, qp.scoringInfo)),
 		termui.NewRow(
-			termui.NewCol(12, 0, a)))
+			termui.NewCol(12, 0, qp.answers)))
 
 	termui.Body.Align()
 	termui.Render(termui.Body)
@@ -391,8 +398,8 @@ func renderQuestionsPage() {
 		lck.Lock()
 		leftTime = leftTime - time.Second
 		lck.Unlock()
-		timeSpent.Text = fmt.Sprintf("%02d:%02d", timeTaken/60, timeTaken%60)
-		timeLeft.Text = fmt.Sprintf("%02d:%02d", leftTime/time.Minute, (leftTime%time.Minute)/time.Second)
+		qp.timeSpent.Text = fmt.Sprintf("%02d:%02d", timeTaken/60, timeTaken%60)
+		qp.timeLeft.Text = fmt.Sprintf("%02d:%02d", leftTime/time.Minute, (leftTime%time.Minute)/time.Second)
 		termui.Render(termui.Body)
 	})
 }
@@ -403,7 +410,7 @@ func renderSelectedAnswers(selected []string, m map[string]*interact.Answer) {
 		check += m[string(k)].Str + "\n"
 	}
 	check += "\nPress ENTER to confirm. Press any other key to cancel."
-	a.Text = check
+	qp.answers.Text = check
 	status = confirmAnswer
 	termui.Render(termui.Body)
 }
@@ -436,8 +443,8 @@ func optionHandler(e termui.Event, q *interact.Question, selected []string,
 	if !exists && status == options {
 		selected = append(selected, k)
 		sort.StringSlice(selected).Sort()
-		a.Text = ansBody + strings.Join(selected, ", ")
-		a.Text += "\nPress Enter to see chosen options."
+		qp.answers.Text = ansBody + strings.Join(selected, ", ")
+		qp.answers.Text += "\nPress Enter to see chosen options."
 		termui.Render(termui.Body)
 	}
 	return selected
@@ -467,7 +474,7 @@ func enterHandler(e termui.Event, q *interact.Question, selected []string,
 }
 
 func keyHandler(ansBody string, selected []string) []string {
-	a.Text = ansBody
+	qp.answers.Text = ansBody
 	selected = selected[:0]
 	status = options
 	termui.Render(termui.Body)
@@ -476,8 +483,8 @@ func keyHandler(ansBody string, selected []string) []string {
 
 func populateQuestionsPage(q *interact.Question) {
 	timeTaken = 0
-	que.Text = q.Str
-	s.Text = fmt.Sprintf("Right answer => +%1.1f\n\nWrong answer => -%1.1f",
+	qp.que.Text = q.Str
+	qp.scoringInfo.Text = fmt.Sprintf("Right answer => +%1.1f\n\nWrong answer => -%1.1f",
 		q.Positive, q.Negative)
 
 	// Selected contains the options user has already selected.
@@ -506,14 +513,14 @@ func populateQuestionsPage(q *interact.Question) {
 		opt++
 	}
 	buf.WriteString("\ns) Skip question\n\n")
-	score.Text = fmt.Sprintf("%3.1f", q.Totscore)
+	qp.score.Text = fmt.Sprintf("%3.1f", q.Totscore)
 	ls = q.Totscore - ts
-	lastScore.Text = fmt.Sprintf("%2.1f", ls)
+	qp.lastScore.Text = fmt.Sprintf("%2.1f", ls)
 	ts = q.Totscore
 	// We store this so that this can be rendered later based on different
 	// key press.
 	ansBody = buf.String()
-	a.Text = ansBody
+	qp.answers.Text = ansBody
 	termui.Render(termui.Body)
 
 	// Attaching event handlers on the options for a answer.
@@ -526,7 +533,7 @@ func populateQuestionsPage(q *interact.Question) {
 	}
 
 	termui.Handle("/sys/kbd/s", func(e termui.Event) {
-		a.Text = "Are you sure you want to skip the question? \n\nPress ENTER to confirm. Press any other key to cancel."
+		qp.answers.Text = "Are you sure you want to skip the question? \n\nPress ENTER to confirm. Press any other key to cancel."
 		selected = selected[:0]
 		selected = append(selected, "skip")
 		termui.Render(termui.Body)
@@ -553,8 +560,8 @@ func initializeDemo() {
 	client := interact.NewGruQuizClient(conn)
 	session, err := client.Authenticate(context.Background(), &interact.Token{Id: *token})
 	if err != nil {
-		demo.Text = grpc.ErrorDesc(err) + " Press Ctrl+Q to exit and try again."
-		demo.TextFgColor = termui.ColorRed
+		infoPage.demo.Text = grpc.ErrorDesc(err) + " Press Ctrl+Q to exit and try again."
+		infoPage.demo.TextFgColor = termui.ColorRed
 		termui.Render(termui.Body)
 		return
 	}
@@ -576,12 +583,12 @@ func main() {
 	th := termui.TermHeight()
 	tw := termui.TermWidth()
 
-	conn, err = grpc.Dial(address, grpc.WithInsecure())
+	conn, err = grpc.Dial(*address, grpc.WithInsecure())
 	if err != nil {
 		log.Fatal(err)
 		return
 	}
-	setupInstructionsPage(th, tw)
+	setupInfoPage(th, tw)
 	renderInstructionsPage()
 
 	// Pressing Ctrl-q terminates the ui.
