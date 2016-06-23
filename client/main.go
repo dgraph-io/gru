@@ -74,6 +74,15 @@ type timeS struct {
 	lck  sync.Mutex
 }
 
+func (a *timeS) setTimeLeft(b time.Duration) {
+	a.lck.Lock()
+	if a.left-b >= time.Second ||
+		b-a.left >= time.Second {
+		a.left = b
+	}
+	a.lck.Unlock()
+}
+
 var leftTime, servTime timeS
 
 // timeTaken per question displayed on the top.
@@ -282,12 +291,8 @@ func streamRecv(stream interact.GruQuiz_StreamChanClient) {
 		if err != nil {
 			log.Printf("Error parsing time from server, %v", err)
 		}
-		if leftTime.left-servTime.left > time.Second ||
-			servTime.left-leftTime.left > time.Second {
-			leftTime.lck.Lock()
-			leftTime.left = servTime.left
-			leftTime.lck.Unlock()
-		}
+
+		leftTime.setTimeLeft(servTime.left)
 		termui.Render(termui.Body)
 	}
 }
@@ -392,16 +397,12 @@ func renderQuestionsPage() {
 	termui.Render(termui.Body)
 
 	secondsCount := 0
-	leftTime.lck.Lock()
-	leftTime.left = testDur * time.Minute
-	leftTime.lck.Unlock()
+	leftTime.setTimeLeft(testDur * time.Minute)
 
 	termui.Handle("/timer/1s", func(e termui.Event) {
 		secondsCount += 1
 		timeTaken += 1
-		leftTime.lck.Lock()
-		leftTime.left = leftTime.left - time.Second
-		leftTime.lck.Unlock()
+		leftTime.setTimeLeft(leftTime.left - time.Second)
 		qp.timeSpent.Text = fmt.Sprintf("%02d:%02d", timeTaken/60, timeTaken%60)
 		qp.timeLeft.Text = fmt.Sprintf("%02d:%02d", leftTime.left/time.Minute,
 			(leftTime.left%time.Minute)/time.Second)
