@@ -33,7 +33,6 @@ const (
 
 // Elements for the questions page.
 var instructions *termui.Par
-var lck sync.Mutex
 
 type QuestionsPage struct {
 	timeLeft    *termui.Par
@@ -68,9 +67,14 @@ const (
 // To mantain the state of user while he is answering a question.
 var status State
 
-var startTime time.Time
 var demoTaken = false
-var leftTime, servTime time.Duration
+
+type timeS struct {
+	left time.Duration
+	lck  sync.Mutex
+}
+
+var leftTime, servTime timeS
 
 // timeTaken per question displayed on the top.
 var timeTaken int
@@ -274,15 +278,15 @@ func streamRecv(stream interact.GruQuiz_StreamChanClient) {
 			showFinalPage(curQuestion)
 			return
 		}
-		servTime, err = time.ParseDuration(msg.TimeLeft)
+		servTime.left, err = time.ParseDuration(msg.TimeLeft)
 		if err != nil {
 			log.Printf("Error parsing time from server, %v", err)
 		}
-		if testDur*time.Second-leftTime-servTime > time.Second ||
-			testDur*time.Second-leftTime-servTime < time.Second {
-			lck.Lock()
-			leftTime = testDur*time.Minute - servTime
-			lck.Unlock()
+		if leftTime.left-servTime.left > time.Second ||
+			servTime.left-leftTime.left > time.Second {
+			leftTime.lck.Lock()
+			leftTime.left = servTime.left
+			leftTime.lck.Unlock()
 		}
 		termui.Render(termui.Body)
 	}
@@ -388,18 +392,19 @@ func renderQuestionsPage() {
 	termui.Render(termui.Body)
 
 	secondsCount := 0
-	lck.Lock()
-	leftTime = testDur * time.Minute
-	lck.Unlock()
+	leftTime.lck.Lock()
+	leftTime.left = testDur * time.Minute
+	leftTime.lck.Unlock()
 
 	termui.Handle("/timer/1s", func(e termui.Event) {
 		secondsCount += 1
 		timeTaken += 1
-		lck.Lock()
-		leftTime = leftTime - time.Second
-		lck.Unlock()
+		leftTime.lck.Lock()
+		leftTime.left = leftTime.left - time.Second
+		leftTime.lck.Unlock()
 		qp.timeSpent.Text = fmt.Sprintf("%02d:%02d", timeTaken/60, timeTaken%60)
-		qp.timeLeft.Text = fmt.Sprintf("%02d:%02d", leftTime/time.Minute, (leftTime%time.Minute)/time.Second)
+		qp.timeLeft.Text = fmt.Sprintf("%02d:%02d", leftTime.left/time.Minute,
+			(leftTime.left%time.Minute)/time.Second)
 		termui.Render(termui.Body)
 	})
 }
