@@ -43,6 +43,7 @@ type Candidate struct {
 	questions []Question
 	// count of demo qns asked.
 	demoQnsAsked int
+	demoTaken    bool
 	logFile      *os.File
 	testStart    time.Time
 	// session id of currently active session.
@@ -281,13 +282,16 @@ func getQuestion(req *interact.Req) (*interact.Question, error) {
 		c.logFile.Close()
 		return q, nil
 	}
-	// This means its the first test question.
-	if len(c.questions) == len(questions)-maxDemoQns && c.testStart.IsZero() {
+	if len(c.questions) == len(questions)-maxDemoQns {
+		if !c.demoTaken {
+			c.score = 0
+			c.demoTaken = true
+			cmap[req.Token] = c
+			return &interact.Question{Id: "DEMOEND", Totscore: 0}, nil
+		}
+		// This means it is his first test question.
 		writeLog(c, fmt.Sprintf("%v test_start\n", UTCTime()))
 		c.testStart = time.Now()
-		c.score = 0
-		cmap[req.Token] = c
-		return &interact.Question{Id: "DEMOEND", Totscore: 0}, nil
 	}
 	q, err := nextQuestion(c, req.Token, TEST)
 	if err != nil {

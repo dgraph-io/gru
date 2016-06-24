@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"math/rand"
 	"sort"
 	"strings"
 	"sync"
@@ -113,10 +114,10 @@ func clear() {
 	termui.Body.Rows = termui.Body.Rows[:0]
 }
 
-func finalScore() string {
+func finalScore(score float32) string {
 	return fmt.Sprintf(strings.Join([]string{"Thank you for taking the test",
 		"Your final score was %3.1f",
-		"We will get in touch with you soon."}, ". "))
+		"We will get in touch with you soon."}, ". "), score)
 }
 
 func fetchAndDisplayQn() {
@@ -138,7 +139,7 @@ func fetchAndDisplayQn() {
 		renderInstructionsPage(true)
 		return
 	} else if q.Id == "END" {
-		showFinalPage(finalScore())
+		showFinalPage(finalScore(q.Totscore))
 		return
 	}
 	populateQuestionsPage(q)
@@ -160,8 +161,7 @@ func streamRecv(stream interact.GruQuiz_StreamChanClient) {
 
 		if msg.Status == "END" {
 			clear()
-			showFinalPage("dummy")
-			// showFinalPage(curQuestion)
+			showFinalPage(finalScore(curQuestion.Totscore))
 			return
 		}
 		servTime, err = time.ParseDuration(msg.TimeLeft)
@@ -278,7 +278,9 @@ func enterHandler(e termui.Event, q *interact.Question, selected []string,
 	// multiple choice question.
 	if q.IsMultiple && len(selected) > 0 && status == options {
 		renderSelectedAnswers(selected, m)
-	} else if status == confirmAnswer || status == confirmSkip {
+		return
+	}
+	if status == confirmAnswer || status == confirmSkip {
 		var answerIds []string
 		for _, s := range selected {
 			if s == "skip" {
@@ -405,6 +407,7 @@ func setupInitialPage(s *interact.Session) {
 }
 
 func main() {
+	rand.Seed(42)
 	flag.Parse()
 	err := termui.Init()
 	if err != nil {
