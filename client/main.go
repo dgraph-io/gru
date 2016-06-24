@@ -160,9 +160,10 @@ func fetchAndDisplayQn() {
 func streamRecv(stream interact.GruQuiz_StreamChanClient) {
 	for {
 		msg, err := stream.Recv()
+
 		if err != nil {
 			if err != io.EOF {
-				log.Printf("Error while receiving stream, %v", err)
+				//log.Printf("Error while receiving stream, %v", err)
 				endTT <- msg
 				return
 			}
@@ -176,6 +177,7 @@ func streamRecv(stream interact.GruQuiz_StreamChanClient) {
 			showFinalPage(finalScore(curQuestion.Totscore))
 			return
 		}
+
 		servTime.left, err = time.ParseDuration(msg.TimeLeft)
 		if err != nil {
 			log.Printf("Error parsing time from server, %v", err)
