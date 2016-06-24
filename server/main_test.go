@@ -42,18 +42,67 @@ func TestIsCorrectAnswer(t *testing.T) {
 }
 
 func TestNextQuestion(t *testing.T) {
-	quizInfo = extractQuizInfo("demo_test.yaml")
-
-	c := Candidate{}
-	c.demoQnList = extractQids(DEMO)[:]
-
-	q, list := nextQuestion(c, c.demoQnList, DEMO)
-	if len(list) != 2 {
-		t.Errorf("Expected len of demoQnList to be %d, Got: %d", 2,
-			len(list))
+	var err error
+	questions, err = extractQuizInfo("demo_test.yaml")
+	if err != nil {
+		t.Error(err)
 	}
-	if q == nil {
-		t.Errorf("Expected qn got nil")
+
+	c := Candidate{questions: questions[:]}
+	cmap = make(map[string]Candidate)
+	cmap["testtoken"] = c
+	q, err := nextQuestion(c, "testtoken", DEMO)
+	if err != nil {
+		t.Errorf("Expected nil error. Got: %v", err)
+	}
+	c = cmap["testtoken"]
+	if c.demoQnsAsked != 1 {
+		t.Errorf("Expected demoQnsAsked to be %v. Got: %v", 1,
+			c.demoQnsAsked)
+	}
+	if len(c.questions) != 2 {
+		t.Errorf("Expected questions to have len %v. Got: %v", 2,
+			len(c.questions))
+	}
+	if q.Id != "demo-1" {
+		t.Errorf("Expected question with id: %v. Got: %v", "demo-1",
+			q.Id)
+	}
+
+	q, err = nextQuestion(c, "testtoken", DEMO)
+	if err != nil {
+		t.Errorf("Expected nil error. Got: %v", err)
+	}
+	c = cmap["testtoken"]
+	if c.demoQnsAsked != 2 {
+		t.Errorf("Expected demoQnsAsked to be %v. Got: %v", 2,
+			c.demoQnsAsked)
+	}
+	if len(c.questions) != 1 {
+		t.Errorf("Expected questions to have len %v. Got: %v", 1,
+			len(c.questions))
+	}
+	if q.Id != "demo-3" {
+		t.Errorf("Expected question with id: %v. Got: %v", "demo-3",
+			q.Id)
+	}
+
+	q, err = nextQuestion(c, "testtoken", TEST)
+	if err != nil {
+		t.Errorf("Expected nil error. Got: %v", err)
+	}
+	c = cmap["testtoken"]
+	if c.demoQnsAsked != 2 {
+		t.Errorf("Expected demoQnsAsked to be %v. Got: %v", 2,
+			c.demoQnsAsked)
+	}
+	if len(c.questions) != 0 {
+		t.Errorf("Expected questions to have len %v. Got: %v", 0,
+			len(c.questions))
+	}
+	if q.Id != "test-2" {
+		t.Errorf("Expected question with id: %v. Got: %v", "test-2",
+			q.Id)
 	}
 }
 
@@ -264,5 +313,54 @@ func TestSliceDiff(t *testing.T) {
 	}
 	if !reflect.DeepEqual(qnsToAsk, []string{"q7", "q9", "q2"}) {
 		t.Error("qnsToAsk doesn't have all the qns.")
+	}
+}
+
+func TestCheckIds(t *testing.T) {
+	qns := []Question{{Id: "qn1"}, {Id: "qn1"}}
+	expectedError := "Qn Id has been used before: qn1"
+	if err := checkIds(qns); err.Error() != expectedError {
+		t.Errorf("Expected error to be %v. Got: %v", expectedError, err)
+	}
+
+	qns = []Question{
+		{
+			Id: "qn1",
+			Opt: []Option{
+				{Uid: "O1"},
+				{Uid: "O2"},
+			},
+		},
+		{
+			Id: "qn2",
+			Opt: []Option{
+				{Uid: "O3"},
+				{Uid: "O2"},
+			},
+		},
+	}
+	expectedError = "Ans Id has been used before: O2"
+	if err := checkIds(qns); err.Error() != expectedError {
+		t.Errorf("Expected error to be %v. Got: %v", expectedError, err)
+	}
+
+	qns = []Question{
+		{
+			Id: "qn1",
+			Opt: []Option{
+				{Uid: "O1"},
+				{Uid: "O2"},
+			},
+		},
+		{
+			Id: "qn2",
+			Opt: []Option{
+				{Uid: "O3"},
+				{Uid: "O4"},
+			},
+		},
+	}
+	if err := checkIds(qns); err != nil {
+		t.Errorf("Expected error to be nil. Got: %v", err)
 	}
 }

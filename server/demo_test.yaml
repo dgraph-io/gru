@@ -1,4 +1,3 @@
-demo:
 - id: demo-1
   str: What is the capital of France?
   correct: [demo-1b]
@@ -13,23 +12,23 @@ demo:
     str: London
   positive: 5
   negative: 2.5
-  tag: [Easy]
+  tags: [Easy,demo]
 
-- id: demo-2
+- id: test-2
   str: Which among the following were originally developed at Google?
-  correct: [demo-2a,demo-2c]
+  correct: [test-2a,test-2c]
   opt:
-  - uid: demo-2a
+  - uid: test-2a
     str: Go programming language
-  - uid: demo-2b
+  - uid: test-2b
     str: Ruby
-  - uid: demo-2c
+  - uid: test-2c
     str: Angular
-  - uid: demo-2d
+  - uid: test-2d
     str: Rust
   positive: 10
   negative: 5
-  tag: [Easy]
+  tags: [Easy,test]
 
 - id: demo-3
   str: Which one is the largest ocean in the world?
@@ -45,5 +44,5 @@ demo:
     str: Arctic
   positive: 5
   negative: 2.5
-  tag: [Easy]
+  tags: [Easy,demo]
   

@@ -17,10 +17,11 @@ import (
 	"sync"
 	"time"
 
-	"google.golang.org/grpc"
+	"golang.org/x/net/context"
 
 	"github.com/dgraph-io/gru/server/interact"
-	"golang.org/x/net/context"
+	"google.golang.org/grpc"
+
 	"gopkg.in/yaml.v2"
 )
 
@@ -33,12 +34,28 @@ const (
 	DURATION = 60 * time.Minute
 )
 
+type Candidate struct {
+	name     string
+	email    string
+	validity time.Time
+	score    float32
+	// List of test questions that have not been asked to the candidate yet.
+	questions []Question
+	// count of demo qns asked.
+	demoQnsAsked int
+	logFile      *os.File
+	testStart    time.Time
+	// session id of currently active session.
+	sid string
+}
+
 var (
-	quizFile = flag.String("quiz", "test.yml", "Input question file")
-	port     = flag.String("port", ":8888", "Port on which server listens")
-	candFile = flag.String("cand", "candidates.txt", "Candidate inforamation")
-	quizInfo map[string][]Question
-	cmap     map[string]Candidate
+	quizFile   = flag.String("quiz", "test.yml", "Input question file")
+	port       = flag.String("port", ":8888", "Port on which server listens")
+	candFile   = flag.String("cand", "candidates.txt", "Candidate inforamation")
+	maxDemoQns = 3
+	questions  []Question
+	cmap       map[string]Candidate
 	// List of question ids.
 	qnList     []string
 	demoQnList []string
@@ -70,14 +87,14 @@ func RandStringBytes(n int) string {
 	return string(b)
 }
 
-func sliceDiff(qnList, qnsAsked []string) []string {
-	qns := []string{}
+func sliceDiff(qnList []Question, qnsAsked []string) []Question {
+	qns := []Question{}
 	qmap := make(map[string]bool)
 	for _, q := range qnsAsked {
 		qmap[q] = true
 	}
 	for _, q := range qnList {
-		if present := qmap[q]; !present {
+		if present := qmap[q.Id]; !present {
 			qns = append(qns, q)
 		}
 	}
@@ -127,10 +144,7 @@ func (c Candidate) loadCandInfo(token string) error {
 	}
 	c.score = score
 	c.logFile = f
-	if len(qnsAsked) > 0 {
-		c.demoQnList = demoQnList[:]
-	}
-	c.qnList = sliceDiff(qnList, qnsAsked)
+	c.questions = sliceDiff(questions, qnsAsked)
 	// TODO(pawan) - Extract timeLeft from logs too. Maybe send initial time
 	// from server when test starts
 	cmap[token] = c
@@ -147,18 +161,19 @@ func populateCandInfo(c Candidate, token string) {
 			log.Fatalf("error opening file: %v", err)
 		}
 		c.logFile = f
-		c.qnList = qnList[:]
-		c.demoQnList = demoQnList[:]
+		c.questions = make([]Question, len(questions))
+		copy(c.questions, questions)
 		cmap[token] = c
 		return
 	}
 	// If file exists but the test start is zero means the server might have
 	// lost the data in memory, so we need to load it back from the file.
-	if c.testStart.IsZero() {
-		c.loadCandInfo(token)
-	}
+	// if c.testStart.IsZero() {
+	// 	c.loadCandInfo(token)
+	// }
 }
 
+// TODO - Don't allow multiple sessions simultaneously.
 func authenticate(t *interact.Token) (*interact.Session, error) {
 	var c Candidate
 	var ok bool
@@ -176,6 +191,7 @@ func authenticate(t *interact.Token) (*interact.Session, error) {
 
 	session := interact.Session{Id: RandStringBytes(36)}
 	writeLog(c, fmt.Sprintf("%v session_token %s\n", UTCTime(), session.Id))
+	c.sid = session.Id
 	cmap[t.Id] = c
 	return &session, nil
 }
@@ -197,23 +213,10 @@ type Question struct {
 	Opt      []Option
 	Positive float32
 	Negative float32
-	Tag      []string
+	Tags     []string
 }
 
-func qnFromList(qid string, list []Question) Question {
-	for _, q := range list {
-		if q.Id == qid {
-			return q
-		}
-	}
-	return Question{}
-}
-
-func nextQuestion(c Candidate, list []string, testType string) (*interact.Question, []string) {
-	idx := rand.Intn(len(list))
-	qid := list[idx]
-	q := qnFromList(qid, quizInfo[testType])
-
+func formQuestion(q Question, score float32) *interact.Question {
 	var opts []*interact.Answer
 	for _, o := range q.Opt {
 		a := &interact.Answer{Id: o.Uid, Str: o.Str}
@@ -224,12 +227,31 @@ func nextQuestion(c Candidate, list []string, testType string) (*interact.Questi
 	if len(q.Correct) > 1 {
 		isM = true
 	}
-	que := &interact.Question{Id: q.Id, Str: q.Str, Options: opts,
+	return &interact.Question{Id: q.Id, Str: q.Str, Options: opts,
 		IsMultiple: isM, Positive: q.Positive, Negative: q.Negative,
-		Totscore: c.score,
+		Totscore: score}
+}
+
+func nextQuestion(c Candidate, token string, qnType string) (*interact.Question,
+	error) {
+	for idx, q := range c.questions {
+		for _, t := range q.Tags {
+			// For now qnType can just be "demo" or "test", later
+			// it would have the difficulity level too.
+			if qnType == t {
+				c.questions = append(c.questions[:idx],
+					c.questions[idx+1:]...)
+				if qnType == DEMO {
+					c.demoQnsAsked += 1
+				}
+				cmap[token] = c
+				return formQuestion(q, c.score), nil
+			}
+		}
 	}
-	list = append(list[:idx], list[idx+1:]...)
-	return que, list
+	return &interact.Question{},
+		fmt.Errorf("Didn't find qn with label: %s, for candidate: %s", qnType,
+			token)
 }
 
 func getQuestion(req *interact.Req) (*interact.Question, error) {
@@ -239,34 +261,29 @@ func getQuestion(req *interact.Req) (*interact.Question, error) {
 		return nil, errors.New("Invalid token.")
 	}
 
-	testType := req.TestType
-	if testType == DEMO {
-		if len(c.demoQnList) == 0 {
-			// If demo qns are over, indicate end of demo to client.
-			q := &interact.Question{Id: END, Totscore: 0}
-			c.score = 0
-			cmap[req.Token] = c
-			return q, nil
+	if c.demoQnsAsked < maxDemoQns {
+		q, err := nextQuestion(c, req.Token, DEMO)
+		if err != nil {
+			return nil, err
 		}
-		q, list := nextQuestion(c, c.demoQnList, DEMO)
-		c.demoQnList = list
-		cmap[req.Token] = c
 		return q, nil
 	}
 	// TOOD(pawan) - Check if time is up
-	if len(c.qnList) == 0 {
+	if len(c.questions) == 0 {
 		q := &interact.Question{Id: END, Totscore: c.score}
 		c.logFile.Close()
 		return q, nil
 	}
 	// This means its the first test question.
-	if len(c.qnList) == len(qnList) {
+	if len(c.questions) == len(questions)-maxDemoQns && !c.testStart.IsZero() {
 		writeLog(c, fmt.Sprintf("%v test_start\n", UTCTime()))
 		c.testStart = time.Now()
+		return &interact.Question{Id: "DEMOEND"}
 	}
-	q, list := nextQuestion(c, c.qnList, TEST)
-	c.qnList = list
-	cmap[req.Token] = c
+	q, err := nextQuestion(c, req.Token, TEST)
+	if err != nil {
+		return nil, err
+	}
 	return q, nil
 }
 
@@ -292,17 +309,17 @@ func (s *server) GetQuestion(ctx context.Context,
 	return getQuestion(req)
 }
 
-func isCorrectAnswer(resp *interact.Response) (int, int64, error) {
-	for i, que := range quizInfo[resp.TestType] {
+func isCorrectAnswer(resp *interact.Response) (int, int64) {
+	for idx, que := range questions {
 		if que.Id == resp.Qid {
 			if reflect.DeepEqual(resp.Aid, que.Correct) {
-				return i, CORRECT, nil
+				return idx, CORRECT
 			} else {
-				return i, WRONG, nil
+				return idx, WRONG
 			}
 		}
 	}
-	return -1, -1, errors.New("No matching question")
+	return -1, -1
 }
 
 func UTCTime() string {
@@ -326,26 +343,25 @@ func sendAnswer(resp *interact.Response) (*interact.Status, error) {
 	var err error
 	var idx int
 
-	idx, status.Status, err = isCorrectAnswer(resp)
-
+	idx, status.Status = isCorrectAnswer(resp)
+	if idx == -1 {
+		log.Fatalf("Didn't find question with Id, %v.", resp.Qid)
+	}
 	if len(resp.Aid) > 0 && resp.Aid[0] != "skip" {
 		if status.Status == 1 {
-			c.score += quizInfo[resp.TestType][idx].Positive
+			c.score += questions[idx].Positive
 		} else {
-			c.score -= quizInfo[resp.TestType][idx].Negative
+			c.score -= questions[idx].Negative
 		}
 	} else {
 		if len(resp.Aid) > 1 {
 			log.Println("Got extra optoins with SKIP")
 		}
 	}
-
 	cmap[resp.Token] = c
-	// We log only if its a actual test question.
-	if resp.TestType == TEST {
-		writeLog(c, fmt.Sprintf("%s response %s %s %.1f\n", UTCTime(),
-			resp.Qid, strings.Join(resp.Aid, ","), c.score))
-	}
+	writeLog(c, fmt.Sprintf("%s response %s %s %.1f\n", UTCTime(),
+		resp.Qid, strings.Join(resp.Aid, ","), c.score))
+
 	return &status, err
 }
 
@@ -375,7 +391,8 @@ func streamSend(wg *sync.WaitGroup, stream interact.GruQuiz_StreamChanServer,
 				writeLog(c, fmt.Sprintf("End of test. Time out\n"))
 				if err := stream.Send(&stat); err != nil {
 					endTT <- 2
-					log.Printf("Error while sending stream: %v\n", err)
+					log.Printf("Error while sending stream: %v\n",
+						err)
 				}
 				wg.Done()
 			}
@@ -384,7 +401,8 @@ func streamSend(wg *sync.WaitGroup, stream interact.GruQuiz_StreamChanServer,
 				stat.Status = " ONGOING"
 				if err := stream.Send(&stat); err != nil {
 					endTT <- 2
-					log.Printf("Error while sending stream: %v\n", err)
+					log.Printf("Error while sending stream: %v\n",
+						err)
 				}
 			}
 		}
@@ -458,27 +476,12 @@ func runGrpcServer(address string) {
 	return
 }
 
-type Candidate struct {
-	name     string
-	email    string
-	validity time.Time
-	score    float32
-	// List of test questions that have not been asked to the candidate yet.
-	qnList     []string
-	demoQnList []string
-	logFile    *os.File
-	testStart  time.Time
-	// session id of currently active session.
-	sid string
-}
-
-func parseCandidateInfo(file string) error {
+func parseCandidateFile(file string) error {
 	cmap = make(map[string]Candidate)
 	format := "2006/01/02 (MST)"
 	f, err := os.Open(*candFile)
 	if err != nil {
-		log.Fatal(err)
-		return nil
+		return err
 	}
 	defer f.Close()
 
@@ -492,7 +495,8 @@ func parseCandidateInfo(file string) error {
 		var c Candidate
 		splits := strings.Split(line, " ")
 		if len(splits) < 6 {
-			log.Fatalf("Candidate info isn't sufficient for line %v", line)
+			log.Fatalf("Candidate info isn't sufficient for line %v",
+				line)
 		}
 
 		c.name = strings.Join(splits[:2], " ")
@@ -509,34 +513,50 @@ func parseCandidateInfo(file string) error {
 	return nil
 }
 
-func extractQids(testType string) []string {
-	var list []string
-	for _, q := range quizInfo[testType] {
-		list = append(list, q.Id)
+func checkIds(qns []Question) error {
+	qidMap := make(map[string]bool)
+	aidMap := make(map[string]bool)
+
+	for _, q := range qns {
+		if _, ok := qidMap[q.Id]; ok {
+			return fmt.Errorf("Qn Id has been used before: %v", q.Id)
+		}
+		qidMap[q.Id] = true
+		for _, ans := range q.Opt {
+			if _, ok := aidMap[ans.Uid]; ok {
+				return fmt.Errorf("Ans Id has been used before: %v",
+					ans.Uid)
+			}
+			aidMap[ans.Uid] = true
+		}
 	}
-	return list
+	return nil
 }
 
-func extractQuizInfo(file string) map[string][]Question {
-	// TODO - Error out if the qid or aid is repeated.
-	var info map[string][]Question
+func extractQuizInfo(file string) ([]Question, error) {
+	var info []Question
 	b, err := ioutil.ReadFile(file)
 	if err != nil {
-		log.Fatalf("Error while reading quiz info file, %v", err)
+		return []Question{}, err
 	}
 	err = yaml.Unmarshal(b, &info)
 	if err != nil {
-		log.Fatalf("Error while unmarshalling into yaml, %v", err)
+		return []Question{}, err
 	}
-	return info
+	err = checkIds(info)
+	if err != nil {
+		return []Question{}, err
+	}
+	return info, nil
 }
 
 func main() {
 	flag.Parse()
-	quizInfo = extractQuizInfo(*quizFile)
-	qnList = extractQids(TEST)
-	demoQnList = extractQids(DEMO)
-	parseCandidateInfo(*candFile)
+	var err error
+	if questions, err = extractQuizInfo(*quizFile); err != nil {
+		log.Fatal(err)
+	}
+	parseCandidateFile(*candFile)
 	// TODO(pawan) - Read testStart timings for candidates.
 	runGrpcServer(*port)
 }

@@ -136,7 +136,7 @@ func setupInfoPage(th, tw int) {
 	infoPage.contact.Width = tw
 	infoPage.contact.PaddingLeft = 2
 
-	infoPage.demo = termui.NewPar("We have a infoPage.demo of the how the test would look like. Press s to start the demo.")
+	infoPage.demo = termui.NewPar("We have a demo of the how the test would look like. Press s to start the demo.")
 	infoPage.demo.Border = false
 	infoPage.demo.Height = 3
 	infoPage.demo.Width = tw
@@ -195,8 +195,9 @@ func resetHandlers() {
 
 func showFinalPage(q *interact.Question) {
 	instructions = termui.NewPar(
-		fmt.Sprintf("Thank you for taking the test. Your final score was %3.1f. We will get in touch with you soon.",
-			q.Totscore))
+		fmt.Sprintf(strings.Join([]string{"Thank you for taking the test",
+			"Your final score was %3.1f",
+			"We will get in touch with you soon."}, ". "), q.Totscore))
 	instructions.BorderLabel = "Thank You"
 	instructions.Height = 10
 	instructions.Width = termui.TermWidth() / 2
@@ -398,8 +399,10 @@ func renderQuestionsPage() {
 		lck.Lock()
 		leftTime = leftTime - time.Second
 		lck.Unlock()
-		qp.timeSpent.Text = fmt.Sprintf("%02d:%02d", timeTaken/60, timeTaken%60)
-		qp.timeLeft.Text = fmt.Sprintf("%02d:%02d", leftTime/time.Minute, (leftTime%time.Minute)/time.Second)
+		qp.timeSpent.Text = fmt.Sprintf("%02d:%02d", timeTaken/60,
+			timeTaken%60)
+		qp.timeLeft.Text = fmt.Sprintf("%02d:%02d", leftTime/time.Minute,
+			(leftTime%time.Minute)/time.Second)
 		termui.Render(termui.Body)
 	})
 }
