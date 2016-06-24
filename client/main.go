@@ -396,13 +396,13 @@ func initializeDemo() {
 
 func setupInitialPage(s *interact.Session) {
 	state := s.State
+	sessionId = s.Id
 	if state == interact.Quiz_TEST_FINISHED {
 		//show final page saying test already taken and return
 		showFinalPage("You have already taken the test.")
 	}
-	sessionId = s.Id
 	if state == interact.Quiz_TEST_STARTED {
-		//call get questions and return
+		initializeTest()
 	}
 	setupInfoPage(termui.TermHeight(), termui.TermWidth())
 	if state == interact.Quiz_DEMO_NOT_TAKEN {
@@ -413,7 +413,9 @@ func setupInitialPage(s *interact.Session) {
 		//call instructions screen with demo taken to be true
 		renderInstructionsPage(true)
 	}
-
+	if state == interact.Quiz_DEMO_STARTED {
+		initializeDemo()
+	}
 }
 
 func main() {
@@ -440,9 +442,6 @@ func main() {
 	instructions.X = termui.TermWidth() / 4
 	instructions.PaddingTop = 1
 	instructions.PaddingLeft = 1
-	termui.Render(instructions)
-
-	// Set up a connection to the server.
 
 	client := interact.NewGruQuizClient(conn)
 	s, err := client.Authenticate(context.Background(), &interact.Token{Id: *token})
@@ -450,9 +449,9 @@ func main() {
 		instructions.Text = grpc.ErrorDesc(err) + " Press Ctrl+Q to exit and try again."
 		instructions.TextFgColor = termui.ColorRed
 		termui.Render(instructions)
-		return
+	} else {
+		setupInitialPage(s)
 	}
-	setupInitialPage(s)
 
 	// Pressing Ctrl-q terminates the ui.
 	termui.Handle("/sys/kbd/C-q", func(termui.Event) {

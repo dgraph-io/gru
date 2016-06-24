@@ -55,12 +55,10 @@ var (
 	port       = flag.String("port", ":8888", "Port on which server listens")
 	candFile   = flag.String("cand", "candidates.txt", "Candidate inforamation")
 	maxDemoQns = 3
-	questions  []Question
-	cmap       map[string]Candidate
 	// List of question ids.
-	qnList     []string
-	demoQnList []string
-	wrtLock    sync.Mutex
+	questions []Question
+	cmap      map[string]Candidate
+	wrtLock   sync.Mutex
 )
 
 type server struct{}
@@ -102,7 +100,7 @@ func sliceDiff(qnList []Question, qnsAsked []string) []Question {
 	return qns
 }
 
-func (c Candidate) loadCandInfo(token string) error {
+func (c *Candidate) loadCandInfo(token string) error {
 	f, err := os.Open(fmt.Sprintf("logs/%s.log", token))
 	if err != nil {
 		return err
@@ -131,11 +129,15 @@ func (c Candidate) loadCandInfo(token string) error {
 			if err != nil {
 				return err
 			}
-			score += float32(s)
 			if len(qnsAsked) > 0 && splits[4] == qnsAsked[len(qnsAsked)-1] {
 				continue
 			}
 			qnsAsked = append(qnsAsked, splits[4])
+			// We only want to add score from actual quiz questions
+			// and not demo qns.
+			if len(qnsAsked) > maxDemoQns {
+				score += float32(s)
+			}
 		case "ping":
 			if len(qnsAsked) > 0 && splits[4] == qnsAsked[len(qnsAsked)-1] {
 				continue
@@ -146,13 +148,24 @@ func (c Candidate) loadCandInfo(token string) error {
 	c.score = score
 	c.logFile = f
 	c.questions = sliceDiff(questions, qnsAsked)
+	if len(questions)-len(c.questions) >= maxDemoQns {
+		c.demoQnsAsked = maxDemoQns
+		c.demoTaken = true
+	} else {
+		c.demoQnsAsked = len(questions) - len(c.questions)
+	}
 	// TODO(pawan) - Extract timeLeft from logs too. Maybe send initial time
 	// from server when test starts
-	cmap[token] = c
 	return nil
 }
 
-func populateCandInfo(c Candidate, token string) {
+func candInfo(token string) Candidate {
+	// This indicates candidate info exists in memory.
+	c := cmap[token]
+	if len(c.questions) > 0 {
+		return c
+	}
+
 	// If file for the token doesn't exist means client is trying to connect
 	// for the first time. So we create a file
 	if _, err := os.Stat(fmt.Sprintf("logs/%s.log", token)); os.IsNotExist(err) {
@@ -165,34 +178,46 @@ func populateCandInfo(c Candidate, token string) {
 		c.questions = make([]Question, len(questions))
 		copy(c.questions, questions)
 		cmap[token] = c
-		return
+		return c
 	}
-	// If file exists but the test start is zero means the server might have
-	// lost the data in memory, so we need to load it back from the file.
+
+	// If we reach here it means logfile for candidate exists but his info
+	// doesn't exist in memory, so we need to load it back from the file.
 	// TODO - Don't allow multiple sessions simultaneously.
-	// if c.testStart.IsZero() {
-	// 	err := c.loadCandInfo(token)
-	// 	if err != nil {
-	// 		log.Fatalf("error while reading candidate info from log file,token: %s", token)
-	// 	}
-	// }
+	var err error
+	err = c.loadCandInfo(token)
+	if err != nil {
+		log.Fatalf("error while reading candidate info from log file,token: %s", token)
+	}
+	cmap[token] = c
+	return c
 }
 
 func state(c Candidate) interact.QuizState {
-	return interact.Quiz_DEMO_NOT_TAKEN
+	if len(c.questions) == len(questions) {
+		return interact.Quiz_DEMO_NOT_TAKEN
+	}
+	if len(questions)-len(c.questions) < maxDemoQns {
+		return interact.Quiz_DEMO_STARTED
+	}
+	if len(questions)-len(c.questions) == maxDemoQns {
+		return interact.Quiz_TEST_NOT_TAKEN
+	}
+	// TODO - Check validity of test
+	if len(c.questions) == 0 {
+		return interact.Quiz_TEST_FINISHED
+	}
+	return interact.Quiz_TEST_STARTED
 }
 
 func authenticate(t *interact.Token) (*interact.Session, error) {
 	var c Candidate
 	var ok bool
-
-	// This indicates there is no entry in the candidate file with this token.
 	if c, ok = cmap[t.Id]; !ok {
 		return nil, errors.New("Invalid token.")
 	}
 
-	populateCandInfo(c, t.Id)
-	c = cmap[t.Id]
+	c = candInfo(t.Id)
 	if err := checkToken(c); err != nil {
 		return nil, err
 	}
@@ -525,20 +550,21 @@ func parseCandidateFile(file string) error {
 }
 
 func checkIds(qns []Question) error {
-	qidMap := make(map[string]bool)
-	aidMap := make(map[string]bool)
+	idsMap := make(map[string]bool)
 
+	// TODO(pawan) - Have a common check for ids. Also check that correct
+	// should be part of options.
 	for _, q := range qns {
-		if _, ok := qidMap[q.Id]; ok {
-			return fmt.Errorf("Qn Id has been used before: %v", q.Id)
+		if _, ok := idsMap[q.Id]; ok {
+			return fmt.Errorf("Id has been used before: %v", q.Id)
 		}
-		qidMap[q.Id] = true
+		idsMap[q.Id] = true
 		for _, ans := range q.Opt {
-			if _, ok := aidMap[ans.Uid]; ok {
-				return fmt.Errorf("Ans Id has been used before: %v",
+			if _, ok := idsMap[ans.Uid]; ok {
+				return fmt.Errorf("Id has been used before: %v",
 					ans.Uid)
 			}
-			aidMap[ans.Uid] = true
+			idsMap[ans.Uid] = true
 		}
 	}
 	return nil
