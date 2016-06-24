@@ -25,15 +25,25 @@ message Token {
 	string id = 1;
 }
 
+message Quiz {
+	enum state {
+		DEMO_NOT_TAKEN = 0;
+		DEMO_TAKEN = 1;
+		TEST_NOT_TAKEN = 2;
+		TEST_STARTED = 3;
+		TEST_FINISHED = 4;
+	}
+}
+
 message Session {
 	string id = 1;
+	Quiz.state state = 2;
 }
 
 message Req {
 	bool repeat = 1;
 	string sid = 2;
 	string token = 3;
-	string testType = 4;
 }
 
 message Question {
@@ -56,7 +66,6 @@ message Response {
 	repeated string aid = 2;
 	string sid = 3;
 	string token = 4;
-	string testType = 5;
 }
 
 message Status {

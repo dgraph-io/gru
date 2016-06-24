@@ -177,9 +177,11 @@ func TestAuthenticate(t *testing.T) {
 
 	quizInfo = extractQuizInfo("demo_test.yaml")
 	demoQnList = extractQids(DEMO)
+	qnList = extractQids(TEST)
 	c := Candidate{email: "pawan@dgraph.io", validity: time.Now().AddDate(0, 0, 7),
 		demoQnList: extractQids(DEMO)[:]}
 	c.testStart = time.Now().Add(-2 * time.Minute)
+	c.qnList = qnList[:1]
 	cmap = make(map[string]Candidate)
 	cmap[tokenId] = c
 	token := interact.Token{Id: tokenId}
@@ -190,6 +192,10 @@ func TestAuthenticate(t *testing.T) {
 	if s.Id == "" {
 		t.Errorf("Expected non-empty sessionId. Got: %s", s.Id)
 	}
+	if s.State != interact.Quiz_TEST_STARTED {
+		t.Errorf("Expected state to be %d,Got: %d", s.State)
+	}
+	//TODO(pawan) - test other values fo State
 
 	c.testStart = time.Now().Add(-2 * time.Hour)
 	cmap[tokenId] = c
@@ -239,7 +245,7 @@ func TestLoadCandInfo(t *testing.T) {
 	c = cmap[tokenId]
 
 	if c.score != 15.0 {
-		t.Errorf("Expected score %f. Got: %f", 30.0, c.score)
+		t.Errorf("Expected score %f. Got: %f", 15.0, c.score)
 	}
 	if !reflect.DeepEqual(c.qnList, []string{"demo-3"}) {
 		t.Error("Expected qn list doesn't match")

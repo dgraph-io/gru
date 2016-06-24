@@ -168,12 +168,19 @@ func populateCandInfo(c Candidate, token string) {
 	}
 	// If file exists but the test start is zero means the server might have
 	// lost the data in memory, so we need to load it back from the file.
+	// TODO - Don't allow multiple sessions simultaneously.
 	// if c.testStart.IsZero() {
-	// 	c.loadCandInfo(token)
+	// 	err := c.loadCandInfo(token)
+	// 	if err != nil {
+	// 		log.Fatalf("error while reading candidate info from log file,token: %s", token)
+	// 	}
 	// }
 }
 
-// TODO - Don't allow multiple sessions simultaneously.
+func state(c Candidate) interact.QuizState {
+	return interact.Quiz_DEMO_NOT_TAKEN
+}
+
 func authenticate(t *interact.Token) (*interact.Session, error) {
 	var c Candidate
 	var ok bool
@@ -189,7 +196,7 @@ func authenticate(t *interact.Token) (*interact.Session, error) {
 		return nil, err
 	}
 
-	session := interact.Session{Id: RandStringBytes(36)}
+	session := interact.Session{Id: RandStringBytes(36), State: state(c)}
 	writeLog(c, fmt.Sprintf("%v session_token %s\n", UTCTime(), session.Id))
 	c.sid = session.Id
 	cmap[t.Id] = c
@@ -275,10 +282,12 @@ func getQuestion(req *interact.Req) (*interact.Question, error) {
 		return q, nil
 	}
 	// This means its the first test question.
-	if len(c.questions) == len(questions)-maxDemoQns && !c.testStart.IsZero() {
+	if len(c.questions) == len(questions)-maxDemoQns && c.testStart.IsZero() {
 		writeLog(c, fmt.Sprintf("%v test_start\n", UTCTime()))
 		c.testStart = time.Now()
-		return &interact.Question{Id: "DEMOEND"}
+		c.score = 0
+		cmap[req.Token] = c
+		return &interact.Question{Id: "DEMOEND", Totscore: 0}, nil
 	}
 	q, err := nextQuestion(c, req.Token, TEST)
 	if err != nil {
@@ -361,7 +370,6 @@ func sendAnswer(resp *interact.Response) (*interact.Status, error) {
 	cmap[resp.Token] = c
 	writeLog(c, fmt.Sprintf("%s response %s %s %.1f\n", UTCTime(),
 		resp.Qid, strings.Join(resp.Aid, ","), c.score))
-
 	return &status, err
 }
 
