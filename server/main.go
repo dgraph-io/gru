@@ -538,7 +538,23 @@ func checkIds(qns []Question) error {
 				return fmt.Errorf("Ans Id has been used before: %v",
 					ans.Uid)
 			}
+			if _, ok := qidMap[ans.Uid]; ok {
+				return fmt.Errorf("Ans Id has been used in a questoin before: %v",
+					ans.Uid)
+			}
 			aidMap[ans.Uid] = true
+		}
+
+		count := 0
+		for _, corr := range q.Correct {
+			count++
+			if _, ok := aidMap[corr]; !ok {
+				return fmt.Errorf("Correct not part of options: %v ", corr)
+			}
+		}
+
+		if count == 0 {
+			return fmt.Errorf("Correct list is empty")
 		}
 	}
 	return nil
