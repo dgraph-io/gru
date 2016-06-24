@@ -392,8 +392,6 @@ func streamSend(wg *sync.WaitGroup, stream interact.GruQuiz_StreamChanServer,
 	tickChan := time.NewTicker(time.Second * 5).C
 
 	for {
-		stat.TimeLeft = time.Now().Sub(c.testStart).String()
-
 		select {
 		case <-endTimeChan:
 			{
@@ -410,6 +408,7 @@ func streamSend(wg *sync.WaitGroup, stream interact.GruQuiz_StreamChanServer,
 			}
 		case <-tickChan:
 			{
+				stat.TimeLeft = (DURATION - time.Now().Sub(c.testStart)).String()
 				stat.Status = " ONGOING"
 				if err := stream.Send(&stat); err != nil {
 					endTT <- 2

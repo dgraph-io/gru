@@ -34,7 +34,6 @@ const (
 
 // Elements for the questions page.
 var instructions *termui.Par
-var lck sync.Mutex
 
 type QuestionsPage struct {
 	timeLeft    *termui.Par
@@ -69,8 +68,21 @@ const (
 // To mantain the state of user while he is answering a question.
 var status State
 
-var startTime time.Time
-var leftTime, servTime time.Duration
+type timeS struct {
+	left time.Duration
+	lck  sync.Mutex
+}
+
+func (a *timeS) setTimeLeft(b time.Duration) {
+	a.lck.Lock()
+	if a.left-b >= time.Second ||
+		b-a.left >= time.Second {
+		a.left = b
+	}
+	a.lck.Unlock()
+}
+
+var leftTime, servTime timeS
 
 // timeTaken per question displayed on the top.
 var timeTaken int
@@ -164,16 +176,12 @@ func streamRecv(stream interact.GruQuiz_StreamChanClient) {
 			showFinalPage(finalScore(curQuestion.Totscore))
 			return
 		}
-		servTime, err = time.ParseDuration(msg.TimeLeft)
+		servTime.left, err = time.ParseDuration(msg.TimeLeft)
 		if err != nil {
 			log.Printf("Error parsing time from server, %v", err)
 		}
-		if testDur*time.Second-leftTime-servTime > time.Second ||
-			testDur*time.Second-leftTime-servTime < time.Second {
-			lck.Lock()
-			leftTime = testDur*time.Minute - servTime
-			lck.Unlock()
-		}
+
+		leftTime.setTimeLeft(servTime.left)
 		termui.Render(termui.Body)
 	}
 }
