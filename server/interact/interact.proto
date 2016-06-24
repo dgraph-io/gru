@@ -28,7 +28,7 @@ message Token {
 message Quiz {
 	enum state {
 		DEMO_NOT_TAKEN = 0;
-		DEMO_TAKEN = 1;
+		DEMO_STARTED = 1;
 		TEST_NOT_TAKEN = 2;
 		TEST_STARTED = 3;
 		TEST_FINISHED = 4;
