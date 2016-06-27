@@ -27,12 +27,6 @@ var address = flag.String("address", "localhost:8888", "Address of the server")
 var curQuestion *interact.Question
 var endTT chan *interact.ServerStatus
 
-const (
-	//TODO(pawan) - Get from server.
-	testDur = 60
-)
-
-// Elements for the questions page.
 var instructions *termui.Par
 
 type QuestionsPage struct {
@@ -84,6 +78,9 @@ func (a *timeS) setTimeLeft(b time.Duration) {
 
 var leftTime, servTime timeS
 
+// test duration from server.
+var testDuration string
+
 // timeTaken per question displayed on the top.
 var timeTaken int
 var ts float32
@@ -95,36 +92,6 @@ var ls float32
 var conn *grpc.ClientConn
 
 var sessionId string
-
-var infoPage InformationPage
-
-func resetHandlers() {
-	termui.Handle("/sys/kbd", func(e termui.Event) {})
-	termui.Handle("/sys/kbd/s", func(e termui.Event) {})
-	termui.Handle("/sys/kbd/<enter>", func(e termui.Event) {})
-}
-
-func showFinalPage(msg string) {
-	instructions = termui.NewPar(msg)
-	instructions.BorderLabel = "Thank You"
-	instructions.Height = 10
-	instructions.Width = termui.TermWidth() / 2
-	instructions.Y = termui.TermHeight() / 4
-	instructions.X = termui.TermWidth() / 4
-	instructions.PaddingTop = 1
-	instructions.PaddingLeft = 1
-
-	termui.Clear()
-	termui.Body.Rows = termui.Body.Rows[:0]
-	termui.Render(instructions)
-	resetHandlers()
-	conn.Close()
-}
-
-func clear() {
-	termui.Clear()
-	termui.Body.Rows = termui.Body.Rows[:0]
-}
 
 func finalScore(score float32) string {
 	return fmt.Sprintf(strings.Join([]string{"Thank you for taking the test",
@@ -210,9 +177,9 @@ func streamSend(stream interact.GruQuiz_StreamChanClient) {
 	}
 }
 
-func initializeTest() {
+func initializeTest(tl string) {
 	setupQuestionsPage()
-	renderQuestionsPage()
+	renderQuestionsPage(tl)
 	fetchAndDisplayQn()
 
 	if curQuestion.Id == "END" {
@@ -387,22 +354,23 @@ func populateQuestionsPage(q *interact.Question) {
 	})
 }
 
-func initializeDemo() {
+func initializeDemo(tl string) {
 	clear()
 	setupQuestionsPage()
-	renderQuestionsPage()
+	renderQuestionsPage(tl)
 	fetchAndDisplayQn()
 }
 
 func setupInitialPage(s *interact.Session) {
 	state := s.State
+	testDuration = s.TestDuration
 	sessionId = s.Id
 	if state == interact.Quiz_TEST_FINISHED {
 		//show final page saying test already taken and return
 		showFinalPage("You have already taken the test.")
 	}
 	if state == interact.Quiz_TEST_STARTED {
-		initializeTest()
+		initializeTest(s.TimeLeft)
 	}
 	setupInfoPage(termui.TermHeight(), termui.TermWidth())
 	if state == interact.Quiz_DEMO_NOT_TAKEN {
@@ -414,7 +382,7 @@ func setupInitialPage(s *interact.Session) {
 		renderInstructionsPage(true)
 	}
 	if state == interact.Quiz_DEMO_STARTED {
-		initializeDemo()
+		initializeDemo(s.TestDuration)
 	}
 }
 

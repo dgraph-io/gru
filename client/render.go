@@ -2,10 +2,13 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/gizak/termui"
 )
+
+var infoPage InformationPage
 
 func setupInfoPage(th, tw int) {
 	instructions = termui.NewPar("")
@@ -69,7 +72,7 @@ func setupInfoPage(th, tw int) {
 var qp QuestionsPage
 
 func setupQuestionsPage() {
-	qp.timeLeft = termui.NewPar(fmt.Sprintf("%02d:00", testDur))
+	qp.timeLeft = termui.NewPar("")
 	qp.timeLeft.Height = 3
 	qp.timeLeft.BorderLabel = "Time Left"
 
@@ -133,15 +136,15 @@ func renderInstructionsPage(demoTaken bool) {
 
 	termui.Handle("/sys/kbd/s", func(e termui.Event) {
 		if !demoTaken {
-			initializeDemo()
+			initializeDemo(testDuration)
 			return
 		}
 		clear()
-		initializeTest()
+		initializeTest(testDuration)
 	})
 }
 
-func renderQuestionsPage() {
+func renderQuestionsPage(tl string) {
 	termui.Body.Y = 0
 	termui.Body.AddRows(
 		termui.NewRow(
@@ -158,11 +161,13 @@ func renderQuestionsPage() {
 	termui.Body.Align()
 	termui.Render(termui.Body)
 
-	secondsCount := 0
-	leftTime.setTimeLeft(testDur * time.Minute)
+	tLeft, err := time.ParseDuration(tl)
+	if err != nil {
+		log.Printf("Got error while parsing time: %v, err: %v", tl, err)
+	}
+	leftTime.setTimeLeft(tLeft)
 
 	termui.Handle("/timer/1s", func(e termui.Event) {
-		secondsCount += 1
 		timeTaken += 1
 		leftTime.setTimeLeft(leftTime.left - time.Second)
 		qp.timeSpent.Text = fmt.Sprintf("%02d:%02d", timeTaken/60,
@@ -171,4 +176,32 @@ func renderQuestionsPage() {
 			(leftTime.left%time.Minute)/time.Second)
 		termui.Render(termui.Body)
 	})
+}
+
+func resetHandlers() {
+	termui.Handle("/sys/kbd", func(e termui.Event) {})
+	termui.Handle("/sys/kbd/s", func(e termui.Event) {})
+	termui.Handle("/sys/kbd/<enter>", func(e termui.Event) {})
+}
+
+func showFinalPage(msg string) {
+	instructions = termui.NewPar(msg)
+	instructions.BorderLabel = "Thank You"
+	instructions.Height = 10
+	instructions.Width = termui.TermWidth() / 2
+	instructions.Y = termui.TermHeight() / 4
+	instructions.X = termui.TermWidth() / 4
+	instructions.PaddingTop = 1
+	instructions.PaddingLeft = 1
+
+	termui.Clear()
+	termui.Body.Rows = termui.Body.Rows[:0]
+	termui.Render(instructions)
+	resetHandlers()
+	conn.Close()
+}
+
+func clear() {
+	termui.Clear()
+	termui.Body.Rows = termui.Body.Rows[:0]
 }

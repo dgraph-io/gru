@@ -38,6 +38,8 @@ message Quiz {
 message Session {
 	string id = 1;
 	Quiz.state state = 2;
+	string timeLeft = 3;
+	string testDuration = 4;
 }
 
 message Req {

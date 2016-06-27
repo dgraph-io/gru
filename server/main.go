@@ -222,7 +222,8 @@ func authenticate(t *interact.Token) (*interact.Session, error) {
 		return nil, err
 	}
 
-	session := interact.Session{Id: RandStringBytes(36), State: state(c)}
+	session := interact.Session{Id: RandStringBytes(36), State: state(c),
+		TimeLeft: timeLeft(c.testStart), TestDuration: DURATION.String()}
 	writeLog(c, fmt.Sprintf("%v session_token %s\n", UTCTime(), session.Id))
 	c.sid = session.Id
 	cmap[t.Id] = c
@@ -410,6 +411,10 @@ func (s *server) SendAnswer(ctx context.Context,
 	return sendAnswer(resp)
 }
 
+func timeLeft(ts time.Time) string {
+	return (DURATION - time.Now().Sub(ts)).String()
+}
+
 func streamSend(wg *sync.WaitGroup, stream interact.GruQuiz_StreamChanServer,
 	c Candidate, endTT chan int) {
 	var stat interact.ServerStatus
@@ -433,7 +438,7 @@ func streamSend(wg *sync.WaitGroup, stream interact.GruQuiz_StreamChanServer,
 			}
 		case <-tickChan:
 			{
-				stat.TimeLeft = (DURATION - time.Now().Sub(c.testStart)).String()
+				stat.TimeLeft = timeLeft(c.testStart)
 				stat.Status = " ONGOING"
 				if err := stream.Send(&stat); err != nil {
 					endTT <- 2
