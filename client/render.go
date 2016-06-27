@@ -114,7 +114,8 @@ func setupQuestionsPage() {
 func renderInstructionsPage(demoTaken bool) {
 	resetHandlers()
 	termui.Render(instructions)
-	// Adding an offset so that all these boxes come inside the instructions box.
+	// Adding an offset so that all these boxes come inside the instructions
+	// box.
 	termui.Body.Y = 2
 	termui.Body.AddRows(
 		termui.NewRow(
@@ -172,7 +173,8 @@ func renderQuestionsPage(tl string) {
 		leftTime.setTimeLeft(leftTime.left - time.Second)
 		qp.timeSpent.Text = fmt.Sprintf("%02d:%02d", timeTaken/60,
 			timeTaken%60)
-		qp.timeLeft.Text = fmt.Sprintf("%02d:%02d", leftTime.left/time.Minute,
+		qp.timeLeft.Text = fmt.Sprintf("%02d:%02d",
+			leftTime.left/time.Minute,
 			(leftTime.left%time.Minute)/time.Second)
 		termui.Render(termui.Body)
 	})

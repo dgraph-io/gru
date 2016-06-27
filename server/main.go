@@ -51,9 +51,11 @@ type Candidate struct {
 }
 
 var (
-	quizFile   = flag.String("quiz", "test.yml", "Input question file")
-	port       = flag.String("port", ":8888", "Port on which server listens")
-	candFile   = flag.String("cand", "candidates.txt", "Candidate inforamation")
+	quizFile = flag.String("quiz", "test.yml", "Input question file")
+	port     = flag.String("port", ":8888", "Port on which server listens")
+	candFile = flag.String("cand", "candidates.txt", "Candidate inforamation")
+	// TODO - Check this number should be less than total number of demo
+	// questions in the file.
 	maxDemoQns = 3
 	// List of question ids.
 	questions []Question
@@ -187,7 +189,8 @@ func candInfo(token string) Candidate {
 	var err error
 	err = c.loadCandInfo(token)
 	if err != nil {
-		log.Fatalf("error while reading candidate info from log file,token: %s", token)
+		log.Fatalf("error while reading candidate info from log file,token: %s",
+			token)
 	}
 	cmap[token] = c
 	return c
@@ -284,8 +287,8 @@ func nextQuestion(c Candidate, token string, qnType string) (*interact.Question,
 		}
 	}
 	return &interact.Question{},
-		fmt.Errorf("Didn't find qn with label: %s, for candidate: %s", qnType,
-			token)
+		fmt.Errorf("Didn't find qn with label: %s, for candidate: %s",
+			qnType, token)
 }
 
 func getQuestion(req *interact.Req) (*interact.Question, error) {
@@ -313,7 +316,8 @@ func getQuestion(req *interact.Req) (*interact.Question, error) {
 			c.score = 0
 			c.demoTaken = true
 			cmap[req.Token] = c
-			return &interact.Question{Id: "DEMOEND", Totscore: 0}, nil
+			return &interact.Question{Id: "DEMOEND", Totscore: 0},
+				nil
 		}
 		// This means it is his first test question.
 		writeLog(c, fmt.Sprintf("%v test_start\n", UTCTime()))
@@ -467,7 +471,8 @@ func streamRecv(wg *sync.WaitGroup, stream interact.GruQuiz_StreamChanServer,
 			msg, err := stream.Recv()
 			if err != nil {
 				if err != io.EOF {
-					log.Printf("Error while receiving stream: %v\n", err)
+					log.Printf("Error while receiving stream: %v\n",
+						err)
 				}
 				wg.Done()
 				return
@@ -574,7 +579,8 @@ func checkIds(qns []Question) error {
 		for _, corr := range q.Correct {
 			count++
 			if _, ok := idsMap[corr]; !ok {
-				return fmt.Errorf("Correct not part of options: %v ", corr)
+				return fmt.Errorf("Correct not part of options: %v ",
+					corr)
 			}
 		}
 
@@ -603,6 +609,7 @@ func extractQuizInfo(file string) ([]Question, error) {
 }
 
 func main() {
+	rand.Seed(time.Now().UTC().UnixNano())
 	flag.Parse()
 	var err error
 	if questions, err = extractQuizInfo(*quizFile); err != nil {
