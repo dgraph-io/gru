@@ -132,15 +132,15 @@ func (c *Candidate) loadCandInfo(token string) error {
 			if err != nil {
 				return err
 			}
+			// We only want to add score from actual quiz questions
+			// and not demo qns.
+			if len(qnsAsked) >= maxDemoQns {
+				score += float32(s)
+			}
 			if len(qnsAsked) > 0 && splits[4] == qnsAsked[len(qnsAsked)-1] {
 				continue
 			}
 			qnsAsked = append(qnsAsked, splits[4])
-			// We only want to add score from actual quiz questions
-			// and not demo qns.
-			if len(qnsAsked) > maxDemoQns {
-				score += float32(s)
-			}
 		case "ping":
 			if len(qnsAsked) > 0 && splits[4] == qnsAsked[len(qnsAsked)-1] {
 				continue
