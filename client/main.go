@@ -62,21 +62,21 @@ const (
 // To mantain the state of user while he is answering a question.
 var status State
 
-type timeS struct {
-	left time.Duration
-	lck  sync.Mutex
+type clock struct {
+	sync.Mutex
+	dur time.Duration
 }
 
-func (a *timeS) setTimeLeft(b time.Duration) {
-	a.lck.Lock()
-	if a.left-b >= time.Second ||
-		b-a.left >= time.Second {
-		a.left = b
+func (c *clock) setTimeLeft(serverDur time.Duration) {
+	c.Lock()
+	if c.dur-serverDur >= time.Second ||
+		serverDur-c.dur >= time.Second {
+		c.dur = serverDur
 	}
-	a.lck.Unlock()
+	c.Unlock()
 }
 
-var leftTime, servTime timeS
+var leftTime, servTime clock
 
 // test duration from server.
 var testDuration string
@@ -95,7 +95,7 @@ var sessionId string
 
 func finalScore(score float32) string {
 	return fmt.Sprintf(strings.Join([]string{"Thank you for taking the test",
-		"Your final score was %3.1f",
+		"Your final score was %4.1f",
 		"We will get in touch with you soon."}, ". "), score)
 }
 
@@ -145,12 +145,12 @@ func streamRecv(stream interact.GruQuiz_StreamChanClient) {
 			return
 		}
 
-		servTime.left, err = time.ParseDuration(msg.TimeLeft)
+		servTime.dur, err = time.ParseDuration(msg.TimeLeft)
 		if err != nil {
 			log.Printf("Error parsing time from server, %v", err)
 		}
 
-		leftTime.setTimeLeft(servTime.left)
+		leftTime.setTimeLeft(servTime.dur)
 		termui.Render(termui.Body)
 	}
 }

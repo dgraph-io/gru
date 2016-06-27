@@ -72,7 +72,8 @@ func checkToken(c Candidate) error {
 	// Initially testStart is zero, but after candidate has taken the
 	// test once, it shouldn't be zero.
 	if !c.testStart.IsZero() && time.Now().UTC().After(c.testStart.Add(DURATION)) {
-		return errors.New(fmt.Sprintf("%v since you started the test for the first time are already over.",
+		return errors.New(fmt.Sprintf(
+			"%v since you started the test for the first time are already over.",
 			DURATION))
 	}
 	return nil
@@ -131,15 +132,15 @@ func (c *Candidate) loadCandInfo(token string) error {
 			if err != nil {
 				return err
 			}
+			// We only want to add score from actual quiz questions
+			// and not demo qns.
+			if len(qnsAsked) >= maxDemoQns {
+				score += float32(s)
+			}
 			if len(qnsAsked) > 0 && splits[4] == qnsAsked[len(qnsAsked)-1] {
 				continue
 			}
 			qnsAsked = append(qnsAsked, splits[4])
-			// We only want to add score from actual quiz questions
-			// and not demo qns.
-			if len(qnsAsked) > maxDemoQns {
-				score += float32(s)
-			}
 		case "ping":
 			if len(qnsAsked) > 0 && splits[4] == qnsAsked[len(qnsAsked)-1] {
 				continue
@@ -421,6 +422,7 @@ func timeLeft(ts time.Time) string {
 
 func streamSend(wg *sync.WaitGroup, stream interact.GruQuiz_StreamChanServer,
 	c Candidate, endTT chan int) {
+	defer wg.Done()
 	var stat interact.ServerStatus
 	endTimeChan := time.NewTimer(DURATION).C
 	tickChan := time.NewTicker(time.Second * 5).C
@@ -438,7 +440,7 @@ func streamSend(wg *sync.WaitGroup, stream interact.GruQuiz_StreamChanServer,
 					log.Printf("Error while sending stream: %v\n",
 						err)
 				}
-				wg.Done()
+				return
 			}
 		case <-tickChan:
 			{
@@ -456,6 +458,7 @@ func streamSend(wg *sync.WaitGroup, stream interact.GruQuiz_StreamChanServer,
 
 func streamRecv(wg *sync.WaitGroup, stream interact.GruQuiz_StreamChanServer,
 	c Candidate, endTT chan int) {
+	defer wg.Done()
 	for {
 		select {
 		case x := <-endTT:
@@ -465,7 +468,6 @@ func streamRecv(wg *sync.WaitGroup, stream interact.GruQuiz_StreamChanServer,
 				log.Println("Possible Client crash")
 
 			}
-			wg.Done()
 			return
 		default:
 			msg, err := stream.Recv()
@@ -474,7 +476,6 @@ func streamRecv(wg *sync.WaitGroup, stream interact.GruQuiz_StreamChanServer,
 					log.Printf("Error while receiving stream: %v\n",
 						err)
 				}
-				wg.Done()
 				return
 			}
 			writeLog(c, fmt.Sprintf("%v ping %s\n",
@@ -482,7 +483,6 @@ func streamRecv(wg *sync.WaitGroup, stream interact.GruQuiz_StreamChanServer,
 
 		}
 	}
-	wg.Done()
 }
 
 // TODO(ashwin) - Add authentication
@@ -575,17 +575,22 @@ func checkIds(qns []Question) error {
 			idsMap[ans.Uid] = true
 		}
 
-		count := 0
+		for _, tag := range q.Tags {
+			if tag[0] < 'a' || tag[0] > 'z' {
+				return fmt.Errorf(
+					"Tag: %v for qn: %v should start with a lowercase character",
+					tag, q.Id)
+			}
+		}
+
+		if len(q.Correct) == 0 {
+			return fmt.Errorf("Correct list is empty")
+		}
 		for _, corr := range q.Correct {
-			count++
 			if _, ok := idsMap[corr]; !ok {
 				return fmt.Errorf("Correct not part of options: %v ",
 					corr)
 			}
-		}
-
-		if count == 0 {
-			return fmt.Errorf("Correct list is empty")
 		}
 	}
 	return nil

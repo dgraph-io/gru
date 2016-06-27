@@ -1,1 +1,4 @@
 /server
+logs/
+!logs/test_token.log
+

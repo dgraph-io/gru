@@ -8,7 +8,6 @@ service GruQuiz {
 	rpc GetQuestion (Req) returns (Question) {}
 	rpc SendAnswer (Response) returns (Status) {}
 	rpc StreamChan (stream ClientStatus) returns (stream ServerStatus) {}
-//	rpc StreamChanClient (stream ClientStatus) returns (stream ServerStatus) {}
 }
 
 message ServerStatus {

@@ -10,7 +10,6 @@ import (
 )
 
 func TestIsCorrectAnswer(t *testing.T) {
-	t.Skip()
 	var err error
 	questions, err = extractQuizInfo("demo_test.yaml")
 	if err != nil {
@@ -19,8 +18,8 @@ func TestIsCorrectAnswer(t *testing.T) {
 
 	r := interact.Response{Qid: "demo-2", Aid: []string{"demo-2a"}}
 	idx, status := isCorrectAnswer(&r)
-	if idx != 1 {
-		t.Errorf("Expected index %d, Got: %d", 1, idx)
+	if idx != 2 {
+		t.Errorf("Expected index %d, Got: %d", 2, idx)
 	}
 	if status != WRONG {
 		t.Errorf("Expected status %d, Got: %d", WRONG, status)
@@ -29,7 +28,7 @@ func TestIsCorrectAnswer(t *testing.T) {
 	r = interact.Response{Qid: "demo-2", Aid: []string{"demo-2c", "demo-2a"}}
 	idx, status = isCorrectAnswer(&r)
 
-	if idx != 1 {
+	if idx != 2 {
 		t.Errorf("Expected index %d, Got: %d", 1, idx)
 	}
 	if status != CORRECT {
@@ -38,7 +37,6 @@ func TestIsCorrectAnswer(t *testing.T) {
 }
 
 func TestNextQuestion(t *testing.T) {
-	t.Skip()
 	var err error
 	questions, err = extractQuizInfo("demo_test.yaml")
 	if err != nil {
@@ -57,8 +55,8 @@ func TestNextQuestion(t *testing.T) {
 		t.Errorf("Expected demoQnsAsked to be %v. Got: %v", 1,
 			c.demoQnsAsked)
 	}
-	if len(c.questions) != 2 {
-		t.Errorf("Expected questions to have len %v. Got: %v", 2,
+	if len(c.questions) != 3 {
+		t.Errorf("Expected questions to have len %v. Got: %v", 3,
 			len(c.questions))
 	}
 	if q.Id != "demo-1" {
@@ -75,12 +73,12 @@ func TestNextQuestion(t *testing.T) {
 		t.Errorf("Expected demoQnsAsked to be %v. Got: %v", 2,
 			c.demoQnsAsked)
 	}
-	if len(c.questions) != 1 {
-		t.Errorf("Expected questions to have len %v. Got: %v", 1,
+	if len(c.questions) != 2 {
+		t.Errorf("Expected questions to have len %v. Got: %v", 2,
 			len(c.questions))
 	}
-	if q.Id != "demo-3" {
-		t.Errorf("Expected question with id: %v. Got: %v", "demo-3",
+	if q.Id != "demo-2" {
+		t.Errorf("Expected question with id: %v. Got: %v", "demo-2",
 			q.Id)
 	}
 
@@ -93,8 +91,8 @@ func TestNextQuestion(t *testing.T) {
 		t.Errorf("Expected demoQnsAsked to be %v. Got: %v", 2,
 			c.demoQnsAsked)
 	}
-	if len(c.questions) != 0 {
-		t.Errorf("Expected questions to have len %v. Got: %v", 0,
+	if len(c.questions) != 1 {
+		t.Errorf("Expected questions to have len %v. Got: %v", 1,
 			len(c.questions))
 	}
 	if q.Id != "test-2" {
@@ -104,7 +102,7 @@ func TestNextQuestion(t *testing.T) {
 }
 
 func TestGetQuestion(t *testing.T) {
-	t.Skip()
+	maxDemoQns = 3
 	var err error
 	questions, err = extractQuizInfo("demo_test.yaml")
 	if err != nil {
@@ -130,12 +128,22 @@ func TestGetQuestion(t *testing.T) {
 	}
 
 	q3, err := getQuestion(req)
-	if q3.Id == q1.Id || q3.Id == q2.Id {
-		t.Errorf("Expected %s to be different from %s and %s", q3.Id,
-			q1.Id, q2.Id)
+	if q3.Id != "demo-3" {
+		t.Errorf("Expected qn Id to be %v. Got: %v", "demo-3", q3.Id)
 	}
+
+	q4, err := getQuestion(req)
+	if q4.Id != "DEMOEND" {
+		t.Errorf("Expected qn Id to be %v. Got: %v", "DEMOEND", q4.Id)
+	}
+
+	q5, err := getQuestion(req)
+	if q5.Id != "test-2" {
+		t.Errorf("Expected qn Id to be %v. Got: %v", "test-2", q5.Id)
+	}
+
 	if len(cmap["abcd1234"].questions) != 0 {
-		t.Errorf("Expected demo qn list to be empty. Got: len %d",
+		t.Errorf("Expected qn list to be empty. Got: len %d",
 			len(cmap["abcd1234"].questions))
 	}
 
@@ -149,7 +157,6 @@ func TestGetQuestion(t *testing.T) {
 }
 
 func TestCheckToken(t *testing.T) {
-	t.Skip()
 	c := Candidate{email: "pawan@dgraph.io", validity: time.Now().AddDate(0, 0, 7),
 		testStart: time.Now().Add(-2 * time.Hour)}
 	cmap = make(map[string]Candidate)
@@ -176,7 +183,7 @@ func TestCheckToken(t *testing.T) {
 }
 
 func TestAuthenticate(t *testing.T) {
-	t.Skip()
+	maxDemoQns = 3
 	tokenId := "test_token"
 	var err error
 	questions, err = extractQuizInfo("demo_test.yaml")
@@ -197,8 +204,9 @@ func TestAuthenticate(t *testing.T) {
 	if s.Id == "" {
 		t.Errorf("Expected non-empty sessionId. Got: %s", s.Id)
 	}
-	if s.State != interact.Quiz_TEST_STARTED {
-		t.Errorf("Expected state to be %d,Got: %d", s.State)
+	if s.State != interact.Quiz_TEST_NOT_TAKEN {
+		t.Errorf("Expected state to be %d,Got: %d",
+			interact.Quiz_TEST_NOT_TAKEN, s.State)
 	}
 	//TODO(pawan) - test other values fo State
 
@@ -238,28 +246,25 @@ func TestAuthenticate(t *testing.T) {
 }
 
 func TestLoadCandInfo(t *testing.T) {
-	t.Skip()
 	tokenId := "test_token"
 	c := Candidate{email: "pawan@dgraph.io", validity: time.Now().AddDate(0, 0, 7)}
 	cmap = make(map[string]Candidate)
-	qnList = []string{"demo-1", "demo-2", "demo-3"}
-
-	err := c.loadCandInfo(tokenId)
+	var err error
+	questions, err = extractQuizInfo("demo_test.yaml")
 	if err != nil {
 		t.Error(err)
 	}
-	c = cmap[tokenId]
 
-	if c.score != 15.0 {
-		t.Errorf("Expected score %f. Got: %f", 15.0, c.score)
+	err = c.loadCandInfo(tokenId)
+	if err != nil {
+		t.Error(err)
 	}
-	// if !reflect.DeepEqual(c.qnList, []string{"demo-3"}) {
-	// 	t.Error("Expected qn list doesn't match")
-	// }
+	if c.score != 10.0 {
+		t.Errorf("Expected score %f. Got: %f", 10.0, c.score)
+	}
 }
 
 func TestSendAnswer(t *testing.T) {
-	t.Skip()
 	var err error
 	questions, err = extractQuizInfo("demo_test.yaml")
 	if err != nil {
@@ -321,22 +326,37 @@ func TestSendAnswer(t *testing.T) {
 }
 
 func TestSliceDiff(t *testing.T) {
-	// qnList := []string{"q7", "q9", "q1", "q2", "q5"}
-	// qnsAsked := []string{"q5", "q1"}
-	// qnsToAsk := sliceDiff(qnList, qnsAsked)
+	var err error
+	questions, err = extractQuizInfo("demo_test.yaml")
+	if err != nil {
+		t.Error(err)
+	}
+	qnsAsked := []string{"demo-2"}
+	qnsToAsk := sliceDiff(questions, qnsAsked)
 
-	// if len(qnsToAsk) != 3 {
-	// 	t.Errorf("Expected slice to have len: %d. Got: %d", 3, len(qnsToAsk))
-	// }
-	// if !reflect.DeepEqual(qnsToAsk, []string{"q7", "q9", "q2"}) {
-	// 	t.Error("qnsToAsk doesn't have all the qns.")
-	// }
+	if len(qnsToAsk) != 3 {
+		t.Errorf("Expected slice to have len: %d. Got: %d", 3, len(qnsToAsk))
+	}
 }
 
 func TestCheckIds(t *testing.T) {
-	t.Skip()
-	qns := []Question{{Id: "qn1"}, {Id: "qn1"}}
-	expectedError := "Qn Id has been used before: qn1"
+	qns := []Question{
+		{
+			Id: "qn1",
+			Opt: []Option{
+				{Uid: "O1"},
+			},
+			Correct: []string{"O1"},
+		},
+		{
+			Id: "qn1",
+			Opt: []Option{
+				{Uid: "O3"},
+			},
+			Correct: []string{"O3"},
+		},
+	}
+	expectedError := "Id has been used before: qn1"
 	if err := checkIds(qns); err.Error() != expectedError {
 		t.Errorf("Expected error to be %v. Got: %v", expectedError, err)
 	}
@@ -348,6 +368,7 @@ func TestCheckIds(t *testing.T) {
 				{Uid: "O1"},
 				{Uid: "O2"},
 			},
+			Correct: []string{"O1"},
 		},
 		{
 			Id: "qn2",
@@ -355,9 +376,10 @@ func TestCheckIds(t *testing.T) {
 				{Uid: "O3"},
 				{Uid: "O2"},
 			},
+			Correct: []string{"O3"},
 		},
 	}
-	expectedError = "Ans Id has been used before: O2"
+	expectedError = "Id has been used before: O2"
 	if err := checkIds(qns); err.Error() != expectedError {
 		t.Errorf("Expected error to be %v. Got: %v", expectedError, err)
 	}
@@ -369,6 +391,7 @@ func TestCheckIds(t *testing.T) {
 				{Uid: "O1"},
 				{Uid: "O2"},
 			},
+			Correct: []string{"O2"},
 		},
 		{
 			Id: "qn2",
@@ -376,9 +399,17 @@ func TestCheckIds(t *testing.T) {
 				{Uid: "O3"},
 				{Uid: "O4"},
 			},
+			Correct: []string{"O3"},
 		},
 	}
 	if err := checkIds(qns); err != nil {
 		t.Errorf("Expected error to be nil. Got: %v", err)
 	}
+
+	qns = []Question{{Id: "qn1", Tags: []string{"Demo"}}}
+	expectedError = "Tag: Demo for qn: qn1 should start with a lowercase character"
+	if err := checkIds(qns); err.Error() != expectedError {
+		t.Errorf("Expected error to be %v. Got: %v", expectedError, err)
+	}
+
 }
