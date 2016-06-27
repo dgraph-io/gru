@@ -8,9 +8,29 @@ import (
 	"github.com/gizak/termui"
 )
 
+var instructions *termui.Par
+
+type QuestionsPage struct {
+	timeLeft    *termui.Par
+	timeSpent   *termui.Par
+	que         *termui.Par
+	score       *termui.Par
+	lastScore   *termui.Par
+	scoringInfo *termui.Par
+	answers     *termui.Par
+}
+
+type InformationPage struct {
+	demo     *termui.Par
+	terminal *termui.Par
+	general  *termui.Par
+	scoring  *termui.Par
+	contact  *termui.Par
+}
+
 var infoPage InformationPage
 
-func setupInfoPage(th, tw int) {
+func setupInfoPage(th, tw int, dur string) {
 	instructions = termui.NewPar("")
 	instructions.BorderLabel = "Instructions"
 	instructions.Height = 50
@@ -29,7 +49,7 @@ func setupInfoPage(th, tw int) {
 	// TODO - Take duration from constant.
 	infoPage.general = termui.NewPar(`
                 - By taking this test, you agree not to discuss/post the questions shown here.
-                - The duration of the test is 60 mins. Timing would be clearly shown.
+                - The duration of the test is ` + dur + `. Timing would be clearly shown.
                 - Once you start the test, the timer would not stop, irrespective of any client side issues.
                 - Questions can have single or multiple correct answers. They will be shown accordingly.
                 - Your total score and the time left at any point in the test would be displayed on the top.
@@ -137,11 +157,11 @@ func renderInstructionsPage(demoTaken bool) {
 
 	termui.Handle("/sys/kbd/s", func(e termui.Event) {
 		if !demoTaken {
-			initializeDemo(testDuration)
+			initializeDemo(s.testDuration)
 			return
 		}
 		clear()
-		initializeTest(testDuration)
+		initializeTest(s.testDuration)
 	})
 }
 
@@ -166,16 +186,16 @@ func renderQuestionsPage(tl string) {
 	if err != nil {
 		log.Printf("Got error while parsing time: %v, err: %v", tl, err)
 	}
-	leftTime.setTimeLeft(tLeft)
+	s.leftTime.setTimeLeft(tLeft)
 
 	termui.Handle("/timer/1s", func(e termui.Event) {
-		timeTaken += 1
-		leftTime.setTimeLeft(leftTime.dur - time.Second)
-		qp.timeSpent.Text = fmt.Sprintf("%02d:%02d", timeTaken/60,
-			timeTaken%60)
+		s.timeTaken += 1
+		s.leftTime.setTimeLeft(s.leftTime.dur - time.Second)
+		qp.timeSpent.Text = fmt.Sprintf("%02d:%02d", s.timeTaken/60,
+			s.timeTaken%60)
 		qp.timeLeft.Text = fmt.Sprintf("%02d:%02d",
-			leftTime.dur/time.Minute,
-			(leftTime.dur%time.Minute)/time.Second)
+			s.leftTime.dur/time.Minute,
+			(s.leftTime.dur%time.Minute)/time.Second)
 		termui.Render(termui.Body)
 	})
 }
