@@ -4,78 +4,48 @@ import (
 	"bytes"
 	"flag"
 	"fmt"
+	"io"
+	"log"
+	"math/rand"
 	"sort"
 	"strings"
+	"sync"
+	"time"
 
+	"golang.org/x/net/context"
+
+	"google.golang.org/grpc"
+
+	"github.com/dgraph-io/gru/server/interact"
 	"github.com/gizak/termui"
 )
 
-var token = flag.String("token", "", "Authentication token")
+var token = flag.String("token", "testtoken", "Authentication token")
 
-const (
-	// Test duration in minutes
-	testDur = 60
-)
+//TODO(Pawan) - Change default address to our server.
+var address = flag.String("address", "localhost:8888", "Address of the server")
+var curQuestion *interact.Question
+var endTT chan *interact.ServerStatus
 
-type question struct {
-	str      string
-	multiple bool
-	positive float64
-	negative float64
-}
-
-type answer struct {
-	id  string
-	str string
-}
-
-// Elements for the questions page.
 var instructions *termui.Par
-var timeLeft *termui.Par
-var que *termui.Par
-var score *termui.Par
-var s *termui.Par
-var a *termui.Par
 
-// Elements for the home page.
-var demo *termui.Par
-var terminal *termui.Par
-var general *termui.Par
-var scoring *termui.Par
-var contact *termui.Par
-
-// These are the questions and answers used for the demo.
-var q1 = question{`What is the capital of France?`, false, 5.0, 2.5}
-
-var q2 = question{`Which among the following were originally developed at Google?`,
-	true, 5.0, 2.5}
-
-var q3 = question{`Which one is the largest ocean in the world?`, false, 5.0, 2.5}
-
-var a1 = []answer{
-	{"1", "Berlin"},
-	{"2", "Paris"},
-	{"3", "Rome"},
-	{"4", "London"},
+type QuestionsPage struct {
+	timeLeft    *termui.Par
+	timeSpent   *termui.Par
+	que         *termui.Par
+	score       *termui.Par
+	lastScore   *termui.Par
+	scoringInfo *termui.Par
+	answers     *termui.Par
 }
 
-var a2 = []answer{
-	{"1", "Go programming language"},
-	{"2", "Ruby"},
-	{"3", "Angular"},
-	{"4", "Rust"},
+type InformationPage struct {
+	demo     *termui.Par
+	terminal *termui.Par
+	general  *termui.Par
+	scoring  *termui.Par
+	contact  *termui.Par
 }
-
-var a3 = []answer{
-	{"1", "Indian"},
-	{"2", "Pacific"},
-	{"3", "Atlantic"},
-	{"4", "Arctic"},
-}
-
-// Question number for the demo.
-// TODO(pawan) - Remove this hack.
-var currentQn = 1
 
 type State int
 
@@ -92,143 +62,165 @@ const (
 // To mantain the state of user while he is answering a question.
 var status State
 
-func setupInstructionsPage(th, tw int) {
-	instructions = termui.NewPar("")
-	instructions.BorderLabel = "Instructions"
-	instructions.Height = 50
-	instructions.Width = tw
-	instructions.PaddingTop = 2
-
-	terminal = termui.NewPar(`
-		- Please ensure that you can see all the 4 borders of the Instructions box.
-		- If you can't see them, you need to increase the size of your terminal or adjust the font-size to a smaller value.
-		- DO NOT proceed with the test, until you are able to see all 4 outer borders of the Instructions box.`)
-	terminal.BorderLabel = "Terminal"
-	terminal.Height = 8
-	terminal.Width = tw
-	terminal.PaddingLeft = 2
-
-	// TODO - Take duration from constant.
-	general = termui.NewPar(`
-		- By taking this test, you agree not to discuss/post the questions shown here.
-		- The duration of the test is 60 mins. Timing would be clearly shown.
-		- Once you start the test, the timer would not stop, irrespective of any client side issues.
-		- Questions can have single or multiple correct answers. They will be shown accordingly.
-		- Your total score and the time left at any point in the test would be displayed on the top.
-		- You would be given the option to have a second attempt at a question if your first answer is wrong.
-		- The scoring for each attempt of a question, would be visible to you in a separate section.
-		- At point you can press Ctrl-q to end the test.`)
-	general.BorderLabel = "General"
-	general.Height = 15
-	general.Width = tw
-	general.PaddingLeft = 2
-
-	scoring = termui.NewPar(`
-		- There is NEGATIVE scoring for wrong answers. So, please DO NOT GUESS.
-		- If you skip a question, the score awarded is always ZERO.
-		- You might be given the option to recover from negative score with a second attempt.
-		- In the above case, please note that another wrong answer would have further negative score.
-		- Scoring would be clearly marked in the question on the right hand side box.`)
-	scoring.BorderLabel = "Scoring"
-	scoring.Height = 10
-	scoring.Width = tw
-	scoring.PaddingLeft = 2
-
-	contact = termui.NewPar(`
-		- If there are any problems with the setup, or something is unclear, please DO NOT start the test.
-		- Send email to contact@dgraph.io and tell us the problem. So we can solve it before you take the test.`)
-	contact.BorderLabel = "Contact"
-	contact.Height = 10
-	contact.Width = tw
-	contact.PaddingLeft = 2
-
-	demo = termui.NewPar("We have a demo of the how the test would look like. Press s to start the demo.")
-	demo.Border = false
-	demo.Height = 3
-	demo.Width = tw
-	demo.TextFgColor = termui.ColorCyan
-	demo.PaddingLeft = 2
-	demo.PaddingTop = 1
+type timeS struct {
+	left time.Duration
+	lck  sync.Mutex
 }
 
-func setupQuestionsPage() {
-	timeLeft = termui.NewPar(fmt.Sprintf("%d mins", testDur))
-	timeLeft.Height = 3
-	timeLeft.BorderLabel = "Time Left"
-
-	ts := 0.0
-	score = termui.NewPar(fmt.Sprintf("%.1f", ts))
-	score.BorderLabel = "Total Score"
-	score.Height = 3
-
-	que = termui.NewPar("")
-	que.BorderLabel = "Question"
-	que.PaddingLeft = 1
-	que.PaddingRight = 1
-	que.PaddingBottom = 1
-	que.Height = 33
-
-	s = termui.NewPar("")
-	s.BorderLabel = "Scoring"
-	s.PaddingTop = 1
-	s.PaddingLeft = 1
-	s.Height = 33
-
-	a = termui.NewPar("")
-	a.TextFgColor = termui.ColorCyan
-	a.BorderLabel = "Answers"
-	a.PaddingLeft = 1
-	a.PaddingRight = 1
-	a.PaddingBottom = 1
-	a.Height = 14
+func (a *timeS) setTimeLeft(b time.Duration) {
+	a.lck.Lock()
+	if a.left-b >= time.Second ||
+		b-a.left >= time.Second {
+		a.left = b
+	}
+	a.lck.Unlock()
 }
 
-func renderInstructionsPage() {
-	termui.Render(instructions)
-	// Adding an offset so that all these boxes come inside the instructions box.
-	termui.Body.Y = 2
-	termui.Body.AddRows(
-		termui.NewRow(
-			termui.NewCol(10, 1, terminal)),
-		termui.NewRow(
-			termui.NewCol(10, 1, general)),
-		termui.NewRow(
-			termui.NewCol(10, 1, scoring)),
-		termui.NewRow(
-			termui.NewCol(10, 1, contact)),
-		termui.NewRow(
-			termui.NewCol(10, 1, demo)))
+var leftTime, servTime timeS
 
-	termui.Body.Align()
-	termui.Render(termui.Body)
+// test duration from server.
+var testDuration string
 
-	termui.Handle("/sys/kbd/s", func(e termui.Event) {
-		// To clear the instructions box that was rendered.
-		termui.Clear()
-		// To clear elements of the body.
-		termui.Body.Rows = termui.Body.Rows[:0]
-		initializeDemo()
-	})
+// timeTaken per question displayed on the top.
+var timeTaken int
+var ts float32
+
+// Last score
+var ls float32
+
+// Declaring connection as a global as can't reuse the client(its unexported)
+var conn *grpc.ClientConn
+
+var sessionId string
+
+func finalScore(score float32) string {
+	return fmt.Sprintf(strings.Join([]string{"Thank you for taking the test",
+		"Your final score was %3.1f",
+		"We will get in touch with you soon."}, ". "), score)
 }
 
-func renderSelectedAnswers(selected []string, m map[string]answer) {
+func fetchAndDisplayQn() {
+	client := interact.NewGruQuizClient(conn)
+
+	q, err := client.GetQuestion(context.Background(),
+		&interact.Req{Repeat: false, Sid: sessionId, Token: *token})
+
+	if err != nil {
+		log.Fatalf("Could not get question.Got err: %v", err)
+	}
+	curQuestion = q
+
+	// TODO(pawan) - If he has already taken the demo,don't show the screen again.
+	if q.Id == "DEMOEND" {
+		clear()
+		ts = 0.0
+		ls = 0.0
+		renderInstructionsPage(true)
+		return
+	} else if q.Id == "END" {
+		showFinalPage(finalScore(q.Totscore))
+		return
+	}
+	populateQuestionsPage(q)
+}
+
+func streamRecv(stream interact.GruQuiz_StreamChanClient) {
+	for {
+		msg, err := stream.Recv()
+
+		if err != nil {
+			if err != io.EOF {
+				//log.Printf("Error while receiving stream, %v", err)
+				endTT <- msg
+				return
+			}
+			endTT <- msg
+			log.Println("got end message")
+			return
+		}
+
+		if msg.Status == "END" {
+			clear()
+			showFinalPage(finalScore(curQuestion.Totscore))
+			return
+		}
+
+		servTime.left, err = time.ParseDuration(msg.TimeLeft)
+		if err != nil {
+			log.Printf("Error parsing time from server, %v", err)
+		}
+
+		leftTime.setTimeLeft(servTime.left)
+		termui.Render(termui.Body)
+	}
+}
+
+func streamSend(stream interact.GruQuiz_StreamChanClient) {
+	tickChan := time.NewTicker(time.Second * 5).C
+
+	for {
+		select {
+		case _ = <-endTT:
+			return
+		case <-tickChan:
+			{
+				cliStat := &interact.ClientStatus{
+					curQuestion.Id,
+					*token,
+				}
+				if err := stream.Send(cliStat); err != nil {
+					// TODO: Show error status in a separate box
+					//glog.WithField("err", err).Error("Error sending to stream")
+				}
+			}
+		}
+	}
+}
+
+func initializeTest(tl string) {
+	setupQuestionsPage()
+	renderQuestionsPage(tl)
+	fetchAndDisplayQn()
+
+	if curQuestion.Id == "END" {
+		return
+	}
+
+	client := interact.NewGruQuizClient(conn)
+	stream, err := client.StreamChan(context.Background())
+	if err != nil {
+		log.Fatalf("Error while creating stream: %v", err)
+	}
+
+	cliStat := &interact.ClientStatus{
+		"First",
+		*token,
+	}
+	if err := stream.Send(cliStat); err != nil {
+		log.Panic(err)
+	}
+	go streamRecv(stream)
+	go streamSend(stream)
+}
+
+func renderSelectedAnswers(selected []string, m map[string]*interact.Answer) {
 	check := "Selected:\n\n"
 	for _, k := range selected {
-		check += m[string(k)].str + "\n"
+		check += m[string(k)].Str + "\n"
 	}
 	check += "\nPress ENTER to confirm. Press any other key to cancel."
-	a.Text = check
+	qp.answers.Text = check
 	status = confirmAnswer
 	termui.Render(termui.Body)
 }
 
-func optionHandler(e termui.Event, q question, selected []string,
-	m map[string]answer, ansBody string) []string {
+func optionHandler(e termui.Event, q *interact.Question, selected []string,
+	m map[string]*interact.Answer, ansBody string) []string {
 	k := e.Data.(termui.EvtKbd).KeyStr
 
 	// For single correct answer qn we just render
 	// the selected answer.
-	if !q.multiple {
+	if !q.IsMultiple {
 		if status != options {
 			return []string{}
 		}
@@ -250,49 +242,51 @@ func optionHandler(e termui.Event, q question, selected []string,
 	if !exists && status == options {
 		selected = append(selected, k)
 		sort.StringSlice(selected).Sort()
-		a.Text = ansBody + strings.Join(selected, ", ")
-		a.Text += "\nPress Enter to see chosen options."
+		qp.answers.Text = ansBody + strings.Join(selected, ", ")
+		qp.answers.Text += "\nPress Enter to see chosen options."
 		termui.Render(termui.Body)
 	}
 	return selected
 }
 
-func enterHandler(e termui.Event, q question, selected []string,
-	m map[string]answer) {
+func enterHandler(e termui.Event, q *interact.Question, selected []string,
+	m map[string]*interact.Answer) {
 	// If the user presses enter after selecting options for a
 	// multiple choice question.
-	if q.multiple && len(selected) > 0 && status == options {
+	if q.IsMultiple && len(selected) > 0 && status == options {
 		renderSelectedAnswers(selected, m)
-	} else if status == confirmAnswer || status == confirmSkip {
-		if currentQn == 0 {
-			populateQuestionsPage(q1, a1)
+		return
+	}
+	if status == confirmAnswer || status == confirmSkip {
+		var answerIds []string
+		for _, s := range selected {
+			if s == "skip" {
+				answerIds = []string{"skip"}
+				break
+			}
+			answerIds = append(answerIds, m[s].Id)
 		}
-		if currentQn == 1 {
-			populateQuestionsPage(q2, a2)
-		} else if currentQn == 2 {
-			populateQuestionsPage(q3, a3)
-		} else if currentQn == 3 {
-			termui.Clear()
-			termui.Body.Rows = termui.Body.Rows[:0]
-			renderInstructionsPage()
-			currentQn = -1
-		}
-		currentQn += 1
+		resp := interact.Response{Qid: q.Id, Aid: answerIds,
+			Sid: sessionId, Token: *token}
+		client := interact.NewGruQuizClient(conn)
+		client.SendAnswer(context.Background(), &resp)
+		fetchAndDisplayQn()
 	}
 }
 
 func keyHandler(ansBody string, selected []string) []string {
-	a.Text = ansBody
+	qp.answers.Text = ansBody
 	selected = selected[:0]
 	status = options
 	termui.Render(termui.Body)
 	return selected
 }
 
-func populateQuestionsPage(q question, answers []answer) {
-	que.Text = q.str
-	s.Text = fmt.Sprintf("Right answer => +%1.1f\n\nWrong answer => -%1.1f",
-		q.positive, q.negative)
+func populateQuestionsPage(q *interact.Question) {
+	timeTaken = 0
+	qp.que.Text = q.Str
+	qp.scoringInfo.Text = fmt.Sprintf("Right answer => +%1.1f\n\nWrong answer => -%1.1f",
+		q.Positive, q.Negative)
 
 	// Selected contains the options user has already selected.
 	selected := []string{}
@@ -300,30 +294,34 @@ func populateQuestionsPage(q question, answers []answer) {
 	ansBody := ""
 	// Map m contains a map of the key to select an answer and the answer
 	// corresponding to it.
-	m := make(map[string]answer)
+	m := make(map[string]*interact.Answer)
 	var buf bytes.Buffer
 
 	status = options
-	if q.multiple {
+	if q.IsMultiple {
 		buf.WriteString("This question could have multiple correct answers.\n\n")
 	} else {
 		buf.WriteString("This question only has a single correct answer.\n\n")
 	}
 	opt := 'a'
-	for _, ans := range answers {
+	for _, o := range q.Options {
 		buf.WriteRune(opt)
 		buf.WriteRune(')')
 		buf.WriteRune(' ')
-		buf.WriteString(ans.str)
+		buf.WriteString(o.Str)
 		buf.WriteRune('\n')
-		m[string(opt)] = ans
+		m[string(opt)] = o
 		opt++
 	}
 	buf.WriteString("\ns) Skip question\n\n")
+	qp.score.Text = fmt.Sprintf("%3.1f", q.Totscore)
+	ls = q.Totscore - ts
+	qp.lastScore.Text = fmt.Sprintf("%2.1f", ls)
+	ts = q.Totscore
 	// We store this so that this can be rendered later based on different
 	// key press.
 	ansBody = buf.String()
-	a.Text = ansBody
+	qp.answers.Text = ansBody
 	termui.Render(termui.Body)
 
 	// Attaching event handlers on the options for a answer.
@@ -336,12 +334,17 @@ func populateQuestionsPage(q question, answers []answer) {
 	}
 
 	termui.Handle("/sys/kbd/s", func(e termui.Event) {
-		a.Text = "Are you sure you want to skip the question? \n\nPress ENTER to confirm. Press any other key to cancel."
+		qp.answers.Text = "Are you sure you want to skip the question? \n\nPress ENTER to confirm. Press any other key to cancel."
+		selected = selected[:0]
+		selected = append(selected, "skip")
 		termui.Render(termui.Body)
 		status = confirmSkip
 	})
 
 	termui.Handle("/sys/kbd/<enter>", func(e termui.Event) {
+		if len(selected) == 0 {
+			return
+		}
 		enterHandler(e, q, selected, m)
 	})
 
@@ -351,25 +354,40 @@ func populateQuestionsPage(q question, answers []answer) {
 	})
 }
 
-func initializeDemo() {
+func initializeDemo(tl string) {
+	clear()
 	setupQuestionsPage()
-	termui.Body.Y = 0
-	termui.Body.AddRows(
-		termui.NewRow(
-			termui.NewCol(6, 0, timeLeft),
-			termui.NewCol(6, 0, score)),
-		termui.NewRow(
-			termui.NewCol(10, 0, que),
-			termui.NewCol(2, 0, s)),
-		termui.NewRow(
-			termui.NewCol(12, 0, a)))
+	renderQuestionsPage(tl)
+	fetchAndDisplayQn()
+}
 
-	termui.Body.Align()
-	termui.Render(termui.Body)
-	populateQuestionsPage(q1, a1)
+func setupInitialPage(s *interact.Session) {
+	state := s.State
+	testDuration = s.TestDuration
+	sessionId = s.Id
+	if state == interact.Quiz_TEST_FINISHED {
+		//show final page saying test already taken and return
+		showFinalPage("You have already taken the test.")
+	}
+	if state == interact.Quiz_TEST_STARTED {
+		initializeTest(s.TimeLeft)
+	}
+	setupInfoPage(termui.TermHeight(), termui.TermWidth())
+	if state == interact.Quiz_DEMO_NOT_TAKEN {
+		//call instructions screen with demo taken to be false
+		renderInstructionsPage(false)
+	}
+	if state == interact.Quiz_TEST_NOT_TAKEN {
+		//call instructions screen with demo taken to be true
+		renderInstructionsPage(true)
+	}
+	if state == interact.Quiz_DEMO_STARTED {
+		initializeDemo(s.TestDuration)
+	}
 }
 
 func main() {
+	rand.Seed(42)
 	flag.Parse()
 	err := termui.Init()
 	if err != nil {
@@ -377,14 +395,35 @@ func main() {
 	}
 	defer termui.Close()
 
-	th := termui.TermHeight()
-	tw := termui.TermWidth()
+	conn, err = grpc.Dial(*address, grpc.WithInsecure())
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
 
-	setupInstructionsPage(th, tw)
-	renderInstructionsPage()
+	instructions = termui.NewPar(
+		fmt.Sprintf("Wait a second, we are getting you started..."))
+	instructions.BorderLabel = "Authenticating"
+	instructions.Height = 10
+	instructions.Width = termui.TermWidth() / 2
+	instructions.Y = termui.TermHeight() / 4
+	instructions.X = termui.TermWidth() / 4
+	instructions.PaddingTop = 1
+	instructions.PaddingLeft = 1
+
+	client := interact.NewGruQuizClient(conn)
+	s, err := client.Authenticate(context.Background(), &interact.Token{Id: *token})
+	if err != nil {
+		instructions.Text = grpc.ErrorDesc(err) + " Press Ctrl+Q to exit and try again."
+		instructions.TextFgColor = termui.ColorRed
+		termui.Render(instructions)
+	} else {
+		setupInitialPage(s)
+	}
 
 	// Pressing Ctrl-q terminates the ui.
 	termui.Handle("/sys/kbd/C-q", func(termui.Event) {
+		conn.Close()
 		termui.StopLoop()
 	})
 	termui.Loop()
