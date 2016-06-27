@@ -146,6 +146,11 @@ func (c *Candidate) loadCandInfo(token string) error {
 				continue
 			}
 			qnsAsked = append(qnsAsked, splits[4])
+		case "newq":
+			if len(qnsAsked) > 0 && splits[4] == qnsAsked[len(qnsAsked)-1] {
+				continue
+			}
+			qnsAsked = append(qnsAsked, splits[4])
 		}
 	}
 	c.score = score
@@ -328,6 +333,7 @@ func getQuestion(req *interact.Req) (*interact.Question, error) {
 	if err != nil {
 		return nil, err
 	}
+	writeLog(c, fmt.Sprintf("%v newq %v\n", UTCTime(), q.Id))
 	return q, nil
 }
 
