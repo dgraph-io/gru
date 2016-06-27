@@ -12,7 +12,7 @@
     str: London
   positive: 5
   negative: 2.5
-  tags: [Easy,demo]
+  tags: [easy,demo]
 
 - id: test-2
   str: Which among the following were originally developed at Google?
@@ -28,7 +28,7 @@
     str: Rust
   positive: 10
   negative: 5
-  tags: [Easy,test]
+  tags: [easy,test]
 
 - id: demo-3
   str: Which one is the largest ocean in the world?
@@ -44,5 +44,5 @@
     str: Arctic
   positive: 5
   negative: 2.5
-  tags: [Easy,demo]
+  tags: [easy,demo]
 

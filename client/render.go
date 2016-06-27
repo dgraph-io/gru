@@ -170,12 +170,12 @@ func renderQuestionsPage(tl string) {
 
 	termui.Handle("/timer/1s", func(e termui.Event) {
 		timeTaken += 1
-		leftTime.setTimeLeft(leftTime.left - time.Second)
+		leftTime.setTimeLeft(leftTime.dur - time.Second)
 		qp.timeSpent.Text = fmt.Sprintf("%02d:%02d", timeTaken/60,
 			timeTaken%60)
 		qp.timeLeft.Text = fmt.Sprintf("%02d:%02d",
-			leftTime.left/time.Minute,
-			(leftTime.left%time.Minute)/time.Second)
+			leftTime.dur/time.Minute,
+			(leftTime.dur%time.Minute)/time.Second)
 		termui.Render(termui.Body)
 	})
 }

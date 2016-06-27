@@ -239,20 +239,20 @@ func TestAuthenticate(t *testing.T) {
 
 func TestLoadCandInfo(t *testing.T) {
 	t.Skip()
-	tokenId := "test_token"
-	c := Candidate{email: "pawan@dgraph.io", validity: time.Now().AddDate(0, 0, 7)}
-	cmap = make(map[string]Candidate)
-	qnList = []string{"demo-1", "demo-2", "demo-3"}
+	// tokenId := "test_token"
+	// c := Candidate{email: "pawan@dgraph.io", validity: time.Now().AddDate(0, 0, 7)}
+	// cmap = make(map[string]Candidate)
+	// qnList = []string{"demo-1", "demo-2", "demo-3"}
 
-	err := c.loadCandInfo(tokenId)
-	if err != nil {
-		t.Error(err)
-	}
-	c = cmap[tokenId]
+	// err := c.loadCandInfo(tokenId)
+	// if err != nil {
+	// 	t.Error(err)
+	// }
+	// c = cmap[tokenId]
 
-	if c.score != 15.0 {
-		t.Errorf("Expected score %f. Got: %f", 15.0, c.score)
-	}
+	// if c.score != 15.0 {
+	// 	t.Errorf("Expected score %f. Got: %f", 15.0, c.score)
+	// }
 	// if !reflect.DeepEqual(c.qnList, []string{"demo-3"}) {
 	// 	t.Error("Expected qn list doesn't match")
 	// }
@@ -334,9 +334,23 @@ func TestSliceDiff(t *testing.T) {
 }
 
 func TestCheckIds(t *testing.T) {
-	t.Skip()
-	qns := []Question{{Id: "qn1"}, {Id: "qn1"}}
-	expectedError := "Qn Id has been used before: qn1"
+	qns := []Question{
+		{
+			Id: "qn1",
+			Opt: []Option{
+				{Uid: "O1"},
+			},
+			Correct: []string{"O1"},
+		},
+		{
+			Id: "qn1",
+			Opt: []Option{
+				{Uid: "O3"},
+			},
+			Correct: []string{"O3"},
+		},
+	}
+	expectedError := "Id has been used before: qn1"
 	if err := checkIds(qns); err.Error() != expectedError {
 		t.Errorf("Expected error to be %v. Got: %v", expectedError, err)
 	}
@@ -348,6 +362,7 @@ func TestCheckIds(t *testing.T) {
 				{Uid: "O1"},
 				{Uid: "O2"},
 			},
+			Correct: []string{"O1"},
 		},
 		{
 			Id: "qn2",
@@ -355,9 +370,10 @@ func TestCheckIds(t *testing.T) {
 				{Uid: "O3"},
 				{Uid: "O2"},
 			},
+			Correct: []string{"O3"},
 		},
 	}
-	expectedError = "Ans Id has been used before: O2"
+	expectedError = "Id has been used before: O2"
 	if err := checkIds(qns); err.Error() != expectedError {
 		t.Errorf("Expected error to be %v. Got: %v", expectedError, err)
 	}
@@ -369,6 +385,7 @@ func TestCheckIds(t *testing.T) {
 				{Uid: "O1"},
 				{Uid: "O2"},
 			},
+			Correct: []string{"O2"},
 		},
 		{
 			Id: "qn2",
@@ -376,9 +393,17 @@ func TestCheckIds(t *testing.T) {
 				{Uid: "O3"},
 				{Uid: "O4"},
 			},
+			Correct: []string{"O3"},
 		},
 	}
 	if err := checkIds(qns); err != nil {
 		t.Errorf("Expected error to be nil. Got: %v", err)
 	}
+
+	qns = []Question{{Id: "qn1", Tags: []string{"Demo"}}}
+	expectedError = "Tag: Demo for qn: qn1 should start with a lowercase character"
+	if err := checkIds(qns); err.Error() != expectedError {
+		t.Errorf("Expected error to be %v. Got: %v", expectedError, err)
+	}
+
 }
