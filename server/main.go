@@ -157,9 +157,10 @@ func (c *Candidate) loadCandInfo(token string) error {
 }
 
 func candInfo(token string) Candidate {
-	// This indicates candidate info exists in memory.
+	// This indicates candidate info exists in memory and the client could
+	// have crashed.
 	c := cmap[token]
-	if len(c.questions) > 0 {
+	if len(c.questions) > 0 || c.demoTaken {
 		return c
 	}
 
@@ -177,7 +178,6 @@ func candInfo(token string) Candidate {
 		cmap[token] = c
 		return c
 	}
-
 	// If we reach here it means logfile for candidate exists but his info
 	// doesn't exist in memory, so we need to load it back from the file.
 	// TODO - Don't allow multiple sessions simultaneously.
@@ -301,8 +301,9 @@ func getQuestion(req *interact.Req) (*interact.Question, error) {
 		}
 		return q, nil
 	}
-	// TOOD(pawan) - Check if time is up
-	if len(c.questions) == 0 {
+	// Time is up for the test.
+	if !c.testStart.IsZero() &&
+		DURATION-time.Now().UTC().Sub(c.testStart) < 0 {
 		q := &interact.Question{Id: END, Totscore: c.score}
 		c.endQuestion <- 1
 		writeLog(c, fmt.Sprintf("%v End of test. Questions over\n", UTCTime()))
@@ -319,11 +320,14 @@ func getQuestion(req *interact.Req) (*interact.Question, error) {
 		}
 		// This means it is his first test question.
 		writeLog(c, fmt.Sprintf("%v test_start\n", UTCTime()))
-		c.testStart = time.Now()
+		c.testStart = time.Now().UTC()
 	}
 	q, err := nextQuestion(c, req.Token, TEST)
+	// This means that test qns are over.
 	if err != nil {
-		return nil, err
+		q = &interact.Question{Id: END, Totscore: c.score}
+		c.logFile.Close()
+		return q, nil
 	}
 	writeLog(c, fmt.Sprintf("%v question %v\n", UTCTime(), q.Id))
 	return q, nil
@@ -415,7 +419,7 @@ func (s *server) SendAnswer(ctx context.Context,
 }
 
 func timeLeft(ts time.Time) string {
-	return (DURATION - time.Now().Sub(ts)).String()
+	return (DURATION - time.Now().UTC().Sub(ts)).String()
 }
 
 func streamSend(wg *sync.WaitGroup, stream interact.GruQuiz_StreamChanServer,
