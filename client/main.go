@@ -71,7 +71,7 @@ func (c *clock) setTimeLeft(serverDur time.Duration) {
 	c.Lock()
 	if c.dur-serverDur >= time.Second ||
 		serverDur-c.dur >= time.Second {
-		c.dur = b
+		c.dur = serverDur
 	}
 	c.Unlock()
 }
