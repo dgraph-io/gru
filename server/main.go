@@ -302,6 +302,7 @@ func getQuestion(req *interact.Req) (*interact.Question, error) {
 	// TOOD(pawan) - Check if time is up
 	if len(c.questions) == 0 {
 		q := &interact.Question{Id: END, Totscore: c.score}
+		writeLog(c, fmt.Sprintf("%v End of test. Questions over\n", UTCTime()))
 		c.logFile.Close()
 		return q, nil
 	}
