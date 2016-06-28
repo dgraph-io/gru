@@ -55,7 +55,7 @@ func setupInfoPage(th, tw int, dur string) {
                 - Your total score and the time left at any point in the test would be displayed on the top.
                 - You would be given the option to have a second attempt at a question if your first answer is wrong.
                 - The scoring for each attempt of a question, would be visible to you in a separate section.
-                - At point you can press Ctrl-q to end the test.`)
+                - At any point you can press Ctrl-q to end the test.`)
 	infoPage.general.BorderLabel = "General"
 	infoPage.general.Height = 15
 	infoPage.general.Width = tw
@@ -94,7 +94,7 @@ var qp QuestionsPage
 func setupQuestionsPage() {
 	qp.timeLeft = termui.NewPar("")
 	qp.timeLeft.Height = 3
-	qp.timeLeft.BorderLabel = "Time Left"
+	qp.timeLeft.BorderLabel = "Total Time Left"
 
 	qp.timeSpent = termui.NewPar("00:00")
 	qp.timeSpent.Height = 3

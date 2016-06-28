@@ -275,9 +275,9 @@ func populateQuestionsPage(q *interact.Question) {
 
 	s.status = options
 	if q.IsMultiple {
-		buf.WriteString("This question could have multiple correct answers.\n\n")
+		buf.WriteString("This question could have MULTIPLE correct answers.\n\n")
 	} else {
-		buf.WriteString("This question only has a single correct answer.\n\n")
+		buf.WriteString("This question has a SINGLE correct answer.\n\n")
 	}
 	opt := 'a'
 	for _, o := range q.Options {
