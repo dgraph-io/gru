@@ -47,7 +47,8 @@ type Candidate struct {
 	logFile      *os.File
 	testStart    time.Time
 	// session id of currently active session.
-	sid string
+	sid         string
+	endQuestion chan int
 }
 
 var (
@@ -223,6 +224,7 @@ func authenticate(t *interact.Token) (*interact.Session, error) {
 		TimeLeft: timeLeft(c.testStart), TestDuration: DURATION.String()}
 	writeLog(c, fmt.Sprintf("%v session_token %s\n", UTCTime(), session.Id))
 	c.sid = session.Id
+	c.endQuestion = make(chan int, 1)
 	cmap[t.Id] = c
 	return &session, nil
 }
@@ -302,6 +304,7 @@ func getQuestion(req *interact.Req) (*interact.Question, error) {
 	// TOOD(pawan) - Check if time is up
 	if len(c.questions) == 0 {
 		q := &interact.Question{Id: END, Totscore: c.score}
+		c.endQuestion <- 1
 		writeLog(c, fmt.Sprintf("%v End of test. Questions over\n", UTCTime()))
 		c.logFile.Close()
 		return q, nil
@@ -419,7 +422,7 @@ func streamSend(wg *sync.WaitGroup, stream interact.GruQuiz_StreamChanServer,
 	c Candidate, endTT chan int) {
 	defer wg.Done()
 	var stat interact.ServerStatus
-	endTimeChan := time.NewTimer(DURATION).C
+	endTimeChan := time.NewTimer(DURATION - time.Now().Sub(c.testStart)).C
 	tickChan := time.NewTicker(time.Second * 5).C
 
 	for {
@@ -428,13 +431,19 @@ func streamSend(wg *sync.WaitGroup, stream interact.GruQuiz_StreamChanServer,
 			{
 				endTT <- 1
 				stat.Status = "END"
-				fmt.Println("End test based on time")
-				writeLog(c, fmt.Sprintf("End of test. Time out\n"))
+				log.Println("End test based on time")
+				writeLog(c, fmt.Sprintf("%v End of test. Time out\n", UTCTime()))
 				if err := stream.Send(&stat); err != nil {
 					endTT <- 2
 					log.Printf("Stream: %v, sesion token: %v\n",
 						err, c.sid)
 				}
+				return
+			}
+		case <-c.endQuestion:
+			{
+				endTT <- 1
+				log.Println("End test. Questions over for %v", c.name)
 				return
 			}
 		case <-tickChan:
