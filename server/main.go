@@ -431,8 +431,8 @@ func streamSend(wg *sync.WaitGroup, stream interact.GruQuiz_StreamChanServer,
 				writeLog(c, fmt.Sprintf("End of test. Time out\n"))
 				if err := stream.Send(&stat); err != nil {
 					endTT <- 2
-					log.Printf("Error while sending stream: %v\n",
-						err)
+					log.Printf("Stream: %v, sesion token: %v\n",
+						err, c.sid)
 				}
 				return
 			}
@@ -442,8 +442,8 @@ func streamSend(wg *sync.WaitGroup, stream interact.GruQuiz_StreamChanServer,
 				stat.Status = " ONGOING"
 				if err := stream.Send(&stat); err != nil {
 					endTT <- 2
-					log.Printf("Error while sending stream: %v\n",
-						err)
+					log.Printf("Stream: %v\n, sesion token: %v",
+						err, c.sid)
 				}
 			}
 		}
@@ -460,15 +460,14 @@ func streamRecv(wg *sync.WaitGroup, stream interact.GruQuiz_StreamChanServer,
 				log.Println("Received End test token")
 			} else if x == 2 {
 				log.Println("Possible Client crash")
-
 			}
 			return
 		default:
 			msg, err := stream.Recv()
 			if err != nil {
 				if err != io.EOF {
-					log.Printf("Error while receiving stream: %v\n",
-						err)
+					log.Printf("Client %v has disconnected. sesion token: %v\n",
+						c.name, c.sid)
 				}
 				return
 			}
