@@ -84,11 +84,14 @@ func fetchAndDisplayQn() {
 		&interact.Req{Repeat: false, Sid: s.Id, Token: *token})
 
 	try := 0
-	for err != nil && try < 10 {
+	for err != nil {
 		log.Println("Could not get question.Got err: %v", err)
 		q, err = client.GetQuestion(context.Background(),
 			&interact.Req{Repeat: false, Sid: s.Id, Token: *token})
 		try++
+		if try > 10 {
+			log.Fatal(err)
+		}
 		time.Sleep(1 * time.Second)
 	}
 	s.currentQn = q
@@ -140,7 +143,7 @@ func streamRecv(stream interact.GruQuiz_StreamChanClient) {
 
 func streamSend(stream interact.GruQuiz_StreamChanClient) {
 	tickChan := time.NewTicker(time.Second * 5).C
-
+	count := 0
 	for {
 		select {
 		case _ = <-endTT:
@@ -153,6 +156,13 @@ func streamSend(stream interact.GruQuiz_StreamChanClient) {
 				}
 				if err := stream.Send(cliStat); err != nil {
 					log.Println("Error sending to stream ", err)
+					count++
+				} else {
+					count = 0
+				}
+
+				if count > 2 {
+					log.Fatal("Can't connect to server")
 				}
 			}
 		}
