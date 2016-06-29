@@ -390,20 +390,19 @@ func main() {
 	}
 	defer termui.Close()
 
+	setupInstructionsPage()
+	instructions.Text = "Connecting to server..."
+	termui.Render(instructions)
+
 	conn, err = grpc.Dial(*address, grpc.WithInsecure(), grpc.WithBlock(), grpc.WithTimeout(5*time.Second))
 	if err != nil {
-		log.Fatal("Can't cpnnect with server")
+		instructions.TextFgColor = termui.ColorRed
+		instructions.BorderLabel = "Error"
+		instructions.Text = "Can't connect to server. Please contact us at contact@dgraph.io."
+		termui.Render(instructions)
+		time.Sleep(10 * time.Second)
+		return
 	}
-
-	instructions = termui.NewPar(
-		fmt.Sprintf("Wait a second, we are getting you started..."))
-	instructions.BorderLabel = "Authenticating"
-	instructions.Height = 10
-	instructions.Width = termui.TermWidth() / 2
-	instructions.Y = termui.TermHeight() / 4
-	instructions.X = termui.TermWidth() / 4
-	instructions.PaddingTop = 1
-	instructions.PaddingLeft = 1
 
 	client := interact.NewGruQuizClient(conn)
 	s, err := client.Authenticate(context.Background(), &interact.Token{Id: *token})

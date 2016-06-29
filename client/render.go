@@ -10,6 +10,17 @@ import (
 
 var instructions *termui.Par
 
+func setupInstructionsPage() {
+	instructions = termui.NewPar("")
+	instructions.BorderLabel = "Connecting"
+	instructions.Height = 10
+	instructions.Width = termui.TermWidth() / 2
+	instructions.Y = termui.TermHeight() / 4
+	instructions.X = termui.TermWidth() / 4
+	instructions.PaddingTop = 1
+	instructions.PaddingLeft = 1
+}
+
 type QuestionsPage struct {
 	timeLeft    *termui.Par
 	timeSpent   *termui.Par
