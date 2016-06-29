@@ -234,6 +234,17 @@ func showFinalPage(msg string) {
 	conn.Close()
 }
 
+func showErrorPage() {
+	termui.Handle("/timer/1s", func(e termui.Event) {
+	})
+	termui.Clear()
+	instructions.TextFgColor = termui.ColorRed
+	instructions.BorderLabel = "Error"
+	instructions.Text = "Can't connect to server. Please send the log file created to contact@dgraph.io."
+	termui.Render(instructions)
+	time.Sleep(1 * time.Minute)
+}
+
 func clear() {
 	termui.Clear()
 	termui.Body.Rows = termui.Body.Rows[:0]

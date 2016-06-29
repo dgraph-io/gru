@@ -162,7 +162,7 @@ func streamSend(stream interact.GruQuiz_StreamChanClient) {
 				}
 
 				if count > 2 {
-					log.Fatal("Can't connect to server")
+					showErrorPage()
 				}
 			}
 		}
@@ -419,5 +419,7 @@ func main() {
 		conn.Close()
 		termui.StopLoop()
 	})
+
 	termui.Loop()
+
 }
