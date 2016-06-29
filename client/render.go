@@ -49,7 +49,7 @@ func setupInfoPage(th, tw int, dur string) {
 	// TODO - Take duration from constant.
 	infoPage.general = termui.NewPar(`
                 - By taking this test, you agree not to discuss/post the questions shown here.
-                - The duration of the test is ` + dur + `. Timing would be clearly shown.
+                - The duration of the test is ` + dur + ` mins. Timing would be clearly shown.
                 - Once you start the test, the timer would not stop, irrespective of any client side issues.
                 - Questions can have single or multiple correct answers. They will be shown accordingly.
                 - Your total score and the time left at any point in the test would be displayed on the top.
