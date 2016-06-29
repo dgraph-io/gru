@@ -7,9 +7,11 @@ import (
 	"io"
 	"log"
 	"math/rand"
+	"os"
 	"sort"
 	"strings"
 	"sync"
+	"syscall"
 	"time"
 
 	"golang.org/x/net/context"
@@ -81,8 +83,12 @@ func fetchAndDisplayQn() {
 	q, err := client.GetQuestion(context.Background(),
 		&interact.Req{Repeat: false, Sid: s.Id, Token: *token})
 
-	if err != nil {
-		log.Fatalf("Could not get question.Got err: %v", err)
+	for err != nil {
+		log.Println("Could not get question.Got err: %v", err)
+		q, err = client.GetQuestion(context.Background(),
+			&interact.Req{Repeat: false, Sid: s.Id, Token: *token})
+
+		time.Sleep(1 * time.Second)
 	}
 	s.currentQn = q
 
@@ -123,7 +129,7 @@ func streamRecv(stream interact.GruQuiz_StreamChanClient) {
 
 		s.servTime.dur, err = time.ParseDuration(msg.TimeLeft)
 		if err != nil {
-			log.Printf("Error parsing time from server, %v", err)
+			log.Println("Error parsing time from server, %v", err)
 		}
 
 		s.leftTime.setTimeLeft(s.servTime.dur)
@@ -145,8 +151,7 @@ func streamSend(stream interact.GruQuiz_StreamChanClient) {
 					*token,
 				}
 				if err := stream.Send(cliStat); err != nil {
-					// TODO: Show error s.status in a separate box
-					//glog.WithField("err", err).Error("Error sending to stream")
+					log.Println("Error sending to stream ", err)
 				}
 			}
 		}
@@ -165,7 +170,7 @@ func initializeTest(tl string) {
 	client := interact.NewGruQuizClient(conn)
 	stream, err := client.StreamChan(context.Background())
 	if err != nil {
-		log.Fatalf("Error while creating stream: %v", err)
+		log.Println("Error while creating stream: %v", err)
 	}
 
 	cliStat := &interact.ClientStatus{
@@ -173,7 +178,7 @@ func initializeTest(tl string) {
 		*token,
 	}
 	if err := stream.Send(cliStat); err != nil {
-		log.Panic(err)
+		log.Println(err)
 	}
 	go streamRecv(stream)
 	go streamSend(stream)
@@ -363,18 +368,27 @@ func setupInitialPage(ses *interact.Session) {
 }
 
 func main() {
-	rand.Seed(42)
 	flag.Parse()
+	logFile, _ := os.OpenFile(fmt.Sprintf("%s-gru.log", *token),
+		os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	syscall.Dup2(int(logFile.Fd()), 2)
+	rand.Seed(42)
 	err := termui.Init()
 	if err != nil {
 		panic(err)
 	}
 	defer termui.Close()
 
+	try := 0
 	conn, err = grpc.Dial(*address, grpc.WithInsecure())
-	if err != nil {
-		log.Fatal(err)
-		return
+	for err != nil {
+		log.Println(err)
+		conn, err = grpc.Dial(*address, grpc.WithInsecure())
+		try++
+		time.Sleep(3 * time.Second)
+		if try > 10 {
+			log.Fatal("Can't cpnnect with server")
+		}
 	}
 
 	instructions = termui.NewPar(

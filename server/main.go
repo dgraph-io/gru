@@ -306,7 +306,7 @@ func getQuestion(req *interact.Req) (*interact.Question, error) {
 		DURATION-time.Now().UTC().Sub(c.testStart) < 0 {
 		q := &interact.Question{Id: END, Totscore: c.score}
 		c.endQuestion <- 1
-		writeLog(c, fmt.Sprintf("%v End of test. Questions over\n", UTCTime()))
+		writeLog(c, fmt.Sprintf("%v End of test. Time over\n", UTCTime()))
 		c.logFile.Close()
 		return q, nil
 	}
@@ -326,6 +326,8 @@ func getQuestion(req *interact.Req) (*interact.Question, error) {
 	// This means that test qns are over.
 	if err != nil {
 		q = &interact.Question{Id: END, Totscore: c.score}
+		c.endQuestion <- 1
+		writeLog(c, fmt.Sprintf("%v End of test. Questions over\n", UTCTime()))
 		c.logFile.Close()
 		return q, nil
 	}
