@@ -83,11 +83,12 @@ func fetchAndDisplayQn() {
 	q, err := client.GetQuestion(context.Background(),
 		&interact.Req{Repeat: false, Sid: s.Id, Token: *token})
 
-	for err != nil {
+	try := 0
+	for err != nil && try < 10 {
 		log.Println("Could not get question.Got err: %v", err)
 		q, err = client.GetQuestion(context.Background(),
 			&interact.Req{Repeat: false, Sid: s.Id, Token: *token})
-
+		try++
 		time.Sleep(1 * time.Second)
 	}
 	s.currentQn = q
