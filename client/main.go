@@ -54,6 +54,7 @@ type Session struct {
 	timeTaken    int
 	totalScore   float32
 	lastScore    float32
+	showingAns   bool
 }
 
 var s Session
@@ -181,11 +182,12 @@ func initializeTest(tl string) {
 }
 
 func renderSelectedAnswers(selected []string, m map[string]*interact.Answer) {
+	s.showingAns = true
 	check := "Selected:\n\n"
 	for _, k := range selected {
 		check += m[string(k)].Str + "\n"
 	}
-	check += "\nPress ENTER to confirm. Press any other key to cancel."
+	check += "\nPress ENTER to confirm. Press ESC to cancel."
 	qp.answers.Text = check
 	s.status = confirmAnswer
 	termui.Render(termui.Body)
@@ -220,7 +222,7 @@ func optionHandler(e termui.Event, q *interact.Question, selected []string,
 		selected = append(selected, k)
 		sort.StringSlice(selected).Sort()
 		qp.answers.Text = ansBody + strings.Join(selected, ", ")
-		qp.answers.Text += "\nPress Enter to see chosen options."
+		qp.answers.Text += "\nPress Enter to see chosen options. Press ESC to cancel."
 		termui.Render(termui.Body)
 	}
 	return selected
@@ -251,7 +253,8 @@ func enterHandler(e termui.Event, q *interact.Question, selected []string,
 	}
 }
 
-func keyHandler(ansBody string, selected []string) []string {
+func escapeHandler(ansBody string, selected []string) []string {
+	s.showingAns = false
 	qp.answers.Text = ansBody
 	selected = selected[:0]
 	s.status = options
@@ -260,6 +263,7 @@ func keyHandler(ansBody string, selected []string) []string {
 }
 
 func populateQuestionsPage(q *interact.Question) {
+	resetHandlers()
 	s.timeTaken = 0
 	qp.que.Text = q.Str
 	qp.scoringInfo.Text = fmt.Sprintf(
@@ -268,6 +272,7 @@ func populateQuestionsPage(q *interact.Question) {
 
 	// Selected contains the options user has already selected.
 	selected := []string{}
+	s.showingAns = false
 	// This is the body of the answer which has all the options.
 	ansBody := ""
 	// Map m contains a map of the key to select an answer and the answer
@@ -306,13 +311,20 @@ func populateQuestionsPage(q *interact.Question) {
 	for i := 'a'; i < opt; i++ {
 		termui.Handle(fmt.Sprintf("/sys/kbd/%c", i),
 			func(e termui.Event) {
+				if s.showingAns {
+					return
+				}
 				selected = optionHandler(e, q, selected, m,
 					ansBody)
 			})
 	}
 
 	termui.Handle("/sys/kbd/s", func(e termui.Event) {
-		qp.answers.Text = "Are you sure you want to skip the question? \n\nPress ENTER to confirm. Press any other key to cancel."
+		if s.showingAns {
+			return
+		}
+		s.showingAns = true
+		qp.answers.Text = "Are you sure you want to skip the question? \n\nPress ENTER to confirm. Press ESC to cancel."
 		selected = selected[:0]
 		selected = append(selected, "skip")
 		termui.Render(termui.Body)
@@ -327,8 +339,8 @@ func populateQuestionsPage(q *interact.Question) {
 	})
 
 	// On any other keypress we reset the answer text and the selected answers.
-	termui.Handle("/sys/kbd", func(e termui.Event) {
-		selected = keyHandler(ansBody, selected)
+	termui.Handle("/sys/kbd/<escape>", func(e termui.Event) {
+		selected = escapeHandler(ansBody, selected)
 	})
 }
 

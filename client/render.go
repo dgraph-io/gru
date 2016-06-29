@@ -201,9 +201,11 @@ func renderQuestionsPage(tl string) {
 }
 
 func resetHandlers() {
-	termui.Handle("/sys/kbd", func(e termui.Event) {})
 	termui.Handle("/sys/kbd/s", func(e termui.Event) {})
 	termui.Handle("/sys/kbd/<enter>", func(e termui.Event) {})
+	for i := 'a'; i < 'e'; i++ {
+		termui.Handle(fmt.Sprintf("/sys/kbd/%c", i), func(e termui.Event) {})
+	}
 }
 
 func showFinalPage(msg string) {
