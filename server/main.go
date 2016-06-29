@@ -11,7 +11,6 @@ import (
 	"math/rand"
 	"net"
 	"os"
-	"reflect"
 	"strconv"
 	"strings"
 	"sync"
@@ -73,6 +72,7 @@ func checkToken(c Candidate) error {
 	// Initially testStart is zero, but after candidate has taken the
 	// test once, it shouldn't be zero.
 	if !c.testStart.IsZero() && time.Now().UTC().After(c.testStart.Add(DURATION)) {
+		// TODO - Show duration elapsed in minutes.
 		return errors.New(fmt.Sprintf(
 			"%v since you started the test for the first time are already over.",
 			DURATION))
@@ -105,7 +105,8 @@ func sliceDiff(qnList []Question, qnsAsked []string) []Question {
 }
 
 func (c *Candidate) loadCandInfo(token string) error {
-	f, err := os.Open(fmt.Sprintf("logs/%s.log", token))
+	f, err := os.OpenFile(fmt.Sprintf("logs/%s.log", token),
+		os.O_RDWR|os.O_APPEND, 0666)
 	if err != nil {
 		return err
 	}
@@ -151,8 +152,6 @@ func (c *Candidate) loadCandInfo(token string) error {
 	} else {
 		c.demoQnsAsked = len(questions) - len(c.questions)
 	}
-	// TODO(pawan) - Extract timeLeft from logs too. Maybe send initial time
-	// from server when test starts
 	return nil
 }
 
@@ -201,7 +200,6 @@ func state(c Candidate) interact.QuizState {
 	if len(questions)-len(c.questions) == maxDemoQns {
 		return interact.Quiz_TEST_NOT_TAKEN
 	}
-	// TODO - Check validity of test
 	if len(c.questions) == 0 {
 		return interact.Quiz_TEST_FINISHED
 	}
@@ -299,6 +297,7 @@ func getQuestion(req *interact.Req) (*interact.Question, error) {
 		if err != nil {
 			return nil, err
 		}
+		writeLog(c, fmt.Sprintf("%v question %v\n", UTCTime(), q.Id))
 		return q, nil
 	}
 	// Time is up for the test.
@@ -355,10 +354,28 @@ func (s *server) GetQuestion(ctx context.Context,
 	return getQuestion(req)
 }
 
+func diff(answers []string, options []string) []string {
+	d := []string{}
+	amap := make(map[string]bool)
+	for _, a := range answers {
+		amap[a] = true
+	}
+	for _, o := range options {
+		if present := amap[o]; !present {
+			d = append(d, o)
+		}
+	}
+	return d
+}
+
 func isCorrectAnswer(resp *interact.Response) (int, int64) {
 	for idx, que := range questions {
 		if que.Id == resp.Qid {
-			if reflect.DeepEqual(resp.Aid, que.Correct) {
+			if len(resp.Aid) != len(que.Correct) {
+				return idx, WRONG
+			}
+			if len(diff(resp.Aid, que.Correct)) == 0 &&
+				len(diff(que.Correct, resp.Aid)) == 0 {
 				return idx, CORRECT
 			} else {
 				return idx, WRONG
@@ -374,7 +391,11 @@ func UTCTime() string {
 
 func writeLog(c Candidate, s string) {
 	wrtLock.Lock()
-	c.logFile.WriteString(s)
+	_, err := c.logFile.WriteString(s)
+	if err != nil {
+		log.Printf("Error: %v while writing logs to file for Cand: %v",
+			err, c.name)
+	}
 	wrtLock.Unlock()
 }
 
@@ -628,6 +649,5 @@ func main() {
 		log.Fatal(err)
 	}
 	parseCandidateFile(*candFile)
-	// TODO(pawan) - Read testStart timings for candidates.
 	runGrpcServer(*port)
 }

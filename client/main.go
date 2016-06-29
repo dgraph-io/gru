@@ -8,6 +8,7 @@ import (
 	"log"
 	"math/rand"
 	"sort"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -261,8 +262,9 @@ func keyHandler(ansBody string, selected []string) []string {
 func populateQuestionsPage(q *interact.Question) {
 	s.timeTaken = 0
 	qp.que.Text = q.Str
-	qp.scoringInfo.Text = fmt.Sprintf("Right answer => +%1.1f\n\nWrong answer => -%1.1f",
-		q.Positive, q.Negative)
+	qp.scoringInfo.Text = fmt.Sprintf(
+		"Right answer => +%1.1f\n\nWrong answer => -%1.1f\n\nSkip question Aut=> %1.1f",
+		q.Positive, q.Negative, 0.0)
 
 	// Selected contains the options user has already selected.
 	selected := []string{}
@@ -340,6 +342,9 @@ func initializeDemo(tl string) {
 func setupInitialPage(ses *interact.Session) {
 	state := ses.State
 	s.testDuration = ses.TestDuration
+	d, _ := time.ParseDuration(s.testDuration)
+	dm := strconv.FormatFloat(d.Minutes(), 'f', 0, 64)
+	// TODO(pawan) - Handle error and take to final page.
 	s.Id = ses.Id
 	if state == interact.Quiz_TEST_FINISHED {
 		//show final page saying test already taken and return
@@ -348,7 +353,7 @@ func setupInitialPage(ses *interact.Session) {
 	if state == interact.Quiz_TEST_STARTED {
 		initializeTest(ses.TimeLeft)
 	}
-	setupInfoPage(termui.TermHeight(), termui.TermWidth(), ses.TestDuration)
+	setupInfoPage(termui.TermHeight(), termui.TermWidth(), dm)
 	if state == interact.Quiz_DEMO_NOT_TAKEN {
 		//call instructions screen with demo taken to be false
 		renderInstructionsPage(false)
