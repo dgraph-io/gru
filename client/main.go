@@ -390,16 +390,9 @@ func main() {
 	}
 	defer termui.Close()
 
-	try := 0
-	conn, err = grpc.Dial(*address, grpc.WithInsecure())
-	for err != nil {
-		log.Println(err)
-		conn, err = grpc.Dial(*address, grpc.WithInsecure())
-		try++
-		time.Sleep(3 * time.Second)
-		if try > 10 {
-			log.Fatal("Can't cpnnect with server")
-		}
+	conn, err = grpc.Dial(*address, grpc.WithInsecure(), grpc.WithBlock(), grpc.WithTimeout(5*time.Second))
+	if err != nil {
+		log.Fatal("Can't cpnnect with server")
 	}
 
 	instructions = termui.NewPar(
