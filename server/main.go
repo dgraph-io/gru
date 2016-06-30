@@ -201,27 +201,23 @@ func stringInSlice(a string, list []string) bool {
 
 func onlyDemoQuestions() []Question {
 	var que []Question
+	count := 0
 	for _, x := range questions {
-		if stringInSlice("demo", x.Tags) {
+		if stringInSlice("demo", x.Tags) && count < maxDemoQns {
 			que = append(que, x)
+			count++
 		}
 	}
 	return que
 }
 
 func demoCandInfo(token string) Candidate {
-	// This indicates candidate info exists in memory and the client could
-	// have crashed.
 	var c Candidate
 	c.name = token
 	c.email = "no-mail@given"
 	c.validity = time.Now().Add(time.Duration(100 * time.Hour))
 	c.testStart = time.Now()
-	c.demoTaken = false
-	c.score = 0
 
-	// If file for the token doesn't exist means client is trying to connect
-	// for the first time. So we create a file
 	if _, err := os.Stat(fmt.Sprintf("logs/%s.log", token)); os.IsNotExist(err) {
 		f, err := os.OpenFile(fmt.Sprintf("logs/%s.log", token),
 			os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
@@ -642,11 +638,17 @@ func parseCandidateFile(file string) error {
 
 func checkIds(qns []Question) error {
 	idsMap := make(map[string]bool)
+	demoQnCount := 0
 
 	for _, q := range qns {
 		if _, ok := idsMap[q.Id]; ok {
 			return fmt.Errorf("Id has been used before: %v", q.Id)
 		}
+
+		if stringInSlice("demo", q.Tags) {
+			demoQnCount++
+		}
+
 		idsMap[q.Id] = true
 		for _, ans := range q.Opt {
 			if _, ok := idsMap[ans.Uid]; ok {
@@ -673,6 +675,10 @@ func checkIds(qns []Question) error {
 					corr)
 			}
 		}
+	}
+
+	if demoQnCount < maxDemoQns {
+		log.Fatal("Need more demo questions in quiz file")
 	}
 	return nil
 }
