@@ -7,10 +7,12 @@ import (
 	"io"
 	"log"
 	"math/rand"
+	"os"
 	"sort"
 	"strconv"
 	"strings"
 	"sync"
+	"syscall"
 	"time"
 
 	"golang.org/x/net/context"
@@ -83,8 +85,16 @@ func fetchAndDisplayQn() {
 	q, err := client.GetQuestion(context.Background(),
 		&interact.Req{Repeat: false, Sid: s.Id, Token: *token})
 
-	if err != nil {
-		log.Fatalf("Could not get question.Got err: %v", err)
+	try := 0
+	for err != nil {
+		log.Println("Could not get question.Got err: %v", err)
+		q, err = client.GetQuestion(context.Background(),
+			&interact.Req{Repeat: false, Sid: s.Id, Token: *token})
+		try++
+		if try > 10 {
+			showErrorPage()
+		}
+		time.Sleep(1 * time.Second)
 	}
 	s.currentQn = q
 
@@ -125,7 +135,7 @@ func streamRecv(stream interact.GruQuiz_StreamChanClient) {
 
 		s.servTime.dur, err = time.ParseDuration(msg.TimeLeft)
 		if err != nil {
-			log.Printf("Error parsing time from server, %v", err)
+			log.Println("Error parsing time from server, %v", err)
 		}
 
 		s.leftTime.setTimeLeft(s.servTime.dur)
@@ -135,7 +145,7 @@ func streamRecv(stream interact.GruQuiz_StreamChanClient) {
 
 func streamSend(stream interact.GruQuiz_StreamChanClient) {
 	tickChan := time.NewTicker(time.Second * 5).C
-
+	count := 0
 	for {
 		select {
 		case _ = <-endTT:
@@ -147,8 +157,14 @@ func streamSend(stream interact.GruQuiz_StreamChanClient) {
 					*token,
 				}
 				if err := stream.Send(cliStat); err != nil {
-					// TODO: Show error s.status in a separate box
-					//glog.WithField("err", err).Error("Error sending to stream")
+					log.Println("Error sending to stream ", err)
+					count++
+				} else {
+					count = 0
+				}
+
+				if count > 2 {
+					showErrorPage()
 				}
 			}
 		}
@@ -167,7 +183,7 @@ func initializeTest(tl string) {
 	client := interact.NewGruQuizClient(conn)
 	stream, err := client.StreamChan(context.Background())
 	if err != nil {
-		log.Fatalf("Error while creating stream: %v", err)
+		log.Println("Error while creating stream: %v", err)
 	}
 
 	cliStat := &interact.ClientStatus{
@@ -175,7 +191,7 @@ func initializeTest(tl string) {
 		*token,
 	}
 	if err := stream.Send(cliStat); err != nil {
-		log.Panic(err)
+		log.Println(err)
 	}
 	go streamRecv(stream)
 	go streamSend(stream)
@@ -397,34 +413,33 @@ func main() {
 		*token = fmt.Sprintf("test-%s", RandStringBytes(10))
 	}
 
+	logFile, _ := os.OpenFile("gru.log", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	syscall.Dup2(int(logFile.Fd()), 2)
 	err := termui.Init()
 	if err != nil {
 		panic(err)
 	}
 	defer termui.Close()
 
-	conn, err = grpc.Dial(*address, grpc.WithInsecure())
+	setupErrorPage()
+	setupInstructionsPage()
+	instructions.BorderLabel = "Connecting"
+	instructions.Text = "Connecting to server..."
+	termui.Render(instructions)
+
+	conn, err = grpc.Dial(*address, grpc.WithInsecure(), grpc.WithBlock(), grpc.WithTimeout(5*time.Second))
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		showErrorPage()
 		return
 	}
-
-	instructions = termui.NewPar(
-		fmt.Sprintf("Wait a second, we are getting you started..."))
-	instructions.BorderLabel = "Authenticating"
-	instructions.Height = 10
-	instructions.Width = termui.TermWidth() / 2
-	instructions.Y = termui.TermHeight() / 4
-	instructions.X = termui.TermWidth() / 4
-	instructions.PaddingTop = 1
-	instructions.PaddingLeft = 1
 
 	client := interact.NewGruQuizClient(conn)
 	s, err := client.Authenticate(context.Background(), &interact.Token{Id: *token})
 	if err != nil {
-		instructions.Text = grpc.ErrorDesc(err) + " Press Ctrl+Q to exit and try again."
-		instructions.TextFgColor = termui.ColorRed
-		termui.Render(instructions)
+		log.Println(err)
+		errorPage.Text = grpc.ErrorDesc(err) + " Press Ctrl+Q to exit and try again."
+		termui.Render(errorPage)
 	} else {
 		setupInitialPage(s)
 	}
@@ -434,5 +449,7 @@ func main() {
 		conn.Close()
 		termui.StopLoop()
 	})
+
 	termui.Loop()
+
 }
