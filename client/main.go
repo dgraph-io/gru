@@ -380,8 +380,7 @@ func setupInitialPage(ses *interact.Session) {
 
 func main() {
 	flag.Parse()
-	logFile, _ := os.OpenFile(fmt.Sprintf("%s-gru.log", *token),
-		os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	logFile, _ := os.OpenFile("gru.log", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 	syscall.Dup2(int(logFile.Fd()), 2)
 	rand.Seed(42)
 	err := termui.Init()
@@ -390,26 +389,25 @@ func main() {
 	}
 	defer termui.Close()
 
+	setupErrorPage()
 	setupInstructionsPage()
+	instructions.BorderLabel = "Connecting"
 	instructions.Text = "Connecting to server..."
 	termui.Render(instructions)
 
 	conn, err = grpc.Dial(*address, grpc.WithInsecure(), grpc.WithBlock(), grpc.WithTimeout(5*time.Second))
 	if err != nil {
-		instructions.TextFgColor = termui.ColorRed
-		instructions.BorderLabel = "Error"
-		instructions.Text = "Can't connect to server. Please contact us at contact@dgraph.io."
-		termui.Render(instructions)
-		time.Sleep(10 * time.Second)
+		log.Println(err)
+		showErrorPage()
 		return
 	}
 
 	client := interact.NewGruQuizClient(conn)
 	s, err := client.Authenticate(context.Background(), &interact.Token{Id: *token})
 	if err != nil {
-		instructions.Text = grpc.ErrorDesc(err) + " Press Ctrl+Q to exit and try again."
-		instructions.TextFgColor = termui.ColorRed
-		termui.Render(instructions)
+		log.Println(err)
+		errorPage.Text = grpc.ErrorDesc(err) + " Press Ctrl+Q to exit and try again."
+		termui.Render(errorPage)
 	} else {
 		setupInitialPage(s)
 	}
