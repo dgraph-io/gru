@@ -56,7 +56,7 @@ var (
 	candFile = flag.String("cand", "candidates.txt", "Candidate inforamation")
 	// TODO - Check this number should be less than total number of demo
 	// questions in the file.
-	maxDemoQns = 3
+	maxDemoQns = 10
 	// List of question ids.
 	questions []Question
 	cmap      map[string]Candidate
@@ -190,6 +190,49 @@ func candInfo(token string) Candidate {
 	return c
 }
 
+func stringInSlice(a string, list []string) bool {
+	for _, b := range list {
+		if b == a {
+			return true
+		}
+	}
+	return false
+}
+
+func onlyDemoQuestions() []Question {
+	var que []Question
+	count := 0
+	for _, x := range questions {
+		if stringInSlice("demo", x.Tags) && count < maxDemoQns {
+			que = append(que, x)
+			count++
+		}
+	}
+	return que
+}
+
+func demoCandInfo(token string) Candidate {
+	var c Candidate
+	c.name = token
+	c.email = "no-mail@given"
+	c.validity = time.Now().Add(time.Duration(100 * time.Hour))
+	c.testStart = time.Now()
+
+	if _, err := os.Stat(fmt.Sprintf("logs/%s.log", token)); os.IsNotExist(err) {
+		f, err := os.OpenFile(fmt.Sprintf("logs/%s.log", token),
+			os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+		if err != nil {
+			log.Fatalf("error opening file: %v", err)
+		}
+		c.logFile = f
+		c.questions = onlyDemoQuestions()
+		cmap[token] = c
+		return c
+	}
+	cmap[token] = c
+	return c
+}
+
 func state(c Candidate) interact.QuizState {
 	if len(c.questions) == len(questions) {
 		return interact.Quiz_DEMO_NOT_TAKEN
@@ -209,17 +252,23 @@ func state(c Candidate) interact.QuizState {
 func authenticate(t *interact.Token) (*interact.Session, error) {
 	var c Candidate
 	var ok bool
-	if c, ok = cmap[t.Id]; !ok {
-		return nil, errors.New("Invalid token.")
-	}
+	var session interact.Session
 
-	c = candInfo(t.Id)
-	if err := checkToken(c); err != nil {
-		return nil, err
+	if strings.HasPrefix(t.Id, "test-") {
+		c = demoCandInfo(t.Id)
+		session = interact.Session{Id: RandStringBytes(36), State: interact.Quiz_DEMO_NOT_TAKEN,
+			TimeLeft: timeLeft(c.testStart), TestDuration: DURATION.String()}
+	} else {
+		if c, ok = cmap[t.Id]; !ok {
+			return nil, errors.New("Invalid token.")
+		}
+		c = candInfo(t.Id)
+		if err := checkToken(c); err != nil {
+			return nil, err
+		}
+		session = interact.Session{Id: RandStringBytes(36), State: state(c),
+			TimeLeft: timeLeft(c.testStart), TestDuration: DURATION.String()}
 	}
-
-	session := interact.Session{Id: RandStringBytes(36), State: state(c),
-		TimeLeft: timeLeft(c.testStart), TestDuration: DURATION.String()}
 	writeLog(c, fmt.Sprintf("%v session_token %s\n", UTCTime(), session.Id))
 	c.sid = session.Id
 	c.endQuestion = make(chan int, 1)
@@ -589,11 +638,17 @@ func parseCandidateFile(file string) error {
 
 func checkIds(qns []Question) error {
 	idsMap := make(map[string]bool)
+	demoQnCount := 0
 
 	for _, q := range qns {
 		if _, ok := idsMap[q.Id]; ok {
 			return fmt.Errorf("Id has been used before: %v", q.Id)
 		}
+
+		if stringInSlice("demo", q.Tags) {
+			demoQnCount++
+		}
+
 		idsMap[q.Id] = true
 		for _, ans := range q.Opt {
 			if _, ok := idsMap[ans.Uid]; ok {
@@ -620,6 +675,10 @@ func checkIds(qns []Question) error {
 					corr)
 			}
 		}
+	}
+
+	if demoQnCount < maxDemoQns {
+		log.Fatal("Need more demo questions in quiz file")
 	}
 	return nil
 }
