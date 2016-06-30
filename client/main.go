@@ -90,7 +90,7 @@ func fetchAndDisplayQn() {
 			&interact.Req{Repeat: false, Sid: s.Id, Token: *token})
 		try++
 		if try > 10 {
-			log.Fatal(err)
+			showErrorPage()
 		}
 		time.Sleep(1 * time.Second)
 	}
