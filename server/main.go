@@ -256,9 +256,12 @@ func state(c Candidate) interact.QuizState {
 func authenticate(t *interact.Token) (*interact.Session, error) {
 	var c Candidate
 	var ok bool
+	var session interact.Session
 
 	if strings.HasPrefix(t.Id, "test-") {
 		c = demoCandInfo(t.Id)
+		session = interact.Session{Id: RandStringBytes(36), State: interact.Quiz_DEMO_NOT_TAKEN,
+			TimeLeft: timeLeft(c.testStart), TestDuration: DURATION.String()}
 	} else {
 		if c, ok = cmap[t.Id]; !ok {
 			return nil, errors.New("Invalid token.")
@@ -267,9 +270,9 @@ func authenticate(t *interact.Token) (*interact.Session, error) {
 		if err := checkToken(c); err != nil {
 			return nil, err
 		}
+		session = interact.Session{Id: RandStringBytes(36), State: state(c),
+			TimeLeft: timeLeft(c.testStart), TestDuration: DURATION.String()}
 	}
-	session := interact.Session{Id: RandStringBytes(36), State: state(c),
-		TimeLeft: timeLeft(c.testStart), TestDuration: DURATION.String()}
 	writeLog(c, fmt.Sprintf("%v session_token %s\n", UTCTime(), session.Id))
 	c.sid = session.Id
 	c.endQuestion = make(chan int, 1)

@@ -24,7 +24,7 @@ import (
 var token = flag.String("token", "testtoken", "Authentication token")
 
 //TODO(Pawan) - Change default address to our server.
-var address = flag.String("address", "localhost:8888", "Address of the server")
+var address = flag.String("address", "54.183.229.38:50001", "Address of the server")
 var endTT chan *interact.ServerStatus
 
 type State int
