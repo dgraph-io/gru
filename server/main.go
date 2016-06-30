@@ -28,8 +28,6 @@ const (
 	DEMO     = "demo"
 	TEST     = "test"
 	END      = "END"
-	CORRECT  = 1
-	WRONG    = 2
 	DURATION = 60 * time.Minute
 )
 
@@ -136,7 +134,7 @@ func (c *Candidate) loadCandInfo(token string) error {
 			}
 			// We only want to add score from actual quiz questions
 			// and not demo qns.
-			if len(qnsAsked) >= maxDemoQns {
+			if len(qnsAsked) > maxDemoQns {
 				score += float32(s)
 			}
 		case "question":
@@ -354,8 +352,7 @@ func getQuestion(req *interact.Req) (*interact.Question, error) {
 		DURATION-time.Now().UTC().Sub(c.testStart) < 0 {
 		q := &interact.Question{Id: END, Totscore: c.score}
 		c.endQuestion <- 1
-		writeLog(c, fmt.Sprintf("%v End of test. Time over\n", UTCTime()))
-		c.logFile.Close()
+		writeLog(c, fmt.Sprintf("%v End of test. Questions over\n", UTCTime()))
 		return q, nil
 	}
 	if len(c.questions) == len(questions)-maxDemoQns {
@@ -376,7 +373,6 @@ func getQuestion(req *interact.Req) (*interact.Question, error) {
 		q = &interact.Question{Id: END, Totscore: c.score}
 		c.endQuestion <- 1
 		writeLog(c, fmt.Sprintf("%v End of test. Questions over\n", UTCTime()))
-		c.logFile.Close()
 		return q, nil
 	}
 	writeLog(c, fmt.Sprintf("%v question %v\n", UTCTime(), q.Id))
@@ -405,35 +401,36 @@ func (s *server) GetQuestion(ctx context.Context,
 	return getQuestion(req)
 }
 
-func diff(answers []string, options []string) []string {
-	d := []string{}
-	amap := make(map[string]bool)
-	for _, a := range answers {
-		amap[a] = true
-	}
-	for _, o := range options {
-		if present := amap[o]; !present {
-			d = append(d, o)
-		}
-	}
-	return d
-}
-
-func isCorrectAnswer(resp *interact.Response) (int, int64) {
+func isCorrectAnswer(resp *interact.Response) (int, float32) {
 	for idx, que := range questions {
 		if que.Id == resp.Qid {
-			if len(resp.Aid) != len(que.Correct) {
-				return idx, WRONG
+			// Multiple choice questions.
+			if len(que.Correct) > 1 {
+				var score float32
+				for _, aid := range resp.Aid {
+					correct := false
+					for _, caid := range que.Correct {
+						if caid == aid {
+							correct = true
+							break
+						}
+					}
+					if correct {
+						score += que.Positive
+					} else {
+						score -= que.Negative
+					}
+				}
+				return idx, score
 			}
-			if len(diff(resp.Aid, que.Correct)) == 0 &&
-				len(diff(que.Correct, resp.Aid)) == 0 {
-				return idx, CORRECT
+			if resp.Aid[0] == que.Correct[0] {
+				return idx, que.Positive
 			} else {
-				return idx, WRONG
+				return idx, -que.Negative
 			}
 		}
 	}
-	return -1, -1
+	return -1, 0
 }
 
 func UTCTime() string {
@@ -453,33 +450,34 @@ func writeLog(c Candidate, s string) {
 func sendAnswer(resp *interact.Response) (*interact.Status, error) {
 	var c Candidate
 	var ok bool
-	if c, ok = cmap[resp.Token]; !ok {
-		return &interact.Status{Status: 0}, errors.New("Invalid token.")
-	}
-
 	var status interact.Status
-	var err error
-	var idx int
+	if c, ok = cmap[resp.Token]; !ok {
+		return &status, errors.New("Invalid token.")
+	}
 
-	idx, status.Status = isCorrectAnswer(resp)
-	if idx == -1 {
-		log.Fatalf("Didn't find question with Id, %v.", resp.Qid)
+	if len(resp.Aid) == 0 {
+		log.Printf("Got empty response for qn:%v, token: %v, session: %v",
+			resp.Qid, resp.Token, resp.Sid)
+		return &status, nil
 	}
-	if len(resp.Aid) > 0 && resp.Aid[0] != "skip" {
-		if status.Status == 1 {
-			c.score += questions[idx].Positive
-		} else {
-			c.score -= questions[idx].Negative
-		}
-	} else {
+	if resp.Aid[0] == "skip" {
 		if len(resp.Aid) > 1 {
-			log.Println("Got extra optoins with SKIP")
+			log.Printf("Got extra options with SKIP for qn:%v, token: %v, session: %v",
+				resp.Qid, resp.Token, resp.Sid)
 		}
+		return &status, nil
 	}
-	cmap[resp.Token] = c
+
+	idx, score := isCorrectAnswer(resp)
 	writeLog(c, fmt.Sprintf("%s response %s %s %.1f\n", UTCTime(),
-		resp.Qid, strings.Join(resp.Aid, ","), c.score))
-	return &status, err
+		resp.Qid, strings.Join(resp.Aid, ","), score))
+	if idx == -1 {
+		log.Printf("Didn't find qn: %v, token: %v, session: %v",
+			resp.Qid, resp.Token, resp.Sid)
+	}
+	c.score += score
+	cmap[resp.Token] = c
+	return &status, nil
 }
 
 func (s *server) SendAnswer(ctx context.Context,
@@ -638,7 +636,7 @@ func parseCandidateFile(file string) error {
 	return nil
 }
 
-func checkIds(qns []Question) error {
+func checkTest(qns []Question) error {
 	idsMap := make(map[string]bool)
 	demoQnCount := 0
 
@@ -671,6 +669,10 @@ func checkIds(qns []Question) error {
 		if len(q.Correct) == 0 {
 			return fmt.Errorf("Correct list is empty")
 		}
+		if len(q.Correct) > 1 && q.Negative < q.Positive {
+			return fmt.Errorf("Negative score less than positive for multi-choice qn: %v",
+				q.Id)
+		}
 		for _, corr := range q.Correct {
 			if _, ok := idsMap[corr]; !ok {
 				return fmt.Errorf("Correct not part of options: %v ",
@@ -695,7 +697,7 @@ func extractQuizInfo(file string) ([]Question, error) {
 	if err != nil {
 		return []Question{}, err
 	}
-	err = checkIds(info)
+	err = checkTest(info)
 	if err != nil {
 		return []Question{}, err
 	}

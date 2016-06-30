@@ -17,22 +17,37 @@ func TestIsCorrectAnswer(t *testing.T) {
 	}
 
 	r := interact.Response{Qid: "demo-2", Aid: []string{"demo-2a"}}
-	idx, status := isCorrectAnswer(&r)
+	idx, score := isCorrectAnswer(&r)
 	if idx != 2 {
 		t.Errorf("Expected index %d, Got: %d", 2, idx)
 	}
-	if status != WRONG {
-		t.Errorf("Expected status %d, Got: %d", WRONG, status)
+	if score != 5.0 {
+		t.Errorf("Expected score %f, Got: %f", 5.0, score)
 	}
 
 	r = interact.Response{Qid: "demo-2", Aid: []string{"demo-2c", "demo-2a"}}
-	idx, status = isCorrectAnswer(&r)
-
-	if idx != 2 {
-		t.Errorf("Expected index %d, Got: %d", 1, idx)
+	idx, score = isCorrectAnswer(&r)
+	if score != 10.0 {
+		t.Errorf("Expected score %f, Got: %f", 10.0, score)
 	}
-	if status != CORRECT {
-		t.Errorf("Expected status %d, Got: %d", CORRECT, status)
+
+	r = interact.Response{Qid: "demo-2", Aid: []string{"demo-2d", "demo-2b"}}
+	idx, score = isCorrectAnswer(&r)
+	if score != -10.0 {
+		t.Errorf("Expected score %f, Got: %f", -10.0, score)
+	}
+
+	//Single choice questions
+	r = interact.Response{Qid: "demo-1", Aid: []string{"demo-1b"}}
+	idx, score = isCorrectAnswer(&r)
+	if score != 5 {
+		t.Errorf("Expected score %f, Got: %f", 5.0, score)
+	}
+
+	r = interact.Response{Qid: "demo-1", Aid: []string{"demo-1c"}}
+	idx, score = isCorrectAnswer(&r)
+	if score != -2.5 {
+		t.Errorf("Expected score %f, Got: %f", -2.5, score)
 	}
 }
 
@@ -111,6 +126,11 @@ func TestGetQuestion(t *testing.T) {
 	parseCandidateFile("cand_test.txt")
 	c := cmap["abcd1234"]
 	c.questions = make([]Question, len(questions))
+	c.logFile, err = ioutil.TempFile("", "gru")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.Remove(c.logFile.Name())
 	copy(c.questions, questions)
 	cmap["abcd1234"] = c
 
@@ -192,6 +212,11 @@ func TestAuthenticate(t *testing.T) {
 	}
 	c := Candidate{email: "pawan@dgraph.io", validity: time.Now().AddDate(0, 0, 7),
 		questions: questions[:]}
+	c.logFile, err = ioutil.TempFile("", "gru")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.Remove(c.logFile.Name())
 	c.testStart = time.Now().Add(-2 * time.Minute)
 	c.questions = questions[:1]
 	cmap = make(map[string]Candidate)
@@ -284,12 +309,9 @@ func TestSendAnswer(t *testing.T) {
 	cmap = make(map[string]Candidate)
 	cmap["test_token"] = c
 
-	s, err := sendAnswer(&r)
+	_, err = sendAnswer(&r)
 	if err != nil {
 		t.Error("Expected error to be nil.")
-	}
-	if s.Status != 1 {
-		t.Errorf("Expected status to be 1. Got: %d", s.Status)
 	}
 	if cmap["test_token"].score <= 0.0 {
 		t.Errorf("Expected positive score. Got: -%f", cmap["test_token"].score)
@@ -298,12 +320,9 @@ func TestSendAnswer(t *testing.T) {
 	cmap["test_token"] = c
 
 	r.Aid = []string{"demo-2b"}
-	s, err = sendAnswer(&r)
+	_, err = sendAnswer(&r)
 	if err != nil {
 		t.Error("Expected error to be nil.")
-	}
-	if s.Status != 2 {
-		t.Errorf("Expected status to be 2. Got: %d", s.Status)
 	}
 	if cmap["test_token"].score > 0.0 {
 		t.Errorf("Expected negative score. Got: %f", cmap["test_token"].score)
@@ -312,13 +331,9 @@ func TestSendAnswer(t *testing.T) {
 	c.score = 0.0
 	cmap["test_token"] = c
 	r.Aid = []string{"skip"}
-	s, err = sendAnswer(&r)
+	_, err = sendAnswer(&r)
 	if err != nil {
 		t.Error("Expected error to be nil.")
-	}
-	// TODO(pawan) - Have another status code for skip
-	if s.Status != 2 {
-		t.Errorf("Expected status to be 0. Got: %d", s.Status)
 	}
 	if cmap["test_token"].score != 0.0 {
 		t.Errorf("Expected 0.0 score. Got: %f", cmap["test_token"].score)
@@ -339,7 +354,7 @@ func TestSliceDiff(t *testing.T) {
 	}
 }
 
-func TestCheckIds(t *testing.T) {
+func TestCheckTest(t *testing.T) {
 	qns := []Question{
 		{
 			Id: "qn1",
@@ -357,7 +372,7 @@ func TestCheckIds(t *testing.T) {
 		},
 	}
 	expectedError := "Id has been used before: qn1"
-	if err := checkIds(qns); err.Error() != expectedError {
+	if err := checkTest(qns); err.Error() != expectedError {
 		t.Errorf("Expected error to be %v. Got: %v", expectedError, err)
 	}
 
@@ -380,7 +395,7 @@ func TestCheckIds(t *testing.T) {
 		},
 	}
 	expectedError = "Id has been used before: O2"
-	if err := checkIds(qns); err.Error() != expectedError {
+	if err := checkTest(qns); err.Error() != expectedError {
 		t.Errorf("Expected error to be %v. Got: %v", expectedError, err)
 	}
 
@@ -402,14 +417,30 @@ func TestCheckIds(t *testing.T) {
 			Correct: []string{"O3"},
 		},
 	}
-	if err := checkIds(qns); err != nil {
+	if err := checkTest(qns); err != nil {
 		t.Errorf("Expected error to be nil. Got: %v", err)
 	}
 
 	qns = []Question{{Id: "qn1", Tags: []string{"Demo"}}}
 	expectedError = "Tag: Demo for qn: qn1 should start with a lowercase character"
-	if err := checkIds(qns); err.Error() != expectedError {
+	if err := checkTest(qns); err.Error() != expectedError {
 		t.Errorf("Expected error to be %v. Got: %v", expectedError, err)
 	}
 
+	qns = []Question{
+		{
+			Id: "qn1",
+			Opt: []Option{
+				{Uid: "O1"},
+				{Uid: "O2"},
+			},
+			Correct:  []string{"O2", "O1"},
+			Positive: 2.5,
+			Negative: 1,
+		},
+	}
+	expectedError = "Negative score less than positive for multi-choice qn: qn1"
+	if err := checkTest(qns); err.Error() != expectedError {
+		t.Errorf("Expected error to be %v. Got: %v", expectedError, err)
+	}
 }
