@@ -26,7 +26,7 @@
     str: Angular
   - uid: test-2d
     str: Rust
-  positive: 10
+  positive: 5
   negative: 5
   tags: [easy,test]
 
@@ -42,7 +42,7 @@
     str: Angular
   - uid: demo-2d
     str: Rust
-  positive: 10
+  positive: 5
   negative: 5
   tags: [easy,demo]
 

@@ -266,9 +266,15 @@ func populateQuestionsPage(q *interact.Question) {
 	resetHandlers()
 	s.timeTaken = 0
 	qp.que.Text = q.Str
-	qp.scoringInfo.Text = fmt.Sprintf(
-		"Right answer => +%1.1f\n\nWrong answer => -%1.1f\n\nSkip question Aut=> %1.1f",
-		q.Positive, q.Negative, 0.0)
+	if q.IsMultiple {
+		qp.scoringInfo.Text = fmt.Sprintf(
+			"For every right answer => +%1.1f\n\nFor every wrong answer => -%1.1f\n\nSkip question => %1.1f",
+			q.Positive, q.Negative, 0.0)
+	} else {
+		qp.scoringInfo.Text = fmt.Sprintf(
+			"Right answer => +%1.1f\n\nWrong answer => -%1.1f\n\nSkip question => %1.1f",
+			q.Positive, q.Negative, 0.0)
+	}
 
 	// Selected contains the options user has already selected.
 	selected := []string{}
@@ -380,7 +386,7 @@ func setupInitialPage(ses *interact.Session) {
 }
 
 func main() {
-	rand.Seed(42)
+	rand.Seed(time.Now().UnixNano())
 	flag.Parse()
 	err := termui.Init()
 	if err != nil {
