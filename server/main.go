@@ -190,6 +190,52 @@ func candInfo(token string) Candidate {
 	return c
 }
 
+func stringInSlice(a string, list []string) bool {
+	for _, b := range list {
+		if b == a {
+			return true
+		}
+	}
+	return false
+}
+
+func onlyDemoQuestions() []Question {
+	var que []Question
+	for _, x := range questions {
+		if stringInSlice("demo", x.Tags) {
+			que = append(que, x)
+		}
+	}
+	return que
+}
+
+func demoCandInfo(token string) Candidate {
+	// This indicates candidate info exists in memory and the client could
+	// have crashed.
+	var c Candidate
+	c.name = token
+	c.email = "no-mail@given"
+	c.validity = time.Now().Add(time.Duration(100 * time.Hour))
+	c.testStart = time.Now()
+	c.demoTaken = false
+
+	// If file for the token doesn't exist means client is trying to connect
+	// for the first time. So we create a file
+	if _, err := os.Stat(fmt.Sprintf("logs/%s.log", token)); os.IsNotExist(err) {
+		f, err := os.OpenFile(fmt.Sprintf("logs/%s.log", token),
+			os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+		if err != nil {
+			log.Fatalf("error opening file: %v", err)
+		}
+		c.logFile = f
+		c.questions = onlyDemoQuestions()
+		cmap[token] = c
+		return c
+	}
+	cmap[token] = c
+	return c
+}
+
 func state(c Candidate) interact.QuizState {
 	if len(c.questions) == len(questions) {
 		return interact.Quiz_DEMO_NOT_TAKEN
@@ -209,15 +255,18 @@ func state(c Candidate) interact.QuizState {
 func authenticate(t *interact.Token) (*interact.Session, error) {
 	var c Candidate
 	var ok bool
-	if c, ok = cmap[t.Id]; !ok {
-		return nil, errors.New("Invalid token.")
-	}
 
-	c = candInfo(t.Id)
-	if err := checkToken(c); err != nil {
-		return nil, err
+	if strings.HasPrefix(t.Id, "test-") {
+		c = demoCandInfo(t.Id)
+	} else {
+		if c, ok = cmap[t.Id]; !ok {
+			return nil, errors.New("Invalid token.")
+		}
+		c = candInfo(t.Id)
+		if err := checkToken(c); err != nil {
+			return nil, err
+		}
 	}
-
 	session := interact.Session{Id: RandStringBytes(36), State: state(c),
 		TimeLeft: timeLeft(c.testStart), TestDuration: DURATION.String()}
 	writeLog(c, fmt.Sprintf("%v session_token %s\n", UTCTime(), session.Id))

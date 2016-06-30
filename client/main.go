@@ -367,9 +367,24 @@ func setupInitialPage(ses *interact.Session) {
 	}
 }
 
+const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+
+func RandStringBytes(n int) string {
+	b := make([]byte, n)
+	for i := range b {
+		b[i] = letterBytes[rand.Intn(len(letterBytes))]
+	}
+	return string(b)
+}
+
 func main() {
-	rand.Seed(42)
+	rand.Seed(time.Now().UTC().UnixNano())
 	flag.Parse()
+
+	if *token == "testtoken" {
+		*token = fmt.Sprintf("test-%s", RandStringBytes(10))
+	}
+
 	err := termui.Init()
 	if err != nil {
 		panic(err)
