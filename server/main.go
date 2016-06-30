@@ -56,7 +56,7 @@ var (
 	candFile = flag.String("cand", "candidates.txt", "Candidate inforamation")
 	// TODO - Check this number should be less than total number of demo
 	// questions in the file.
-	maxDemoQns = 3
+	maxDemoQns = 10
 	// List of question ids.
 	questions []Question
 	cmap      map[string]Candidate
@@ -218,6 +218,7 @@ func demoCandInfo(token string) Candidate {
 	c.validity = time.Now().Add(time.Duration(100 * time.Hour))
 	c.testStart = time.Now()
 	c.demoTaken = false
+	c.score = 0
 
 	// If file for the token doesn't exist means client is trying to connect
 	// for the first time. So we create a file
