@@ -9,6 +9,19 @@ import (
 )
 
 var instructions *termui.Par
+var errorPage *termui.Par
+
+func setupErrorPage() {
+	errorPage = termui.NewPar("Can't connect to server. Please send the file gru.log to contact@dgraph.io.")
+	errorPage.BorderLabel = "Error"
+	errorPage.TextFgColor = termui.ColorRed
+	errorPage.Height = 10
+	errorPage.Width = termui.TermWidth() / 2
+	errorPage.Y = termui.TermHeight() / 4
+	errorPage.X = termui.TermWidth() / 4
+	errorPage.PaddingTop = 1
+	errorPage.PaddingLeft = 1
+}
 
 func setupInstructionsPage() {
 	instructions = termui.NewPar("")
@@ -238,11 +251,8 @@ func showErrorPage() {
 	termui.Handle("/timer/1s", func(e termui.Event) {
 	})
 	termui.Clear()
-	instructions.TextFgColor = termui.ColorRed
-	instructions.BorderLabel = "Error"
-	instructions.Text = "Can't connect to server. Please send the log file created to contact@dgraph.io."
-	termui.Render(instructions)
-	time.Sleep(1 * time.Minute)
+	termui.Render(errorPage)
+	time.Sleep(15 * time.Second)
 }
 
 func clear() {
