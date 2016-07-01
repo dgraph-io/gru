@@ -59,6 +59,7 @@ var (
 	questions []Question
 	cmap      map[string]Candidate
 	wrtLock   sync.Mutex
+	mapLock   sync.Mutex
 )
 
 type server struct{}
@@ -76,6 +77,19 @@ func checkToken(c Candidate) error {
 			DURATION))
 	}
 	return nil
+}
+
+func updateMap(token string, c Candidate) {
+	mapLock.Lock()
+	defer mapLock.Unlock()
+	cmap[token] = c
+}
+
+func readMap(token string) (Candidate, bool) {
+	mapLock.Lock()
+	defer mapLock.Unlock()
+	c, ok := cmap[token]
+	return c, ok
 }
 
 const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -156,7 +170,7 @@ func (c *Candidate) loadCandInfo(token string) error {
 func candInfo(token string) Candidate {
 	// This indicates candidate info exists in memory and the client could
 	// have crashed.
-	c := cmap[token]
+	c, _ := readMap(token)
 	if len(c.questions) > 0 || c.demoTaken {
 		return c
 	}
@@ -172,7 +186,7 @@ func candInfo(token string) Candidate {
 		c.logFile = f
 		c.questions = make([]Question, len(questions))
 		copy(c.questions, questions)
-		cmap[token] = c
+		updateMap(token, c)
 		return c
 	}
 	// If we reach here it means logfile for candidate exists but his info
@@ -184,7 +198,7 @@ func candInfo(token string) Candidate {
 		log.Fatalf("error while reading candidate info from log file,token: %s",
 			token)
 	}
-	cmap[token] = c
+	updateMap(token, c)
 	return c
 }
 
@@ -224,10 +238,10 @@ func demoCandInfo(token string) Candidate {
 		}
 		c.logFile = f
 		c.questions = onlyDemoQuestions()
-		cmap[token] = c
+		updateMap(token, c)
 		return c
 	}
-	cmap[token] = c
+	updateMap(token, c)
 	return c
 }
 
@@ -257,7 +271,7 @@ func authenticate(t *interact.Token) (*interact.Session, error) {
 		session = interact.Session{Id: RandStringBytes(36), State: interact.Quiz_DEMO_NOT_TAKEN,
 			TimeLeft: timeLeft(c.testStart), TestDuration: DURATION.String()}
 	} else {
-		if c, ok = cmap[t.Id]; !ok {
+		if c, ok = readMap(t.Id); !ok {
 			return nil, errors.New("Invalid token.")
 		}
 		c = candInfo(t.Id)
@@ -270,7 +284,7 @@ func authenticate(t *interact.Token) (*interact.Session, error) {
 	writeLog(c, fmt.Sprintf("%v session_token %s\n", UTCTime(), session.Id))
 	c.sid = session.Id
 	c.endQuestion = make(chan int, 1)
-	cmap[t.Id] = c
+	updateMap(t.Id, c)
 	return &session, nil
 }
 
@@ -322,7 +336,7 @@ func nextQuestion(c Candidate, token string, qnType string) (*interact.Question,
 				if qnType == DEMO {
 					c.demoQnsAsked += 1
 				}
-				cmap[token] = c
+				updateMap(token, c)
 				return formQuestion(q, c.score), nil
 			}
 		}
@@ -335,7 +349,7 @@ func nextQuestion(c Candidate, token string, qnType string) (*interact.Question,
 func getQuestion(req *interact.Req) (*interact.Question, error) {
 	var c Candidate
 	var ok bool
-	if c, ok = cmap[req.Token]; !ok {
+	if c, ok = readMap(req.Token); !ok {
 		return nil, errors.New("Invalid token.")
 	}
 
@@ -359,7 +373,7 @@ func getQuestion(req *interact.Req) (*interact.Question, error) {
 		if !c.demoTaken {
 			c.score = 0
 			c.demoTaken = true
-			cmap[req.Token] = c
+			updateMap(req.Token, c)
 			return &interact.Question{Id: "DEMOEND", Totscore: 0},
 				nil
 		}
@@ -383,7 +397,7 @@ func isValidSession(token string, sid string) error {
 	var c Candidate
 	var ok bool
 
-	if c, ok = cmap[token]; !ok {
+	if c, ok = readMap(token); !ok {
 		return errors.New("Invalid token.")
 	}
 
@@ -451,7 +465,7 @@ func sendAnswer(resp *interact.Response) (*interact.Status, error) {
 	var c Candidate
 	var ok bool
 	var status interact.Status
-	if c, ok = cmap[resp.Token]; !ok {
+	if c, ok = readMap(resp.Token); !ok {
 		return &status, errors.New("Invalid token.")
 	}
 
@@ -476,7 +490,7 @@ func sendAnswer(resp *interact.Response) (*interact.Status, error) {
 			resp.Qid, resp.Token, resp.Sid)
 	}
 	c.score += score
-	cmap[resp.Token] = c
+	updateMap(resp.Token, c)
 	return &status, nil
 }
 
@@ -573,7 +587,7 @@ func (s *server) StreamChan(stream interact.GruQuiz_StreamChanServer) error {
 		log.Printf("Error while receiving stream %v", err)
 	}
 	token := msg.Token
-	c := cmap[token]
+	c, _ := readMap(token)
 
 	wg.Add(1)
 	go streamSend(&wg, stream, c, endTT)
@@ -600,9 +614,8 @@ func runGrpcServer(address string) {
 }
 
 func parseCandidateFile(file string) error {
-	cmap = make(map[string]Candidate)
 	format := "2006/01/02 (MST)"
-	f, err := os.Open(*candFile)
+	f, err := os.Open(file)
 	if err != nil {
 		return err
 	}
@@ -631,7 +644,7 @@ func parseCandidateFile(file string) error {
 		}
 
 		token := splits[5]
-		cmap[token] = c
+		updateMap(token, c)
 	}
 	return nil
 }
@@ -704,13 +717,21 @@ func extractQuizInfo(file string) ([]Question, error) {
 	return info, nil
 }
 
+func parseCandRepeat(file string) {
+	for {
+		parseCandidateFile(file)
+		time.Sleep(1 * time.Minute)
+	}
+}
+
 func main() {
 	rand.Seed(time.Now().UTC().UnixNano())
 	flag.Parse()
 	var err error
+	cmap = make(map[string]Candidate)
 	if questions, err = extractQuizInfo(*quizFile); err != nil {
 		log.Fatal(err)
 	}
-	parseCandidateFile(*candFile)
+	go parseCandRepeat(*candFile)
 	runGrpcServer(*port)
 }
