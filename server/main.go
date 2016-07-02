@@ -628,13 +628,19 @@ func parseCandidateFile(file string) error {
 			continue
 		}
 
-		var c Candidate
 		splits := strings.Split(line, " ")
 		if len(splits) < 6 {
 			log.Fatalf("Candidate info isn't sufficient for line %v",
 				line)
 		}
 
+		// If the token already exists, skip that line
+		token := splits[5]
+		if _, ok := readMap(token); ok {
+			continue
+		}
+
+		var c Candidate
 		c.name = strings.Join(splits[:2], " ")
 		c.email = splits[2]
 		c.validity, err = time.Parse(format,
@@ -643,7 +649,6 @@ func parseCandidateFile(file string) error {
 			log.Fatal(err)
 		}
 
-		token := splits[5]
 		updateMap(token, c)
 	}
 	return nil
@@ -718,9 +723,13 @@ func extractQuizInfo(file string) ([]Question, error) {
 }
 
 func parseCandRepeat(file string) {
+	parseCandidateFile(file)
+	tickChan := time.NewTicker(time.Minute).C
 	for {
-		parseCandidateFile(file)
-		time.Sleep(1 * time.Minute)
+		select {
+		case <-tickChan:
+			parseCandidateFile(file)
+		}
 	}
 }
 
