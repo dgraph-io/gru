@@ -27,7 +27,7 @@ import (
 var (
 	token   = flag.String("token", "testtoken", "Authentication token")
 	address = flag.String("address", "gru.dgraph.io:443", "Address of the server")
-	tls     = flag.Bool("tls", false, "Connection uses TLS if true, else plain TCP")
+	tls     = flag.Bool("tls", true, "Connection uses TLS if true, else plain TCP")
 )
 var endTT chan *interact.ServerStatus
 
