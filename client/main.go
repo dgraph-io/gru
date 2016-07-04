@@ -27,8 +27,6 @@ var token = flag.String("token", "testtoken", "Authentication token")
 
 //TODO(Pawan) - Change default address to our server.
 var address = flag.String("address", "54.183.229.38:50001", "Address of the server")
-var endTT chan *interact.ServerStatus
-var timeoutChan chan int
 
 type State int
 
@@ -113,24 +111,11 @@ func fetchAndDisplayQn() {
 	populateQuestionsPage(q)
 }
 
-func checkTimeout() {
-	select {
-	case <-timeoutChan:
-		return
-	case <-time.After(11 * time.Second):
-		log.Println("No pings received from server")
-		showErrorPage()
-		return
-	}
-}
-
-func streamRecv(stream interact.GruQuiz_StreamChanClient) {
-	timeoutChan = make(chan int, 1)
+func recvFromStream(stream interact.GruQuiz_StreamChanClient, gotPing chan int,
+	endTT chan *interact.ServerStatus) {
 	for {
-		go checkTimeout()
 		msg, err := stream.Recv()
-		timeoutChan <- 1
-
+		gotPing <- 1
 		if err != nil {
 			if err != io.EOF {
 				//log.Printf("Error while receiving stream, %v", err)
@@ -158,7 +143,24 @@ func streamRecv(stream interact.GruQuiz_StreamChanClient) {
 	}
 }
 
-func streamSend(stream interact.GruQuiz_StreamChanClient) {
+func streamRecv(stream interact.GruQuiz_StreamChanClient,
+	endTT chan *interact.ServerStatus) {
+	gotPing := make(chan int, 1)
+	go recvFromStream(stream, gotPing, endTT)
+	for {
+		select {
+		case <-gotPing:
+			continue
+		case <-time.After(10 * time.Second):
+			log.Println("No pings received from server")
+			showErrorPage()
+			return
+		}
+	}
+}
+
+func streamSend(stream interact.GruQuiz_StreamChanClient,
+	endTT chan *interact.ServerStatus) {
 	tickChan := time.NewTicker(time.Second * 5).C
 	count := 0
 	for {
@@ -187,6 +189,7 @@ func streamSend(stream interact.GruQuiz_StreamChanClient) {
 }
 
 func initializeStream() {
+	endTT := make(chan *interact.ServerStatus, 1)
 	client := interact.NewGruQuizClient(conn)
 	stream, err := client.StreamChan(context.Background())
 	if err != nil {
@@ -200,8 +203,8 @@ func initializeStream() {
 	if err := stream.Send(cliStat); err != nil {
 		log.Println(err)
 	}
-	go streamRecv(stream)
-	go streamSend(stream)
+	go streamRecv(stream, endTT)
+	go streamSend(stream, endTT)
 }
 
 func initializeTest(tl string) {
