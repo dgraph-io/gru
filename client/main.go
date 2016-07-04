@@ -18,15 +18,18 @@ import (
 	"golang.org/x/net/context"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 
 	"github.com/dgraph-io/gru/server/interact"
 	"github.com/gizak/termui"
 )
 
-var token = flag.String("token", "testtoken", "Authentication token")
-
-//TODO(Pawan) - Change default address to our server.
-var address = flag.String("address", "54.183.229.38:50001", "Address of the server")
+var (
+	token   = flag.String("token", "testtoken", "Authentication token")
+	address = flag.String("address", "127.0.0.1:8888", "Address of the server")
+	tls     = flag.Bool("tls", false, "Connection uses TLS if true, else plain TCP")
+	caFile  = flag.String("ca_file", "", "The file containning the CA root cert file")
+)
 var endTT chan *interact.ServerStatus
 
 type State int
@@ -433,7 +436,23 @@ func main() {
 	instructions.Text = "Connecting to server..."
 	termui.Render(instructions)
 
-	conn, err = grpc.Dial(*address, grpc.WithInsecure(), grpc.WithBlock(), grpc.WithTimeout(5*time.Second))
+	opts := []grpc.DialOption{grpc.WithBlock(), grpc.WithTimeout(5 * time.Second)}
+	if *tls {
+		var creds credentials.TransportCredentials
+		if *caFile != "" {
+			var err error
+			creds, err = credentials.NewClientTLSFromFile(*caFile, *address)
+			if err != nil {
+				log.Fatalf("Failed to create TLS credentials %v", err)
+			}
+		} else {
+			creds = credentials.NewClientTLSFromCert(nil, *address)
+		}
+		opts = append(opts, grpc.WithTransportCredentials(creds))
+	} else {
+		opts = append(opts, grpc.WithInsecure())
+	}
+	conn, err = grpc.Dial(*address, opts...)
 	if err != nil {
 		log.Println(err)
 		showErrorPage()
