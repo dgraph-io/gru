@@ -25,11 +25,9 @@ import (
 )
 
 var (
-	token              = flag.String("token", "testtoken", "Authentication token")
-	address            = flag.String("address", "52.8.225.224:8142", "Address of the server")
-	tls                = flag.Bool("tls", false, "Connection uses TLS if true, else plain TCP")
-	serverHostOverride = flag.String("server_host_override", "gru.dgraph.io",
-		"The server name use to verify the hostname returned by TLS handshake")
+	token   = flag.String("token", "testtoken", "Authentication token")
+	address = flag.String("address", "gru.dgraph.io:443", "Address of the server")
+	tls     = flag.Bool("tls", false, "Connection uses TLS if true, else plain TCP")
 )
 var endTT chan *interact.ServerStatus
 
@@ -439,12 +437,9 @@ func main() {
 
 	var opts []grpc.DialOption
 	if *tls {
-		var sn string
-		if *serverHostOverride != "" {
-			sn = *serverHostOverride
-		}
 		var creds credentials.TransportCredentials
-		creds = credentials.NewClientTLSFromCert(nil, sn)
+		host := strings.Split(*address, ":")
+		creds = credentials.NewClientTLSFromCert(nil, host[0])
 		opts = append(opts, grpc.WithTransportCredentials(creds))
 	} else {
 		opts = append(opts, grpc.WithInsecure())
