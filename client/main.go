@@ -28,6 +28,7 @@ var token = flag.String("token", "testtoken", "Authentication token")
 //TODO(Pawan) - Change default address to our server.
 var address = flag.String("address", "54.183.229.38:50001", "Address of the server")
 var endTT chan *interact.ServerStatus
+var timeoutChan chan int
 
 type State int
 
@@ -112,9 +113,23 @@ func fetchAndDisplayQn() {
 	populateQuestionsPage(q)
 }
 
+func checkTimeout() {
+	select {
+	case <-timeoutChan:
+		return
+	case <-time.After(11 * time.Second):
+		log.Println("No pings received from server")
+		showErrorPage()
+		return
+	}
+}
+
 func streamRecv(stream interact.GruQuiz_StreamChanClient) {
+	timeoutChan = make(chan int, 1)
 	for {
+		go checkTimeout()
 		msg, err := stream.Recv()
+		timeoutChan <- 1
 
 		if err != nil {
 			if err != io.EOF {
@@ -171,15 +186,7 @@ func streamSend(stream interact.GruQuiz_StreamChanClient) {
 	}
 }
 
-func initializeTest(tl string) {
-	setupQuestionsPage()
-	renderQuestionsPage(tl)
-	fetchAndDisplayQn()
-
-	if s.currentQn.Id == "END" {
-		return
-	}
-
+func initializeStream() {
 	client := interact.NewGruQuizClient(conn)
 	stream, err := client.StreamChan(context.Background())
 	if err != nil {
@@ -195,6 +202,18 @@ func initializeTest(tl string) {
 	}
 	go streamRecv(stream)
 	go streamSend(stream)
+}
+
+func initializeTest(tl string) {
+	setupQuestionsPage()
+	renderQuestionsPage(tl)
+	fetchAndDisplayQn()
+
+	if s.currentQn.Id == "END" {
+		return
+	}
+
+	initializeStream()
 }
 
 func renderSelectedAnswers(selected []string, m map[string]*interact.Answer) {

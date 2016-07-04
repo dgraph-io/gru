@@ -54,7 +54,7 @@ var (
 	candFile = flag.String("cand", "candidates.txt", "Candidate inforamation")
 	// TODO - Check this number should be less than total number of demo
 	// questions in the file.
-	maxDemoQns = 10
+	maxDemoQns = 8
 	// List of question ids.
 	questions []Question
 	cmap      map[string]Candidate
@@ -550,8 +550,8 @@ func streamRecv(wg *sync.WaitGroup, stream interact.GruQuiz_StreamChanServer,
 			msg, err := stream.Recv()
 			if err != nil {
 				if err != io.EOF {
-					log.Printf("Client %v has disconnected. sesion token: %v\n",
-						c.name, c.sid)
+					log.Printf("Client %v has disconnected. sesion token: %v. err: %v\n",
+						c.name, c.sid, err)
 				}
 				return
 			}
