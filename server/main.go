@@ -20,6 +20,7 @@ import (
 
 	"github.com/dgraph-io/gru/server/interact"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 
 	"gopkg.in/yaml.v2"
 )
@@ -49,11 +50,12 @@ type Candidate struct {
 }
 
 var (
-	quizFile = flag.String("quiz", "test.yml", "Input question file")
-	port     = flag.String("port", ":8888", "Port on which server listens")
-	candFile = flag.String("cand", "candidates.txt", "Candidate inforamation")
-	// TODO - Check this number should be less than total number of demo
-	// questions in the file.
+	tls        = flag.Bool("tls", false, "Connection uses TLS if true, else plain TCP")
+	certFile   = flag.String("cert_file", "fullchain.pem", "The TLS cert file")
+	keyFile    = flag.String("key_file", "privkey.pem", "The TLS key file")
+	quizFile   = flag.String("quiz", "test.yml", "Input question file")
+	port       = flag.String("port", ":443", "Port on which server listens")
+	candFile   = flag.String("cand", "candidates.txt", "Candidate inforamation")
 	maxDemoQns = 8
 	// List of question ids.
 	questions []Question
@@ -605,7 +607,15 @@ func runGrpcServer(address string) {
 	}
 	log.Printf("Server listening on address: %v", ln.Addr())
 
-	s := grpc.NewServer()
+	var opts []grpc.ServerOption
+	if *tls {
+		creds, err := credentials.NewServerTLSFromFile(*certFile, *keyFile)
+		if err != nil {
+			log.Fatalf("Failed to generate credentials %v", err)
+		}
+		opts = append(opts, grpc.Creds(creds))
+	}
+	s := grpc.NewServer(opts...)
 	interact.RegisterGruQuizServer(s, &server{})
 	if err = s.Serve(ln); err != nil {
 		log.Fatalf("While serving gRpc requests %v", err)

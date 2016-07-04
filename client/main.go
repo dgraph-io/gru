@@ -18,15 +18,17 @@ import (
 	"golang.org/x/net/context"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 
 	"github.com/dgraph-io/gru/server/interact"
 	"github.com/gizak/termui"
 )
 
-var token = flag.String("token", "testtoken", "Authentication token")
-
-//TODO(Pawan) - Change default address to our server.
-var address = flag.String("address", "54.183.229.38:50001", "Address of the server")
+var (
+	token   = flag.String("token", "testtoken", "Authentication token")
+	address = flag.String("address", "gru.dgraph.io:443", "Address of the server")
+	tls     = flag.Bool("tls", true, "Connection uses TLS if true, else plain TCP")
+)
 var endTT chan *interact.ServerStatus
 
 type State int
@@ -433,7 +435,17 @@ func main() {
 	instructions.Text = "Connecting to server..."
 	termui.Render(instructions)
 
-	conn, err = grpc.Dial(*address, grpc.WithInsecure(), grpc.WithBlock(), grpc.WithTimeout(5*time.Second))
+	var opts []grpc.DialOption
+	if *tls {
+		var creds credentials.TransportCredentials
+		host := strings.Split(*address, ":")
+		creds = credentials.NewClientTLSFromCert(nil, host[0])
+		opts = append(opts, grpc.WithTransportCredentials(creds))
+	} else {
+		opts = append(opts, grpc.WithInsecure())
+	}
+	opts = append(opts, grpc.WithBlock(), grpc.WithTimeout(5*time.Second))
+	conn, err = grpc.Dial(*address, opts...)
 	if err != nil {
 		log.Println(err)
 		showErrorPage()
