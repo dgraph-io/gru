@@ -444,3 +444,57 @@ func TestCheckTest(t *testing.T) {
 		t.Errorf("Expected error to be %v. Got: %v", expectedError, err)
 	}
 }
+
+func TestCandfileRead(t *testing.T) {
+	cmap = make(map[string]Candidate)
+	questions, err := extractQuizInfo("demo_test.yaml")
+	candFile, err := ioutil.TempFile("", "candFile")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.Remove(candFile.Name())
+
+	content := []byte("Mallory a test-mail@gmail.com 2017/12/06 IST wxwwr43e332\n")
+	if _, err := candFile.Write(content); err != nil {
+		t.Fatal(err)
+	}
+	parseCandidateFile(candFile.Name())
+	c := cmap["wxwwr43e332"]
+	c.questions = make([]Question, len(questions))
+	c.logFile, err = ioutil.TempFile("", "gru")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.Remove(c.logFile.Name())
+	copy(c.questions, questions)
+	cmap["wxwwr43e332"] = c
+
+	req := &interact.Req{Token: "wxwwr43e332"}
+	_, err = getQuestion(req)
+	if err != nil {
+		t.Error(err)
+	}
+
+	content = []byte("Mary a test-mail@gmail.com 2017/12/06 IST fefvevrev3e332\n")
+	if _, err := candFile.Write(content); err != nil {
+		t.Fatal(err)
+	}
+	parseCandidateFile(candFile.Name())
+
+	if len(questions) == len(cmap["wxwwr43e332"].questions) {
+		t.Fatal("Candidate object updated on reading Candidate file")
+	}
+
+	if _, ok := cmap["fefvevrev3e332"]; !ok {
+		t.Fatal("New candidate info not added")
+	}
+
+	if cmap["fefvevrev3e332"].email != "test-mail@gmail.com" {
+		t.Fatal("Candidate info incorrect")
+	}
+
+	if err := candFile.Close(); err != nil {
+		t.Fatal(err)
+	}
+
+}
