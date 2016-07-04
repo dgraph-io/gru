@@ -2,6 +2,7 @@ package main
 
 import (
 	"io/ioutil"
+	"log"
 	"os"
 	"testing"
 	"time"
@@ -443,4 +444,46 @@ func TestCheckTest(t *testing.T) {
 	if err := checkTest(qns); err.Error() != expectedError {
 		t.Errorf("Expected error to be %v. Got: %v", expectedError, err)
 	}
+}
+
+func TestCandfileRead(t *testing.T) {
+	cmap = make(map[string]Candidate)
+	questions, err := extractQuizInfo("demo_test.yaml")
+	candFile, err := ioutil.TempFile("", "candFile")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer os.Remove(candFile.Name())
+
+	content := []byte("Mallory a test-mail@gmail.com 2017/12/06 IST wxwwr43e332\n")
+	if _, err := candFile.Write(content); err != nil {
+		log.Fatal(err)
+	}
+	parseCandidateFile("cand_test.txt")
+	c := cmap["wxwwr43e332"]
+	c.questions = make([]Question, len(questions))
+	c.logFile, err = ioutil.TempFile("", "gru")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.Remove(c.logFile.Name())
+	copy(c.questions, questions)
+	cmap["wxwwr43e332"] = c
+
+	req := &interact.Req{Token: "wxwwr43e332"}
+	_, err = getQuestion(req)
+	if err != nil {
+		t.Error(err)
+	}
+
+	content = []byte("Mary a test-mail@gmail.com 2017/12/06 IST fefvevrev3e332\n")
+	if _, err := candFile.Write(content); err != nil {
+		log.Fatal(err)
+	}
+	parseCandidateFile("cand_test.txt")
+
+	if err := candFile.Close(); err != nil {
+		log.Fatal(err)
+	}
+
 }
