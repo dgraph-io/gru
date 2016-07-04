@@ -112,12 +112,12 @@ func fetchAndDisplayQn() {
 }
 
 func recvFromStream(stream interact.GruQuiz_StreamChanClient, gotPing chan int,
-	endTT chan *interact.ServerStatus) {
+	errChan chan error) {
 	for {
 		msg, err := stream.Recv()
 		gotPing <- 1
 		if err != nil {
-			endTT <- msg
+			errChan <- err
 			log.Println("Error while receiving from stream: %v", err)
 			return
 		}
@@ -139,9 +139,9 @@ func recvFromStream(stream interact.GruQuiz_StreamChanClient, gotPing chan int,
 }
 
 func streamRecv(stream interact.GruQuiz_StreamChanClient,
-	endTT chan *interact.ServerStatus) {
-	gotPing := make(chan int, 1)
-	go recvFromStream(stream, gotPing, endTT)
+	errChan chan error) {
+	gotPing := make(chan int, 100)
+	go recvFromStream(stream, gotPing, errChan)
 	for {
 		select {
 		case <-gotPing:
@@ -155,12 +155,12 @@ func streamRecv(stream interact.GruQuiz_StreamChanClient,
 }
 
 func streamSend(stream interact.GruQuiz_StreamChanClient,
-	endTT chan *interact.ServerStatus) {
+	errChan chan error) {
 	tickChan := time.NewTicker(PINGDUR).C
 	count := 0
 	for {
 		select {
-		case _ = <-endTT:
+		case _ = <-errChan:
 			return
 		case <-tickChan:
 			{
@@ -184,15 +184,15 @@ func streamSend(stream interact.GruQuiz_StreamChanClient,
 }
 
 func initializeStream() {
-	endTT := make(chan *interact.ServerStatus, 1)
+	errChan := make(chan error, 1)
 	client := interact.NewGruQuizClient(conn)
 	stream, err := client.StreamChan(context.Background())
 	if err != nil {
 		log.Println("Error while creating stream: %v", err)
 	}
 
-	go streamRecv(stream, endTT)
-	go streamSend(stream, endTT)
+	go streamRecv(stream, errChan)
+	go streamSend(stream, errChan)
 }
 
 func initializeTest(tl string) {
