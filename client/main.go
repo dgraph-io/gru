@@ -26,7 +26,7 @@ import (
 
 var (
 	token              = flag.String("token", "testtoken", "Authentication token")
-	address            = flag.String("address", "52.8.225.224:80", "Address of the server")
+	address            = flag.String("address", "52.8.225.224:8142", "Address of the server")
 	tls                = flag.Bool("tls", false, "Connection uses TLS if true, else plain TCP")
 	serverHostOverride = flag.String("server_host_override", "gru.dgraph.io",
 		"The server name use to verify the hostname returned by TLS handshake")

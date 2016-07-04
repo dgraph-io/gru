@@ -54,7 +54,7 @@ var (
 	certFile   = flag.String("cert_file", "fullchain.pem", "The TLS cert file")
 	keyFile    = flag.String("key_file", "privkey.pem", "The TLS key file")
 	quizFile   = flag.String("quiz", "test.yml", "Input question file")
-	port       = flag.String("port", ":8888", "Port on which server listens")
+	port       = flag.String("port", ":8142", "Port on which server listens")
 	candFile   = flag.String("cand", "candidates.txt", "Candidate inforamation")
 	maxDemoQns = 10
 	// List of question ids.
