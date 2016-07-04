@@ -54,7 +54,7 @@ var (
 	candFile = flag.String("cand", "candidates.txt", "Candidate inforamation")
 	// TODO - Check this number should be less than total number of demo
 	// questions in the file.
-	maxDemoQns = 3
+	maxDemoQns = 8
 	// List of question ids.
 	questions []Question
 	cmap      map[string]Candidate
