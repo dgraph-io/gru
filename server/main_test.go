@@ -459,7 +459,7 @@ func TestCandfileRead(t *testing.T) {
 	if _, err := candFile.Write(content); err != nil {
 		log.Fatal(err)
 	}
-	parseCandidateFile("cand_test.txt")
+	parseCandidateFile(candFile.Name())
 	c := cmap["wxwwr43e332"]
 	c.questions = make([]Question, len(questions))
 	c.logFile, err = ioutil.TempFile("", "gru")
@@ -480,7 +480,11 @@ func TestCandfileRead(t *testing.T) {
 	if _, err := candFile.Write(content); err != nil {
 		log.Fatal(err)
 	}
-	parseCandidateFile("cand_test.txt")
+	parseCandidateFile(candFile.Name())
+
+	if len(questions) == len(cmap["wxwwr43e332"].questions) {
+		log.Fatal("Candidate object updated on reading Candidate file")
+	}
 
 	if err := candFile.Close(); err != nil {
 		log.Fatal(err)
