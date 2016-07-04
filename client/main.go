@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"flag"
 	"fmt"
-	"io"
 	"log"
 	"math/rand"
 	"os"
@@ -38,6 +37,7 @@ const (
 	// User is being asked to confirm if they want to skip answering the
 	// question.
 	confirmSkip
+	PINGDUR = 5 * time.Second
 )
 
 type clock struct {
@@ -117,13 +117,8 @@ func recvFromStream(stream interact.GruQuiz_StreamChanClient, gotPing chan int,
 		msg, err := stream.Recv()
 		gotPing <- 1
 		if err != nil {
-			if err != io.EOF {
-				//log.Printf("Error while receiving stream, %v", err)
-				endTT <- msg
-				return
-			}
 			endTT <- msg
-			log.Println("got end message")
+			log.Println("Error while receiving from stream: %v", err)
 			return
 		}
 
@@ -151,7 +146,7 @@ func streamRecv(stream interact.GruQuiz_StreamChanClient,
 		select {
 		case <-gotPing:
 			continue
-		case <-time.After(10 * time.Second):
+		case <-time.After(2 * PINGDUR):
 			log.Println("No pings received from server")
 			showErrorPage()
 			return
@@ -161,7 +156,7 @@ func streamRecv(stream interact.GruQuiz_StreamChanClient,
 
 func streamSend(stream interact.GruQuiz_StreamChanClient,
 	endTT chan *interact.ServerStatus) {
-	tickChan := time.NewTicker(time.Second * 5).C
+	tickChan := time.NewTicker(PINGDUR).C
 	count := 0
 	for {
 		select {
@@ -196,13 +191,6 @@ func initializeStream() {
 		log.Println("Error while creating stream: %v", err)
 	}
 
-	cliStat := &interact.ClientStatus{
-		"First",
-		*token,
-	}
-	if err := stream.Send(cliStat); err != nil {
-		log.Println(err)
-	}
 	go streamRecv(stream, endTT)
 	go streamSend(stream, endTT)
 }
@@ -455,7 +443,7 @@ func main() {
 	instructions.Text = "Connecting to server..."
 	termui.Render(instructions)
 
-	conn, err = grpc.Dial(*address, grpc.WithInsecure(), grpc.WithBlock(), grpc.WithTimeout(5*time.Second))
+	conn, err = grpc.Dial(*address, grpc.WithInsecure(), grpc.WithBlock(), grpc.WithTimeout(PINGDUR))
 	if err != nil {
 		log.Println(err)
 		showErrorPage()
