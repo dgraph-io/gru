@@ -25,10 +25,11 @@ import (
 )
 
 var (
-	token   = flag.String("token", "testtoken", "Authentication token")
-	address = flag.String("address", "127.0.0.1:8888", "Address of the server")
-	tls     = flag.Bool("tls", false, "Connection uses TLS if true, else plain TCP")
-	caFile  = flag.String("ca_file", "", "The file containning the CA root cert file")
+	token              = flag.String("token", "testtoken", "Authentication token")
+	address            = flag.String("address", "52.8.225.224:80", "Address of the server")
+	tls                = flag.Bool("tls", false, "Connection uses TLS if true, else plain TCP")
+	serverHostOverride = flag.String("server_host_override", "gru.dgraph.io",
+		"The server name use to verify the hostname returned by TLS handshake")
 )
 var endTT chan *interact.ServerStatus
 
@@ -436,22 +437,19 @@ func main() {
 	instructions.Text = "Connecting to server..."
 	termui.Render(instructions)
 
-	opts := []grpc.DialOption{grpc.WithBlock(), grpc.WithTimeout(5 * time.Second)}
+	var opts []grpc.DialOption
 	if *tls {
-		var creds credentials.TransportCredentials
-		if *caFile != "" {
-			var err error
-			creds, err = credentials.NewClientTLSFromFile(*caFile, *address)
-			if err != nil {
-				log.Fatalf("Failed to create TLS credentials %v", err)
-			}
-		} else {
-			creds = credentials.NewClientTLSFromCert(nil, *address)
+		var sn string
+		if *serverHostOverride != "" {
+			sn = *serverHostOverride
 		}
+		var creds credentials.TransportCredentials
+		creds = credentials.NewClientTLSFromCert(nil, sn)
 		opts = append(opts, grpc.WithTransportCredentials(creds))
 	} else {
 		opts = append(opts, grpc.WithInsecure())
 	}
+	opts = append(opts, grpc.WithBlock(), grpc.WithTimeout(5*time.Second))
 	conn, err = grpc.Dial(*address, opts...)
 	if err != nil {
 		log.Println(err)

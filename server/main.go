@@ -51,8 +51,8 @@ type Candidate struct {
 
 var (
 	tls        = flag.Bool("tls", false, "Connection uses TLS if true, else plain TCP")
-	certFile   = flag.String("cert_file", "", "The TLS cert file")
-	keyFile    = flag.String("key_file", "", "The TLS key file")
+	certFile   = flag.String("cert_file", "fullchain.pem", "The TLS cert file")
+	keyFile    = flag.String("key_file", "privkey.pem", "The TLS key file")
 	quizFile   = flag.String("quiz", "test.yml", "Input question file")
 	port       = flag.String("port", ":8888", "Port on which server listens")
 	candFile   = flag.String("cand", "candidates.txt", "Candidate inforamation")
@@ -595,7 +595,6 @@ func runGrpcServer(address string) {
 
 	var opts []grpc.ServerOption
 	if *tls {
-		fmt.Println(*certFile, "keyfile", *keyFile)
 		creds, err := credentials.NewServerTLSFromFile(*certFile, *keyFile)
 		if err != nil {
 			log.Fatalf("Failed to generate credentials %v", err)
