@@ -527,6 +527,7 @@ func streamSend(wg *sync.WaitGroup, stream interact.GruQuiz_StreamChanServer,
 					endTT <- 2
 					log.Printf("Stream: %v, sesion token: %v\n",
 						err, c.sid)
+					return
 				}
 				return
 			}
@@ -566,8 +567,8 @@ func streamRecv(wg *sync.WaitGroup, stream interact.GruQuiz_StreamChanServer,
 			msg, err := stream.Recv()
 			if err != nil {
 				if err != io.EOF {
-					log.Printf("Client %v has disconnected. sesion token: %v\n",
-						c.name, c.sid)
+					log.Printf("Client %v has disconnected. sesion token: %v. err: %v\n",
+						c.name, c.sid, err)
 				}
 				return
 			}

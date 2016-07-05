@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"flag"
 	"fmt"
-	"io"
 	"log"
 	"math/rand"
 	"os"
@@ -29,7 +28,6 @@ var (
 	address = flag.String("address", "gru.dgraph.io:443", "Address of the server")
 	tls     = flag.Bool("tls", true, "Connection uses TLS if true, else plain TCP")
 )
-var endTT chan *interact.ServerStatus
 
 type State int
 
@@ -41,6 +39,7 @@ const (
 	// User is being asked to confirm if they want to skip answering the
 	// question.
 	confirmSkip
+	PINGDUR = 5 * time.Second
 )
 
 type clock struct {
@@ -93,7 +92,7 @@ func fetchAndDisplayQn() {
 		q, err = client.GetQuestion(context.Background(),
 			&interact.Req{Repeat: false, Sid: s.Id, Token: *token})
 		try++
-		if try > 10 {
+		if try > 100 {
 			showErrorPage()
 		}
 		time.Sleep(1 * time.Second)
@@ -114,52 +113,70 @@ func fetchAndDisplayQn() {
 	populateQuestionsPage(q)
 }
 
-func streamRecv(stream interact.GruQuiz_StreamChanClient) {
+func recvFromStream(stream *interact.GruQuiz_StreamChanClient,
+	msgChan chan *interact.ServerStatus) {
 	for {
-		msg, err := stream.Recv()
-
+		msg, err := (*stream).Recv()
 		if err != nil {
-			if err != io.EOF {
-				endTT <- msg
-				return
-			}
-			endTT <- msg
-			log.Println("got end message")
-			return
+			/*
+				client := interact.NewGruQuizClient(conn)
+				*stream, err = client.StreamChan(context.Background())
+				if err != nil {
+					log.Println("Error while re-creating stream: %v", err)
+					time.Sleep(PINGDUR)
+				}
+			*/
+			continue
 		}
-
-		if msg.Status == "END" {
-			clear()
-			showFinalPage(finalScore(s.currentQn.Totscore))
-			return
-		}
-
-		qp.pingbox.Text = "Connected to server."
-		qp.pingbox.TextFgColor = termui.ColorGreen
-		s.servTime.dur, err = time.ParseDuration(msg.TimeLeft)
-		if err != nil {
-			log.Println("Error parsing time from server, %v", err)
-		}
-
-		s.leftTime.setTimeLeft(s.servTime.dur)
-		termui.Render(termui.Body)
+		log.Println("got reply. no error")
+		msgChan <- msg
 	}
 }
 
-func streamSend(stream interact.GruQuiz_StreamChanClient) {
-	tickChan := time.NewTicker(time.Second * 5).C
+func streamRecv(stream *interact.GruQuiz_StreamChanClient) {
+	msgChan := make(chan *interact.ServerStatus, 100)
+	var err error
+	go recvFromStream(stream, msgChan)
+	for {
+		select {
+		case msg := <-msgChan:
+			{
+				if msg.Status == "END" {
+					clear()
+					showFinalPage(finalScore(s.currentQn.Totscore))
+					return
+				}
+
+				qp.pingbox.Text = "Connected to server."
+				qp.pingbox.TextFgColor = termui.ColorGreen
+				s.servTime.dur, err = time.ParseDuration(msg.TimeLeft)
+				if err != nil {
+					log.Println("Error parsing time from server, %v", err)
+				}
+
+				s.leftTime.setTimeLeft(s.servTime.dur)
+				termui.Render(termui.Body)
+			}
+		case <-time.After(3 * PINGDUR):
+			log.Println("No pings received from server")
+			qp.pingbox.Text = "No pings from server"
+			qp.pingbox.TextFgColor = termui.ColorRed
+		}
+	}
+}
+
+func streamSend(stream *interact.GruQuiz_StreamChanClient) {
+	tickChan := time.NewTicker(PINGDUR).C
 	count := 0
 	for {
 		select {
-		case _ = <-endTT:
-			return
 		case <-tickChan:
 			{
 				cliStat := &interact.ClientStatus{
 					s.currentQn.Id,
 					*token,
 				}
-				if err := stream.Send(cliStat); err != nil {
+				if err := (*stream).Send(cliStat); err != nil {
 					log.Println("Error sending to stream ", err)
 					count++
 				} else {
@@ -167,11 +184,23 @@ func streamSend(stream interact.GruQuiz_StreamChanClient) {
 				}
 
 				if count > 2 {
-					showErrorPage()
+					qp.pingbox.Text = "Can't ping server"
+					qp.pingbox.TextFgColor = termui.ColorRed
 				}
 			}
 		}
 	}
+}
+
+func initializeStream() {
+	client := interact.NewGruQuizClient(conn)
+	stream, err := client.StreamChan(context.Background())
+	if err != nil {
+		log.Println("Error while creating stream: %v", err)
+	}
+
+	go streamRecv(&stream)
+	go streamSend(&stream)
 }
 
 func initializeTest(tl string) {
@@ -183,21 +212,7 @@ func initializeTest(tl string) {
 		return
 	}
 
-	client := interact.NewGruQuizClient(conn)
-	stream, err := client.StreamChan(context.Background())
-	if err != nil {
-		log.Println("Error while creating stream: %v", err)
-	}
-
-	cliStat := &interact.ClientStatus{
-		"First",
-		*token,
-	}
-	if err := stream.Send(cliStat); err != nil {
-		log.Println(err)
-	}
-	go streamRecv(stream)
-	go streamSend(stream)
+	initializeStream()
 }
 
 func renderSelectedAnswers(selected []string, m map[string]*interact.Answer) {
