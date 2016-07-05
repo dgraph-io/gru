@@ -126,7 +126,7 @@ func recvFromStream(stream interact.GruQuiz_StreamChanClient,
 }
 
 func streamRecv(stream interact.GruQuiz_StreamChanClient) {
-	gotPing := make(chan *interact.ServerStatus)
+	gotPing := make(chan *interact.ServerStatus, 100)
 	var err error
 	go recvFromStream(stream, gotPing)
 	for {
@@ -149,7 +149,7 @@ func streamRecv(stream interact.GruQuiz_StreamChanClient) {
 			}
 		case <-time.After(3 * PINGDUR):
 			log.Println("No pings received from server")
-			// Show message (server can't sonnect to client)
+			// TODO(Ashwin): Show message (server can't connect to client)
 		}
 	}
 }
@@ -173,7 +173,7 @@ func streamSend(stream interact.GruQuiz_StreamChanClient) {
 				}
 
 				if count > 2 {
-					// Show message (client can't reach server)
+					// TODO(Ashwin): Show message (client can't reach server)
 				}
 			}
 		}
