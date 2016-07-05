@@ -111,57 +111,54 @@ func fetchAndDisplayQn() {
 	populateQuestionsPage(q)
 }
 
-func recvFromStream(stream interact.GruQuiz_StreamChanClient, gotPing chan int,
-	errChan chan error) {
+func recvFromStream(stream interact.GruQuiz_StreamChanClient,
+	gotPing chan *interact.ServerStatus) {
 	for {
 		msg, err := stream.Recv()
-		gotPing <- 1
+		log.Println("got reply")
 		if err != nil {
-			errChan <- err
 			log.Println("Error while receiving from stream: %v", err)
-			return
+			continue
 		}
-
-		if msg.Status == "END" {
-			clear()
-			showFinalPage(finalScore(s.currentQn.Totscore))
-			return
-		}
-
-		s.servTime.dur, err = time.ParseDuration(msg.TimeLeft)
-		if err != nil {
-			log.Println("Error parsing time from server, %v", err)
-		}
-
-		s.leftTime.setTimeLeft(s.servTime.dur)
-		termui.Render(termui.Body)
+		log.Println("got reply. no error")
+		gotPing <- msg
 	}
 }
 
-func streamRecv(stream interact.GruQuiz_StreamChanClient,
-	errChan chan error) {
-	gotPing := make(chan int, 100)
-	go recvFromStream(stream, gotPing, errChan)
+func streamRecv(stream interact.GruQuiz_StreamChanClient) {
+	gotPing := make(chan *interact.ServerStatus)
+	var err error
+	go recvFromStream(stream, gotPing)
 	for {
 		select {
-		case <-gotPing:
-			continue
-		case <-time.After(2 * PINGDUR):
+		case msg := <-gotPing:
+			{
+				if msg.Status == "END" {
+					clear()
+					showFinalPage(finalScore(s.currentQn.Totscore))
+					return
+				}
+
+				s.servTime.dur, err = time.ParseDuration(msg.TimeLeft)
+				if err != nil {
+					log.Println("Error parsing time from server, %v", err)
+				}
+
+				s.leftTime.setTimeLeft(s.servTime.dur)
+				termui.Render(termui.Body)
+			}
+		case <-time.After(3 * PINGDUR):
 			log.Println("No pings received from server")
-			showErrorPage()
-			return
+			// Show message (server can't sonnect to client)
 		}
 	}
 }
 
-func streamSend(stream interact.GruQuiz_StreamChanClient,
-	errChan chan error) {
+func streamSend(stream interact.GruQuiz_StreamChanClient) {
 	tickChan := time.NewTicker(PINGDUR).C
 	count := 0
 	for {
 		select {
-		case _ = <-errChan:
-			return
 		case <-tickChan:
 			{
 				cliStat := &interact.ClientStatus{
@@ -176,7 +173,7 @@ func streamSend(stream interact.GruQuiz_StreamChanClient,
 				}
 
 				if count > 2 {
-					showErrorPage()
+					// Show message (client can't reach server)
 				}
 			}
 		}
@@ -184,15 +181,14 @@ func streamSend(stream interact.GruQuiz_StreamChanClient,
 }
 
 func initializeStream() {
-	errChan := make(chan error, 1)
 	client := interact.NewGruQuizClient(conn)
 	stream, err := client.StreamChan(context.Background())
 	if err != nil {
 		log.Println("Error while creating stream: %v", err)
 	}
 
-	go streamRecv(stream, errChan)
-	go streamSend(stream, errChan)
+	go streamRecv(stream)
+	go streamSend(stream)
 }
 
 func initializeTest(tl string) {
