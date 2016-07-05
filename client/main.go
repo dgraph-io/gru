@@ -59,6 +59,7 @@ type Session struct {
 	totalScore   float32
 	lastScore    float32
 	showingAns   bool
+	startedPing  bool
 }
 
 var s Session
@@ -117,7 +118,6 @@ func fetchAndDisplayQn() {
 func streamRecv(stream interact.GruQuiz_StreamChanClient) {
 	for {
 		msg, err := stream.Recv()
-
 		if err != nil {
 			if err != io.EOF {
 				endTT <- msg
@@ -134,13 +134,14 @@ func streamRecv(stream interact.GruQuiz_StreamChanClient) {
 			return
 		}
 
-		qp.pingbox.Text = "Connected to server."
-		qp.pingbox.TextFgColor = termui.ColorGreen
 		s.servTime.dur, err = time.ParseDuration(msg.TimeLeft)
 		if err != nil {
 			log.Println("Error parsing time from server, %v", err)
 		}
 
+		if s.servTime.dur < 0 {
+			return
+		}
 		s.leftTime.setTimeLeft(s.servTime.dur)
 		termui.Render(termui.Body)
 	}
@@ -174,30 +175,30 @@ func streamSend(stream interact.GruQuiz_StreamChanClient) {
 	}
 }
 
-func initializeTest(tl string) {
-	setupQuestionsPage()
-	renderQuestionsPage(tl)
-	fetchAndDisplayQn()
-
-	if s.currentQn.Id == "END" {
+func startPing() {
+	if s.startedPing {
 		return
 	}
-
 	client := interact.NewGruQuizClient(conn)
 	stream, err := client.StreamChan(context.Background())
 	if err != nil {
 		log.Println("Error while creating stream: %v", err)
 	}
 
-	cliStat := &interact.ClientStatus{
-		"First",
-		*token,
-	}
-	if err := stream.Send(cliStat); err != nil {
-		log.Println(err)
-	}
 	go streamRecv(stream)
 	go streamSend(stream)
+	s.startedPing = true
+}
+
+func initializeTest(tl string) {
+	setupQuestionsPage()
+	renderQuestionsPage(tl)
+	fetchAndDisplayQn()
+	startPing()
+
+	if s.currentQn.Id == "END" {
+		return
+	}
 }
 
 func renderSelectedAnswers(selected []string, m map[string]*interact.Answer) {
@@ -374,6 +375,7 @@ func initializeDemo(tl string) {
 	setupQuestionsPage()
 	renderQuestionsPage(tl)
 	fetchAndDisplayQn()
+	startPing()
 }
 
 func setupInitialPage(ses *interact.Session) {
@@ -422,7 +424,8 @@ func main() {
 		*token = fmt.Sprintf("test-%s", RandStringBytes(10))
 	}
 
-	logFile, _ := os.OpenFile("gru.log", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	logFile, _ := os.OpenFile("gru.log", os.O_RDWR|os.O_CREATE|os.O_APPEND,
+		0666)
 	syscall.Dup2(int(logFile.Fd()), 2)
 	err := termui.Init()
 	if err != nil {

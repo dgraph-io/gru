@@ -29,7 +29,7 @@ const (
 	DEMO     = "demo"
 	TEST     = "test"
 	END      = "END"
-	DURATION = 60 * time.Minute
+	DURATION = 1 * time.Minute
 )
 
 type Candidate struct {
@@ -47,6 +47,7 @@ type Candidate struct {
 	// session id of currently active session.
 	sid         string
 	endQuestion chan int
+	endTimer    *time.Timer
 }
 
 var (
@@ -140,6 +141,7 @@ func (c *Candidate) loadCandInfo(token string) error {
 		case "test_start":
 			c.testStart, err = time.Parse(format, fmt.Sprintf("%s %s %s",
 				splits[0], splits[1], splits[2]))
+			c.endTimer = time.NewTimer(timeLeft(c.testStart))
 			if err != nil {
 				return err
 			}
@@ -230,7 +232,6 @@ func demoCandInfo(token string) Candidate {
 	c.name = token
 	c.email = "no-mail@given"
 	c.validity = time.Now().Add(time.Duration(100 * time.Hour))
-	c.testStart = time.Now()
 
 	if _, err := os.Stat(fmt.Sprintf("logs/%s.log", token)); os.IsNotExist(err) {
 		f, err := os.OpenFile(fmt.Sprintf("logs/%s.log", token),
@@ -240,6 +241,7 @@ func demoCandInfo(token string) Candidate {
 		}
 		c.logFile = f
 		c.questions = onlyDemoQuestions()
+		c.endTimer = time.NewTimer(DURATION)
 		updateMap(token, c)
 		return c
 	}
@@ -271,7 +273,8 @@ func authenticate(t *interact.Token) (*interact.Session, error) {
 	if strings.HasPrefix(t.Id, "test-") {
 		c = demoCandInfo(t.Id)
 		session = interact.Session{Id: RandStringBytes(36), State: interact.Quiz_DEMO_NOT_TAKEN,
-			TimeLeft: timeLeft(c.testStart), TestDuration: DURATION.String()}
+			TimeLeft:     timeLeft(c.testStart).String(),
+			TestDuration: DURATION.String()}
 	} else {
 		if c, ok = readMap(t.Id); !ok {
 			return nil, errors.New("Invalid token.")
@@ -281,7 +284,8 @@ func authenticate(t *interact.Token) (*interact.Session, error) {
 			return nil, err
 		}
 		session = interact.Session{Id: RandStringBytes(36), State: state(c),
-			TimeLeft: timeLeft(c.testStart), TestDuration: DURATION.String()}
+			TimeLeft:     timeLeft(c.testStart).String(),
+			TestDuration: DURATION.String()}
 	}
 	writeLog(c, fmt.Sprintf("%v session_token %s\n", UTCTime(), session.Id))
 	c.sid = session.Id
@@ -364,8 +368,7 @@ func getQuestion(req *interact.Req) (*interact.Question, error) {
 		return q, nil
 	}
 	// Time is up for the test.
-	if !c.testStart.IsZero() &&
-		DURATION-time.Now().UTC().Sub(c.testStart) < 0 {
+	if !c.testStart.IsZero() && timeLeft(c.testStart) < 0 {
 		q := &interact.Question{Id: END, Totscore: c.score}
 		c.endQuestion <- 1
 		writeLog(c, fmt.Sprintf("%v End of test. Questions over\n", UTCTime()))
@@ -382,6 +385,7 @@ func getQuestion(req *interact.Req) (*interact.Question, error) {
 		// This means it is his first test question.
 		writeLog(c, fmt.Sprintf("%v test_start\n", UTCTime()))
 		c.testStart = time.Now().UTC()
+		c.endTimer = time.NewTimer(timeLeft(c.testStart))
 	}
 	q, err := nextQuestion(c, req.Token, TEST)
 	// This means that test qns are over.
@@ -420,6 +424,9 @@ func (s *server) GetQuestion(ctx context.Context,
 func isCorrectAnswer(resp *interact.Response) (int, float32) {
 	for idx, que := range questions {
 		if que.Id == resp.Qid {
+			if resp.Aid[0] == "skip" {
+				return idx, 0
+			}
 			// Multiple choice questions.
 			if len(que.Correct) > 1 {
 				var score float32
@@ -476,14 +483,10 @@ func sendAnswer(resp *interact.Response) (*interact.Status, error) {
 			resp.Qid, resp.Token, resp.Sid)
 		return &status, nil
 	}
-	if resp.Aid[0] == "skip" {
-		if len(resp.Aid) > 1 {
-			log.Printf("Got extra options with SKIP for qn:%v, token: %v, session: %v",
-				resp.Qid, resp.Token, resp.Sid)
-		}
-		return &status, nil
+	if resp.Aid[0] == "skip" && len(resp.Aid) > 1 {
+		log.Printf("Got extra options with SKIP for qn:%v, token: %v, session: %v",
+			resp.Qid, resp.Token, resp.Sid)
 	}
-
 	idx, score := isCorrectAnswer(resp)
 	writeLog(c, fmt.Sprintf("%s response %s %s %.1f\n", UTCTime(),
 		resp.Qid, strings.Join(resp.Aid, ","), score))
@@ -504,20 +507,19 @@ func (s *server) SendAnswer(ctx context.Context,
 	return sendAnswer(resp)
 }
 
-func timeLeft(ts time.Time) string {
-	return (DURATION - time.Now().UTC().Sub(ts)).String()
+func timeLeft(ts time.Time) time.Duration {
+	return (DURATION - time.Now().UTC().Sub(ts))
 }
 
 func streamSend(wg *sync.WaitGroup, stream interact.GruQuiz_StreamChanServer,
 	c Candidate, endTT chan int) {
 	defer wg.Done()
 	var stat interact.ServerStatus
-	endTimeChan := time.NewTimer(DURATION - time.Now().Sub(c.testStart)).C
-	tickChan := time.NewTicker(time.Second * 5).C
+	tickerCh := time.NewTicker(time.Second * 5).C
 
 	for {
 		select {
-		case <-endTimeChan:
+		case <-c.endTimer.C:
 			{
 				endTT <- 1
 				stat.Status = "END"
@@ -525,9 +527,10 @@ func streamSend(wg *sync.WaitGroup, stream interact.GruQuiz_StreamChanServer,
 				writeLog(c, fmt.Sprintf("%v End of test. Time out\n", UTCTime()))
 				if err := stream.Send(&stat); err != nil {
 					endTT <- 2
-					log.Printf("Stream: %v, sesion token: %v\n",
+					log.Printf("Stream: %v, session token: %v\n",
 						err, c.sid)
 				}
+				fmt.Println("here")
 				return
 			}
 		case <-c.endQuestion:
@@ -536,13 +539,12 @@ func streamSend(wg *sync.WaitGroup, stream interact.GruQuiz_StreamChanServer,
 				log.Println("End test. Questions over for %v", c.name)
 				return
 			}
-		case <-tickChan:
+		case <-tickerCh:
 			{
-				stat.TimeLeft = timeLeft(c.testStart)
-				stat.Status = " ONGOING"
+				stat.TimeLeft = timeLeft(c.testStart).String()
 				if err := stream.Send(&stat); err != nil {
 					endTT <- 2
-					log.Printf("Stream: %v\n, sesion token: %v",
+					log.Printf("Stream: %v\n, session token: %v",
 						err, c.sid)
 				}
 			}
@@ -566,7 +568,7 @@ func streamRecv(wg *sync.WaitGroup, stream interact.GruQuiz_StreamChanServer,
 			msg, err := stream.Recv()
 			if err != nil {
 				if err != io.EOF {
-					log.Printf("Client %v has disconnected. sesion token: %v\n",
+					log.Printf("Client %v has disconnected. session token: %v\n",
 						c.name, c.sid)
 				}
 				return
@@ -580,9 +582,8 @@ func streamRecv(wg *sync.WaitGroup, stream interact.GruQuiz_StreamChanServer,
 
 // TODO(ashwin) - Add authentication
 func (s *server) StreamChan(stream interact.GruQuiz_StreamChanServer) error {
-
-	endTT := make(chan int)
 	var wg sync.WaitGroup
+	endTestCh := make(chan int)
 
 	msg, err := stream.Recv()
 	if err != nil {
@@ -592,9 +593,9 @@ func (s *server) StreamChan(stream interact.GruQuiz_StreamChanServer) error {
 	c, _ := readMap(token)
 
 	wg.Add(1)
-	go streamSend(&wg, stream, c, endTT)
+	go streamSend(&wg, stream, c, endTestCh)
 	wg.Add(1)
-	go streamRecv(&wg, stream, c, endTT)
+	go streamRecv(&wg, stream, c, endTestCh)
 	wg.Wait()
 	return nil
 }
@@ -655,6 +656,9 @@ func parseCandidateFile(file string) error {
 		c.email = splits[2]
 		c.validity, err = time.Parse(format,
 			fmt.Sprintf("%s (%s)", splits[3], splits[4]))
+		// Initialised with duration for the demo. This is reinitialized
+		// when the test starts.
+		c.endTimer = time.NewTimer(DURATION)
 		if err != nil {
 			log.Fatal(err)
 		}

@@ -156,6 +156,7 @@ func setupQuestionsPage() {
 	qp.answers.Height = 14
 
 	qp.pingbox = termui.NewPar("Connected to server.")
+	qp.pingbox.TextFgColor = termui.ColorGreen
 	qp.pingbox.BorderLabel = "Status"
 	qp.pingbox.PaddingLeft = 1
 	qp.pingbox.Height = 3
