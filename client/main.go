@@ -114,7 +114,7 @@ func fetchAndDisplayQn() {
 }
 
 func recvFromStream(stream *interact.GruQuiz_StreamChanClient,
-	gotPing chan *interact.ServerStatus) {
+	msgChan chan *interact.ServerStatus) {
 	for {
 		msg, err := (*stream).Recv()
 		if err != nil {
@@ -129,17 +129,17 @@ func recvFromStream(stream *interact.GruQuiz_StreamChanClient,
 			continue
 		}
 		log.Println("got reply. no error")
-		gotPing <- msg
+		msgChan <- msg
 	}
 }
 
 func streamRecv(stream *interact.GruQuiz_StreamChanClient) {
-	gotPing := make(chan *interact.ServerStatus, 100)
+	msgChan := make(chan *interact.ServerStatus, 100)
 	var err error
-	go recvFromStream(stream, gotPing)
+	go recvFromStream(stream, msgChan)
 	for {
 		select {
-		case msg := <-gotPing:
+		case msg := <-msgChan:
 			{
 				if msg.Status == "END" {
 					clear()
