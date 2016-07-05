@@ -17,15 +17,17 @@ import (
 	"golang.org/x/net/context"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 
 	"github.com/dgraph-io/gru/server/interact"
 	"github.com/gizak/termui"
 )
 
-var token = flag.String("token", "testtoken", "Authentication token")
-
-//TODO(Pawan) - Change default address to our server.
-var address = flag.String("address", "54.183.229.38:50001", "Address of the server")
+var (
+	token   = flag.String("token", "testtoken", "Authentication token")
+	address = flag.String("address", "gru.dgraph.io:443", "Address of the server")
+	tls     = flag.Bool("tls", true, "Connection uses TLS if true, else plain TCP")
+)
 
 type State int
 
@@ -90,7 +92,7 @@ func fetchAndDisplayQn() {
 		q, err = client.GetQuestion(context.Background(),
 			&interact.Req{Repeat: false, Sid: s.Id, Token: *token})
 		try++
-		if try > 10 {
+		if try > 100 {
 			showErrorPage()
 		}
 		time.Sleep(1 * time.Second)
@@ -111,13 +113,19 @@ func fetchAndDisplayQn() {
 	populateQuestionsPage(q)
 }
 
-func recvFromStream(stream interact.GruQuiz_StreamChanClient,
+func recvFromStream(stream *interact.GruQuiz_StreamChanClient,
 	gotPing chan *interact.ServerStatus) {
 	for {
-		msg, err := stream.Recv()
-		log.Println("got reply")
+		msg, err := (*stream).Recv()
 		if err != nil {
-			log.Println("Error while receiving from stream: %v", err)
+			/*
+				client := interact.NewGruQuizClient(conn)
+				*stream, err = client.StreamChan(context.Background())
+				if err != nil {
+					log.Println("Error while re-creating stream: %v", err)
+					time.Sleep(PINGDUR)
+				}
+			*/
 			continue
 		}
 		log.Println("got reply. no error")
@@ -125,7 +133,7 @@ func recvFromStream(stream interact.GruQuiz_StreamChanClient,
 	}
 }
 
-func streamRecv(stream interact.GruQuiz_StreamChanClient) {
+func streamRecv(stream *interact.GruQuiz_StreamChanClient) {
 	gotPing := make(chan *interact.ServerStatus, 100)
 	var err error
 	go recvFromStream(stream, gotPing)
@@ -139,6 +147,8 @@ func streamRecv(stream interact.GruQuiz_StreamChanClient) {
 					return
 				}
 
+				qp.pingbox.Text = "Connected to server."
+				qp.pingbox.TextFgColor = termui.ColorGreen
 				s.servTime.dur, err = time.ParseDuration(msg.TimeLeft)
 				if err != nil {
 					log.Println("Error parsing time from server, %v", err)
@@ -149,12 +159,13 @@ func streamRecv(stream interact.GruQuiz_StreamChanClient) {
 			}
 		case <-time.After(3 * PINGDUR):
 			log.Println("No pings received from server")
-			// TODO(Ashwin): Show message (server can't connect to client)
+			qp.pingbox.Text = "No pings from server"
+			qp.pingbox.TextFgColor = termui.ColorRed
 		}
 	}
 }
 
-func streamSend(stream interact.GruQuiz_StreamChanClient) {
+func streamSend(stream *interact.GruQuiz_StreamChanClient) {
 	tickChan := time.NewTicker(PINGDUR).C
 	count := 0
 	for {
@@ -165,7 +176,7 @@ func streamSend(stream interact.GruQuiz_StreamChanClient) {
 					s.currentQn.Id,
 					*token,
 				}
-				if err := stream.Send(cliStat); err != nil {
+				if err := (*stream).Send(cliStat); err != nil {
 					log.Println("Error sending to stream ", err)
 					count++
 				} else {
@@ -173,7 +184,8 @@ func streamSend(stream interact.GruQuiz_StreamChanClient) {
 				}
 
 				if count > 2 {
-					// TODO(Ashwin): Show message (client can't reach server)
+					qp.pingbox.Text = "Can't ping server"
+					qp.pingbox.TextFgColor = termui.ColorRed
 				}
 			}
 		}
@@ -187,8 +199,8 @@ func initializeStream() {
 		log.Println("Error while creating stream: %v", err)
 	}
 
-	go streamRecv(stream)
-	go streamSend(stream)
+	go streamRecv(&stream)
+	go streamSend(&stream)
 }
 
 func initializeTest(tl string) {
@@ -439,7 +451,17 @@ func main() {
 	instructions.Text = "Connecting to server..."
 	termui.Render(instructions)
 
-	conn, err = grpc.Dial(*address, grpc.WithInsecure(), grpc.WithBlock(), grpc.WithTimeout(PINGDUR))
+	var opts []grpc.DialOption
+	if *tls {
+		var creds credentials.TransportCredentials
+		host := strings.Split(*address, ":")
+		creds = credentials.NewClientTLSFromCert(nil, host[0])
+		opts = append(opts, grpc.WithTransportCredentials(creds))
+	} else {
+		opts = append(opts, grpc.WithInsecure())
+	}
+	opts = append(opts, grpc.WithBlock(), grpc.WithTimeout(5*time.Second))
+	conn, err = grpc.Dial(*address, opts...)
 	if err != nil {
 		log.Println(err)
 		showErrorPage()
