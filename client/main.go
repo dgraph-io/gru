@@ -120,7 +120,6 @@ func streamRecv(stream interact.GruQuiz_StreamChanClient) {
 
 		if err != nil {
 			if err != io.EOF {
-				//log.Printf("Error while receiving stream, %v", err)
 				endTT <- msg
 				return
 			}
@@ -135,6 +134,8 @@ func streamRecv(stream interact.GruQuiz_StreamChanClient) {
 			return
 		}
 
+		qp.pingbox.Text = "Connected to server."
+		qp.pingbox.TextFgColor = termui.ColorGreen
 		s.servTime.dur, err = time.ParseDuration(msg.TimeLeft)
 		if err != nil {
 			log.Println("Error parsing time from server, %v", err)
