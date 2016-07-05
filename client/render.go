@@ -42,6 +42,7 @@ type QuestionsPage struct {
 	lastScore   *termui.Par
 	scoringInfo *termui.Par
 	answers     *termui.Par
+	pingbox     *termui.Par
 }
 
 type InformationPage struct {
@@ -57,7 +58,7 @@ var infoPage InformationPage
 func setupInfoPage(th, tw int, dur string) {
 	instructions = termui.NewPar("")
 	instructions.BorderLabel = "Instructions"
-	instructions.Height = 50
+	instructions.Height = 53
 	instructions.Width = tw
 	instructions.PaddingTop = 2
 
@@ -153,6 +154,11 @@ func setupQuestionsPage() {
 	qp.answers.PaddingRight = 1
 	qp.answers.PaddingBottom = 1
 	qp.answers.Height = 14
+
+	qp.pingbox = termui.NewPar("Connected to server.")
+	qp.pingbox.BorderLabel = "Status"
+	qp.pingbox.PaddingLeft = 1
+	qp.pingbox.Height = 3
 }
 
 func renderInstructionsPage(demoTaken bool) {
@@ -198,10 +204,12 @@ func renderQuestionsPage(tl string) {
 			termui.NewCol(3, 0, qp.score),
 			termui.NewCol(3, 0, qp.lastScore)),
 		termui.NewRow(
-			termui.NewCol(10, 0, qp.que),
-			termui.NewCol(2, 0, qp.scoringInfo)),
+			termui.NewCol(9, 0, qp.que),
+			termui.NewCol(3, 0, qp.scoringInfo)),
 		termui.NewRow(
-			termui.NewCol(12, 0, qp.answers)))
+			termui.NewCol(12, 0, qp.answers)),
+		termui.NewRow(
+			termui.NewCol(12, 0, qp.pingbox)))
 
 	termui.Body.Align()
 	termui.Render(termui.Body)
