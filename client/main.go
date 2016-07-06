@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"flag"
 	"fmt"
-	"io"
 	"log"
 	"math/rand"
 	"os"
@@ -29,7 +28,6 @@ var (
 	address = flag.String("address", "gru.dgraph.io:443", "Address of the server")
 	tls     = flag.Bool("tls", true, "Connection uses TLS if true, else plain TCP")
 )
-var endTT chan *interact.ServerStatus
 
 type State int
 
@@ -41,6 +39,9 @@ const (
 	// User is being asked to confirm if they want to skip answering the
 	// question.
 	confirmSkip
+	END     = "END"
+	DEMOEND = "DEMOEND"
+	PINGDUR = 5 * time.Second
 )
 
 type clock struct {
@@ -59,6 +60,8 @@ type Session struct {
 	totalScore   float32
 	lastScore    float32
 	showingAns   bool
+	startedPing  bool
+	testEndCh    chan struct{}
 }
 
 var s Session
@@ -78,7 +81,8 @@ var conn *grpc.ClientConn
 func finalScore(score float32) string {
 	return fmt.Sprintf(strings.Join([]string{"Thank you for taking the test",
 		"Your final score was %4.1f",
-		"We will get in touch with you soon."}, ". "), score)
+		"We will get in touch with you soon",
+		"Press Ctrl + Q to exit."}, ". "), score)
 }
 
 func fetchAndDisplayQn() {
@@ -89,7 +93,7 @@ func fetchAndDisplayQn() {
 
 	try := 0
 	for err != nil {
-		log.Println("Could not get question.Got err: %v", err)
+		log.Printf("Could not get question.Got err: %v", err)
 		q, err = client.GetQuestion(context.Background(),
 			&interact.Req{Repeat: false, Sid: s.Id, Token: *token})
 		try++
@@ -101,103 +105,90 @@ func fetchAndDisplayQn() {
 	s.currentQn = q
 
 	// TODO(pawan) - If he has already taken the demo,don't show the screen again.
-	if q.Id == "DEMOEND" {
+	if q.Id == DEMOEND {
 		clear()
 		s.totalScore = 0.0
 		s.lastScore = 0.0
 		renderInstructionsPage(true)
 		return
-	} else if q.Id == "END" {
+	}
+	if q.Id == END {
 		showFinalPage(finalScore(q.Totscore))
 		return
 	}
 	populateQuestionsPage(q)
 }
 
-func streamRecv(stream interact.GruQuiz_StreamChanClient) {
-	for {
-		msg, err := stream.Recv()
+func sendStatus() {
+	status := interact.ClientStatus{
+		s.currentQn.Id,
+		*token,
+	}
+	client := interact.NewGruQuizClient(conn)
+	serverS, err := client.Ping(context.Background(), &status)
+	// TODO - Retry here and don't show error page till X mins.
+	if err != nil {
+		showErrorPage()
+		return
+	}
 
-		if err != nil {
-			if err != io.EOF {
-				endTT <- msg
-				return
-			}
-			endTT <- msg
-			log.Println("got end message")
-			return
-		}
-
-		if msg.Status == "END" {
+	if serverS.Status == DEMOEND {
+		// If its a dummy token, show final screen else instructions box.
+		if strings.HasPrefix(*token, "test-") {
 			clear()
 			showFinalPage(finalScore(s.currentQn.Totscore))
 			return
 		}
-
-		qp.pingbox.Text = "Connected to server."
-		qp.pingbox.TextFgColor = termui.ColorGreen
-		s.servTime.dur, err = time.ParseDuration(msg.TimeLeft)
-		if err != nil {
-			log.Println("Error parsing time from server, %v", err)
-		}
-
-		s.leftTime.setTimeLeft(s.servTime.dur)
-		termui.Render(termui.Body)
+		clear()
+		renderInstructionsPage(true)
+		return
 	}
+
+	if serverS.Status == END {
+		clear()
+		showFinalPage(finalScore(s.currentQn.Totscore))
+		return
+	}
+
+	s.servTime.dur, err = time.ParseDuration(serverS.TimeLeft)
+	if err != nil {
+		log.Printf("Error parsing time from server, %v", err)
+	}
+
+	s.leftTime.setTimeLeft(s.servTime.dur)
+	termui.Render(termui.Body)
 }
 
-func streamSend(stream interact.GruQuiz_StreamChanClient) {
-	tickChan := time.NewTicker(time.Second * 5).C
-	count := 0
-	for {
-		select {
-		case _ = <-endTT:
-			return
-		case <-tickChan:
-			{
-				cliStat := &interact.ClientStatus{
-					s.currentQn.Id,
-					*token,
-				}
-				if err := stream.Send(cliStat); err != nil {
-					log.Println("Error sending to stream ", err)
-					count++
-				} else {
-					count = 0
-				}
-
-				if count > 2 {
-					showErrorPage()
-				}
+func startPing() {
+	if s.startedPing {
+		return
+	}
+	ticker := time.NewTicker(PINGDUR)
+	go func() {
+	L:
+		for {
+			// If the test ends because of time or questions being
+			// over, stop the pings.
+			select {
+			case <-s.testEndCh:
+				break L
+			case <-ticker.C:
+				sendStatus()
 			}
 		}
-	}
+	}()
+	s.startedPing = true
 }
 
 func initializeTest(tl string) {
 	setupQuestionsPage()
 	renderQuestionsPage(tl)
 	fetchAndDisplayQn()
+	startPing()
 
-	if s.currentQn.Id == "END" {
+	if s.currentQn.Id == END {
 		return
 	}
-
-	client := interact.NewGruQuizClient(conn)
-	stream, err := client.StreamChan(context.Background())
-	if err != nil {
-		log.Println("Error while creating stream: %v", err)
-	}
-
-	cliStat := &interact.ClientStatus{
-		"First",
-		*token,
-	}
-	if err := stream.Send(cliStat); err != nil {
-		log.Println(err)
-	}
-	go streamRecv(stream)
-	go streamSend(stream)
 }
 
 func renderSelectedAnswers(selected []string, m map[string]*interact.Answer) {
@@ -374,6 +365,7 @@ func initializeDemo(tl string) {
 	setupQuestionsPage()
 	renderQuestionsPage(tl)
 	fetchAndDisplayQn()
+	startPing()
 }
 
 func setupInitialPage(ses *interact.Session) {
@@ -422,7 +414,8 @@ func main() {
 		*token = fmt.Sprintf("test-%s", RandStringBytes(10))
 	}
 
-	logFile, _ := os.OpenFile("gru.log", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	logFile, _ := os.OpenFile("gru.log", os.O_RDWR|os.O_CREATE|os.O_APPEND,
+		0666)
 	syscall.Dup2(int(logFile.Fd()), 2)
 	err := termui.Init()
 	if err != nil {
@@ -430,6 +423,7 @@ func main() {
 	}
 	defer termui.Close()
 
+	s.testEndCh = make(chan struct{}, 2)
 	setupErrorPage()
 	setupInstructionsPage()
 	instructions.BorderLabel = "Connecting"
@@ -454,13 +448,13 @@ func main() {
 	}
 
 	client := interact.NewGruQuizClient(conn)
-	s, err := client.Authenticate(context.Background(), &interact.Token{Id: *token})
+	ses, err := client.Authenticate(context.Background(), &interact.Token{Id: *token})
 	if err != nil {
 		log.Println(err)
 		errorPage.Text = grpc.ErrorDesc(err) + " Press Ctrl+Q to exit and try again."
 		termui.Render(errorPage)
 	} else {
-		setupInitialPage(s)
+		setupInitialPage(ses)
 	}
 
 	// Pressing Ctrl-q terminates the ui.

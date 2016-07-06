@@ -156,6 +156,7 @@ func setupQuestionsPage() {
 	qp.answers.Height = 14
 
 	qp.pingbox = termui.NewPar("Connected to server.")
+	qp.pingbox.TextFgColor = termui.ColorGreen
 	qp.pingbox.BorderLabel = "Status"
 	qp.pingbox.PaddingLeft = 1
 	qp.pingbox.Height = 3
@@ -241,6 +242,7 @@ func resetHandlers() {
 }
 
 func showFinalPage(msg string) {
+	s.testEndCh <- struct{}{}
 	instructions = termui.NewPar(msg)
 	instructions.BorderLabel = "Thank You"
 	instructions.Height = 10
