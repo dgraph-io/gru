@@ -143,6 +143,7 @@ func sendStatus(pingFail *int) {
 		return
 	}
 	*pingFail = 0
+	statusConnected()
 
 	if serverS.Status == DEMOEND {
 		// If its a dummy token, show final screen else instructions box.
