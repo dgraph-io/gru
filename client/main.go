@@ -39,9 +39,11 @@ const (
 	// User is being asked to confirm if they want to skip answering the
 	// question.
 	confirmSkip
-	END     = "END"
-	DEMOEND = "DEMOEND"
-	PINGDUR = 5 * time.Second
+	END      = "END"
+	DEMOEND  = "DEMOEND"
+	PINGDUR  = 5 * time.Second
+	NUMRETRY = 12
+	TIMEOUT  = 5 * time.Second
 )
 
 type clock struct {
@@ -88,20 +90,22 @@ func finalScore(score float32) string {
 func fetchAndDisplayQn() {
 	client := interact.NewGruQuizClient(conn)
 
-	q, err := client.GetQuestion(context.Background(),
+	ctx, _ := context.WithTimeout(context.Background(), TIMEOUT)
+	q, err := client.GetQuestion(ctx,
 		&interact.Req{Repeat: false, Sid: s.Id, Token: *token})
 
 	try := 0
 	for err != nil {
+		statusNoConnection()
 		log.Printf("Could not get question.Got err: %v", err)
-		q, err = client.GetQuestion(context.Background(),
+		q, err = client.GetQuestion(ctx,
 			&interact.Req{Repeat: false, Sid: s.Id, Token: *token})
 		try++
-		if try > 10 {
+		if try > NUMRETRY {
 			showErrorPage()
 		}
-		time.Sleep(1 * time.Second)
 	}
+	statusConnected()
 	s.currentQn = q
 
 	// TODO(pawan) - If he has already taken the demo,don't show the screen again.
@@ -119,18 +123,26 @@ func fetchAndDisplayQn() {
 	populateQuestionsPage(q)
 }
 
-func sendStatus() {
+func sendStatus(pingFail *int) {
 	status := interact.ClientStatus{
 		s.currentQn.Id,
 		*token,
 	}
 	client := interact.NewGruQuizClient(conn)
-	serverS, err := client.Ping(context.Background(), &status)
+	ctx, _ := context.WithTimeout(context.Background(), TIMEOUT)
+	serverS, err := client.Ping(ctx, &status)
 	// TODO - Retry here and don't show error page till X mins.
 	if err != nil {
-		showErrorPage()
+		(*pingFail)++
+		log.Println("While sending ping", err)
+		if (*pingFail) > NUMRETRY {
+			showErrorPage()
+			return
+		}
+		statusNoConnection()
 		return
 	}
+	*pingFail = 0
 
 	if serverS.Status == DEMOEND {
 		// If its a dummy token, show final screen else instructions box.
@@ -163,6 +175,7 @@ func startPing() {
 	if s.startedPing {
 		return
 	}
+	pingFail := 0
 	ticker := time.NewTicker(PINGDUR)
 	go func() {
 	L:
@@ -173,7 +186,7 @@ func startPing() {
 			case <-s.testEndCh:
 				break L
 			case <-ticker.C:
-				sendStatus()
+				sendStatus(&pingFail)
 			}
 		}
 	}()
@@ -258,7 +271,20 @@ func enterHandler(e termui.Event, q *interact.Question, selected []string,
 		resp := interact.Response{Qid: q.Id, Aid: answerIds,
 			Sid: s.Id, Token: *token}
 		client := interact.NewGruQuizClient(conn)
-		client.SendAnswer(context.Background(), &resp)
+		ctx, _ := context.WithTimeout(context.Background(), TIMEOUT)
+		_, err := client.SendAnswer(ctx, &resp)
+		try := 0
+		for err != nil {
+			log.Println("While sending Answer", err)
+			statusNoConnection()
+			_, err = client.SendAnswer(ctx, &resp)
+			try++
+			if try > NUMRETRY {
+				showErrorPage()
+				return
+			}
+		}
+		statusConnected()
 		fetchAndDisplayQn()
 	}
 }
@@ -439,7 +465,7 @@ func main() {
 	} else {
 		opts = append(opts, grpc.WithInsecure())
 	}
-	opts = append(opts, grpc.WithBlock(), grpc.WithTimeout(5*time.Second))
+	opts = append(opts, grpc.WithBlock(), grpc.WithTimeout(TIMEOUT))
 	conn, err = grpc.Dial(*address, opts...)
 	if err != nil {
 		log.Println(err)
@@ -448,7 +474,8 @@ func main() {
 	}
 
 	client := interact.NewGruQuizClient(conn)
-	ses, err := client.Authenticate(context.Background(), &interact.Token{Id: *token})
+	ctx, _ := context.WithTimeout(context.Background(), TIMEOUT)
+	ses, err := client.Authenticate(ctx, &interact.Token{Id: *token})
 	if err != nil {
 		log.Println(err)
 		errorPage.Text = grpc.ErrorDesc(err) + " Press Ctrl+Q to exit and try again."
