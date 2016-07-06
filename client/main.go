@@ -121,7 +121,7 @@ func fetchAndDisplayQn() {
 	populateQuestionsPage(q)
 }
 
-func sendStatus() {
+func sendStatus(pingFail *int) {
 	status := interact.ClientStatus{
 		s.currentQn.Id,
 		*token,
@@ -131,10 +131,16 @@ func sendStatus() {
 	serverS, err := client.Ping(ctx, &status)
 	// TODO - Retry here and don't show error page till X mins.
 	if err != nil {
+		(*pingFail)++
 		log.Println("While sending ping", err)
+		if (*pingFail) > 12 {
+			showErrorPage()
+			return
+		}
 		statusNoConnection()
 		return
 	}
+	*pingFail = 0
 
 	if serverS.Status == DEMOEND {
 		// If its a dummy token, show final screen else instructions box.
@@ -167,6 +173,7 @@ func startPing() {
 	if s.startedPing {
 		return
 	}
+	pingFail := 0
 	ticker := time.NewTicker(PINGDUR)
 	go func() {
 	L:
@@ -177,7 +184,7 @@ func startPing() {
 			case <-s.testEndCh:
 				break L
 			case <-ticker.C:
-				sendStatus()
+				sendStatus(&pingFail)
 			}
 		}
 	}()
