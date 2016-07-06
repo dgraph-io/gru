@@ -39,9 +39,11 @@ const (
 	// User is being asked to confirm if they want to skip answering the
 	// question.
 	confirmSkip
-	END     = "END"
-	DEMOEND = "DEMOEND"
-	PINGDUR = 5 * time.Second
+	END      = "END"
+	DEMOEND  = "DEMOEND"
+	PINGDUR  = 5 * time.Second
+	NUMRETRY = 12
+	TIMEOUT  = 5 * time.Second
 )
 
 type clock struct {
@@ -88,7 +90,7 @@ func finalScore(score float32) string {
 func fetchAndDisplayQn() {
 	client := interact.NewGruQuizClient(conn)
 
-	ctx, _ := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, _ := context.WithTimeout(context.Background(), TIMEOUT)
 	q, err := client.GetQuestion(ctx,
 		&interact.Req{Repeat: false, Sid: s.Id, Token: *token})
 
@@ -99,7 +101,7 @@ func fetchAndDisplayQn() {
 		q, err = client.GetQuestion(ctx,
 			&interact.Req{Repeat: false, Sid: s.Id, Token: *token})
 		try++
-		if try > 12 {
+		if try > NUMRETRY {
 			showErrorPage()
 		}
 	}
@@ -127,13 +129,13 @@ func sendStatus(pingFail *int) {
 		*token,
 	}
 	client := interact.NewGruQuizClient(conn)
-	ctx, _ := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, _ := context.WithTimeout(context.Background(), TIMEOUT)
 	serverS, err := client.Ping(ctx, &status)
 	// TODO - Retry here and don't show error page till X mins.
 	if err != nil {
 		(*pingFail)++
 		log.Println("While sending ping", err)
-		if (*pingFail) > 12 {
+		if (*pingFail) > NUMRETRY {
 			showErrorPage()
 			return
 		}
@@ -269,7 +271,7 @@ func enterHandler(e termui.Event, q *interact.Question, selected []string,
 		resp := interact.Response{Qid: q.Id, Aid: answerIds,
 			Sid: s.Id, Token: *token}
 		client := interact.NewGruQuizClient(conn)
-		ctx, _ := context.WithTimeout(context.Background(), 5*time.Second)
+		ctx, _ := context.WithTimeout(context.Background(), TIMEOUT)
 		_, err := client.SendAnswer(ctx, &resp)
 		try := 0
 		for err != nil {
@@ -277,7 +279,7 @@ func enterHandler(e termui.Event, q *interact.Question, selected []string,
 			statusNoConnection()
 			_, err = client.SendAnswer(ctx, &resp)
 			try++
-			if try > 12 {
+			if try > NUMRETRY {
 				showErrorPage()
 				return
 			}
@@ -463,7 +465,7 @@ func main() {
 	} else {
 		opts = append(opts, grpc.WithInsecure())
 	}
-	opts = append(opts, grpc.WithBlock(), grpc.WithTimeout(5*time.Second))
+	opts = append(opts, grpc.WithBlock(), grpc.WithTimeout(TIMEOUT))
 	conn, err = grpc.Dial(*address, opts...)
 	if err != nil {
 		log.Println(err)
@@ -472,7 +474,7 @@ func main() {
 	}
 
 	client := interact.NewGruQuizClient(conn)
-	ctx, _ := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, _ := context.WithTimeout(context.Background(), TIMEOUT)
 	ses, err := client.Authenticate(ctx, &interact.Token{Id: *token})
 	if err != nil {
 		log.Println(err)
