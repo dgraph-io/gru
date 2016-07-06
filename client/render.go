@@ -242,6 +242,7 @@ func resetHandlers() {
 }
 
 func showFinalPage(msg string) {
+	s.testEndCh <- struct{}{}
 	instructions = termui.NewPar(msg)
 	instructions.BorderLabel = "Thank You"
 	instructions.Height = 10

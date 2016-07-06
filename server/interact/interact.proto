@@ -7,7 +7,7 @@ service GruQuiz {
 	rpc Authenticate (Token) returns (Session) {}
 	rpc GetQuestion (Req) returns (Question) {}
 	rpc SendAnswer (Response) returns (Status) {}
-	rpc StreamChan (stream ClientStatus) returns (stream ServerStatus) {}
+	rpc Ping (ClientStatus) returns (ServerStatus) {}
 }
 
 message ServerStatus {

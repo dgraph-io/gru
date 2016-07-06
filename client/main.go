@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"flag"
 	"fmt"
-	"io"
 	"log"
 	"math/rand"
 	"os"
@@ -29,7 +28,6 @@ var (
 	address = flag.String("address", "gru.dgraph.io:443", "Address of the server")
 	tls     = flag.Bool("tls", true, "Connection uses TLS if true, else plain TCP")
 )
-var endTT chan *interact.ServerStatus
 
 type State int
 
@@ -60,6 +58,7 @@ type Session struct {
 	lastScore    float32
 	showingAns   bool
 	startedPing  bool
+	testEndCh    chan struct{}
 }
 
 var s Session
@@ -79,7 +78,8 @@ var conn *grpc.ClientConn
 func finalScore(score float32) string {
 	return fmt.Sprintf(strings.Join([]string{"Thank you for taking the test",
 		"Your final score was %4.1f",
-		"We will get in touch with you soon."}, ". "), score)
+		"We will get in touch with you soon",
+		"Press Ctrl + Q to exit"}, ". "), score)
 }
 
 func fetchAndDisplayQn() {
@@ -115,78 +115,65 @@ func fetchAndDisplayQn() {
 	populateQuestionsPage(q)
 }
 
-func streamRecv(stream interact.GruQuiz_StreamChanClient) {
-	for {
-		msg, err := stream.Recv()
-		if err != nil {
-			if err != io.EOF {
-				endTT <- msg
-				return
-			}
-			endTT <- msg
-			log.Println("got end message")
-			return
-		}
+func sendStatus() {
+	status := interact.ClientStatus{
+		s.currentQn.Id,
+		*token,
+	}
+	client := interact.NewGruQuizClient(conn)
+	serverS, err := client.Ping(context.Background(), &status)
+	// TODO - Retry here and don't show error page till X mins.
+	if err != nil {
+		showErrorPage()
+		return
+	}
 
-		if msg.Status == "END" {
+	if serverS.Status == "DEMOEND" {
+		// If its a dummy token, show final screen else instructions box.
+		if strings.HasPrefix(*token, "test-") {
 			clear()
 			showFinalPage(finalScore(s.currentQn.Totscore))
 			return
-		}
-
-		s.servTime.dur, err = time.ParseDuration(msg.TimeLeft)
-		if err != nil {
-			log.Println("Error parsing time from server, %v", err)
-		}
-
-		if s.servTime.dur < 0 {
+		} else {
+			clear()
+			renderInstructionsPage(true)
 			return
 		}
-		s.leftTime.setTimeLeft(s.servTime.dur)
-		termui.Render(termui.Body)
 	}
-}
 
-func streamSend(stream interact.GruQuiz_StreamChanClient) {
-	tickChan := time.NewTicker(time.Second * 5).C
-	count := 0
-	for {
-		select {
-		case _ = <-endTT:
-			return
-		case <-tickChan:
-			{
-				cliStat := &interact.ClientStatus{
-					s.currentQn.Id,
-					*token,
-				}
-				if err := stream.Send(cliStat); err != nil {
-					log.Println("Error sending to stream ", err)
-					count++
-				} else {
-					count = 0
-				}
-
-				if count > 2 {
-					showErrorPage()
-				}
-			}
-		}
+	if serverS.Status == "END" {
+		clear()
+		showFinalPage(finalScore(s.currentQn.Totscore))
+		return
 	}
+
+	s.servTime.dur, err = time.ParseDuration(serverS.TimeLeft)
+	if err != nil {
+		log.Println("Error parsing time from server, %v", err)
+	}
+
+	s.leftTime.setTimeLeft(s.servTime.dur)
+	termui.Render(termui.Body)
 }
 
 func startPing() {
 	if s.startedPing {
 		return
 	}
-	client := interact.NewGruQuizClient(conn)
-	stream, err := client.StreamChan(context.Background())
-	if err != nil {
-		log.Println("Error while creating stream: %v", err)
-	}
-
-	go streamRecv(stream)
-	go streamSend(stream)
+	ticker := time.NewTicker(time.Second * 5)
+	go func() {
+	L:
+		for range ticker.C {
+			// If the test ends because of time or questions being
+			// over, stop the pings.
+			select {
+			case <-s.testEndCh:
+				break L
+			default:
+				sendStatus()
+			}
+		}
+	}()
 	s.startedPing = true
 }
 
@@ -433,6 +420,7 @@ func main() {
 	}
 	defer termui.Close()
 
+	s.testEndCh = make(chan struct{}, 2)
 	setupErrorPage()
 	setupInstructionsPage()
 	instructions.BorderLabel = "Connecting"
@@ -457,13 +445,13 @@ func main() {
 	}
 
 	client := interact.NewGruQuizClient(conn)
-	s, err := client.Authenticate(context.Background(), &interact.Token{Id: *token})
+	ses, err := client.Authenticate(context.Background(), &interact.Token{Id: *token})
 	if err != nil {
 		log.Println(err)
 		errorPage.Text = grpc.ErrorDesc(err) + " Press Ctrl+Q to exit and try again."
 		termui.Render(errorPage)
 	} else {
-		setupInitialPage(s)
+		setupInitialPage(ses)
 	}
 
 	// Pressing Ctrl-q terminates the ui.

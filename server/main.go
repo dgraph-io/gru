@@ -5,7 +5,6 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"log"
 	"math/rand"
@@ -29,7 +28,7 @@ const (
 	DEMO     = "demo"
 	TEST     = "test"
 	END      = "END"
-	DURATION = 1 * time.Minute
+	DURATION = 60 * time.Minute
 )
 
 type Candidate struct {
@@ -43,11 +42,10 @@ type Candidate struct {
 	demoQnsAsked int
 	demoTaken    bool
 	logFile      *os.File
+	demoStart    time.Time
 	testStart    time.Time
 	// session id of currently active session.
-	sid         string
-	endQuestion chan int
-	endTimer    *time.Timer
+	sid string
 }
 
 var (
@@ -138,10 +136,15 @@ func (c *Candidate) loadCandInfo(token string) error {
 		}
 
 		switch splits[3] {
+		case "demo_start":
+			c.demoStart, err = time.Parse(format, fmt.Sprintf("%s %s %s",
+				splits[0], splits[1], splits[2]))
+			if err != nil {
+				return err
+			}
 		case "test_start":
 			c.testStart, err = time.Parse(format, fmt.Sprintf("%s %s %s",
 				splits[0], splits[1], splits[2]))
-			c.endTimer = time.NewTimer(timeLeft(c.testStart))
 			if err != nil {
 				return err
 			}
@@ -241,7 +244,6 @@ func demoCandInfo(token string) Candidate {
 		}
 		c.logFile = f
 		c.questions = onlyDemoQuestions()
-		c.endTimer = time.NewTimer(DURATION)
 		updateMap(token, c)
 		return c
 	}
@@ -289,7 +291,6 @@ func authenticate(t *interact.Token) (*interact.Session, error) {
 	}
 	writeLog(c, fmt.Sprintf("%v session_token %s\n", UTCTime(), session.Id))
 	c.sid = session.Id
-	c.endQuestion = make(chan int, 1)
 	updateMap(t.Id, c)
 	return &session, nil
 }
@@ -360,6 +361,10 @@ func getQuestion(req *interact.Req) (*interact.Question, error) {
 	}
 
 	if c.demoQnsAsked < maxDemoQns {
+		if c.demoQnsAsked == 0 {
+			c.demoStart = time.Now().UTC()
+			writeLog(c, fmt.Sprintf("%v demo_start\n", UTCTime()))
+		}
 		q, err := nextQuestion(c, req.Token, DEMO)
 		if err != nil {
 			return nil, err
@@ -370,7 +375,6 @@ func getQuestion(req *interact.Req) (*interact.Question, error) {
 	// Time is up for the test.
 	if !c.testStart.IsZero() && timeLeft(c.testStart) < 0 {
 		q := &interact.Question{Id: END, Totscore: c.score}
-		c.endQuestion <- 1
 		writeLog(c, fmt.Sprintf("%v End of test. Questions over\n", UTCTime()))
 		return q, nil
 	}
@@ -385,13 +389,11 @@ func getQuestion(req *interact.Req) (*interact.Question, error) {
 		// This means it is his first test question.
 		writeLog(c, fmt.Sprintf("%v test_start\n", UTCTime()))
 		c.testStart = time.Now().UTC()
-		c.endTimer = time.NewTimer(timeLeft(c.testStart))
 	}
 	q, err := nextQuestion(c, req.Token, TEST)
 	// This means that test qns are over.
 	if err != nil {
 		q = &interact.Question{Id: END, Totscore: c.score}
-		c.endQuestion <- 1
 		writeLog(c, fmt.Sprintf("%v End of test. Questions over\n", UTCTime()))
 		return q, nil
 	}
@@ -511,93 +513,51 @@ func timeLeft(ts time.Time) time.Duration {
 	return (DURATION - time.Now().UTC().Sub(ts))
 }
 
-func streamSend(wg *sync.WaitGroup, stream interact.GruQuiz_StreamChanServer,
-	c Candidate, endTT chan int) {
-	defer wg.Done()
-	var stat interact.ServerStatus
-	tickerCh := time.NewTicker(time.Second * 5).C
-
-	for {
-		select {
-		case <-c.endTimer.C:
-			{
-				endTT <- 1
-				stat.Status = "END"
-				log.Println("End test based on time")
-				writeLog(c, fmt.Sprintf("%v End of test. Time out\n", UTCTime()))
-				if err := stream.Send(&stat); err != nil {
-					endTT <- 2
-					log.Printf("Stream: %v, session token: %v\n",
-						err, c.sid)
-				}
-				fmt.Println("here")
-				return
-			}
-		case <-c.endQuestion:
-			{
-				endTT <- 1
-				log.Println("End test. Questions over for %v", c.name)
-				return
-			}
-		case <-tickerCh:
-			{
-				stat.TimeLeft = timeLeft(c.testStart).String()
-				if err := stream.Send(&stat); err != nil {
-					endTT <- 2
-					log.Printf("Stream: %v\n, session token: %v",
-						err, c.sid)
-				}
-			}
+func removeDemoQns(qns []Question) []Question {
+	var questions []Question
+	for _, q := range qns {
+		if stringInSlice("demo", q.Tags) {
+			continue
 		}
+		questions = append(questions, q)
 	}
+	return questions
 }
 
-func streamRecv(wg *sync.WaitGroup, stream interact.GruQuiz_StreamChanServer,
-	c Candidate, endTT chan int) {
-	defer wg.Done()
-	for {
-		select {
-		case x := <-endTT:
-			if x == 1 {
-				log.Println("Received End test token")
-			} else if x == 2 {
-				log.Println("Possible Client crash")
-			}
-			return
-		default:
-			msg, err := stream.Recv()
-			if err != nil {
-				if err != io.EOF {
-					log.Printf("Client %v has disconnected. session token: %v\n",
-						c.name, c.sid)
-				}
-				return
-			}
-			writeLog(c, fmt.Sprintf("%v ping %s\n",
-				UTCTime(), msg.CurrQuestion))
+func (s *server) Ping(ctx context.Context,
+	stat *interact.ClientStatus) (*interact.ServerStatus, error) {
+	c, _ := readMap(stat.Token)
+	writeLog(c, fmt.Sprintf("%v ping %s\n",
+		UTCTime(), stat.CurrQuestion))
 
+	var sstat interact.ServerStatus
+	if c.demoStart.IsZero() {
+		log.Printf("Got ping before demo for Cand: %v", c.name)
+		return &sstat, nil
+	}
+	// We want to indicate end of demo and test based on time.
+	if c.testStart.IsZero() {
+		demoTimeLeft := timeLeft(c.demoStart)
+		if demoTimeLeft < 0 {
+			// So that now actual test questions are asked.
+			c.demoQnsAsked = maxDemoQns
+			copy(c.questions, removeDemoQns(c.questions))
+			c.demoTaken = true
+			updateMap(stat.Token, c)
+			sstat.Status = "DEMOEND"
+			return &sstat, nil
 		}
+		sstat.TimeLeft = demoTimeLeft.String()
+		return &sstat, nil
 	}
-}
-
-// TODO(ashwin) - Add authentication
-func (s *server) StreamChan(stream interact.GruQuiz_StreamChanServer) error {
-	var wg sync.WaitGroup
-	endTestCh := make(chan int)
-
-	msg, err := stream.Recv()
-	if err != nil {
-		log.Printf("Error while receiving stream %v", err)
+	quizTimeLeft := timeLeft(c.testStart)
+	if quizTimeLeft < 0 {
+		sstat.Status = "END"
+		writeLog(c, fmt.Sprintf("%v test_end\n", UTCTime()))
+		return &sstat, nil
 	}
-	token := msg.Token
-	c, _ := readMap(token)
-
-	wg.Add(1)
-	go streamSend(&wg, stream, c, endTestCh)
-	wg.Add(1)
-	go streamRecv(&wg, stream, c, endTestCh)
-	wg.Wait()
-	return nil
+	sstat.TimeLeft = quizTimeLeft.String()
+	return &sstat, nil
 }
 
 func runGrpcServer(address string) {
@@ -656,9 +616,6 @@ func parseCandidateFile(file string) error {
 		c.email = splits[2]
 		c.validity, err = time.Parse(format,
 			fmt.Sprintf("%s (%s)", splits[3], splits[4]))
-		// Initialised with duration for the demo. This is reinitialized
-		// when the test starts.
-		c.endTimer = time.NewTimer(DURATION)
 		if err != nil {
 			log.Fatal(err)
 		}
