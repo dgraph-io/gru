@@ -162,6 +162,16 @@ func setupQuestionsPage() {
 	qp.pingbox.Height = 3
 }
 
+func statusNoConnection() {
+	qp.pingbox.Text = "Trouble connecting to the server. Hang on for a sec!"
+	qp.pingbox.TextFgColor = termui.ColorRed
+}
+
+func statusConnected() {
+	qp.pingbox.Text = "Connected to server"
+	qp.pingbox.TextFgColor = termui.ColorGreen
+}
+
 func renderInstructionsPage(demoTaken bool) {
 	resetHandlers()
 	termui.Render(instructions)
