@@ -288,19 +288,19 @@ func authenticate(t *interact.Token) (*interact.Session, error) {
 		return nil, err
 	}
 
-	timeUntilLastExchange := time.Now().Sub(c.lastExchange)
-	if c.lastExchange.IsZero() || timeUntilLastExchange > 5*time.Second {
-		session = interact.Session{Id: RandStringBytes(36), State: state(c),
-			TimeLeft:     timeLeft(c.testStart).String(),
-			TestDuration: DURATION.String()}
-		writeLog(c, fmt.Sprintf("%v session_token %s\n", UTCTime(), session.Id))
-		c.sid = session.Id
-		updateMap(t.Id, c)
-		return &session, nil
+	timeSinceLastExchange := time.Now().Sub(c.lastExchange)
+	if !c.lastExchange.IsZero() && timeSinceLastExchange < 10*time.Second {
+		fmt.Println("Duplicate session for same auth token", t.Id, c.name)
+		return nil, errors.New("Duplicate Session. You already have an open session. If not try after 10 seconds.")
 	}
 
-	fmt.Println("Duplicate session for same auth token", t.Id, c.name)
-	return nil, errors.New("Duplicate Session. You already have an open session. If not try after 5 seconds.")
+	session = interact.Session{Id: RandStringBytes(36), State: state(c),
+		TimeLeft:     timeLeft(c.testStart).String(),
+		TestDuration: DURATION.String()}
+	writeLog(c, fmt.Sprintf("%v session_token %s\n", UTCTime(), session.Id))
+	c.sid = session.Id
+	updateMap(t.Id, c)
+	return &session, nil
 }
 
 func (s *server) Authenticate(ctx context.Context,

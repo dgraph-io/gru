@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"io/ioutil"
 	"os"
 	"testing"
@@ -237,15 +238,21 @@ func TestAuthenticate(t *testing.T) {
 	req := &interact.Req{Token: tokenId}
 	getQuestion(req)
 	_, err = authenticate(&token)
-	if err == nil {
+	if err == errors.New("Duplicate session for same auth token") {
 		t.Error("Expected duplicate session error")
 	}
-	time.Sleep(6 * time.Second)
+	time.Sleep(11 * time.Second)
 	_, err = authenticate(&token)
 	if err != nil {
 		t.Error("Should allow a start of new session. Error: ", err)
 	}
 
+	token = interact.Token{Id: "test-abcd"}
+	_, err = authenticate(&token)
+
+	if err != nil {
+		t.Error("Demo test token isn't being authenticated. Error: ", err)
+	}
 	//TODO(pawan) - test other values fo State
 
 	c.testStart = time.Now().Add(-2 * time.Hour)
