@@ -287,9 +287,8 @@ func authenticate(t *interact.Token) (*interact.Session, error) {
 			return nil, err
 		}
 
-		cand, ok := readMap(t.Id)
-
-		if !ok {
+		timeUntilLastExchange := time.Now().Sub(c.lastExchange)
+		if c.lastExchange.IsZero() || timeUntilLastExchange > 5*time.Second {
 			session = interact.Session{Id: RandStringBytes(36), State: state(c),
 				TimeLeft:     timeLeft(c.testStart).String(),
 				TestDuration: DURATION.String()}
@@ -297,21 +296,10 @@ func authenticate(t *interact.Token) (*interact.Session, error) {
 			c.sid = session.Id
 			updateMap(t.Id, c)
 			return &session, nil
-		} else {
-			timeUntilLastExchange := time.Now().Sub(cand.lastExchange)
-			if cand.lastExchange.IsZero() || timeUntilLastExchange > 5*time.Second {
-				session = interact.Session{Id: RandStringBytes(36), State: state(c),
-					TimeLeft:     timeLeft(c.testStart).String(),
-					TestDuration: DURATION.String()}
-				writeLog(c, fmt.Sprintf("%v session_token %s\n", UTCTime(), session.Id))
-				c.sid = session.Id
-				updateMap(t.Id, c)
-				return &session, nil
 
-			} else {
-				fmt.Println("Duplicate session for same auth token", t.Id, cand.name)
-				return nil, errors.New("Duplicate Session. You already have an open session. If not try after 5 seconds.")
-			}
+		} else {
+			fmt.Println("Duplicate session for same auth token", t.Id, c.name)
+			return nil, errors.New("Duplicate Session. You already have an open session. If not try after 5 seconds.")
 		}
 	}
 
