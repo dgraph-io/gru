@@ -372,13 +372,8 @@ func getQuestion(req *interact.Req) (*interact.Question, error) {
 		writeLog(c, fmt.Sprintf("%v question %v\n", UTCTime(), q.Id))
 		return q, nil
 	}
-	// Time is up for the test.
-	if !c.testStart.IsZero() && timeLeft(c.testStart) < 0 {
-		q := &interact.Question{Id: END, Totscore: c.score}
-		writeLog(c, fmt.Sprintf("%v End of test. Questions over\n", UTCTime()))
-		return q, nil
-	}
-	if len(c.questions) == len(questions)-maxDemoQns {
+
+	if c.demoQnsAsked == maxDemoQns && c.testStart.IsZero() {
 		if !c.demoTaken {
 			c.score = 0
 			c.demoTaken = true
@@ -513,24 +508,21 @@ func timeLeft(ts time.Time) time.Duration {
 	return (DURATION - time.Now().UTC().Sub(ts))
 }
 
-func removeDemoQns(qns []Question) []Question {
-	var questions []Question
-	for _, q := range qns {
-		if stringInSlice("demo", q.Tags) {
-			continue
-		}
-		questions = append(questions, q)
-	}
-	return questions
-}
-
 func (s *server) Ping(ctx context.Context,
 	stat *interact.ClientStatus) (*interact.ServerStatus, error) {
-	c, _ := readMap(stat.Token)
+	var sstat interact.ServerStatus
+	var c Candidate
+	var ok bool
+
+	if c, ok = readMap(stat.Token); !ok {
+		return &sstat, fmt.Errorf("Invalid token: %v", stat.Token)
+	}
+	// In case the server crashed, we need to load up candidate info as
+	// authenticate call won't be made.
+	c = candInfo(stat.Token)
+
 	writeLog(c, fmt.Sprintf("%v ping %s\n",
 		UTCTime(), stat.CurrQuestion))
-
-	var sstat interact.ServerStatus
 	if c.demoStart.IsZero() {
 		log.Printf("Got ping before demo for Cand: %v", c.name)
 		return &sstat, nil
@@ -544,7 +536,6 @@ func (s *server) Ping(ctx context.Context,
 		}
 		// So that now actual test questions are asked.
 		c.demoQnsAsked = maxDemoQns
-		copy(c.questions, removeDemoQns(c.questions))
 		c.demoTaken = true
 		updateMap(stat.Token, c)
 		sstat.Status = "DEMOEND"
@@ -669,9 +660,8 @@ func checkTest(qns []Question) error {
 			}
 		}
 	}
-
 	if demoQnCount < maxDemoQns {
-		log.Fatal("Need more demo questions in quiz file")
+		return fmt.Errorf("Need more demo questions in quiz file")
 	}
 	return nil
 }

@@ -10,6 +10,7 @@ import (
 )
 
 func TestIsCorrectAnswer(t *testing.T) {
+	maxDemoQns = 3
 	var err error
 	questions, err = extractQuizInfo("demo_test.yaml")
 	if err != nil {
@@ -52,6 +53,7 @@ func TestIsCorrectAnswer(t *testing.T) {
 }
 
 func TestNextQuestion(t *testing.T) {
+	maxDemoQns = 3
 	var err error
 	questions, err = extractQuizInfo("demo_test.yaml")
 	if err != nil {
@@ -290,6 +292,7 @@ func TestLoadCandInfo(t *testing.T) {
 }
 
 func TestSendAnswer(t *testing.T) {
+	maxDemoQns = 3
 	var err error
 	questions, err = extractQuizInfo("demo_test.yaml")
 	if err != nil {
@@ -399,28 +402,6 @@ func TestCheckTest(t *testing.T) {
 		t.Errorf("Expected error to be %v. Got: %v", expectedError, err)
 	}
 
-	qns = []Question{
-		{
-			Id: "qn1",
-			Opt: []Option{
-				{Uid: "O1"},
-				{Uid: "O2"},
-			},
-			Correct: []string{"O2"},
-		},
-		{
-			Id: "qn2",
-			Opt: []Option{
-				{Uid: "O3"},
-				{Uid: "O4"},
-			},
-			Correct: []string{"O3"},
-		},
-	}
-	if err := checkTest(qns); err != nil {
-		t.Errorf("Expected error to be nil. Got: %v", err)
-	}
-
 	qns = []Question{{Id: "qn1", Tags: []string{"Demo"}}}
 	expectedError = "Tag: Demo for qn: qn1 should start with a lowercase character"
 	if err := checkTest(qns); err.Error() != expectedError {
@@ -437,11 +418,19 @@ func TestCheckTest(t *testing.T) {
 			Correct:  []string{"O2", "O1"},
 			Positive: 2.5,
 			Negative: 1,
+			Tags:     []string{"demo"},
 		},
 	}
 	expectedError = "Negative score less than positive for multi-choice qn: qn1"
 	if err := checkTest(qns); err.Error() != expectedError {
 		t.Errorf("Expected error to be %v. Got: %v", expectedError, err)
+	}
+
+	maxDemoQns = 3
+	var err error
+	questions, err = extractQuizInfo("demo_test.yaml")
+	if err != nil {
+		t.Errorf("Expected error to be nil. Got: %v", err)
 	}
 }
 
