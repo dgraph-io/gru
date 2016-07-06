@@ -45,7 +45,8 @@ type Candidate struct {
 	demoStart    time.Time
 	testStart    time.Time
 	// session id of currently active session.
-	sid string
+	sid          string
+	lastExchange time.Time
 }
 
 var (
@@ -277,22 +278,29 @@ func authenticate(t *interact.Token) (*interact.Session, error) {
 		session = interact.Session{Id: RandStringBytes(36), State: interact.Quiz_DEMO_NOT_TAKEN,
 			TimeLeft:     timeLeft(c.testStart).String(),
 			TestDuration: DURATION.String()}
-	} else {
-		if c, ok = readMap(t.Id); !ok {
-			return nil, errors.New("Invalid token.")
-		}
-		c = candInfo(t.Id)
-		if err := checkToken(c); err != nil {
-			return nil, err
-		}
+		return &session, nil
+	}
+	if c, ok = readMap(t.Id); !ok {
+		return nil, errors.New("Invalid token.")
+	}
+	c = candInfo(t.Id)
+	if err := checkToken(c); err != nil {
+		return nil, err
+	}
+
+	timeUntilLastExchange := time.Now().Sub(c.lastExchange)
+	if c.lastExchange.IsZero() || timeUntilLastExchange > 5*time.Second {
 		session = interact.Session{Id: RandStringBytes(36), State: state(c),
 			TimeLeft:     timeLeft(c.testStart).String(),
 			TestDuration: DURATION.String()}
+		writeLog(c, fmt.Sprintf("%v session_token %s\n", UTCTime(), session.Id))
+		c.sid = session.Id
+		updateMap(t.Id, c)
+		return &session, nil
 	}
-	writeLog(c, fmt.Sprintf("%v session_token %s\n", UTCTime(), session.Id))
-	c.sid = session.Id
-	updateMap(t.Id, c)
-	return &session, nil
+
+	fmt.Println("Duplicate session for same auth token", t.Id, c.name)
+	return nil, errors.New("Duplicate Session. You already have an open session. If not try after 5 seconds.")
 }
 
 func (s *server) Authenticate(ctx context.Context,
@@ -359,6 +367,9 @@ func getQuestion(req *interact.Req) (*interact.Question, error) {
 	if c, ok = readMap(req.Token); !ok {
 		return nil, errors.New("Invalid token.")
 	}
+
+	c.lastExchange = time.Now()
+	updateMap(req.Token, c)
 
 	if c.demoQnsAsked < maxDemoQns {
 		if c.demoQnsAsked == 0 {
@@ -480,6 +491,9 @@ func sendAnswer(resp *interact.Response) (*interact.Status, error) {
 		return &status, errors.New("Invalid token.")
 	}
 
+	c.lastExchange = time.Now()
+	updateMap(resp.Token, c)
+
 	if len(resp.Aid) == 0 {
 		log.Printf("Got empty response for qn:%v, token: %v, session: %v",
 			resp.Qid, resp.Token, resp.Sid)
@@ -529,6 +543,9 @@ func (s *server) Ping(ctx context.Context,
 	c, _ := readMap(stat.Token)
 	writeLog(c, fmt.Sprintf("%v ping %s\n",
 		UTCTime(), stat.CurrQuestion))
+
+	c.lastExchange = time.Now()
+	updateMap(stat.Token, c)
 
 	var sstat interact.ServerStatus
 	if c.demoStart.IsZero() {
