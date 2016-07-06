@@ -538,25 +538,25 @@ func (s *server) Ping(ctx context.Context,
 	// We want to indicate end of demo and test based on time.
 	if c.testStart.IsZero() {
 		demoTimeLeft := timeLeft(c.demoStart)
-		if demoTimeLeft < 0 {
-			// So that now actual test questions are asked.
-			c.demoQnsAsked = maxDemoQns
-			copy(c.questions, removeDemoQns(c.questions))
-			c.demoTaken = true
-			updateMap(stat.Token, c)
-			sstat.Status = "DEMOEND"
+		if demoTimeLeft > 0 {
+			sstat.TimeLeft = demoTimeLeft.String()
 			return &sstat, nil
 		}
-		sstat.TimeLeft = demoTimeLeft.String()
+		// So that now actual test questions are asked.
+		c.demoQnsAsked = maxDemoQns
+		copy(c.questions, removeDemoQns(c.questions))
+		c.demoTaken = true
+		updateMap(stat.Token, c)
+		sstat.Status = "DEMOEND"
 		return &sstat, nil
 	}
 	quizTimeLeft := timeLeft(c.testStart)
-	if quizTimeLeft < 0 {
-		sstat.Status = "END"
-		writeLog(c, fmt.Sprintf("%v test_end\n", UTCTime()))
+	if quizTimeLeft > 0 {
+		sstat.TimeLeft = quizTimeLeft.String()
 		return &sstat, nil
 	}
-	sstat.TimeLeft = quizTimeLeft.String()
+	sstat.Status = "END"
+	writeLog(c, fmt.Sprintf("%v test_end\n", UTCTime()))
 	return &sstat, nil
 }
 
