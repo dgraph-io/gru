@@ -235,6 +235,27 @@ func TestAuthenticate(t *testing.T) {
 		t.Errorf("Expected state to be %d,Got: %d",
 			interact.Quiz_TEST_NOT_TAKEN, s.State)
 	}
+
+	req := &interact.Req{Token: tokenId}
+	getQuestion(req)
+	_, err = authenticate(&token)
+	if err == nil {
+		t.Error("Expected duplicate session error")
+	}
+	time.Sleep(11 * time.Second)
+	s, err = authenticate(&token)
+	if err != nil {
+		t.Error("Should allow a start of new session. Error: ", err)
+	}
+	if s.Id == "" {
+		t.Errorf("Expected non-empty sessionId. Got: %s", s.Id)
+	}
+	token = interact.Token{Id: "test-abcd"}
+	_, err = authenticate(&token)
+
+	if err != nil {
+		t.Error("Demo test token isn't being authenticated. Error: ", err)
+	}
 	//TODO(pawan) - test other values fo State
 
 	c.testStart = time.Now().Add(-2 * time.Hour)

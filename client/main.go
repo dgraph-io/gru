@@ -492,5 +492,4 @@ func main() {
 	})
 
 	termui.Loop()
-
 }
