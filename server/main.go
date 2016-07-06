@@ -49,7 +49,7 @@ type Candidate struct {
 }
 
 var (
-	tls        = flag.Bool("tls", false, "Connection uses TLS if true, else plain TCP")
+	tls        = flag.Bool("tls", true, "Connection uses TLS if true, else plain TCP")
 	certFile   = flag.String("cert_file", "fullchain.pem", "The TLS cert file")
 	keyFile    = flag.String("key_file", "privkey.pem", "The TLS key file")
 	quizFile   = flag.String("quiz", "test.yml", "Input question file")

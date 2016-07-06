@@ -39,6 +39,9 @@ const (
 	// User is being asked to confirm if they want to skip answering the
 	// question.
 	confirmSkip
+	END     = "END"
+	DEMOEND = "DEMOEND"
+	PINGDUR = 5 * time.Second
 )
 
 type clock struct {
@@ -79,7 +82,7 @@ func finalScore(score float32) string {
 	return fmt.Sprintf(strings.Join([]string{"Thank you for taking the test",
 		"Your final score was %4.1f",
 		"We will get in touch with you soon",
-		"Press Ctrl + Q to exit"}, ". "), score)
+		"Press Ctrl + Q to exit."}, ". "), score)
 }
 
 func fetchAndDisplayQn() {
@@ -90,7 +93,7 @@ func fetchAndDisplayQn() {
 
 	try := 0
 	for err != nil {
-		log.Println("Could not get question.Got err: %v", err)
+		log.Printf("Could not get question.Got err: %v", err)
 		q, err = client.GetQuestion(context.Background(),
 			&interact.Req{Repeat: false, Sid: s.Id, Token: *token})
 		try++
@@ -102,13 +105,14 @@ func fetchAndDisplayQn() {
 	s.currentQn = q
 
 	// TODO(pawan) - If he has already taken the demo,don't show the screen again.
-	if q.Id == "DEMOEND" {
+	if q.Id == DEMOEND {
 		clear()
 		s.totalScore = 0.0
 		s.lastScore = 0.0
 		renderInstructionsPage(true)
 		return
-	} else if q.Id == "END" {
+	}
+	if q.Id == END {
 		showFinalPage(finalScore(q.Totscore))
 		return
 	}
@@ -128,20 +132,19 @@ func sendStatus() {
 		return
 	}
 
-	if serverS.Status == "DEMOEND" {
+	if serverS.Status == DEMOEND {
 		// If its a dummy token, show final screen else instructions box.
 		if strings.HasPrefix(*token, "test-") {
 			clear()
 			showFinalPage(finalScore(s.currentQn.Totscore))
 			return
-		} else {
-			clear()
-			renderInstructionsPage(true)
-			return
 		}
+		clear()
+		renderInstructionsPage(true)
+		return
 	}
 
-	if serverS.Status == "END" {
+	if serverS.Status == END {
 		clear()
 		showFinalPage(finalScore(s.currentQn.Totscore))
 		return
@@ -149,7 +152,7 @@ func sendStatus() {
 
 	s.servTime.dur, err = time.ParseDuration(serverS.TimeLeft)
 	if err != nil {
-		log.Println("Error parsing time from server, %v", err)
+		log.Printf("Error parsing time from server, %v", err)
 	}
 
 	s.leftTime.setTimeLeft(s.servTime.dur)
@@ -160,16 +163,16 @@ func startPing() {
 	if s.startedPing {
 		return
 	}
-	ticker := time.NewTicker(time.Second * 5)
+	ticker := time.NewTicker(PINGDUR)
 	go func() {
 	L:
-		for range ticker.C {
+		for {
 			// If the test ends because of time or questions being
 			// over, stop the pings.
 			select {
 			case <-s.testEndCh:
 				break L
-			default:
+			case <-ticker.C:
 				sendStatus()
 			}
 		}
@@ -183,7 +186,7 @@ func initializeTest(tl string) {
 	fetchAndDisplayQn()
 	startPing()
 
-	if s.currentQn.Id == "END" {
+	if s.currentQn.Id == END {
 		return
 	}
 }
