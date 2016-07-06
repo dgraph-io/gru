@@ -233,6 +233,19 @@ func TestAuthenticate(t *testing.T) {
 		t.Errorf("Expected state to be %d,Got: %d",
 			interact.Quiz_TEST_NOT_TAKEN, s.State)
 	}
+
+	req := &interact.Req{Token: tokenId}
+	getQuestion(req)
+	_, err = authenticate(&token)
+	if err == nil {
+		t.Error("Expected duplicate session error")
+	}
+	time.Sleep(6 * time.Second)
+	_, err = authenticate(&token)
+	if err != nil {
+		t.Error("Should allow a start of new session. Error: ", err)
+	}
+
 	//TODO(pawan) - test other values fo State
 
 	c.testStart = time.Now().Add(-2 * time.Hour)
