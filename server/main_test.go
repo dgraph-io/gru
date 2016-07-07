@@ -3,6 +3,7 @@ package main
 import (
 	"io/ioutil"
 	"os"
+	"strings"
 	"testing"
 	"time"
 
@@ -208,10 +209,12 @@ func TestAuthenticate(t *testing.T) {
 	maxDemoQns = 3
 	tokenId := "test_token"
 	var err error
+
 	questions, err = extractQuizInfo("demo_test.yaml")
 	if err != nil {
 		t.Error(err)
 	}
+
 	c := Candidate{email: "pawan@dgraph.io", validity: time.Now().AddDate(0, 0, 7),
 		questions: questions[:]}
 	c.logFile, err = ioutil.TempFile("", "gru")
@@ -219,11 +222,13 @@ func TestAuthenticate(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer os.Remove(c.logFile.Name())
+
 	c.testStart = time.Now().Add(-2 * time.Minute)
 	c.questions = questions[:1]
 	cmap = make(map[string]Candidate)
-	cmap[tokenId] = c
+	updateMap(tokenId, c)
 	token := interact.Token{Id: tokenId}
+
 	s, err := authenticate(&token)
 	if err != nil {
 		t.Errorf("Expected nil error. Got: %s", err.Error())
@@ -236,12 +241,11 @@ func TestAuthenticate(t *testing.T) {
 			interact.Quiz_TEST_NOT_TAKEN, s.State)
 	}
 
-	req := &interact.Req{Token: tokenId}
-	getQuestion(req)
-	_, err = authenticate(&token)
-	if err == nil {
+	s, err = authenticate(&token)
+	if !strings.HasPrefix(err.Error(), "Duplicate Session") {
 		t.Error("Expected duplicate session error")
 	}
+
 	time.Sleep(11 * time.Second)
 	s, err = authenticate(&token)
 	if err != nil {
@@ -250,6 +254,7 @@ func TestAuthenticate(t *testing.T) {
 	if s.Id == "" {
 		t.Errorf("Expected non-empty sessionId. Got: %s", s.Id)
 	}
+
 	token = interact.Token{Id: "test-abcd"}
 	_, err = authenticate(&token)
 

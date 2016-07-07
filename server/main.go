@@ -299,6 +299,7 @@ func authenticate(t *interact.Token) (*interact.Session, error) {
 		TestDuration: DURATION.String()}
 	writeLog(c, fmt.Sprintf("%v session_token %s\n", UTCTime(), session.Id))
 	c.sid = session.Id
+	c.lastExchange = time.Now()
 	updateMap(t.Id, c)
 	return &session, nil
 }
