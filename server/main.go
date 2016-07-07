@@ -364,6 +364,7 @@ func nextQuestion(c Candidate, token string, qnType string) (*interact.Question,
 }
 
 func getQuestion(req *interact.Req, c Candidate) (*interact.Question, error) {
+	c = candInfo(req.Token)
 	c.lastExchange = time.Now()
 	updateMap(req.Token, c)
 
@@ -480,6 +481,7 @@ func writeLog(c Candidate, s string) {
 func sendAnswer(resp *interact.Response, c Candidate) (*interact.Status, error) {
 	var status interact.Status
 
+	c = candInfo(resp.Token)
 	c.lastExchange = time.Now()
 	updateMap(resp.Token, c)
 	if len(resp.Aid) == 0 {
