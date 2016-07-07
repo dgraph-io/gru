@@ -541,7 +541,6 @@ func (s *server) Ping(ctx context.Context,
 	c.lastExchange = time.Now()
 	updateMap(stat.Token, c)
 
-	var sstat interact.ServerStatus
 	if c.demoStart.IsZero() {
 		log.Printf("Got ping before demo for Cand: %v", c.name)
 		return &sstat, nil
