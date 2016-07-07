@@ -1,3 +1,19 @@
+/*
+ * Copyright 2016 DGraph Labs, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * 		http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package main
 
 import (
@@ -88,22 +104,30 @@ func finalScore(score float32) string {
 }
 
 func fetchAndDisplayQn() {
+	var q *interact.Question
+	var err error
 	client := interact.NewGruQuizClient(conn)
-
-	ctx, _ := context.WithTimeout(context.Background(), TIMEOUT)
-	q, err := client.GetQuestion(ctx,
-		&interact.Req{Repeat: false, Sid: s.Id, Token: *token})
-
 	try := 0
-	for err != nil {
-		statusNoConnection()
-		log.Printf("Could not get question.Got err: %v", err)
+	ticker := time.NewTicker(TIMEOUT).C
+
+	for {
+		ctx, cancel := context.WithTimeout(context.Background(), TIMEOUT)
 		q, err = client.GetQuestion(ctx,
 			&interact.Req{Repeat: false, Sid: s.Id, Token: *token})
+		cancel()
 		try++
-		if try > NUMRETRY {
-			showErrorPage()
+		if err == nil {
+			break
 		}
+
+		if try >= NUMRETRY {
+			showErrorPage()
+			return
+		}
+
+		statusNoConnection()
+		log.Printf("Could not get question.Got err: %v", err)
+		<-ticker
 	}
 	statusConnected()
 	s.currentQn = q
@@ -133,23 +157,23 @@ func sendStatus(pingFail *int) {
 		*token,
 	}
 	client := interact.NewGruQuizClient(conn)
-	ctx, _ := context.WithTimeout(context.Background(), TIMEOUT)
-	serverS, err := client.Ping(ctx, &status)
-	// TODO - Retry here and don't show error page till X mins.
+	ctx, cancel := context.WithTimeout(context.Background(), TIMEOUT)
+	serverStat, err := client.Ping(ctx, &status)
+	cancel()
 	if err != nil {
 		(*pingFail)++
 		log.Println("While sending ping", err)
 		if (*pingFail) > NUMRETRY {
 			showErrorPage()
-			return
+		} else {
+			statusNoConnection()
 		}
-		statusNoConnection()
 		return
 	}
 	*pingFail = 0
 	statusConnected()
 
-	if serverS.Status == DEMOEND {
+	if serverStat.Status == DEMOEND {
 		// If its a dummy token, show final screen else instructions box.
 		if strings.HasPrefix(*token, "test-") {
 			clear()
@@ -161,13 +185,13 @@ func sendStatus(pingFail *int) {
 		return
 	}
 
-	if serverS.Status == END {
+	if serverStat.Status == END {
 		clear()
 		showFinalPage(finalScore(s.currentQn.Totscore))
 		return
 	}
 
-	s.servTime.dur, err = time.ParseDuration(serverS.TimeLeft)
+	s.servTime.dur, err = time.ParseDuration(serverStat.TimeLeft)
 	if err != nil {
 		log.Printf("Error parsing time from server, %v", err)
 	}
@@ -275,19 +299,27 @@ func enterHandler(e termui.Event, q *interact.Question, selected []string,
 		}
 		resp := interact.Response{Qid: q.Id, Aid: answerIds,
 			Sid: s.Id, Token: *token}
+
 		client := interact.NewGruQuizClient(conn)
-		ctx, _ := context.WithTimeout(context.Background(), TIMEOUT)
-		_, err := client.SendAnswer(ctx, &resp)
 		try := 0
-		for err != nil {
-			log.Println("While sending Answer", err)
-			statusNoConnection()
-			_, err = client.SendAnswer(ctx, &resp)
+		ticker := time.NewTicker(TIMEOUT).C
+		for {
+			ctx, cancel := context.WithTimeout(context.Background(), TIMEOUT)
+			_, err := client.SendAnswer(ctx, &resp)
+			cancel()
 			try++
-			if try > NUMRETRY {
+			if err == nil {
+				break
+			}
+
+			if try >= NUMRETRY {
 				showErrorPage()
 				return
 			}
+
+			statusNoConnection()
+			log.Println("While sending Answer", err)
+			<-ticker
 		}
 		statusConnected()
 		fetchAndDisplayQn()
@@ -318,7 +350,7 @@ func populateQuestionsPage(q *interact.Question) {
 	}
 
 	// Selected contains the options user has already selected.
-	selected := []string{}
+	var selected []string
 	s.showingAns = false
 	// This is the body of the answer which has all the options.
 	ansBody := ""
@@ -479,8 +511,9 @@ func main() {
 	}
 
 	client := interact.NewGruQuizClient(conn)
-	ctx, _ := context.WithTimeout(context.Background(), TIMEOUT)
+	ctx, cancel := context.WithTimeout(context.Background(), TIMEOUT)
 	ses, err := client.Authenticate(ctx, &interact.Token{Id: *token})
+	cancel()
 	if err != nil {
 		log.Println(err)
 		errorPage.Text = grpc.ErrorDesc(err) + " Press Ctrl+Q to exit and try again."
