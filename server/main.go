@@ -179,6 +179,10 @@ func candInfo(token string) Candidate {
 	// This indicates candidate info exists in memory and the client could
 	// have crashed.
 	c, _ := readMap(token)
+	// We don't want to load up cand info for dummy test candidates.
+	if strings.HasPrefix(token, "test-") {
+		return c
+	}
 	if len(c.questions) > 0 || c.demoTaken {
 		return c
 	}
