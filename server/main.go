@@ -386,12 +386,13 @@ func getQuestion(req *interact.Req) (*interact.Question, error) {
 
 	if c.demoQnsAsked == maxDemoQns && c.testStart.IsZero() {
 		if !c.demoTaken {
-			c.score = 0
 			c.demoTaken = true
 			updateMap(req.Token, c)
-			return &interact.Question{Id: "DEMOEND", Totscore: 0},
+			return &interact.Question{Id: "DEMOEND", Totscore: c.score},
 				nil
 		}
+		c.score = 0
+		updateMap(req.Token, c)
 		// This means it is his first test question.
 		writeLog(c, fmt.Sprintf("%v test_start\n", UTCTime()))
 		c.testStart = time.Now().UTC()

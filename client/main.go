@@ -108,8 +108,12 @@ func fetchAndDisplayQn() {
 	statusConnected()
 	s.currentQn = q
 
-	// TODO(pawan) - If he has already taken the demo,don't show the screen again.
 	if q.Id == DEMOEND {
+		if strings.HasPrefix(*token, "test-") {
+			clear()
+			showFinalPage(finalScore(s.currentQn.Totscore))
+			return
+		}
 		clear()
 		s.totalScore = 0.0
 		s.lastScore = 0.0
