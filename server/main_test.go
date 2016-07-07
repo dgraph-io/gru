@@ -126,8 +126,10 @@ func TestGetQuestion(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
+	cmap = make(map[string]Candidate)
 	parseCandidateFile("cand_test.txt")
-	c := cmap["abcd1234"]
+	token := "abcd1234"
+	c, _ := readMap(token)
 	c.questions = make([]Question, len(questions))
 	c.logFile, err = ioutil.TempFile("", "gru")
 	if err != nil {
@@ -135,7 +137,7 @@ func TestGetQuestion(t *testing.T) {
 	}
 	defer os.Remove(c.logFile.Name())
 	copy(c.questions, questions)
-	cmap["abcd1234"] = c
+	updateMap(token, c)
 
 	req := &interact.Req{Token: "abcd1234"}
 	q1, err := getQuestion(req)
@@ -145,21 +147,26 @@ func TestGetQuestion(t *testing.T) {
 	if q1.Id == END {
 		t.Errorf("Expected q.Id not to be %s", END)
 	}
+
+	c, _ = readMap(token)
 	q2, err := getQuestion(req)
 	if q2.Id == q1.Id {
 		t.Errorf("Expected %s to be different from %s", q2.Id, q1.Id)
 	}
 
+	c, _ = readMap(token)
 	q3, err := getQuestion(req)
 	if q3.Id != "demo-3" {
 		t.Errorf("Expected qn Id to be %v. Got: %v", "demo-3", q3.Id)
 	}
 
+	c, _ = readMap(token)
 	q4, err := getQuestion(req)
 	if q4.Id != "DEMOEND" {
 		t.Errorf("Expected qn Id to be %v. Got: %v", "DEMOEND", q4.Id)
 	}
 
+	c, _ = readMap(token)
 	q5, err := getQuestion(req)
 	if q5.Id != "test-2" {
 		t.Errorf("Expected qn Id to be %v. Got: %v", "test-2", q5.Id)
@@ -170,6 +177,7 @@ func TestGetQuestion(t *testing.T) {
 			len(cmap["abcd1234"].questions))
 	}
 
+	c, _ = readMap(token)
 	q, err := getQuestion(req)
 	if err != nil {
 		t.Error(err)
@@ -299,6 +307,7 @@ func TestAuthenticate(t *testing.T) {
 }
 
 func TestLoadCandInfo(t *testing.T) {
+	maxDemoQns = 3
 	tokenId := "test_token"
 	c := Candidate{email: "pawan@dgraph.io", validity: time.Now().AddDate(0, 0, 7)}
 	cmap = make(map[string]Candidate)
@@ -314,6 +323,12 @@ func TestLoadCandInfo(t *testing.T) {
 	}
 	if c.score != 10.0 {
 		t.Errorf("Expected score %f. Got: %f", 10.0, c.score)
+	}
+	if !c.demoTaken {
+		t.Errorf("Expected demoTaken to be true")
+	}
+	if c.demoQnsAsked != 3 {
+		t.Errorf("Expected demoQnsAsked to be 3. Got: %d", c.demoQnsAsked)
 	}
 }
 
