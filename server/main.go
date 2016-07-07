@@ -363,8 +363,8 @@ func nextQuestion(c Candidate, token string, qnType string) (*interact.Question,
 			qnType, token)
 }
 
-func getQuestion(req *interact.Req, c Candidate) (*interact.Question, error) {
-	c = candInfo(req.Token)
+func getQuestion(req *interact.Req) (*interact.Question, error) {
+	c, _ := readMap(req.Token)
 	c.lastExchange = time.Now()
 	updateMap(req.Token, c)
 
@@ -422,12 +422,12 @@ func isValidSession(token string, sid string) (Candidate, error) {
 
 func (s *server) GetQuestion(ctx context.Context,
 	req *interact.Req) (*interact.Question, error) {
-	c, err := isValidSession(req.Token, req.Sid)
+	_, err := isValidSession(req.Token, req.Sid)
 	if err != nil {
 		return &interact.Question{}, err
 	}
 
-	return getQuestion(req, c)
+	return getQuestion(req)
 }
 
 func isCorrectAnswer(resp *interact.Response) (int, float32) {
@@ -478,10 +478,10 @@ func writeLog(c Candidate, s string) {
 	wrtLock.Unlock()
 }
 
-func sendAnswer(resp *interact.Response, c Candidate) (*interact.Status, error) {
+func sendAnswer(resp *interact.Response) (*interact.Status, error) {
 	var status interact.Status
 
-	c = candInfo(resp.Token)
+	c, _ := readMap(resp.Token)
 	c.lastExchange = time.Now()
 	updateMap(resp.Token, c)
 	if len(resp.Aid) == 0 {
@@ -508,11 +508,11 @@ func sendAnswer(resp *interact.Response, c Candidate) (*interact.Status, error) 
 
 func (s *server) SendAnswer(ctx context.Context,
 	resp *interact.Response) (*interact.Status, error) {
-	c, err := isValidSession(resp.Token, resp.Sid)
+	_, err := isValidSession(resp.Token, resp.Sid)
 	if err != nil {
 		return &interact.Status{}, err
 	}
-	return sendAnswer(resp, c)
+	return sendAnswer(resp)
 }
 
 func timeLeft(ts time.Time) time.Duration {

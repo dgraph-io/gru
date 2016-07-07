@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"io/ioutil"
 	"os"
 	"strings"
@@ -141,7 +140,7 @@ func TestGetQuestion(t *testing.T) {
 	updateMap(token, c)
 
 	req := &interact.Req{Token: "abcd1234"}
-	q1, err := getQuestion(req, c)
+	q1, err := getQuestion(req)
 	if err != nil {
 		t.Error(err)
 	}
@@ -150,26 +149,25 @@ func TestGetQuestion(t *testing.T) {
 	}
 
 	c, _ = readMap(token)
-	q2, err := getQuestion(req, c)
-	fmt.Println(q1)
+	q2, err := getQuestion(req)
 	if q2.Id == q1.Id {
 		t.Errorf("Expected %s to be different from %s", q2.Id, q1.Id)
 	}
 
 	c, _ = readMap(token)
-	q3, err := getQuestion(req, c)
+	q3, err := getQuestion(req)
 	if q3.Id != "demo-3" {
 		t.Errorf("Expected qn Id to be %v. Got: %v", "demo-3", q3.Id)
 	}
 
 	c, _ = readMap(token)
-	q4, err := getQuestion(req, c)
+	q4, err := getQuestion(req)
 	if q4.Id != "DEMOEND" {
 		t.Errorf("Expected qn Id to be %v. Got: %v", "DEMOEND", q4.Id)
 	}
 
 	c, _ = readMap(token)
-	q5, err := getQuestion(req, c)
+	q5, err := getQuestion(req)
 	if q5.Id != "test-2" {
 		t.Errorf("Expected qn Id to be %v. Got: %v", "test-2", q5.Id)
 	}
@@ -180,7 +178,7 @@ func TestGetQuestion(t *testing.T) {
 	}
 
 	c, _ = readMap(token)
-	q, err := getQuestion(req, c)
+	q, err := getQuestion(req)
 	if err != nil {
 		t.Error(err)
 	}
@@ -355,7 +353,7 @@ func TestSendAnswer(t *testing.T) {
 	cmap = make(map[string]Candidate)
 	cmap["test_token"] = c
 
-	_, err = sendAnswer(&r, c)
+	_, err = sendAnswer(&r)
 	if err != nil {
 		t.Error("Expected error to be nil.")
 	}
@@ -366,7 +364,7 @@ func TestSendAnswer(t *testing.T) {
 	cmap["test_token"] = c
 
 	r.Aid = []string{"demo-2b"}
-	_, err = sendAnswer(&r, c)
+	_, err = sendAnswer(&r)
 	if err != nil {
 		t.Error("Expected error to be nil.")
 	}
@@ -377,7 +375,7 @@ func TestSendAnswer(t *testing.T) {
 	c.score = 0.0
 	cmap["test_token"] = c
 	r.Aid = []string{"skip"}
-	_, err = sendAnswer(&r, c)
+	_, err = sendAnswer(&r)
 	if err != nil {
 		t.Error("Expected error to be nil.")
 	}
@@ -502,7 +500,7 @@ func TestCandfileRead(t *testing.T) {
 	cmap["wxwwr43e332"] = c
 
 	req := &interact.Req{Token: "wxwwr43e332"}
-	_, err = getQuestion(req, c)
+	_, err = getQuestion(req)
 	if err != nil {
 		t.Error(err)
 	}
