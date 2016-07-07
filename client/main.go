@@ -104,26 +104,28 @@ func finalScore(score float32) string {
 }
 
 func fetchAndDisplayQn() {
+	var q *interact.Question
+	var err error
 	client := interact.NewGruQuizClient(conn)
-
-	ctx, cancel := context.WithTimeout(context.Background(), TIMEOUT)
-	q, err := client.GetQuestion(ctx,
-		&interact.Req{Repeat: false, Sid: s.Id, Token: *token})
-	cancel()
 	try := 0
 	ticker := time.NewTicker(TIMEOUT).C
-	for err != nil {
-		statusNoConnection()
-		log.Printf("Could not get question.Got err: %v", err)
+
+	for {
 		ctx, cancel := context.WithTimeout(context.Background(), TIMEOUT)
 		q, err = client.GetQuestion(ctx,
 			&interact.Req{Repeat: false, Sid: s.Id, Token: *token})
 		cancel()
-		<-ticker
 		try++
-		if try > NUMRETRY {
+		if err == nil {
+			break
+		} else if try < NUMRETRY {
+			statusNoConnection()
+			log.Printf("Could not get question.Got err: %v", err)
+		} else {
 			showErrorPage()
+			return
 		}
+		<-ticker
 	}
 	statusConnected()
 	s.currentQn = q
@@ -161,9 +163,9 @@ func sendStatus(pingFail *int) {
 		log.Println("While sending ping", err)
 		if (*pingFail) > NUMRETRY {
 			showErrorPage()
-			return
+		} else {
+			statusNoConnection()
 		}
-		statusNoConnection()
 		return
 	}
 	*pingFail = 0
@@ -295,24 +297,25 @@ func enterHandler(e termui.Event, q *interact.Question, selected []string,
 		}
 		resp := interact.Response{Qid: q.Id, Aid: answerIds,
 			Sid: s.Id, Token: *token}
+
 		client := interact.NewGruQuizClient(conn)
-		ctx, cancel := context.WithTimeout(context.Background(), TIMEOUT)
-		_, err := client.SendAnswer(ctx, &resp)
-		cancel()
 		try := 0
 		ticker := time.NewTicker(TIMEOUT).C
-		for err != nil {
-			log.Println("While sending Answer", err)
-			statusNoConnection()
+		for {
 			ctx, cancel := context.WithTimeout(context.Background(), TIMEOUT)
-			_, err = client.SendAnswer(ctx, &resp)
+			_, err := client.SendAnswer(ctx, &resp)
 			cancel()
-			<-ticker
 			try++
-			if try > NUMRETRY {
+			if err == nil {
+				break
+			} else if try < NUMRETRY {
+				statusNoConnection()
+				log.Println("While sending Answer", err)
+			} else {
 				showErrorPage()
 				return
 			}
+			<-ticker
 		}
 		statusConnected()
 		fetchAndDisplayQn()
