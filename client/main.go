@@ -118,13 +118,15 @@ func fetchAndDisplayQn() {
 		try++
 		if err == nil {
 			break
-		} else if try < NUMRETRY {
-			statusNoConnection()
-			log.Printf("Could not get question.Got err: %v", err)
-		} else {
+		}
+
+		if try >= NUMRETRY {
 			showErrorPage()
 			return
 		}
+
+		statusNoConnection()
+		log.Printf("Could not get question.Got err: %v", err)
 		<-ticker
 	}
 	statusConnected()
@@ -308,13 +310,15 @@ func enterHandler(e termui.Event, q *interact.Question, selected []string,
 			try++
 			if err == nil {
 				break
-			} else if try < NUMRETRY {
-				statusNoConnection()
-				log.Println("While sending Answer", err)
-			} else {
+			}
+
+			if try >= NUMRETRY {
 				showErrorPage()
 				return
 			}
+
+			statusNoConnection()
+			log.Println("While sending Answer", err)
 			<-ticker
 		}
 		statusConnected()
