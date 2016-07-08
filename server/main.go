@@ -41,12 +41,14 @@ import (
 )
 
 const (
-	DEMO          = "demo"
-	QUIZ          = "quiz"
-	END           = "END"
-	DEMO_END      = "DEMOEND"
-	DEMO_DURATION = 10 * time.Minute
-	QUIZ_DURATION = 60 * time.Minute
+	DEMO           = "demo"
+	QUIZ           = "quiz"
+	END            = "END"
+	demoEnd        = "DEMOEND"
+	demoDuration   = 10 * time.Minute
+	quizDuration   = 60 * time.Minute
+	maxDemoQns     = 8
+	demoQnsBfrQuiz = 3
 )
 
 type Candidate struct {
@@ -58,6 +60,7 @@ type Candidate struct {
 	questions []Question
 	// count of demo qns asked.
 	demoQnsAsked int
+	demoQnsToAsk int
 	demoTaken    bool
 	logFile      *os.File
 	demoStart    time.Time
@@ -68,13 +71,12 @@ type Candidate struct {
 }
 
 var (
-	tls        = flag.Bool("tls", true, "Connection uses TLS if true, else plain TCP")
-	certFile   = flag.String("cert_file", "fullchain.pem", "The TLS cert file")
-	keyFile    = flag.String("key_file", "privkey.pem", "The TLS key file")
-	quizFile   = flag.String("quiz", "quiz.yml", "Input question file")
-	port       = flag.String("port", ":443", "Port on which server listens")
-	candFile   = flag.String("cand", "candidates.txt", "Candidate inforamation")
-	maxDemoQns = 8
+	tls      = flag.Bool("tls", true, "Connection uses TLS if true, else plain TCP")
+	certFile = flag.String("cert_file", "fullchain.pem", "The TLS cert file")
+	keyFile  = flag.String("key_file", "privkey.pem", "The TLS key file")
+	quizFile = flag.String("quiz", "quiz.yml", "Input question file")
+	port     = flag.String("port", ":443", "Port on which server listens")
+	candFile = flag.String("cand", "candidates.txt", "Candidate inforamation")
 	// List of question ids.
 	questions []Question
 	cmap      map[string]Candidate
@@ -90,11 +92,11 @@ func checkToken(c Candidate) error {
 	}
 	// Initially quizStart is zero, but after candidate has taken the
 	// quiz once, it shouldn't be zero.
-	if !c.quizStart.IsZero() && time.Now().UTC().After(c.quizStart.Add(QUIZ_DURATION)) {
+	if !c.quizStart.IsZero() && time.Now().UTC().After(c.quizStart.Add(quizDuration)) {
 		// TODO - Show duration elapsed in minutes.
 		return errors.New(fmt.Sprintf(
 			"%v since you started the quiz for the first time are already over.",
-			QUIZ_DURATION))
+			quizDuration))
 	}
 	return nil
 }
@@ -186,7 +188,7 @@ func (c *Candidate) loadCandInfo(token string) error {
 			}
 			// We only want to add score from actual quiz questions
 			// and not demo qns.
-			if len(qnsAsked) > maxDemoQns {
+			if len(qnsAsked) > demoQnsBfrQuiz {
 				score += float32(s)
 			}
 		case "question":
@@ -202,8 +204,8 @@ func (c *Candidate) loadCandInfo(token string) error {
 	c.score = score
 	c.logFile = f
 	c.questions = sliceDiff(questions, qnsAsked)
-	if len(qnsAsked) >= maxDemoQns {
-		c.demoQnsAsked = maxDemoQns
+	if len(qnsAsked) >= demoQnsBfrQuiz {
+		c.demoQnsAsked = demoQnsBfrQuiz
 		c.demoTaken = true
 	} else {
 		c.demoQnsAsked = len(qnsAsked)
@@ -280,6 +282,7 @@ func demoCandInfo(token string) Candidate {
 	c.name = token
 	c.email = "no-mail@given"
 	c.validity = time.Now().Add(time.Duration(100 * time.Hour))
+	c.demoQnsToAsk = maxDemoQns
 
 	if _, err := os.Stat(fmt.Sprintf("logs/%s.log", token)); os.IsNotExist(err) {
 		f, err := os.OpenFile(fmt.Sprintf("logs/%s.log", token),
@@ -300,10 +303,10 @@ func state(c Candidate) interact.QuizState {
 	if len(c.questions) == len(questions) {
 		return interact.Quiz_DEMO_NOT_TAKEN
 	}
-	if len(questions)-len(c.questions) < maxDemoQns {
+	if len(questions)-len(c.questions) < c.demoQnsToAsk {
 		return interact.Quiz_DEMO_STARTED
 	}
-	if len(questions)-len(c.questions) == maxDemoQns {
+	if len(questions)-len(c.questions) == c.demoQnsToAsk {
 		return interact.Quiz_TEST_NOT_TAKEN
 	}
 	if len(c.questions) == 0 {
@@ -323,9 +326,9 @@ func (s *server) Authenticate(ctx context.Context,
 		session = interact.Session{
 			Id:           RandStringBytes(36),
 			State:        interact.Quiz_DEMO_NOT_TAKEN,
-			TimeLeft:     timeLeft(DEMO_DURATION, c.demoStart).String(),
-			TestDuration: QUIZ_DURATION.String(),
-			DemoDuration: DEMO_DURATION.String(),
+			TimeLeft:     timeLeft(demoDuration, c.demoStart).String(),
+			TestDuration: quizDuration.String(),
+			DemoDuration: demoDuration.String(),
 		}
 		return &session, nil
 	}
@@ -350,14 +353,14 @@ func (s *server) Authenticate(ctx context.Context,
 	session = interact.Session{
 		Id:           RandStringBytes(36),
 		State:        state(c),
-		TestDuration: QUIZ_DURATION.String(),
-		DemoDuration: DEMO_DURATION.String(),
+		TestDuration: quizDuration.String(),
+		DemoDuration: demoDuration.String(),
 	}
 
 	if state(c) == interact.Quiz_DEMO_NOT_TAKEN || state(c) == interact.Quiz_DEMO_STARTED {
-		session.TimeLeft = timeLeft(DEMO_DURATION, c.demoStart).String()
+		session.TimeLeft = timeLeft(demoDuration, c.demoStart).String()
 	} else {
-		session.TimeLeft = timeLeft(QUIZ_DURATION, c.quizStart).String()
+		session.TimeLeft = timeLeft(quizDuration, c.quizStart).String()
 	}
 	writeLog(c, fmt.Sprintf("%v session_token %s\n", UTCTime(), session.Id))
 	c.sid = session.Id
@@ -424,7 +427,7 @@ func getQuestion(req *interact.Req) (*interact.Question, error) {
 	c.lastExchange = time.Now()
 	updateMap(req.Token, c)
 
-	if c.demoQnsAsked < maxDemoQns {
+	if c.demoQnsAsked < c.demoQnsToAsk {
 		if c.demoQnsAsked == 0 {
 			c.demoStart = time.Now().UTC()
 			writeLog(c, fmt.Sprintf("%v demo_start\n", UTCTime()))
@@ -437,11 +440,11 @@ func getQuestion(req *interact.Req) (*interact.Question, error) {
 		return q, nil
 	}
 
-	if c.demoQnsAsked == maxDemoQns && c.quizStart.IsZero() {
+	if c.demoQnsAsked == c.demoQnsToAsk && c.quizStart.IsZero() {
 		if !c.demoTaken {
 			c.demoTaken = true
 			updateMap(req.Token, c)
-			return &interact.Question{Id: DEMO_END,
+			return &interact.Question{Id: demoEnd,
 				Score: c.score}, nil
 		}
 		c.score = 0
@@ -603,20 +606,20 @@ func (s *server) Ping(ctx context.Context,
 	// We want to indicate end of demo and quiz based on time. If quiz did
 	// not start yet we send time left for demo.
 	if c.quizStart.IsZero() {
-		demoTimeLeft := timeLeft(DEMO_DURATION, c.demoStart)
+		demoTimeLeft := timeLeft(demoDuration, c.demoStart)
 		if demoTimeLeft > 0 {
 			sstat.TimeLeft = demoTimeLeft.String()
 			return &sstat, nil
 		}
 		// So that now actual quiz questions are asked.
-		c.demoQnsAsked = maxDemoQns
+		c.demoQnsAsked = demoQnsBfrQuiz
 		c.demoTaken = true
 		updateMap(stat.Token, c)
-		sstat.Status = DEMO_END
+		sstat.Status = demoEnd
 		return &sstat, nil
 	}
 
-	quizTimeLeft := timeLeft(QUIZ_DURATION, c.quizStart)
+	quizTimeLeft := timeLeft(quizDuration, c.quizStart)
 	if quizTimeLeft > 0 {
 		sstat.TimeLeft = quizTimeLeft.String()
 		return &sstat, nil
@@ -681,6 +684,7 @@ func parseCandidateFile(file string) error {
 		}
 
 		var c Candidate
+		c.demoQnsToAsk = demoQnsBfrQuiz
 		c.name = strings.Join(splits[:2], " ")
 		c.email = splits[2]
 		c.validity, err = time.Parse(format,
