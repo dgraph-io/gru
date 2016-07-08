@@ -54,7 +54,7 @@ message Question {
 	bool isMultiple = 4;
 	float positive = 6;
 	float negative = 7;
-	float totscore = 8;
+	float score = 8;
 }
 
 message Answer {

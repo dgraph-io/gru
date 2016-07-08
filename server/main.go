@@ -1,3 +1,19 @@
+/*
+ * Copyright 2016 DGraph Labs, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * 		http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package main
 
 import (
@@ -26,7 +42,7 @@ import (
 
 const (
 	DEMO     = "demo"
-	TEST     = "test"
+	QUIZ     = "quiz"
 	END      = "END"
 	DURATION = 60 * time.Minute
 )
@@ -36,7 +52,7 @@ type Candidate struct {
 	email    string
 	validity time.Time
 	score    float32
-	// List of test questions that have not been asked to the candidate yet.
+	// List of quiz questions that have not been asked to the candidate yet.
 	questions []Question
 	// count of demo qns asked.
 	demoQnsAsked int
@@ -133,6 +149,11 @@ func (c *Candidate) loadCandInfo(token string) error {
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
 		splits := strings.Split(line, " ")
+		if len(splits) < 4 {
+			log.Printf("Log for token: %v, line: %v has less than 4 words",
+				token, line)
+			continue
+		}
 		if splits[3] == "session_token" {
 			continue
 		}
@@ -151,6 +172,12 @@ func (c *Candidate) loadCandInfo(token string) error {
 				return err
 			}
 		case "response":
+			if len(splits) < 7 {
+				log.Printf(
+					"Response log for token: %v, line: %v has less than 7 words",
+					token, line)
+				continue
+			}
 			s, err := strconv.ParseFloat(splits[6], 32)
 			if err != nil {
 				return err
@@ -161,6 +188,12 @@ func (c *Candidate) loadCandInfo(token string) error {
 				score += float32(s)
 			}
 		case "question":
+			if len(splits) < 5 {
+				log.Printf(
+					"Question log for token: %v, line: %v has less than 5 words",
+					token, line)
+				continue
+			}
 			qnsAsked = append(qnsAsked, splits[4])
 		}
 	}
@@ -176,16 +209,13 @@ func (c *Candidate) loadCandInfo(token string) error {
 	return nil
 }
 
-func candInfo(token string) Candidate {
-	// This indicates candidate info exists in memory and the client could
-	// have crashed.
-	c, _ := readMap(token)
+func candInfo(token string, c Candidate) (Candidate, error) {
 	// We don't want to load up cand info for dummy test candidates.
 	if strings.HasPrefix(token, "test-") {
-		return c
+		return c, nil
 	}
 	if len(c.questions) > 0 || c.demoTaken {
-		return c
+		return c, nil
 	}
 
 	// If file for the token doesn't exist means client is trying to connect
@@ -194,25 +224,24 @@ func candInfo(token string) Candidate {
 		f, err := os.OpenFile(fmt.Sprintf("logs/%s.log", token),
 			os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 		if err != nil {
-			log.Fatalf("error opening file: %v", err)
+			return c, err
 		}
 		c.logFile = f
 		c.questions = make([]Question, len(questions))
 		copy(c.questions, questions)
 		updateMap(token, c)
-		return c
+		return c, nil
 	}
+
+	var err error
 	// If we reach here it means logfile for candidate exists but his info
 	// doesn't exist in memory, so we need to load it back from the file.
-	// TODO - Don't allow multiple sessions simultaneously.
-	var err error
 	err = c.loadCandInfo(token)
 	if err != nil {
-		log.Fatalf("error while reading candidate info from log file,token: %s",
-			token)
+		return c, err
 	}
 	updateMap(token, c)
-	return c
+	return c, nil
 }
 
 func stringInSlice(a string, list []string) bool {
@@ -224,16 +253,24 @@ func stringInSlice(a string, list []string) bool {
 	return false
 }
 
+func shuffle(qns []Question) {
+	for i, _ := range qns {
+		j := rand.Intn(i + 1)
+		qns[i], qns[j] = qns[j], qns[i]
+	}
+}
+
 func onlyDemoQuestions() []Question {
-	var que []Question
+	var qns []Question
 	count := 0
 	for _, x := range questions {
 		if stringInSlice("demo", x.Tags) && count < maxDemoQns {
-			que = append(que, x)
+			qns = append(qns, x)
 			count++
 		}
 	}
-	return que
+	shuffle(qns)
+	return qns
 }
 
 func demoCandInfo(token string) Candidate {
@@ -273,24 +310,32 @@ func state(c Candidate) interact.QuizState {
 	return interact.Quiz_TEST_STARTED
 }
 
-func authenticate(t *interact.Token) (*interact.Session, error) {
+func (s *server) Authenticate(ctx context.Context,
+	t *interact.Token) (*interact.Session, error) {
 	var c Candidate
 	var ok bool
 	var session interact.Session
 
 	if strings.HasPrefix(t.Id, "test-") {
 		c = demoCandInfo(t.Id)
-		session = interact.Session{Id: RandStringBytes(36), State: interact.Quiz_DEMO_NOT_TAKEN,
+		session = interact.Session{
+			Id:           RandStringBytes(36),
+			State:        interact.Quiz_DEMO_NOT_TAKEN,
 			TimeLeft:     timeLeft(c.testStart).String(),
-			TestDuration: DURATION.String()}
+			TestDuration: DURATION.String(),
+		}
 		return &session, nil
 	}
 	if c, ok = readMap(t.Id); !ok {
 		return nil, errors.New("Invalid token.")
 	}
-	c = candInfo(t.Id)
-	if err := checkToken(c); err != nil {
-		return nil, err
+
+	var err error
+	if c, err = candInfo(t.Id, c); err != nil {
+		return &session, err
+	}
+	if err = checkToken(c); err != nil {
+		return &session, err
 	}
 
 	timeSinceLastExchange := time.Now().Sub(c.lastExchange)
@@ -299,19 +344,17 @@ func authenticate(t *interact.Token) (*interact.Session, error) {
 		return nil, errors.New("Duplicate Session. You already have an open session. If not try after 10 seconds.")
 	}
 
-	session = interact.Session{Id: RandStringBytes(36), State: state(c),
+	session = interact.Session{
+		Id:           RandStringBytes(36),
+		State:        state(c),
 		TimeLeft:     timeLeft(c.testStart).String(),
-		TestDuration: DURATION.String()}
+		TestDuration: DURATION.String(),
+	}
 	writeLog(c, fmt.Sprintf("%v session_token %s\n", UTCTime(), session.Id))
 	c.sid = session.Id
 	c.lastExchange = time.Now()
 	updateMap(t.Id, c)
 	return &session, nil
-}
-
-func (s *server) Authenticate(ctx context.Context,
-	t *interact.Token) (*interact.Session, error) {
-	return authenticate(t)
 }
 
 type Option struct {
@@ -342,14 +385,14 @@ func formQuestion(q Question, score float32) *interact.Question {
 	}
 	return &interact.Question{Id: q.Id, Str: q.Str, Options: opts,
 		IsMultiple: isM, Positive: q.Positive, Negative: q.Negative,
-		Totscore: score}
+		Score: score}
 }
 
 func nextQuestion(c Candidate, token string, qnType string) (*interact.Question,
 	error) {
 	for idx, q := range c.questions {
 		for _, t := range q.Tags {
-			// For now qnType can just be "demo" or "test", later
+			// For now qnType can just be "demo" or "quiz", later
 			// it would have the difficulity level too.
 			if qnType == t {
 				c.questions = append(c.questions[:idx],
@@ -390,7 +433,7 @@ func getQuestion(req *interact.Req) (*interact.Question, error) {
 			c.demoTaken = true
 			updateMap(req.Token, c)
 			return &interact.Question{Id: "DEMOEND",
-				Totscore: c.score}, nil
+				Score: c.score}, nil
 		}
 		c.score = 0
 		updateMap(req.Token, c)
@@ -401,7 +444,7 @@ func getQuestion(req *interact.Req) (*interact.Question, error) {
 	q, err := nextQuestion(c, req.Token, TEST)
 	// This means that test qns are over.
 	if err != nil {
-		q = &interact.Question{Id: END, Totscore: c.score}
+		q = &interact.Question{Id: END, Score: c.score}
 		writeLog(c, fmt.Sprintf("%v End of test. Questions over\n",
 			UTCTime()))
 		return q, nil
@@ -435,34 +478,34 @@ func (s *server) GetQuestion(ctx context.Context,
 }
 
 func isCorrectAnswer(resp *interact.Response) (int, float32) {
-	for idx, que := range questions {
-		if que.Id == resp.Qid {
+	for idx, qn := range qnstions {
+		if qn.Id == resp.Qid {
 			if resp.Aid[0] == "skip" {
 				return idx, 0
 			}
-			// For multiple choice questions, we have partial scoring.
-			if len(que.Correct) > 1 {
-				var score float32
-				for _, aid := range resp.Aid {
-					correct := false
-					for _, caid := range que.Correct {
-						if caid == aid {
-							correct = true
-							break
-						}
-					}
-					if correct {
-						score += que.Positive
-					} else {
-						score -= que.Negative
+			// For multiple choice qnstions, we have partial scoring.
+			if len(qn.Correct) == 1 {
+				if resp.Aid[0] == qn.Correct[0] {
+					return idx, qn.Positive
+				}
+				return idx, -qn.Negative
+			}
+			var score float32
+			for _, aid := range resp.Aid {
+				correct := false
+				for _, caid := range qn.Correct {
+					if caid == aid {
+						correct = true
+						break
 					}
 				}
-				return idx, score
+				if correct {
+					score += qn.Positive
+				} else {
+					score -= qn.Negative
+				}
 			}
-			if resp.Aid[0] == que.Correct[0] {
-				return idx, que.Positive
-			}
-			return idx, -que.Negative
+			return idx, score
 		}
 	}
 	return -1, 0
@@ -533,9 +576,13 @@ func (s *server) Ping(ctx context.Context,
 		return &sstat, fmt.Errorf("Invalid token: %v", stat.Token)
 	}
 
+	var err error
 	// In case the server crashed, we need to load up candidate info as
 	// authenticate call won't be made.
-	c = candInfo(stat.Token)
+	if c, err = candInfo(stat.Token, c); err != nil {
+		return &sstat, err
+	}
+
 	writeLog(c, fmt.Sprintf("%v ping %s\n", UTCTime(), stat.CurrQuestion))
 	c.lastExchange = time.Now()
 	updateMap(stat.Token, c)
@@ -674,6 +721,10 @@ func checkTest(qns []Question) error {
 			return fmt.Errorf("Correct list is empty")
 		}
 
+		if q.Negative < 0 || q.Positive < 0 {
+			return fmt.Errorf("Score for qn: %v is less than zero.",
+				q.Id)
+		}
 		// As we do partial scoring for multiple questions, the negative
 		// score shouldn't be less than positive score.
 		if len(q.Correct) > 1 && q.Negative < q.Positive {
