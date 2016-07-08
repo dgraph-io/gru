@@ -59,7 +59,7 @@ type Candidate struct {
 	demoTaken    bool
 	logFile      *os.File
 	demoStart    time.Time
-	testStart    time.Time
+	quizStart    time.Time
 	// session id of currently active session.
 	sid          string
 	lastExchange time.Time
@@ -69,7 +69,7 @@ var (
 	tls        = flag.Bool("tls", true, "Connection uses TLS if true, else plain TCP")
 	certFile   = flag.String("cert_file", "fullchain.pem", "The TLS cert file")
 	keyFile    = flag.String("key_file", "privkey.pem", "The TLS key file")
-	quizFile   = flag.String("quiz", "test.yml", "Input question file")
+	quizFile   = flag.String("quiz", "quiz.yml", "Input question file")
 	port       = flag.String("port", ":443", "Port on which server listens")
 	candFile   = flag.String("cand", "candidates.txt", "Candidate inforamation")
 	maxDemoQns = 8
@@ -86,12 +86,12 @@ func checkToken(c Candidate) error {
 	if time.Now().UTC().After(c.validity) {
 		return errors.New("Your token has expired.")
 	}
-	// Initially testStart is zero, but after candidate has taken the
-	// test once, it shouldn't be zero.
-	if !c.testStart.IsZero() && time.Now().UTC().After(c.testStart.Add(DURATION)) {
+	// Initially quizStart is zero, but after candidate has taken the
+	// quiz once, it shouldn't be zero.
+	if !c.quizStart.IsZero() && time.Now().UTC().After(c.quizStart.Add(DURATION)) {
 		// TODO - Show duration elapsed in minutes.
 		return errors.New(fmt.Sprintf(
-			"%v since you started the test for the first time are already over.",
+			"%v since you started the quiz for the first time are already over.",
 			DURATION))
 	}
 	return nil
@@ -165,8 +165,8 @@ func (c *Candidate) loadCandInfo(token string) error {
 			if err != nil {
 				return err
 			}
-		case "test_start":
-			c.testStart, err = time.Parse(format, fmt.Sprintf("%s %s %s",
+		case "quiz_start":
+			c.quizStart, err = time.Parse(format, fmt.Sprintf("%s %s %s",
 				splits[0], splits[1], splits[2]))
 			if err != nil {
 				return err
@@ -210,7 +210,7 @@ func (c *Candidate) loadCandInfo(token string) error {
 }
 
 func candInfo(token string, c Candidate) (Candidate, error) {
-	// We don't want to load up cand info for dummy test candidates.
+	// We don't want to load up cand info for dummy quiz candidates.
 	if strings.HasPrefix(token, "test-") {
 		return c, nil
 	}
@@ -316,12 +316,12 @@ func (s *server) Authenticate(ctx context.Context,
 	var ok bool
 	var session interact.Session
 
-	if strings.HasPrefix(t.Id, "test-") {
+	if strings.HasPrefix(t.Id, "quiz-") {
 		c = demoCandInfo(t.Id)
 		session = interact.Session{
 			Id:           RandStringBytes(36),
 			State:        interact.Quiz_DEMO_NOT_TAKEN,
-			TimeLeft:     timeLeft(c.testStart).String(),
+			TimeLeft:     timeLeft(c.quizStart).String(),
 			TestDuration: DURATION.String(),
 		}
 		return &session, nil
@@ -347,7 +347,7 @@ func (s *server) Authenticate(ctx context.Context,
 	session = interact.Session{
 		Id:           RandStringBytes(36),
 		State:        state(c),
-		TimeLeft:     timeLeft(c.testStart).String(),
+		TimeLeft:     timeLeft(c.quizStart).String(),
 		TestDuration: DURATION.String(),
 	}
 	writeLog(c, fmt.Sprintf("%v session_token %s\n", UTCTime(), session.Id))
@@ -428,7 +428,7 @@ func getQuestion(req *interact.Req) (*interact.Question, error) {
 		return q, nil
 	}
 
-	if c.demoQnsAsked == maxDemoQns && c.testStart.IsZero() {
+	if c.demoQnsAsked == maxDemoQns && c.quizStart.IsZero() {
 		if !c.demoTaken {
 			c.demoTaken = true
 			updateMap(req.Token, c)
@@ -437,15 +437,15 @@ func getQuestion(req *interact.Req) (*interact.Question, error) {
 		}
 		c.score = 0
 		updateMap(req.Token, c)
-		// This means it is his first test question.
-		writeLog(c, fmt.Sprintf("%v test_start\n", UTCTime()))
-		c.testStart = time.Now().UTC()
+		// This means it is his first quiz question.
+		writeLog(c, fmt.Sprintf("%v quiz_start\n", UTCTime()))
+		c.quizStart = time.Now().UTC()
 	}
-	q, err := nextQuestion(c, req.Token, TEST)
-	// This means that test qns are over.
+	q, err := nextQuestion(c, req.Token, QUIZ)
+	// This means that quiz qns are over.
 	if err != nil {
 		q = &interact.Question{Id: END, Score: c.score}
-		writeLog(c, fmt.Sprintf("%v End of test. Questions over\n",
+		writeLog(c, fmt.Sprintf("%v End of quiz. Questions over\n",
 			UTCTime()))
 		return q, nil
 	}
@@ -478,7 +478,7 @@ func (s *server) GetQuestion(ctx context.Context,
 }
 
 func isCorrectAnswer(resp *interact.Response) (int, float32) {
-	for idx, qn := range qnstions {
+	for idx, qn := range questions {
 		if qn.Id == resp.Qid {
 			if resp.Aid[0] == "skip" {
 				return idx, 0
@@ -591,15 +591,15 @@ func (s *server) Ping(ctx context.Context,
 		return &sstat, nil
 	}
 
-	// We want to indicate end of demo and test based on time. If test did
+	// We want to indicate end of demo and quiz based on time. If quiz did
 	// not start yet we send time left for demo.
-	if c.testStart.IsZero() {
+	if c.quizStart.IsZero() {
 		demoTimeLeft := timeLeft(c.demoStart)
 		if demoTimeLeft > 0 {
 			sstat.TimeLeft = demoTimeLeft.String()
 			return &sstat, nil
 		}
-		// So that now actual test questions are asked.
+		// So that now actual quiz questions are asked.
 		c.demoQnsAsked = maxDemoQns
 		c.demoTaken = true
 		updateMap(stat.Token, c)
@@ -607,14 +607,14 @@ func (s *server) Ping(ctx context.Context,
 		return &sstat, nil
 	}
 
-	quizTimeLeft := timeLeft(c.testStart)
+	quizTimeLeft := timeLeft(c.quizStart)
 	if quizTimeLeft > 0 {
 		sstat.TimeLeft = quizTimeLeft.String()
 		return &sstat, nil
 	}
 
 	sstat.Status = "END"
-	writeLog(c, fmt.Sprintf("%v test_end\n", UTCTime()))
+	writeLog(c, fmt.Sprintf("%v quiz_end\n", UTCTime()))
 	return &sstat, nil
 }
 
@@ -643,7 +643,7 @@ func runGrpcServer(address string) {
 }
 
 // This method is used to parse the candidate file which contains information
-// about the candidates allowed to take the test.
+// about the candidates allowed to take the quiz.
 func parseCandidateFile(file string) error {
 	format := "2006/01/02 (MST)"
 	f, err := os.Open(file)
@@ -686,7 +686,7 @@ func parseCandidateFile(file string) error {
 }
 
 // This method performs sanity checks on the data in the quiz file.
-func checkTest(qns []Question) error {
+func checkQuiz(qns []Question) error {
 	// None of the ids should be repeated, so we check that using a map.
 	idsMap := make(map[string]bool)
 	demoQnCount := 0
@@ -755,7 +755,7 @@ func extractQuizInfo(file string) ([]Question, error) {
 	if err != nil {
 		return []Question{}, err
 	}
-	err = checkTest(info)
+	err = checkQuiz(info)
 	if err != nil {
 		return []Question{}, err
 	}
