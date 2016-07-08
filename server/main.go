@@ -317,6 +317,10 @@ func state(c Candidate) interact.QuizState {
 
 func (s *server) Authenticate(ctx context.Context,
 	t *interact.Token) (*interact.Session, error) {
+	if d, ok := ctx.Deadline(); ok && d.Before(time.Now()) {
+		return &interact.Session{}, errors.New("Context deadline has passed.")
+	}
+
 	var c Candidate
 	var ok bool
 	var session interact.Session
@@ -481,6 +485,9 @@ func isValidSession(token string, sid string) (Candidate, error) {
 
 func (s *server) GetQuestion(ctx context.Context,
 	req *interact.Req) (*interact.Question, error) {
+	if d, ok := ctx.Deadline(); ok && d.Before(time.Now()) {
+		return &interact.Question{}, errors.New("Context deadline has passed.")
+	}
 	_, err := isValidSession(req.Token, req.Sid)
 	if err != nil {
 		return &interact.Question{}, err
@@ -567,6 +574,9 @@ func sendAnswer(resp *interact.Response) (*interact.Status, error) {
 
 func (s *server) SendAnswer(ctx context.Context,
 	resp *interact.Response) (*interact.Status, error) {
+	if d, ok := ctx.Deadline(); ok && d.Before(time.Now()) {
+		return &interact.Status{}, errors.New("Context deadline has passed.")
+	}
 	_, err := isValidSession(resp.Token, resp.Sid)
 	if err != nil {
 		return &interact.Status{}, err
@@ -580,6 +590,9 @@ func timeLeft(dur time.Duration, ts time.Time) time.Duration {
 
 func (s *server) Ping(ctx context.Context,
 	stat *interact.ClientStatus) (*interact.ServerStatus, error) {
+	if d, ok := ctx.Deadline(); ok && d.Before(time.Now()) {
+		return &interact.ServerStatus{}, errors.New("Context deadline has passed.")
+	}
 	var sstat interact.ServerStatus
 	var c Candidate
 	var ok bool
