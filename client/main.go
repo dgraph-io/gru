@@ -73,6 +73,7 @@ type Session struct {
 	status       State
 	leftTime     clock
 	servTime     clock
+	demoDuration string
 	testDuration string
 	timeTaken    int
 	totalScore   float32
@@ -135,7 +136,7 @@ func fetchAndDisplayQn() {
 	if q.Id == DEMOEND {
 		if strings.HasPrefix(*token, "test-") {
 			clear()
-			showFinalPage(finalScore(s.currentQn.Totscore))
+			showFinalPage(finalScore(s.currentQn.Score))
 			return
 		}
 		clear()
@@ -145,7 +146,7 @@ func fetchAndDisplayQn() {
 		return
 	}
 	if q.Id == END {
-		showFinalPage(finalScore(q.Totscore))
+		showFinalPage(finalScore(q.Score))
 		return
 	}
 	populateQuestionsPage(q)
@@ -177,7 +178,7 @@ func sendStatus(pingFail *int) {
 		// If its a dummy token, show final screen else instructions box.
 		if strings.HasPrefix(*token, "test-") {
 			clear()
-			showFinalPage(finalScore(s.currentQn.Totscore))
+			showFinalPage(finalScore(s.currentQn.Score))
 			return
 		}
 		clear()
@@ -187,7 +188,7 @@ func sendStatus(pingFail *int) {
 
 	if serverStat.Status == END {
 		clear()
-		showFinalPage(finalScore(s.currentQn.Totscore))
+		showFinalPage(finalScore(s.currentQn.Score))
 		return
 	}
 
@@ -376,10 +377,10 @@ func populateQuestionsPage(q *interact.Question) {
 		opt++
 	}
 	buf.WriteString("\ns) Skip question\n\n")
-	qp.score.Text = fmt.Sprintf("%3.1f", q.Totscore)
-	s.lastScore = q.Totscore - s.totalScore
+	qp.score.Text = fmt.Sprintf("%3.1f", q.Score)
+	s.lastScore = q.Score - s.totalScore
 	qp.lastScore.Text = fmt.Sprintf("%2.1f", s.lastScore)
-	s.totalScore = q.Totscore
+	s.totalScore = q.Score
 	// We store this so that this can be rendered later based on different
 	// key press.
 	ansBody = buf.String()
@@ -434,13 +435,14 @@ func initializeDemo(tl string) {
 func setupInitialPage(ses *interact.Session) {
 	state := ses.State
 	s.testDuration = ses.TestDuration
+	s.demoDuration = ses.DemoDuration
 	d, _ := time.ParseDuration(s.testDuration)
 	dm := strconv.FormatFloat(d.Minutes(), 'f', 0, 64)
 	// TODO(pawan) - Handle error and take to final page.
 	s.Id = ses.Id
 	if state == interact.Quiz_TEST_FINISHED {
-		//show final page saying test already taken and return
-		showFinalPage("You have already taken the test.")
+		//show final page saying quiz already taken and return
+		showFinalPage("You have already taken the quiz.")
 	}
 	if state == interact.Quiz_TEST_STARTED {
 		initializeTest(ses.TimeLeft)
@@ -455,7 +457,7 @@ func setupInitialPage(ses *interact.Session) {
 		renderInstructionsPage(true)
 	}
 	if state == interact.Quiz_DEMO_STARTED {
-		initializeDemo(ses.TestDuration)
+		initializeDemo(ses.TimeLeft)
 	}
 }
 

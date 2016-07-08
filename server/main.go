@@ -41,10 +41,12 @@ import (
 )
 
 const (
-	DEMO     = "demo"
-	QUIZ     = "quiz"
-	END      = "END"
-	DURATION = 60 * time.Minute
+	DEMO          = "demo"
+	QUIZ          = "quiz"
+	END           = "END"
+	DEMO_END      = "DEMOEND"
+	DEMO_DURATION = 10 * time.Minute
+	QUIZ_DURATION = 60 * time.Minute
 )
 
 type Candidate struct {
@@ -88,11 +90,11 @@ func checkToken(c Candidate) error {
 	}
 	// Initially quizStart is zero, but after candidate has taken the
 	// quiz once, it shouldn't be zero.
-	if !c.quizStart.IsZero() && time.Now().UTC().After(c.quizStart.Add(DURATION)) {
+	if !c.quizStart.IsZero() && time.Now().UTC().After(c.quizStart.Add(QUIZ_DURATION)) {
 		// TODO - Show duration elapsed in minutes.
 		return errors.New(fmt.Sprintf(
 			"%v since you started the quiz for the first time are already over.",
-			DURATION))
+			QUIZ_DURATION))
 	}
 	return nil
 }
@@ -316,13 +318,14 @@ func (s *server) Authenticate(ctx context.Context,
 	var ok bool
 	var session interact.Session
 
-	if strings.HasPrefix(t.Id, "quiz-") {
+	if strings.HasPrefix(t.Id, "test-") {
 		c = demoCandInfo(t.Id)
 		session = interact.Session{
 			Id:           RandStringBytes(36),
 			State:        interact.Quiz_DEMO_NOT_TAKEN,
-			TimeLeft:     timeLeft(c.quizStart).String(),
-			TestDuration: DURATION.String(),
+			TimeLeft:     timeLeft(DEMO_DURATION, c.demoStart).String(),
+			TestDuration: QUIZ_DURATION.String(),
+			DemoDuration: DEMO_DURATION.String(),
 		}
 		return &session, nil
 	}
@@ -347,8 +350,14 @@ func (s *server) Authenticate(ctx context.Context,
 	session = interact.Session{
 		Id:           RandStringBytes(36),
 		State:        state(c),
-		TimeLeft:     timeLeft(c.quizStart).String(),
-		TestDuration: DURATION.String(),
+		TestDuration: QUIZ_DURATION.String(),
+		DemoDuration: DEMO_DURATION.String(),
+	}
+
+	if state(c) == interact.Quiz_DEMO_NOT_TAKEN || state(c) == interact.Quiz_DEMO_STARTED {
+		session.TimeLeft = timeLeft(DEMO_DURATION, c.demoStart).String()
+	} else {
+		session.TimeLeft = timeLeft(QUIZ_DURATION, c.quizStart).String()
 	}
 	writeLog(c, fmt.Sprintf("%v session_token %s\n", UTCTime(), session.Id))
 	c.sid = session.Id
@@ -432,7 +441,7 @@ func getQuestion(req *interact.Req) (*interact.Question, error) {
 		if !c.demoTaken {
 			c.demoTaken = true
 			updateMap(req.Token, c)
-			return &interact.Question{Id: "DEMOEND",
+			return &interact.Question{Id: DEMO_END,
 				Score: c.score}, nil
 		}
 		c.score = 0
@@ -562,8 +571,8 @@ func (s *server) SendAnswer(ctx context.Context,
 	return sendAnswer(resp)
 }
 
-func timeLeft(ts time.Time) time.Duration {
-	return (DURATION - time.Now().UTC().Sub(ts))
+func timeLeft(dur time.Duration, ts time.Time) time.Duration {
+	return (dur - time.Now().UTC().Sub(ts))
 }
 
 func (s *server) Ping(ctx context.Context,
@@ -583,7 +592,7 @@ func (s *server) Ping(ctx context.Context,
 		return &sstat, err
 	}
 
-	writeLog(c, fmt.Sprintf("%v ping %s\n", UTCTime(), stat.CurrQuestion))
+	writeLog(c, fmt.Sprintf("%v ping %s\n", UTCTime(), stat.CurQuestion))
 	c.lastExchange = time.Now()
 	updateMap(stat.Token, c)
 	if c.demoStart.IsZero() {
@@ -594,7 +603,7 @@ func (s *server) Ping(ctx context.Context,
 	// We want to indicate end of demo and quiz based on time. If quiz did
 	// not start yet we send time left for demo.
 	if c.quizStart.IsZero() {
-		demoTimeLeft := timeLeft(c.demoStart)
+		demoTimeLeft := timeLeft(DEMO_DURATION, c.demoStart)
 		if demoTimeLeft > 0 {
 			sstat.TimeLeft = demoTimeLeft.String()
 			return &sstat, nil
@@ -603,11 +612,11 @@ func (s *server) Ping(ctx context.Context,
 		c.demoQnsAsked = maxDemoQns
 		c.demoTaken = true
 		updateMap(stat.Token, c)
-		sstat.Status = "DEMOEND"
+		sstat.Status = DEMO_END
 		return &sstat, nil
 	}
 
-	quizTimeLeft := timeLeft(c.quizStart)
+	quizTimeLeft := timeLeft(QUIZ_DURATION, c.quizStart)
 	if quizTimeLeft > 0 {
 		sstat.TimeLeft = quizTimeLeft.String()
 		return &sstat, nil
@@ -685,6 +694,15 @@ func parseCandidateFile(file string) error {
 	return nil
 }
 
+func partOfOptions(opts []Option, s string) bool {
+	for _, opt := range opts {
+		if s == opt.Uid {
+			return true
+		}
+	}
+	return false
+}
+
 // This method performs sanity checks on the data in the quiz file.
 func checkQuiz(qns []Question) error {
 	// None of the ids should be repeated, so we check that using a map.
@@ -731,8 +749,9 @@ func checkQuiz(qns []Question) error {
 			return fmt.Errorf("Negative score less than positive for multi-choice qn: %v",
 				q.Id)
 		}
+
 		for _, corr := range q.Correct {
-			if _, ok := idsMap[corr]; !ok {
+			if ok := partOfOptions(q.Opt, corr); !ok {
 				return fmt.Errorf("Correct not part of options: %v ",
 					corr)
 			}

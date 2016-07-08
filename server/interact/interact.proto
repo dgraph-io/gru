@@ -16,7 +16,7 @@ message ServerStatus {
 }
 
 message ClientStatus {
-	string currQuestion = 1;
+	string curQuestion = 1;
 	string token = 2;
 }
 
@@ -39,6 +39,7 @@ message Session {
 	Quiz.state state = 2;
 	string timeLeft = 3;
 	string testDuration = 4;
+	string demoDuration = 5;
 }
 
 message Req {
