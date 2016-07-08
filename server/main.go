@@ -41,9 +41,9 @@ import (
 )
 
 const (
-	DEMO           = "demo"
-	QUIZ           = "quiz"
-	END            = "END"
+	demo           = "demo"
+	quiz           = "quiz"
+	end            = "END"
 	demoEnd        = "DEMOEND"
 	demoDuration   = 10 * time.Minute
 	quizDuration   = 60 * time.Minute
@@ -409,7 +409,7 @@ func nextQuestion(c Candidate, token string, qnType string) (*interact.Question,
 			if qnType == t {
 				c.questions = append(c.questions[:idx],
 					c.questions[idx+1:]...)
-				if qnType == DEMO {
+				if qnType == demo {
 					c.demoQnsAsked += 1
 				}
 				updateMap(token, c)
@@ -432,7 +432,7 @@ func getQuestion(req *interact.Req) (*interact.Question, error) {
 			c.demoStart = time.Now().UTC()
 			writeLog(c, fmt.Sprintf("%v demo_start\n", UTCTime()))
 		}
-		q, err := nextQuestion(c, req.Token, DEMO)
+		q, err := nextQuestion(c, req.Token, demo)
 		if err != nil {
 			return nil, err
 		}
@@ -453,10 +453,10 @@ func getQuestion(req *interact.Req) (*interact.Question, error) {
 		writeLog(c, fmt.Sprintf("%v quiz_start\n", UTCTime()))
 		c.quizStart = time.Now().UTC()
 	}
-	q, err := nextQuestion(c, req.Token, QUIZ)
+	q, err := nextQuestion(c, req.Token, quiz)
 	// This means that quiz qns are over.
 	if err != nil {
-		q = &interact.Question{Id: END, Score: c.score}
+		q = &interact.Question{Id: end, Score: c.score}
 		writeLog(c, fmt.Sprintf("%v End of quiz. Questions over\n",
 			UTCTime()))
 		return q, nil
@@ -625,7 +625,7 @@ func (s *server) Ping(ctx context.Context,
 		return &sstat, nil
 	}
 
-	sstat.Status = "END"
+	sstat.Status = end
 	writeLog(c, fmt.Sprintf("%v quiz_end\n", UTCTime()))
 	return &sstat, nil
 }
