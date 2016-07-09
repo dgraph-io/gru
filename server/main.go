@@ -41,14 +41,16 @@ import (
 )
 
 const (
-	demo           = "demo"
-	quiz           = "quiz"
-	end            = "END"
-	demoEnd        = "DEMOEND"
-	demoDuration   = 10 * time.Minute
-	quizDuration   = 60 * time.Minute
-	maxDemoQns     = 8
-	demoQnsBfrQuiz = 3
+	demo         = "demo"
+	quiz         = "quiz"
+	end          = "END"
+	demoEnd      = "DEMOEND"
+	demoDuration = 10 * time.Minute
+	quizDuration = 60 * time.Minute
+	// This is the number of demo questions asked to dummy candidates.
+	maxDemoQns = 8
+	// This is the number of demo questions asked to actual quiz candidates.
+	beforeQuiz = 3
 )
 
 type Candidate struct {
@@ -188,7 +190,7 @@ func (c *Candidate) loadCandInfo(token string) error {
 			}
 			// We only want to add score from actual quiz questions
 			// and not demo qns.
-			if len(qnsAsked) > demoQnsBfrQuiz {
+			if len(qnsAsked) > beforeQuiz {
 				score += float32(s)
 			}
 		case "question":
@@ -204,8 +206,8 @@ func (c *Candidate) loadCandInfo(token string) error {
 	c.score = score
 	c.logFile = f
 	c.questions = sliceDiff(questions, qnsAsked)
-	if len(qnsAsked) >= demoQnsBfrQuiz {
-		c.demoQnsAsked = demoQnsBfrQuiz
+	if len(qnsAsked) >= beforeQuiz {
+		c.demoQnsAsked = beforeQuiz
 		c.demoTaken = true
 	} else {
 		c.demoQnsAsked = len(qnsAsked)
@@ -240,8 +242,7 @@ func candInfo(token string, c Candidate) (Candidate, error) {
 	var err error
 	// If we reach here it means logfile for candidate exists but his info
 	// doesn't exist in memory, so we need to load it back from the file.
-	err = c.loadCandInfo(token)
-	if err != nil {
+	if err = c.loadCandInfo(token); err != nil {
 		return c, err
 	}
 	updateMap(token, c)
@@ -299,20 +300,20 @@ func demoCandInfo(token string) Candidate {
 	return c
 }
 
-func state(c Candidate) interact.QuizState {
+func state(c Candidate) interact.QUIZState {
 	if len(c.questions) == len(questions) {
-		return interact.Quiz_DEMO_NOT_TAKEN
+		return interact.QUIZ_DEMO_NOT_TAKEN
 	}
 	if len(questions)-len(c.questions) < c.demoQnsToAsk {
-		return interact.Quiz_DEMO_STARTED
+		return interact.QUIZ_DEMO_STARTED
 	}
 	if len(questions)-len(c.questions) == c.demoQnsToAsk {
-		return interact.Quiz_TEST_NOT_TAKEN
+		return interact.QUIZ_TEST_NOT_TAKEN
 	}
 	if len(c.questions) == 0 {
-		return interact.Quiz_TEST_FINISHED
+		return interact.QUIZ_TEST_FINISHED
 	}
-	return interact.Quiz_TEST_STARTED
+	return interact.QUIZ_TEST_STARTED
 }
 
 func (s *server) Authenticate(ctx context.Context,
@@ -329,7 +330,7 @@ func (s *server) Authenticate(ctx context.Context,
 		c = demoCandInfo(t.Id)
 		session = interact.Session{
 			Id:           RandStringBytes(36),
-			State:        interact.Quiz_DEMO_NOT_TAKEN,
+			State:        interact.QUIZ_DEMO_NOT_TAKEN,
 			TimeLeft:     timeLeft(demoDuration, c.demoStart).String(),
 			TestDuration: quizDuration.String(),
 			DemoDuration: demoDuration.String(),
@@ -361,7 +362,7 @@ func (s *server) Authenticate(ctx context.Context,
 		DemoDuration: demoDuration.String(),
 	}
 
-	if state(c) == interact.Quiz_DEMO_NOT_TAKEN || state(c) == interact.Quiz_DEMO_STARTED {
+	if state(c) == interact.QUIZ_DEMO_NOT_TAKEN || state(c) == interact.QUIZ_DEMO_STARTED {
 		session.TimeLeft = timeLeft(demoDuration, c.demoStart).String()
 	} else {
 		session.TimeLeft = timeLeft(quizDuration, c.quizStart).String()
@@ -625,7 +626,7 @@ func (s *server) Ping(ctx context.Context,
 			return &sstat, nil
 		}
 		// So that now actual quiz questions are asked.
-		c.demoQnsAsked = demoQnsBfrQuiz
+		c.demoQnsAsked = beforeQuiz
 		c.demoTaken = true
 		updateMap(stat.Token, c)
 		sstat.Status = demoEnd
@@ -697,7 +698,7 @@ func parseCandidateFile(file string) error {
 		}
 
 		var c Candidate
-		c.demoQnsToAsk = demoQnsBfrQuiz
+		c.demoQnsToAsk = beforeQuiz
 		c.name = strings.Join(splits[:2], " ")
 		c.email = splits[2]
 		c.validity, err = time.Parse(format,

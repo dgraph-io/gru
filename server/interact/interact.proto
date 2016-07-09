@@ -24,7 +24,7 @@ message Token {
 	string id = 1;
 }
 
-message Quiz {
+message QUIZ {
 	enum state {
 		DEMO_NOT_TAKEN = 0;
 		DEMO_STARTED = 1;
@@ -36,7 +36,7 @@ message Quiz {
 
 message Session {
 	string id = 1;
-	Quiz.state state = 2;
+	QUIZ.state state = 2;
 	string timeLeft = 3;
 	string testDuration = 4;
 	string demoDuration = 5;

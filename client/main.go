@@ -440,23 +440,23 @@ func setupInitialPage(ses *interact.Session) {
 	dm := strconv.FormatFloat(d.Minutes(), 'f', 0, 64)
 	// TODO(pawan) - Handle error and take to final page.
 	s.Id = ses.Id
-	if state == interact.Quiz_TEST_FINISHED {
+	if state == interact.QUIZ_TEST_FINISHED {
 		//show final page saying quiz already taken and return
 		showFinalPage("You have already taken the quiz.")
 	}
-	if state == interact.Quiz_TEST_STARTED {
+	if state == interact.QUIZ_TEST_STARTED {
 		initializeTest(ses.TimeLeft)
 	}
 	setupInfoPage(termui.TermHeight(), termui.TermWidth(), dm)
-	if state == interact.Quiz_DEMO_NOT_TAKEN {
+	if state == interact.QUIZ_DEMO_NOT_TAKEN {
 		//call instructions screen with demo taken to be false
 		renderInstructionsPage(false)
 	}
-	if state == interact.Quiz_TEST_NOT_TAKEN {
+	if state == interact.QUIZ_TEST_NOT_TAKEN {
 		//call instructions screen with demo taken to be true
 		renderInstructionsPage(true)
 	}
-	if state == interact.Quiz_DEMO_STARTED {
+	if state == interact.QUIZ_DEMO_STARTED {
 		initializeDemo(ses.TimeLeft)
 	}
 }
