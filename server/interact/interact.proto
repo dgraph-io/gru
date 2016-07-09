@@ -6,7 +6,7 @@ package interact;
 service GruQuiz {
 	rpc Authenticate (Token) returns (Session) {}
 	rpc GetQuestion (Req) returns (Question) {}
-	rpc SendAnswer (Response) returns (Status) {}
+	rpc Status (Response) returns (AnswerStatus) {}
 	rpc Ping (ClientStatus) returns (ServerStatus) {}
 }
 
@@ -16,7 +16,7 @@ message ServerStatus {
 }
 
 message ClientStatus {
-	string currQuestion = 1;
+	string curQuestion = 1;
 	string token = 2;
 }
 
@@ -24,7 +24,7 @@ message Token {
 	string id = 1;
 }
 
-message Quiz {
+message QUIZ {
 	enum state {
 		DEMO_NOT_TAKEN = 0;
 		DEMO_STARTED = 1;
@@ -36,9 +36,10 @@ message Quiz {
 
 message Session {
 	string id = 1;
-	Quiz.state state = 2;
+	QUIZ.state state = 2;
 	string timeLeft = 3;
 	string testDuration = 4;
+	string demoDuration = 5;
 }
 
 message Req {
@@ -54,7 +55,7 @@ message Question {
 	bool isMultiple = 4;
 	float positive = 6;
 	float negative = 7;
-	float totscore = 8;
+	float score = 8;
 }
 
 message Answer {
@@ -69,7 +70,7 @@ message Response {
 	string token = 4;
 }
 
-message Status {
-	int64 status = 1; // 0 - end test | 1 - right answer | 2 - wrong answer
+message AnswerStatus {
+	int64 status = 1; // 1 - right answer | 2 - wrong answer
 }
 

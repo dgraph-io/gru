@@ -2,7 +2,9 @@ package main
 
 import (
 	"io/ioutil"
+	"math/rand"
 	"os"
+	"reflect"
 	"strings"
 	"testing"
 	"time"
@@ -467,6 +469,24 @@ func TestCheckTest(t *testing.T) {
 		t.Errorf("Expected error to be %v. Got: %v", expectedError, err)
 	}
 
+	qns = []Question{
+		{
+			Id: "qn1",
+			Opt: []Option{
+				{Uid: "O1"},
+				{Uid: "O2"},
+			},
+			Correct:  []string{"O2", "O1"},
+			Positive: -2.5,
+			Negative: 1,
+			Tags:     []string{"demo"},
+		},
+	}
+	expectedError = "Score for qn: qn1 is less than zero."
+	if err := checkTest(qns); err.Error() != expectedError {
+		t.Errorf("Expected error to be %v. Got: %v", expectedError, err)
+	}
+
 	maxDemoQns = 3
 	var err error
 	questions, err = extractQuizInfo("demo_test.yaml")
@@ -526,5 +546,19 @@ func TestCandfileRead(t *testing.T) {
 	if err := candFile.Close(); err != nil {
 		t.Fatal(err)
 	}
+}
 
+func TestShuffle(t *testing.T) {
+	rand.Seed(time.Now().UTC().UnixNano())
+	maxDemoQns = 3
+	questions, err := extractQuizInfo("demo_test.yaml")
+	if err != nil {
+		t.Error(err)
+	}
+	oldQuestions := make([]Question, len(questions))
+	copy(oldQuestions, questions)
+	shuffle(questions)
+	if reflect.DeepEqual(questions, oldQuestions) {
+		t.Error("Expected sequence to be shuffled. Got same sequence.")
+	}
 }
