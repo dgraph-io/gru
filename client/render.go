@@ -198,7 +198,7 @@ func renderInstructionsPage(demoTaken bool) {
 
 	termui.Handle("/sys/kbd/s", func(e termui.Event) {
 		if !demoTaken {
-			initializeDemo(s.testDuration)
+			initializeDemo(s.demoDuration)
 			return
 		}
 		clear()
