@@ -96,9 +96,9 @@ func checkToken(c Candidate) error {
 	// quiz once, it shouldn't be zero.
 	if !c.quizStart.IsZero() && time.Now().UTC().After(c.quizStart.Add(quizDuration)) {
 		// TODO - Show duration elapsed in minutes.
-		return errors.New(fmt.Sprintf(
-			"%v since you started the quiz for the first time are already over.",
-			quizDuration))
+		return fmt.Errorf(
+			"%v since you started the quiz for the first time are already over",
+			quizDuration)
 	}
 	return nil
 }
@@ -259,7 +259,7 @@ func stringInSlice(a string, list []string) bool {
 }
 
 func shuffle(qns []Question) {
-	for i, _ := range qns {
+	for i := range qns {
 		j := rand.Intn(i + 1)
 		qns[i], qns[j] = qns[j], qns[i]
 	}
@@ -415,7 +415,7 @@ func nextQuestion(c Candidate, token string, qnType string) (*interact.Question,
 				c.questions = append(c.questions[:idx],
 					c.questions[idx+1:]...)
 				if qnType == demo {
-					c.demoQnsAsked += 1
+					c.demoQnsAsked++
 				}
 				updateMap(token, c)
 				return formQuestion(q, c.score), nil
