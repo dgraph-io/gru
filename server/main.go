@@ -827,10 +827,12 @@ func rateLimit() {
 	defer rateTicker.Stop()
 
 	for t := range rateTicker.C {
-		throttle <- t
+		select {
+		case throttle <- t:
+		default:
+		}
 	}
 }
-
 func main() {
 	rand.Seed(time.Now().UTC().UnixNano())
 	flag.Parse()
