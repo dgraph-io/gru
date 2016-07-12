@@ -84,8 +84,8 @@ var (
 	cmap      map[string]Candidate
 	wrtLock   sync.Mutex
 	mapLock   sync.Mutex
-	throttle  = make(chan time.Time, 1)
-	rate      = time.Second / 2
+	throttle  = make(chan time.Time, 3)
+	rate      = time.Second
 )
 
 type server struct{}
@@ -318,8 +318,7 @@ func state(c Candidate) interact.QUIZState {
 	return interact.QUIZ_TEST_STARTED
 }
 
-func (s *server) Authenticate(ctx context.Context,
-	t *interact.Token) (*interact.Session, error) {
+func authenticate(ctx context.Context, t *interact.Token) (*interact.Session, error) {
 	if d, ok := ctx.Deadline(); ok && d.Before(time.Now()) {
 		return &interact.Session{}, errors.New("Context deadline has passed.")
 	}
@@ -381,9 +380,9 @@ func (s *server) Authenticate(ctx context.Context,
 
 	select {
 	case <-throttle:
-		return authenticate(t)
+		return authenticate(ctx, t)
 	case <-time.After(time.Second * 1):
-		return nil, errors.New("Please try again later. Too much load on server")
+		return nil, errors.New("Please try again later. Too much load on server.")
 	}
 }
 
