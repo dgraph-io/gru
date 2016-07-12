@@ -62,6 +62,8 @@ var (
 	cmap      map[string]Candidate
 	wrtLock   sync.Mutex
 	mapLock   sync.Mutex
+	throttle  = make(chan time.Time, 1)
+	rate      = time.Second / 2
 )
 
 type server struct{}
@@ -311,7 +313,13 @@ func authenticate(t *interact.Token) (*interact.Session, error) {
 
 func (s *server) Authenticate(ctx context.Context,
 	t *interact.Token) (*interact.Session, error) {
-	return authenticate(t)
+
+	select {
+	case <-throttle:
+		return authenticate(t)
+	case <-time.After(time.Second * 1):
+		return nil, errors.New("Please try again later. Too much load on server")
+	}
 }
 
 type Option struct {
@@ -722,6 +730,15 @@ func parseCandRepeat(file string) {
 	}
 }
 
+func rateLimit() {
+	rateTicker := time.NewTicker(rate)
+	defer rateTicker.Stop()
+
+	for t := range rateTicker.C {
+		throttle <- t
+	}
+}
+
 func main() {
 	rand.Seed(time.Now().UTC().UnixNano())
 	flag.Parse()
@@ -731,5 +748,6 @@ func main() {
 		log.Fatal(err)
 	}
 	go parseCandRepeat(*candFile)
+	go rateLimit()
 	runGrpcServer(*port)
 }
