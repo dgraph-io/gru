@@ -28,7 +28,7 @@
     str: Rust
   positive: 5
   negative: 5
-  tags: [easy,test]
+  tags: [easy,quiz]
 
 - id: demo-2
   str: Which among the following were originally developed at Google?
@@ -61,4 +61,85 @@
   positive: 5
   negative: 2.5
   tags: [easy,demo]
+
+- id: demo-4
+  str: Which one is the largest ocean in the world?
+  correct: [demo-4b]
+  opt:
+  - uid: demo-4a
+    str: Indian
+  - uid: demo-4b
+    str: Pacific
+  - uid: demo-4c
+    str: Atlantic
+  - uid: demo-4d
+    str: Arctic
+  positive: 5
+  negative: 2.5
+  tags: [easy,demo]
+
+- id: demo-5
+  str: Which one is the largest ocean in the world?
+  correct: [demo-5b]
+  opt:
+  - uid: demo-5a
+    str: Indian
+  - uid: demo-5b
+    str: Pacific
+  - uid: demo-5c
+    str: Atlantic
+  - uid: demo-5d
+    str: Arctic
+  positive: 5
+  negative: 2.5
+  tags: [easy,demo]
+
+- id: demo-6
+  str: Which one is the largest ocean in the world?
+  correct: [demo-6b]
+  opt:
+  - uid: demo-6a
+    str: Indian
+  - uid: demo-6b
+    str: Pacific
+  - uid: demo-6c
+    str: Atlantic
+  - uid: demo-6d
+    str: Arctic
+  positive: 5
+  negative: 2.5
+  tags: [easy,demo]
+
+- id: demo-7
+  str: Which one is the largest ocean in the world?
+  correct: [demo-7b]
+  opt:
+  - uid: demo-7a
+    str: Indian
+  - uid: demo-7b
+    str: Pacific
+  - uid: demo-7c
+    str: Atlantic
+  - uid: demo-7d
+    str: Arctic
+  positive: 5
+  negative: 2.5
+  tags: [easy,demo]
+
+- id: demo-8
+  str: Which one is the largest ocean in the world?
+  correct: [demo-8b]
+  opt:
+  - uid: demo-8a
+    str: Indian
+  - uid: demo-8b
+    str: Pacific
+  - uid: demo-8c
+    str: Atlantic
+  - uid: demo-8d
+    str: Arctic
+  positive: 5
+  negative: 2.5
+  tags: [easy,demo]
+
 

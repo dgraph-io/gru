@@ -9,11 +9,12 @@ import (
 	"testing"
 	"time"
 
+	"golang.org/x/net/context"
+
 	"github.com/dgraph-io/gru/server/interact"
 )
 
 func TestIsCorrectAnswer(t *testing.T) {
-	maxDemoQns = 3
 	var err error
 	questions, err = extractQuizInfo("demo_test.yaml")
 	if err != nil {
@@ -56,7 +57,6 @@ func TestIsCorrectAnswer(t *testing.T) {
 }
 
 func TestNextQuestion(t *testing.T) {
-	maxDemoQns = 3
 	var err error
 	questions, err = extractQuizInfo("demo_test.yaml")
 	if err != nil {
@@ -66,7 +66,7 @@ func TestNextQuestion(t *testing.T) {
 	c := Candidate{questions: questions[:]}
 	cmap = make(map[string]Candidate)
 	cmap["testtoken"] = c
-	q, err := nextQuestion(c, "testtoken", DEMO)
+	q, err := nextQuestion(c, "testtoken", demo)
 	if err != nil {
 		t.Errorf("Expected nil error. Got: %v", err)
 	}
@@ -75,8 +75,8 @@ func TestNextQuestion(t *testing.T) {
 		t.Errorf("Expected demoQnsAsked to be %v. Got: %v", 1,
 			c.demoQnsAsked)
 	}
-	if len(c.questions) != 3 {
-		t.Errorf("Expected questions to have len %v. Got: %v", 3,
+	if len(c.questions) != 8 {
+		t.Errorf("Expected questions to have len %v. Got: %v", 8,
 			len(c.questions))
 	}
 	if q.Id != "demo-1" {
@@ -84,7 +84,7 @@ func TestNextQuestion(t *testing.T) {
 			q.Id)
 	}
 
-	q, err = nextQuestion(c, "testtoken", DEMO)
+	q, err = nextQuestion(c, "testtoken", demo)
 	if err != nil {
 		t.Errorf("Expected nil error. Got: %v", err)
 	}
@@ -93,8 +93,8 @@ func TestNextQuestion(t *testing.T) {
 		t.Errorf("Expected demoQnsAsked to be %v. Got: %v", 2,
 			c.demoQnsAsked)
 	}
-	if len(c.questions) != 2 {
-		t.Errorf("Expected questions to have len %v. Got: %v", 2,
+	if len(c.questions) != 7 {
+		t.Errorf("Expected questions to have len %v. Got: %v", 7,
 			len(c.questions))
 	}
 	if q.Id != "demo-2" {
@@ -102,7 +102,7 @@ func TestNextQuestion(t *testing.T) {
 			q.Id)
 	}
 
-	q, err = nextQuestion(c, "testtoken", TEST)
+	q, err = nextQuestion(c, "testtoken", quiz)
 	if err != nil {
 		t.Errorf("Expected nil error. Got: %v", err)
 	}
@@ -111,8 +111,8 @@ func TestNextQuestion(t *testing.T) {
 		t.Errorf("Expected demoQnsAsked to be %v. Got: %v", 2,
 			c.demoQnsAsked)
 	}
-	if len(c.questions) != 1 {
-		t.Errorf("Expected questions to have len %v. Got: %v", 1,
+	if len(c.questions) != 6 {
+		t.Errorf("Expected questions to have len %v. Got: %v", 6,
 			len(c.questions))
 	}
 	if q.Id != "test-2" {
@@ -122,7 +122,6 @@ func TestNextQuestion(t *testing.T) {
 }
 
 func TestGetQuestion(t *testing.T) {
-	maxDemoQns = 3
 	var err error
 	questions, err = extractQuizInfo("demo_test.yaml")
 	if err != nil {
@@ -146,8 +145,8 @@ func TestGetQuestion(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	if q1.Id == END {
-		t.Errorf("Expected q.Id not to be %s", END)
+	if q1.Id == end {
+		t.Errorf("Expected q.Id not to be %s", end)
 	}
 
 	c, _ = readMap(token)
@@ -174,8 +173,8 @@ func TestGetQuestion(t *testing.T) {
 		t.Errorf("Expected qn Id to be %v. Got: %v", "test-2", q5.Id)
 	}
 
-	if len(cmap["abcd1234"].questions) != 0 {
-		t.Errorf("Expected qn list to be empty. Got: len %d",
+	if len(cmap["abcd1234"].questions) != 5 {
+		t.Errorf("Expected qn list to have length %d. Got: len %d", 5,
 			len(cmap["abcd1234"].questions))
 	}
 
@@ -184,14 +183,14 @@ func TestGetQuestion(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	if q.Id != END {
-		t.Errorf("Expected q.Id to be %s. Got: %s", END, q.Id)
+	if q.Id != end {
+		t.Errorf("Expected q.Id to be %s. Got: %s", end, q.Id)
 	}
 }
 
 func TestCheckToken(t *testing.T) {
 	c := Candidate{email: "pawan@dgraph.io", validity: time.Now().AddDate(0, 0, 7),
-		testStart: time.Now().Add(-2 * time.Hour)}
+		quizStart: time.Now().Add(-2 * time.Hour)}
 	cmap = make(map[string]Candidate)
 	cmap["test_token"] = c
 	err := checkToken(c)
@@ -199,7 +198,7 @@ func TestCheckToken(t *testing.T) {
 		t.Errorf("Expected non-nil error. Got: nil")
 	}
 
-	c.testStart = time.Now().Add(-1 * time.Minute)
+	c.quizStart = time.Now().Add(-1 * time.Minute)
 	c.validity = time.Now().AddDate(0, 0, -1)
 	cmap["test_token"] = c
 	err = checkToken(c)
@@ -216,7 +215,6 @@ func TestCheckToken(t *testing.T) {
 }
 
 func TestAuthenticate(t *testing.T) {
-	maxDemoQns = 3
 	tokenId := "test_token"
 	var err error
 
@@ -233,31 +231,30 @@ func TestAuthenticate(t *testing.T) {
 	}
 	defer os.Remove(c.logFile.Name())
 
-	c.testStart = time.Now().Add(-2 * time.Minute)
-	c.questions = questions[:1]
 	cmap = make(map[string]Candidate)
 	updateMap(tokenId, c)
 	token := interact.Token{Id: tokenId}
 
-	s, err := authenticate(&token)
+	s, err := authenticate(context.Background(), &token)
+
 	if err != nil {
 		t.Errorf("Expected nil error. Got: %s", err.Error())
 	}
 	if s.Id == "" {
 		t.Errorf("Expected non-empty sessionId. Got: %s", s.Id)
 	}
-	if s.State != interact.Quiz_TEST_NOT_TAKEN {
+	if s.State != interact.QUIZ_DEMO_NOT_TAKEN {
 		t.Errorf("Expected state to be %d,Got: %d",
-			interact.Quiz_TEST_NOT_TAKEN, s.State)
+			interact.QUIZ_DEMO_NOT_TAKEN, s.State)
 	}
 
-	s, err = authenticate(&token)
+	s, err = authenticate(context.Background(), &token)
 	if !strings.HasPrefix(err.Error(), "Duplicate Session") {
 		t.Error("Expected duplicate session error")
 	}
 
 	time.Sleep(11 * time.Second)
-	s, err = authenticate(&token)
+	s, err = authenticate(context.Background(), &token)
 	if err != nil {
 		t.Error("Should allow a start of new session. Error: ", err)
 	}
@@ -266,24 +263,24 @@ func TestAuthenticate(t *testing.T) {
 	}
 
 	token = interact.Token{Id: "test-abcd"}
-	_, err = authenticate(&token)
+	_, err = authenticate(context.Background(), &token)
 
 	if err != nil {
 		t.Error("Demo test token isn't being authenticated. Error: ", err)
 	}
 	//TODO(pawan) - test other values fo State
 
-	c.testStart = time.Now().Add(-2 * time.Hour)
+	c.quizStart = time.Now().Add(-2 * time.Hour)
 	cmap[tokenId] = c
 	token = interact.Token{Id: tokenId}
-	_, err = authenticate(&token)
+	_, err = authenticate(context.Background(), &token)
 	if err == nil {
 		t.Errorf("Expected non-nil error. Got: %s", err.Error())
 	}
 
-	c.testStart = time.Now().Add(-1 * time.Minute)
+	c.quizStart = time.Now().Add(-1 * time.Minute)
 	cmap[tokenId] = c
-	s, err = authenticate(&token)
+	s, err = authenticate(context.Background(), &token)
 	if s.Id == "" {
 		t.Errorf("Expected non-empty sessionId. Got: %s", s.Id)
 	}
@@ -293,7 +290,7 @@ func TestAuthenticate(t *testing.T) {
 	c = Candidate{email: "ashwin@dgraph.io", validity: time.Now().AddDate(0, 0, 7)}
 	cmap[tokenId] = c
 	token.Id = tokenId
-	s, err = authenticate(&token)
+	s, err = authenticate(context.Background(), &token)
 	if err != nil {
 		t.Errorf("Expected nil error. Got: %s", err.Error())
 	}
@@ -309,7 +306,6 @@ func TestAuthenticate(t *testing.T) {
 }
 
 func TestLoadCandInfo(t *testing.T) {
-	maxDemoQns = 3
 	tokenId := "test_token"
 	c := Candidate{email: "pawan@dgraph.io", validity: time.Now().AddDate(0, 0, 7)}
 	cmap = make(map[string]Candidate)
@@ -335,7 +331,6 @@ func TestLoadCandInfo(t *testing.T) {
 }
 
 func TestSendAnswer(t *testing.T) {
-	maxDemoQns = 3
 	var err error
 	questions, err = extractQuizInfo("demo_test.yaml")
 	if err != nil {
@@ -344,7 +339,7 @@ func TestSendAnswer(t *testing.T) {
 	r := interact.Response{Qid: "demo-2", Aid: []string{"demo-2a", "demo-2c"},
 		Token: "test_token"}
 	c := Candidate{email: "pawan@dgraph.io", validity: time.Now().AddDate(0, 0, 7),
-		testStart: time.Now().Add(-2 * time.Minute)}
+		quizStart: time.Now().Add(-2 * time.Minute)}
 	f, err := ioutil.TempFile("", "test_token")
 	if err != nil {
 		t.Error(err)
@@ -355,7 +350,7 @@ func TestSendAnswer(t *testing.T) {
 	cmap = make(map[string]Candidate)
 	cmap["test_token"] = c
 
-	_, err = sendAnswer(&r)
+	_, err = status(&r)
 	if err != nil {
 		t.Error("Expected error to be nil.")
 	}
@@ -366,7 +361,7 @@ func TestSendAnswer(t *testing.T) {
 	cmap["test_token"] = c
 
 	r.Aid = []string{"demo-2b"}
-	_, err = sendAnswer(&r)
+	_, err = status(&r)
 	if err != nil {
 		t.Error("Expected error to be nil.")
 	}
@@ -377,7 +372,7 @@ func TestSendAnswer(t *testing.T) {
 	c.score = 0.0
 	cmap["test_token"] = c
 	r.Aid = []string{"skip"}
-	_, err = sendAnswer(&r)
+	_, err = status(&r)
 	if err != nil {
 		t.Error("Expected error to be nil.")
 	}
@@ -395,8 +390,8 @@ func TestSliceDiff(t *testing.T) {
 	qnsAsked := []string{"demo-2"}
 	qnsToAsk := sliceDiff(questions, qnsAsked)
 
-	if len(qnsToAsk) != 3 {
-		t.Errorf("Expected slice to have len: %d. Got: %d", 3, len(qnsToAsk))
+	if len(qnsToAsk) != 8 {
+		t.Errorf("Expected slice to have len: %d. Got: %d", 8, len(qnsToAsk))
 	}
 }
 
@@ -418,7 +413,7 @@ func TestCheckTest(t *testing.T) {
 		},
 	}
 	expectedError := "Id has been used before: qn1"
-	if err := checkTest(qns); err.Error() != expectedError {
+	if err := checkQuiz(qns); err.Error() != expectedError {
 		t.Errorf("Expected error to be %v. Got: %v", expectedError, err)
 	}
 
@@ -441,13 +436,13 @@ func TestCheckTest(t *testing.T) {
 		},
 	}
 	expectedError = "Id has been used before: O2"
-	if err := checkTest(qns); err.Error() != expectedError {
+	if err := checkQuiz(qns); err.Error() != expectedError {
 		t.Errorf("Expected error to be %v. Got: %v", expectedError, err)
 	}
 
 	qns = []Question{{Id: "qn1", Tags: []string{"Demo"}}}
 	expectedError = "Tag: Demo for qn: qn1 should start with a lowercase character"
-	if err := checkTest(qns); err.Error() != expectedError {
+	if err := checkQuiz(qns); err.Error() != expectedError {
 		t.Errorf("Expected error to be %v. Got: %v", expectedError, err)
 	}
 
@@ -465,7 +460,7 @@ func TestCheckTest(t *testing.T) {
 		},
 	}
 	expectedError = "Negative score less than positive for multi-choice qn: qn1"
-	if err := checkTest(qns); err.Error() != expectedError {
+	if err := checkQuiz(qns); err.Error() != expectedError {
 		t.Errorf("Expected error to be %v. Got: %v", expectedError, err)
 	}
 
@@ -483,11 +478,10 @@ func TestCheckTest(t *testing.T) {
 		},
 	}
 	expectedError = "Score for qn: qn1 is less than zero."
-	if err := checkTest(qns); err.Error() != expectedError {
+	if err := checkQuiz(qns); err.Error() != expectedError {
 		t.Errorf("Expected error to be %v. Got: %v", expectedError, err)
 	}
 
-	maxDemoQns = 3
 	var err error
 	questions, err = extractQuizInfo("demo_test.yaml")
 	if err != nil {
@@ -550,7 +544,6 @@ func TestCandfileRead(t *testing.T) {
 
 func TestShuffle(t *testing.T) {
 	rand.Seed(time.Now().UTC().UnixNano())
-	maxDemoQns = 3
 	questions, err := extractQuizInfo("demo_test.yaml")
 	if err != nil {
 		t.Error(err)
