@@ -45,10 +45,8 @@ const (
 	quiz         = "quiz"
 	end          = "END"
 	demoEnd      = "DEMOEND"
-	demoDuration = 10 * time.Minute
+	demoDuration = 20 * time.Minute
 	quizDuration = 60 * time.Minute
-	// This is the number of demo questions asked to dummy candidates.
-	maxDemoQns = 8
 	// This is the number of demo questions asked to actual quiz candidates.
 	beforeQuiz = 3
 )
@@ -79,6 +77,8 @@ var (
 	quizFile = flag.String("quiz", "quiz.yml", "Input question file")
 	port     = flag.String("port", ":443", "Port on which server listens")
 	candFile = flag.String("cand", "candidates.txt", "Candidate inforamation")
+	// This is the number of demo questions asked to dummy candidates.
+	maxDemoQns = 25
 	// List of question ids.
 	questions []Question
 	cmap      map[string]Candidate
