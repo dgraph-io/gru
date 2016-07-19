@@ -33,7 +33,7 @@ import (
 
 	"golang.org/x/net/context"
 
-	"github.com/dgraph-io/gru/server/interact"
+	"github.com/dgraph-io/gru/gruserver/interact"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 
