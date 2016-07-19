@@ -11,7 +11,7 @@ import (
 
 	"golang.org/x/net/context"
 
-	"github.com/dgraph-io/gru/server/interact"
+	"github.com/dgraph-io/gru/gruserver/interact"
 )
 
 func TestIsCorrectAnswer(t *testing.T) {
