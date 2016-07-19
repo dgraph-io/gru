@@ -813,12 +813,16 @@ func extractQuizInfo(file string) ([]Question, error) {
 }
 
 func parseCandRepeat(file string) {
-	parseCandidateFile(file)
+	if err := parseCandidateFile(file); err != nil {
+		log.Fatal(err)
+	}
 	tickChan := time.NewTicker(time.Minute).C
 	for {
 		select {
 		case <-tickChan:
-			parseCandidateFile(file)
+			if err := parseCandidateFile(file); err != nil {
+				log.Fatal(err)
+			}
 		}
 	}
 }

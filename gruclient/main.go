@@ -60,6 +60,7 @@ const (
 	PINGDUR  = 5 * time.Second
 	NUMRETRY = 12
 	TIMEOUT  = 5 * time.Second
+	MAXWIDTH = 200
 )
 
 type clock struct {
@@ -475,13 +476,15 @@ func main() {
 	rand.Seed(time.Now().UnixNano())
 	flag.Parse()
 
-	if *token == "testtoken" {
-		*token = fmt.Sprintf("test-%s", RandStringBytes(10))
-	}
-
 	logFile, _ := os.OpenFile("gru.log", os.O_RDWR|os.O_CREATE|os.O_APPEND,
 		0666)
 	syscall.Dup2(int(logFile.Fd()), 2)
+
+	if *token == "testtoken" {
+		*token = fmt.Sprintf("test-%s", RandStringBytes(10))
+		log.Printf("Generated dummy token: %v\n", *token)
+	}
+
 	err := termui.Init()
 	if err != nil {
 		panic(err)
