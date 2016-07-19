@@ -60,6 +60,7 @@ const (
 	PINGDUR  = 5 * time.Second
 	NUMRETRY = 12
 	TIMEOUT  = 5 * time.Second
+	MAXWIDTH = 300
 )
 
 type clock struct {

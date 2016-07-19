@@ -172,6 +172,7 @@ func statusConnected() {
 func renderInstructionsPage(demoTaken bool) {
 	resetHandlers()
 	termui.Render(instructions)
+	applyMaxDimensions()
 	// Adding an offset so that all these boxes come inside the instructions
 	// box.
 	termui.Body.Y = 2
@@ -203,8 +204,16 @@ func renderInstructionsPage(demoTaken bool) {
 	})
 }
 
+func applyMaxDimensions() {
+	if termui.TermWidth() > MAXWIDTH {
+		termui.Body.Width = MAXWIDTH
+		termui.Body.X = (termui.TermWidth() - MAXWIDTH) / 2
+	}
+}
+
 func renderQuestionsPage(tl string) {
 	termui.Body.Y = 0
+	applyMaxDimensions()
 	termui.Body.AddRows(
 		termui.NewRow(
 			termui.NewCol(3, 0, qp.timeLeft),
