@@ -35,7 +35,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 
-	"github.com/dgraph-io/gru/server/interact"
+	"github.com/dgraph-io/gru/gruserver/interact"
 	"github.com/gizak/termui"
 )
 
