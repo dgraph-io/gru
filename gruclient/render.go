@@ -73,14 +73,13 @@ func setupInfoPage(th, tw int, dur string) {
 
 	// TODO - Take duration from constant.
 	infoPage.general = termui.NewPar(`
-                - By taking this test, you agree not to discuss/post the questions shown here.
-                - The duration of the test is ` + dur + ` mins. Timing would be clearly shown.
-                - Once you start the test, the timer would not stop, irrespective of any client side issues.
+                - By taking this quiz, you agree not to discuss/post the questions shown here.
+                - The duration of the quiz is ` + dur + ` mins. Timing would be clearly shown.
+                - Once you start the quiz, the timer would not stop, irrespective of any client side issues.
                 - Questions can have single or multiple correct answers. They will be shown accordingly.
-                - Your total score and the time left at any point in the test would be displayed on the top.
-                - You would be given the option to have a second attempt at a question if your first answer is wrong.
+                - Your total score and the time left at any point in the quiz would be displayed on the top.
                 - The scoring for each attempt of a question, would be visible to you in a separate section.
-                - At any point you can press Ctrl-q to end the test.`)
+                - At any point you can press Ctrl-q to end the quiz.`)
 	infoPage.general.BorderLabel = "General"
 	infoPage.general.Height = 15
 	infoPage.general.Width = tw
@@ -89,23 +88,21 @@ func setupInfoPage(th, tw int, dur string) {
 	infoPage.scoring = termui.NewPar(`
                 - There is NEGATIVE scoring for wrong answers. So, please DO NOT GUESS.
                 - If you skip a question, the score awarded is always ZERO.
-                - You might be given the option to recover from negative score with a second attempt.
-                - In the above case, please note that another wrong answer would have further negative score.
-                - scoring would be clearly marked in the question on the right hand side box.`)
+                - Scoring would be clearly marked in the question on the right hand side box.`)
 	infoPage.scoring.BorderLabel = "Scoring"
 	infoPage.scoring.Height = 10
 	infoPage.scoring.Width = tw
 	infoPage.scoring.PaddingLeft = 2
 
 	infoPage.contact = termui.NewPar(`
-                - If there are any problems with the setup, or something is unclear, please DO NOT start the test.
-                - Send email to contact@dgraph.io and tell us the problem. So we can solve it before you take the test.`)
+                - If there are any problems with the setup, or something is unclear, please DO NOT start the quiz.
+                - Send email to contact@dgraph.io and tell us the problem. So we can solve it before you take the quiz.`)
 	infoPage.contact.BorderLabel = "Contact"
 	infoPage.contact.Height = 10
 	infoPage.contact.Width = tw
 	infoPage.contact.PaddingLeft = 2
 
-	infoPage.demo = termui.NewPar("We have a demo of the how the test would look like. Press s to start the demo.")
+	infoPage.demo = termui.NewPar("We have a demo of the how the quiz would look like. Press s to start the demo.")
 	infoPage.demo.Border = false
 	infoPage.demo.Height = 3
 	infoPage.demo.Width = tw
@@ -168,7 +165,7 @@ func statusNoConnection() {
 }
 
 func statusConnected() {
-	qp.pingbox.Text = "Connected to server"
+	qp.pingbox.Text = fmt.Sprintf("Connected to server. Last ping received at: %v", time.Now().Format("15:04:05"))
 	qp.pingbox.TextFgColor = termui.ColorGreen
 }
 
@@ -191,7 +188,7 @@ func renderInstructionsPage(demoTaken bool) {
 			termui.NewCol(10, 1, infoPage.demo)))
 
 	if demoTaken {
-		infoPage.demo.Text = "Press s to start the test."
+		infoPage.demo.Text = "Press s to start the quiz."
 	}
 	termui.Body.Align()
 	termui.Render(termui.Body)
