@@ -1,4 +1,4 @@
-// Run protoc --go_out=plugins=grpc:. *.proto to generate the .pb.go from 
+// Run protoc --gofast_out=plugins=grpc:. *.proto to generate the .pb.go from 
 // with the directory that contains the proto file
 syntax="proto3";
 package interact;
