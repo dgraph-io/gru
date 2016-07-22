@@ -553,7 +553,7 @@ func TestShuffle(t *testing.T) {
 	}
 	oldQuestions := make([]Question, len(questions))
 	copy(oldQuestions, questions)
-	shuffleQues(questions)
+	shuffleQuestions(questions)
 	if reflect.DeepEqual(questions, oldQuestions) {
 		t.Error("Expected sequence of the questions to be shuffled. Got same sequence.")
 	}
@@ -564,7 +564,7 @@ func TestShuffle(t *testing.T) {
 		options = append(options, a)
 	}
 	oldOptions := make([]*interact.Answer, len(options))
-	shuffleOpts(options)
+	shuffleOptions(options)
 	if reflect.DeepEqual(options, oldOptions) {
 		t.Error("Expected sequence of the options to be shuffled. Got same sequence.")
 	}

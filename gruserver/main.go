@@ -260,14 +260,14 @@ func stringInSlice(a string, list []string) bool {
 	return false
 }
 
-func shuffleOpts(opts []*interact.Answer) {
+func shuffleOptions(opts []*interact.Answer) {
 	for i := range opts {
 		j := rand.Intn(i + 1)
 		opts[i], opts[j] = opts[j], opts[i]
 	}
 }
 
-func shuffleQues(qns []Question) {
+func shuffleQuestions(qns []Question) {
 	for i := range qns {
 		j := rand.Intn(i + 1)
 		qns[i], qns[j] = qns[j], qns[i]
@@ -283,7 +283,7 @@ func onlyDemoQuestions() []Question {
 			count++
 		}
 	}
-	shuffleQues(qns)
+	shuffleQuestions(qns)
 	return qns
 }
 
@@ -415,7 +415,7 @@ func formQuestion(q Question, score float32) *interact.Question {
 		a := &interact.Answer{Id: o.Uid, Str: o.Str}
 		opts = append(opts, a)
 	}
-	shuffleOpts(opts)
+	shuffleOptions(opts)
 	var isM bool
 	if len(q.Correct) > 1 {
 		isM = true
