@@ -553,7 +553,7 @@ func TestShuffle(t *testing.T) {
 	}
 	oldQuestions := make([]Question, len(questions))
 	copy(oldQuestions, questions)
-	shuffle(questions)
+	shuffleQues(questions)
 	if reflect.DeepEqual(questions, oldQuestions) {
 		t.Error("Expected sequence to be shuffled. Got same sequence.")
 	}
