@@ -64,9 +64,9 @@ func setupInfoPage(th, tw int, dur string) {
 	instructions.PaddingTop = 2
 
 	infoPage.terminal = termui.NewPar(`
-                - Please ensure that you can see all the 4 borders of the Instructions box.
-                - If you can't see them, you need to increase the size of your terminal or adjust the font-size to a smaller value.
-                - DO NOT proceed with the test, until you are able to see all 4 outer borders of the Instructions box.`)
+  - Please ensure that you can see all the 4 borders of the Instructions box.
+  - If you can't see them, you need to increase the size of your terminal or adjust the font-size to a smaller value.
+  - DO NOT proceed with the test, until you are able to see all 4 outer borders of the Instructions box.`)
 	infoPage.terminal.BorderLabel = "Terminal"
 	infoPage.terminal.Height = 8
 	infoPage.terminal.Width = tw
@@ -74,30 +74,30 @@ func setupInfoPage(th, tw int, dur string) {
 
 	// TODO - Take duration from constant.
 	infoPage.general = termui.NewPar(`
-                - By taking this quiz, you agree not to discuss/post the questions shown here.
-                - The duration of the quiz is ` + dur + ` mins. Timing would be clearly shown.
-                - Once you start the quiz, the timer would not stop, irrespective of any client side issues.
-                - Questions can have single or multiple correct answers. They will be shown accordingly.
-                - Your total score and the time left at any point in the quiz would be displayed on the top.
-                - The scoring for each attempt of a question, would be visible to you in a separate section.
-                - At any point you can press Ctrl-q to end the quiz.`)
+  - By taking this quiz, you agree not to discuss/post the questions shown here.
+  - The duration of the quiz is ` + dur + ` mins. Timing would be clearly shown.
+  - Once you start the quiz, the timer would not stop, irrespective of any client side issues.
+  - Questions can have single or multiple correct answers. They will be shown accordingly.
+  - Your total score and the time left at any point in the quiz would be displayed on the top.
+  - The scoring for each attempt of a question, would be visible to you in a separate section.
+  - At any point you can press Ctrl-q to end the quiz.`)
 	infoPage.general.BorderLabel = "General"
 	infoPage.general.Height = 15
 	infoPage.general.Width = tw
 	infoPage.general.PaddingLeft = 2
 
 	infoPage.scoring = termui.NewPar(`
-                - There is NEGATIVE scoring for wrong answers. So, please DO NOT GUESS.
-                - If you skip a question, the score awarded is always ZERO.
-                - Scoring would be clearly marked in the question on the right hand side box.`)
+  - There is NEGATIVE scoring for wrong answers. So, please DO NOT GUESS.
+  - If you skip a question, the score awarded is always ZERO.
+  - Scoring would be clearly marked in the question on the right hand side box.`)
 	infoPage.scoring.BorderLabel = "Scoring"
 	infoPage.scoring.Height = 10
 	infoPage.scoring.Width = tw
 	infoPage.scoring.PaddingLeft = 2
 
 	infoPage.contact = termui.NewPar(`
-                - If there are any problems with the setup, or something is unclear, please DO NOT start the quiz.
-                - Send email to contact@dgraph.io and tell us the problem. So we can solve it before you take the quiz.`)
+  - If there are any problems with the setup, or something is unclear, please DO NOT start the quiz.
+  - Send email to contact@dgraph.io and tell us the problem. So we can solve it before you take the quiz.`)
 	infoPage.contact.BorderLabel = "Contact"
 	infoPage.contact.Height = 10
 	infoPage.contact.Width = tw
