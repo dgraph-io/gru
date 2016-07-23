@@ -532,6 +532,13 @@ func main() {
 		conn.Close()
 		termui.StopLoop()
 	})
+	// Resize event triggers body re-alignment to new width
+	termui.Handle("/sys/wnd/resize", func(e termui.Event) {
+		applyMaxDimensions()
+		termui.Body.Align()
+		termui.Clear() // needed because the padded columns do not get redrawn
+		termui.Render(termui.Body)
+	})
 
 	termui.Loop()
 }

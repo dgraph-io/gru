@@ -208,6 +208,9 @@ func applyMaxDimensions() {
 	if termui.TermWidth() > MAXWIDTH {
 		termui.Body.Width = MAXWIDTH
 		termui.Body.X = (termui.TermWidth() - MAXWIDTH) / 2
+	} else {
+		termui.Body.Width = termui.TermWidth()
+		termui.Body.X = 0
 	}
 }
 
