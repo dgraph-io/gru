@@ -10,6 +10,7 @@ import (
 
 var instructions *termui.Par
 var errorPage *termui.Par
+var isInfoPage bool
 
 func setupErrorPage() {
 	errorPage = termui.NewPar("Can't connect to server. Please send the file gru.log to contact@dgraph.io.")
@@ -170,6 +171,7 @@ func statusConnected() {
 }
 
 func renderInstructionsPage(demoTaken bool) {
+	isInfoPage = true
 	resetHandlers()
 	termui.Render(instructions)
 	applyMaxDimensions()
@@ -195,6 +197,7 @@ func renderInstructionsPage(demoTaken bool) {
 	termui.Render(termui.Body)
 
 	termui.Handle("/sys/kbd/s", func(e termui.Event) {
+		isInfoPage = false
 		if !demoTaken {
 			initializeDemo(s.demoDuration)
 			return

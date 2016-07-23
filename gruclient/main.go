@@ -497,6 +497,7 @@ func main() {
 	instructions.BorderLabel = "Connecting"
 	instructions.Text = "Connecting to server..."
 	termui.Render(instructions)
+	isInfoPage = false
 
 	var opts []grpc.DialOption
 	if *tls {
@@ -535,6 +536,10 @@ func main() {
 	// Resize event triggers body re-alignment to new width
 	termui.Handle("/sys/wnd/resize", func(e termui.Event) {
 		applyMaxDimensions()
+		if isInfoPage {
+			instructions.Width = termui.TermWidth()
+			termui.Render(instructions)
+		}
 		termui.Body.Align()
 		termui.Clear() // needed because the padded columns do not get redrawn
 		termui.Render(termui.Body)
