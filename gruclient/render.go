@@ -276,7 +276,8 @@ func showFinalPage(msg string) {
 
 	termui.Clear()
 	termui.Body.Rows = termui.Body.Rows[:0]
-	termui.Render(instructions)
+	termui.Body.Y = termui.TermHeight() / 4
+	termui.Body.AddRows(termui.NewRow(termui.NewCol(6, 3, instructions)))
 	resetHandlers()
 	conn.Close()
 }
