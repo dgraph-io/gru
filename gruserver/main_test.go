@@ -566,7 +566,41 @@ func TestShuffle(t *testing.T) {
 	oldOptions := make([]*interact.Answer, len(options))
 	copy(oldOptions, options)
 	shuffleOptions(options)
+	// Make sure that the options are still equivalent with the oldOptions.
+
+	if areOptionsEqual(oldOptions, options) != true {
+		t.Error("The shuffled options are different from the original options.")
+	}
+
+	// Make sure that the order is not same.
 	if reflect.DeepEqual(options, oldOptions) {
 		t.Error("Expected sequence of the options to be shuffled. Got same sequence.")
 	}
+}
+
+func areOptionsEqual(x, y []*interact.Answer) bool {
+	//http://stackoverflow.com/a/36000696
+	if len(x) != len(y) {
+		return false
+	}
+	// create a map of string -> int
+	diff := make(map[*interact.Answer]int, len(x))
+	for _, _x := range x {
+		// 0 value for int is 0, so just increment a counter for the string
+		diff[_x]++
+	}
+	for _, _y := range y {
+		// If the string _y is not in diff bail out early
+		if _, ok := diff[_y]; !ok {
+			return false
+		}
+		diff[_y] -= 1
+		if diff[_y] == 0 {
+			delete(diff, _y)
+		}
+	}
+	if len(diff) == 0 {
+		return true
+	}
+	return false
 }
