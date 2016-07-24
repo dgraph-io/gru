@@ -78,7 +78,7 @@ var (
 	port     = flag.String("port", ":443", "Port on which server listens")
 	candFile = flag.String("cand", "candidates.txt", "Candidate inforamation")
 	// This is the number of demo questions asked to dummy candidates.
-	maxDemoQns = flag.Int("max_demo_questions", 25, "Maximum number of demo questions for dummy candidates.")
+	maxDemoQns = flag.Int("max_demo_qns", 25, "Maximum number of demo questions for dummy candidates.")
 	// List of question ids.
 	questions []Question
 	cmap      map[string]Candidate
