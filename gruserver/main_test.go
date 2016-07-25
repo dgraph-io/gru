@@ -579,24 +579,24 @@ func TestShuffle(t *testing.T) {
 }
 
 func areOptionsEqual(x, y []*interact.Answer) bool {
-	//http://stackoverflow.com/a/36000696
+	// http://stackoverflow.com/a/36000696
 	if len(x) != len(y) {
 		return false
 	}
 	// create a map of string -> int
 	diff := make(map[*interact.Answer]int, len(x))
-	for _, _x := range x {
+	for _, i := range x {
 		// 0 value for int is 0, so just increment a counter for the string
-		diff[_x]++
+		diff[i]++
 	}
-	for _, _y := range y {
-		// If the string _y is not in diff bail out early
-		if _, ok := diff[_y]; !ok {
+	for _, j := range y {
+		// If the string j is not in diff bail out early
+		if _, ok := diff[j]; !ok {
 			return false
 		}
-		diff[_y] -= 1
-		if diff[_y] == 0 {
-			delete(diff, _y)
+		diff[j] -= 1
+		if diff[j] == 0 {
+			delete(diff, j)
 		}
 	}
 	if len(diff) == 0 {
