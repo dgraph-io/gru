@@ -78,7 +78,7 @@ var (
 	port     = flag.String("port", ":443", "Port on which server listens")
 	candFile = flag.String("cand", "candidates.txt", "Candidate inforamation")
 	// This is the number of demo questions asked to dummy candidates.
-	maxDemoQns = 25
+	maxDemoQns = flag.Int("max_demo_qns", 25, "Maximum number of demo questions for dummy candidates.")
 	// List of question ids.
 	questions []Question
 	cmap      map[string]Candidate
@@ -271,7 +271,7 @@ func onlyDemoQuestions() []Question {
 	var qns []Question
 	count := 0
 	for _, x := range questions {
-		if stringInSlice("demo", x.Tags) && count < maxDemoQns {
+		if stringInSlice("demo", x.Tags) && count < *maxDemoQns {
 			qns = append(qns, x)
 			count++
 		}
@@ -285,7 +285,7 @@ func demoCandInfo(token string) Candidate {
 	c.name = token
 	c.email = "no-mail@given"
 	c.validity = time.Now().Add(time.Duration(100 * time.Hour))
-	c.demoQnsToAsk = maxDemoQns
+	c.demoQnsToAsk = *maxDemoQns
 
 	if _, err := os.Stat(fmt.Sprintf("logs/%s.log", token)); os.IsNotExist(err) {
 		f, err := os.OpenFile(fmt.Sprintf("logs/%s.log", token),
@@ -788,7 +788,7 @@ func checkQuiz(qns []Question) error {
 			}
 		}
 	}
-	if demoQnCount < maxDemoQns {
+	if demoQnCount < *maxDemoQns {
 		return fmt.Errorf("Need more demo questions in quiz file")
 	}
 	return nil

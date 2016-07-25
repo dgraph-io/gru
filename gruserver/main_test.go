@@ -15,7 +15,7 @@ import (
 )
 
 func TestIsCorrectAnswer(t *testing.T) {
-	maxDemoQns = 8
+	*maxDemoQns = 8
 	var err error
 	questions, err = extractQuizInfo("demo_test.yaml")
 	if err != nil {
@@ -58,7 +58,7 @@ func TestIsCorrectAnswer(t *testing.T) {
 }
 
 func TestNextQuestion(t *testing.T) {
-	maxDemoQns = 8
+	*maxDemoQns = 8
 	var err error
 	questions, err = extractQuizInfo("demo_test.yaml")
 	if err != nil {
@@ -124,7 +124,7 @@ func TestNextQuestion(t *testing.T) {
 }
 
 func TestGetQuestion(t *testing.T) {
-	maxDemoQns = 8
+	*maxDemoQns = 8
 	var err error
 	questions, err = extractQuizInfo("demo_test.yaml")
 	if err != nil {
