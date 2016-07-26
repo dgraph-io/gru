@@ -1,4 +1,5 @@
-// Run protoc --go_out=plugins=grpc:. *.proto to generate the .pb.go from 
+// Get gogo proto: go get github.com/gogo/protobuf/protoc-gen-gofast
+// Run protoc --gofast_out=plugins=grpc:. *.proto to generate the .pb.go from 
 // with the directory that contains the proto file
 syntax="proto3";
 package interact;
