@@ -44,6 +44,7 @@ const (
 	demo         = "demo"
 	quiz         = "quiz"
 	end          = "END"
+	terminated   = "TERMINATED"
 	demoEnd      = "DEMOEND"
 	demoDuration = 20 * time.Minute
 	quizDuration = 60 * time.Minute
@@ -80,12 +81,13 @@ var (
 	// This is the number of demo questions asked to dummy candidates.
 	maxDemoQns = flag.Int("max_demo_qns", 25, "Maximum number of demo questions for dummy candidates.")
 	// List of question ids.
-	questions []Question
-	cmap      map[string]Candidate
-	wrtLock   sync.Mutex
-	mapLock   sync.Mutex
-	throttle  = make(chan time.Time, 3)
-	rate      = time.Second
+	terminationScore = flag.Int("term_score", 0, "Minimum negative score at which the quiz should be terminated.")
+	questions        []Question
+	cmap             map[string]Candidate
+	wrtLock          sync.Mutex
+	mapLock          sync.Mutex
+	throttle         = make(chan time.Time, 3)
+	rate             = time.Second
 )
 
 type server struct{}
@@ -479,6 +481,14 @@ func getQuestion(req *interact.Req) (*interact.Question, error) {
 		c.quizStart = time.Now().UTC()
 	}
 	q, err := nextQuestion(c, req.Token, quiz)
+	// It means that the user has score less than allowed terminated score.
+	if *terminationScore != 0 && c.score <= float32(*terminationScore) {
+		q = &interact.Question{Id: terminated, Score: c.score}
+		writeLog(c, fmt.Sprintf("%v Quiz terminated.\n",
+			UTCTime()))
+		return q, nil
+	}
+
 	// This means that quiz qns are over.
 	if err != nil {
 		q = &interact.Question{Id: end, Score: c.score}
@@ -658,7 +668,6 @@ func (s *server) Ping(ctx context.Context,
 		sstat.TimeLeft = quizTimeLeft.String()
 		return &sstat, nil
 	}
-
 	sstat.Status = end
 	writeLog(c, fmt.Sprintf("%v quiz_end\n", UTCTime()))
 	return &sstat, nil
@@ -849,6 +858,9 @@ func rateLimit() {
 func main() {
 	rand.Seed(time.Now().UTC().UnixNano())
 	flag.Parse()
+	if *terminationScore > 0 {
+		*terminationScore = -1 * (*terminationScore)
+	}
 	var err error
 	cmap = make(map[string]Candidate)
 	if questions, err = extractQuizInfo(*quizFile); err != nil {

@@ -55,12 +55,13 @@ const (
 	// User is being asked to confirm if they want to skip answering the
 	// question.
 	confirmSkip
-	END      = "END"
-	DEMOEND  = "DEMOEND"
-	PINGDUR  = 5 * time.Second
-	NUMRETRY = 12
-	TIMEOUT  = 5 * time.Second
-	MAXWIDTH = 200
+	END        = "END"
+	DEMOEND    = "DEMOEND"
+	TERMINATED = "TERMINATED"
+	PINGDUR    = 5 * time.Second
+	NUMRETRY   = 12
+	TIMEOUT    = 5 * time.Second
+	MAXWIDTH   = 200
 )
 
 type clock struct {
@@ -144,6 +145,10 @@ func fetchAndDisplayQn() {
 		s.totalScore = 0.0
 		s.lastScore = 0.0
 		renderInstructionsPage(true)
+		return
+	}
+	if q.Id == TERMINATED {
+		showFinalPage("The quiz has been terminated! \n\n" + finalScore(q.Score))
 		return
 	}
 	if q.Id == END {
