@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"io/ioutil"
 	"math/rand"
 	"os"
@@ -590,4 +591,29 @@ func areOptionsEqual(x, y []*quizmeta.Answer) bool {
 		return true
 	}
 	return false
+}
+
+func TestIsValidSession(t *testing.T) {
+	c := Candidate{email: "test@gmail.com", sid: "testsid"}
+	cmap = make(map[string]Candidate)
+	cmap["testtoken"] = c
+
+	expected := fmt.Errorf("Invalid token.")
+	if _, err := isValidSession("errtoken", ""); err.Error() != expected.Error() {
+		t.Errorf("Expected err to be: %v, Got: %v", expected, err)
+	}
+
+	expected = fmt.Errorf("You already have another session active.")
+	if _, err := isValidSession("testtoken", "errsid"); err.Error() != expected.Error() {
+		t.Errorf("Expected err to be: %v, Got: %v", expected, err)
+	}
+
+	var cand Candidate
+	cand, err := isValidSession("testtoken", "testsid")
+	if err != nil {
+		t.Errorf("Expected err to be: %v, Got: %v", nil, err)
+	}
+	if cand.email != "test@gmail.com" {
+		t.Errorf("Got wrong candidate")
+	}
 }

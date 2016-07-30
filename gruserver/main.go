@@ -521,11 +521,11 @@ func isValidSession(token string, sid string) (Candidate, error) {
 	var ok bool
 
 	if c, ok = readMap(token); !ok {
-		return Candidate{}, errors.New("Invalid token.")
+		return Candidate{}, fmt.Errorf("Invalid token.")
 	}
 
 	if c.sid != "" && c.sid != sid {
-		return Candidate{}, errors.New("You already have another session active.")
+		return Candidate{}, fmt.Errorf("You already have another session active.")
 	}
 	return c, nil
 }
@@ -625,10 +625,9 @@ func status(token string, sid string, qid string, aids []string) (*quizmeta.Answ
 
 func Status(w http.ResponseWriter, r *http.Request) {
 	token := r.Header.Get("Authorization")
-	r.ParseForm()
 	sid := r.FormValue("sid")
 
-	_, err := isValidSession(token, r.FormValue("sid"))
+	_, err := isValidSession(token, sid)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusForbidden)
 		return
