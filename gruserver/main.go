@@ -88,6 +88,16 @@ var (
 
 type server struct{}
 
+func addCorsHeaders(w http.ResponseWriter) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+	w.Header().Set("Access-Control-Allow-Headers",
+		"Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token,"+
+			"X-Auth-Token, Cache-Control, X-Requested-With")
+	w.Header().Set("Access-Control-Allow-Credentials", "true")
+	w.Header().Set("Connection", "close")
+}
+
 func checkToken(c Candidate) error {
 	if time.Now().UTC().After(c.validity) {
 		return errors.New("Your token has expired.")
@@ -399,7 +409,7 @@ func authenticate(token string) (s Session, err error) {
 }
 
 func Authenticate(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Access-Control-Allow-Origin", "*")
+	addCorsHeaders(w)
 	var s Session
 	var err error
 
@@ -532,7 +542,7 @@ func isValidSession(token string, sid string) (Candidate, error) {
 }
 
 func GetQuestion(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Access-Control-Allow-Origin", "*")
+	addCorsHeaders(w)
 	token := r.Header.Get("Authorization")
 
 	_, err := isValidSession(token, r.FormValue("sid"))
@@ -626,7 +636,7 @@ func status(token string, sid string, qid string, aids []string) (*quizmeta.Answ
 }
 
 func Status(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Access-Control-Allow-Origin", "*")
+	addCorsHeaders(w)
 	token := r.Header.Get("Authorization")
 	sid := r.FormValue("sid")
 
