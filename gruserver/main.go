@@ -399,6 +399,7 @@ func authenticate(token string) (s Session, err error) {
 }
 
 func Authenticate(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 	var s Session
 	var err error
 
@@ -531,6 +532,7 @@ func isValidSession(token string, sid string) (Candidate, error) {
 }
 
 func GetQuestion(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 	token := r.Header.Get("Authorization")
 
 	_, err := isValidSession(token, r.FormValue("sid"))
@@ -624,6 +626,7 @@ func status(token string, sid string, qid string, aids []string) (*quizmeta.Answ
 }
 
 func Status(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 	token := r.Header.Get("Authorization")
 	sid := r.FormValue("sid")
 
