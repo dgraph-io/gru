@@ -92,7 +92,7 @@ func addCorsHeaders(w http.ResponseWriter) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
 	w.Header().Set("Access-Control-Allow-Headers",
-		"Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token,"+
+		"Authorization,Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token,"+
 			"X-Auth-Token, Cache-Control, X-Requested-With")
 	w.Header().Set("Access-Control-Allow-Credentials", "true")
 	w.Header().Set("Connection", "close")
@@ -410,6 +410,9 @@ func authenticate(token string) (s Session, err error) {
 
 func Authenticate(w http.ResponseWriter, r *http.Request) {
 	addCorsHeaders(w)
+	if r.Method == "OPTIONS" {
+		return
+	}
 	var s Session
 	var err error
 
@@ -543,6 +546,9 @@ func isValidSession(token string, sid string) (Candidate, error) {
 
 func GetQuestion(w http.ResponseWriter, r *http.Request) {
 	addCorsHeaders(w)
+	if r.Method == "OPTIONS" {
+		return
+	}
 	token := r.Header.Get("Authorization")
 
 	_, err := isValidSession(token, r.FormValue("sid"))
@@ -637,6 +643,9 @@ func status(token string, sid string, qid string, aids []string) (*quizmeta.Answ
 
 func Status(w http.ResponseWriter, r *http.Request) {
 	addCorsHeaders(w)
+	if r.Method == "OPTIONS" {
+		return
+	}
 	token := r.Header.Get("Authorization")
 	sid := r.FormValue("sid")
 
