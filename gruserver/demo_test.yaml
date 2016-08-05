@@ -1,145 +1,464 @@
-- id: demo-1
-  str: What is the capital of France?
-  correct: [demo-1b]
+- id: sunmass
+  str: What percentage of the solar system's mass does Sun holds?
+  correct: [sunmass-99]
   opt:
-  - uid: demo-1a
-    str: Berlin
-  - uid: demo-1b
-    str: Paris
-  - uid: demo-1c
-    str: Rome
-  - uid: demo-1d
-    str: London
+  - uid: sunmass-50
+    str: 50 percent
+  - uid: sunmass-1
+    str: 1 percent
+  - uid: sunmass-99
+    str: 99 percent
+  - uid: sunmass-10
+    str: 10 percent
   positive: 5
   negative: 2.5
+  tags: [easy,medium]
+
+- id: earthsun
+  str: What is the distance between Sun and Earth?
+  correct: [earthsun-8]
+  opt:
+  - uid: earthsun-5
+    str: 92,960 miles
+  - uid: earthsuni-3
+    str: 926 miles
+  - uid: earthsun-11
+    str: 92,960,000,000 miles
+  - uid: earthsun-8
+    str: 92,960,000 miles
+  positive: 5
+  negative: 2.5
+  tags: [easy,medium]
+
+- id: largestplanet
+  str: Which is the largest planet in our Solar System?
+  correct: [largestplanet-jupiter]
+  opt:
+  - uid: largestplanet-earth
+    str: Earth
+  - uid: largestplanet-venus
+    str: Venus
+  - uid: largestplanet-mars
+    str: Mars
+  - uid: largestplanet-jupiter
+    str: Jupiter
+  positive: 3
+  negative: 1.5
   tags: [easy,demo]
 
-- id: test-2
-  str: Which among the following were originally developed at Google?
-  correct: [test-2a,test-2c]
+- id: ringplanets
+  str: Which planets have rings around them?
+  correct: [ringplanets-saturn, ringplanets-neptune]
   opt:
-  - uid: test-2a
-    str: Go programming language
-  - uid: test-2b
-    str: Ruby
-  - uid: test-2c
-    str: Angular
-  - uid: test-2d
-    str: Rust
+  - uid: ringplanets-saturn
+    str: Saturn
+  - uid: ringplanets-venus
+    str: Venus
+  - uid: ringplanets-mars
+    str: Mars
+  - uid: ringplanets-neptune
+    str: Neptune
+  positive: 2.5
+  negative: 3
+  tags: [easy,demo]
+
+- id: moonorbit
+  str: The moon orbits earth every
+  correct: [moonorbit-27]
+  opt:
+  - uid: moonorbit-2
+    str: 2.3 days
+  - uid: moonorbit-27
+    str: 27.3 days
+  - uid: moonorbit-273
+    str: 273 days
+  - uid: moonorbit-23
+    str: 23 days
+  positive: 3
+  negative: 1.5
+  tags: [easy,demo]
+
+- id: redplanet
+  str: Which planet looks reddish in the night sky?
+  correct: [redplanet-mars]
+  opt:
+  - uid: redplanet-saturn
+    str: Saturn
+  - uid: redplanet-jupiter
+    str: Jupiter
+  - uid: redplanet-mars
+    str: Mars
+  - uid: redplanet-mercury
+    str: Mercury
+  positive: 3
+  negative: 1.5
+  tags: [easy,demo]
+
+- id: coldestplanet
+  str: The coldest planet in the solar system is
+  correct: [coldestplanet-neptune]
+  opt:
+  - uid: coldestplanet-jupiter
+    str: Jupiter
+  - uid: coldestplanet-uranus
+    str: Uranus
+  - uid: coldestplanet-saturn
+    str: Saturn
+  - uid: coldestplanet-neptune
+    str: Neptune
   positive: 5
-  negative: 5
+  negative: 2.5
+  tags: [medium,demo]
+
+- id: ageofearth
+  str: Roughly how old is Earth?
+  correct: [ageofearth-9]
+  opt:
+  - uid: ageofearth-3
+    str: 6000 years
+  - uid: ageofearth-9
+    str: 4.54 billion years
+  - uid: ageofearth-6
+    str: 4.54 million years
+  - uid: ageofearth-12
+    str: 4.54 trillion years
+  positive: 5
+  negative: 2.5
+  tags: [medium,demo]
+
+- id: hotesttemp
+  str: 56.7 C (134 F) was recorded as the highest temperature on Earth in 1913, where?
+  correct: [hotesttemp-deathvalley]
+  opt:
+  - uid: hotesttemp-libya
+    str: Azizia, Libya
+  - uid: hotesttemp-deathvalley
+    str: Death Valley, California
+  - uid: hotesttemp-sahara
+    str: Sahara Desert
+  - uid: hotesttemp-thar
+    str: Thar Desert
+  positive: 5
+  negative: 2.5
+  tags: [medium,demo]
+
+- id: coldesttemp
+  str: Minus 100 degrees Fahrenheit (minus 73 degrees C) was the coldest temperature measured on Earth. Where?
+  correct: [coldesttemp-antartica]
+  opt:
+  - uid: coldesttemp-alaska
+    str: Anchorage, Alaska
+  - uid: coldesttemp-antartica
+    str: Vostok Station, Antartica
+  - uid: coldesttemp-northpole
+    str: North Pole
+  - uid: coldesttemp-iceland
+    str: Iceland
+  positive: 5
+  negative: 2.5
+  tags: [medium,demo]
+
+- id: daymars
+  str: How long is a day on Mars?
+  correct: [daymars-24]
+  opt:
+  - uid: daymars-24
+    str: 24.62 hours
+  - uid: daymars-2
+    str: 2.462 hours
+  - uid: daymars-246
+    str: 246.2 hours
+  - uid: daymars-49
+    str: 49.24 hours
+  positive: 5
+  negative: 2.5
+  tags: [medium,demo]
+
+- id: firstinspace
+  str: The first person to enter into space was
+  correct: [firstinspace-yuri]
+  opt:
+  - uid: firstinspace-valentina
+    str: Valentina Tereshkova
+  - uid: firstinspace-edward
+    str: Edward H. White
+  - uid: firstinspace-yuri
+    str: Yuri Gagarin
+  - uid: firstinspace-alan
+    str: Alan Shepard
+  positive: 3
+  negative: 1.5
+  tags: [easy,demo]
+
+- id: spacecraftmars
+  str: Which year did we first land a spacecraft on Mars?
+  correct: [spacecraftmars-1976]
+  opt:
+  - uid: spacecraftmars-2001
+    str: 2001
+  - uid: spacecraftmars-1976
+    str: 1976
+  - uid: spacecraftmars-1981
+    str: 1981
+  - uid: spacecraftmars-2013
+    str: 2013
+  positive: 5
+  negative: 2.5
+  tags: [medium,demo]
+
+- id: halleyscomet
+  str: When will the Halley's comet return?
+  correct: [halleyscomet-2062]
+  opt:
+  - uid: halleyscomet-2017
+    str: 2017
+  - uid: halleyscomet-2062
+    str: 2062
+  - uid: halleyscomet-2124
+    str: 2124
+  - uid: halleyscomet-2021
+    str: 2021
+  positive: 5
+  negative: 2.5
+  tags: [medium,demo]
+
+- id: firstsatspace
+  str: What was the first satellite in space?
+  correct: [firstsatspace-sputnik]
+  opt:
+  - uid: firstsatspace-explorer
+    str: Explorer 1
+  - uid: firstsatspace-echo
+    str: Echo 1
+  - uid: firstsatspace-sputnik
+    str: Sputnik 1
+  - uid: firstsatspace-apollo
+    str: Apollo 1
+  positive: 5
+  negative: 2.5
+  tags: [medium,demo]
+
+- id: greatestmoons
+  str: The planet with the greatest number of moons is
+  correct: [greatestmoons-jupiter]
+  opt:
+  - uid: greatestmoons-saturn
+    str: Saturn
+  - uid: greatestmoons-jupiter
+    str: Jupiter
+  - uid: greatestmoons-mars
+    str: Mars
+  - uid: greatestmoons-mercury
+    str: Mercury
+  positive: 3
+  negative: 1.5
+  tags: [easy,demo]
+
+- id: lightsunearth
+  str: How long does it take for light to travel from Sun to the Earth?
+  correct: [lightsunearth-8]
+  opt:
+  - uid: lightsunearth-1
+    str: 1 minute
+  - uid: lightsunearth-8
+    str: 8 minutes
+  - uid: lightsunearth-instant
+    str: Instantaneous
+  - uid: lightsunearth-24
+    str: 24 hours
+  positive: 5
+  negative: 2.5
+  tags: [medium,demo]
+
+- id: firstcraftmoon
+  str: What was the first spacecraft to reach the Moon's surface?
+  correct: [firstcraftmoon-luna2]
+  opt:
+  - uid: firstcraftmoon-apollo
+    str: Apollo 11
+  - uid: firstcraftmoon-luna9
+    str: Luna 9
+  - uid: firstcraftmoon-surveyor
+    str: Surveyor 1
+  - uid: firstcraftmoon-luna2
+    str: Luna 2
+  positive: 5
+  negative: 2.5
+  tags: [medium,demo]
+
+- id: voyager
+  str: Voyager 1 is the first spacecraft to leave our solar system. How many years did it take to reach the edge?
+  correct: [voyager-35]
+  opt:
+  - uid: voyager-20
+    str: 20 years
+  - uid: voyager-25
+    str: 25 years
+  - uid: voyager-30
+    str: 30 years
+  - uid: voyager-35
+    str: 35 years
+  positive: 5
+  negative: 2.5
+  tags: [medium,demo]
+
+- id: pluto
+  str: Which of these American astronomers discovered Pluto in 1930?
+  correct: [pluto-clyde]
+  opt:
+  - uid: pluto-harlow
+    str: Harlow Shapley
+  - uid: pluto-clyde
+    str: Clyde Tombaugh
+  - uid: pluto-edwin
+    str: Edwin Hubble
+  - uid: pluto-johann
+    str: Johann Gottfried Galle
+  positive : 5
+  negative: 2.5
+  tags: [medium,demo]
+
+- id: jupiterrevolution
+  str: How long does Jupiter take to complete one revolution in its orbit around the Sun?
+  correct: [jupiterrevolution-11]
+  opt:
+  - uid: jupiterrevolution-11
+    str: 11.86 years
+  - uid: jupiterrevolution-248
+    str: 248 years
+  - uid: jupiterrevolution-84
+    str: 84 years
+  - uid: jupiterrevolution-165
+    str: 165 years
+  positive: 5
+  negative: 2.5
+  tags: [medium,demo]
+
+- id: gasplanets
+  str: Which of the following planets in our solar system are made from Gas?
+  correct: [gasplanets-jupiter,gasplanets-saturn,gasplanets-uranus,gasplanets-neptune]
+  opt:
+  - uid: gasplanets-jupiter
+    str: Jupiter
+  - uid: gasplanets-saturn
+    str: Saturn
+  - uid: gasplanets-uranus
+    str: Uranus
+  - uid: gasplanets-neptune
+    str: Neptune
+  positive: 2.5
+  negative: 3
+  tags: [easy,demo]
+
+- id: menonmoon
+  str: How many men have walked on the moon?
+  correct: [menonmoon-12]
+  opt:
+  - uid: menonmoon-7
+    str: 7
+  - uid: menonmoon-12
+    str: 12
+  - uid: menonmoon-13
+    str: 13
+  - uid: menonmoon-15
+    str: 15
+  positive: 5
+  negative: 2.5
+  tags: [medium,demo]
+
+- id: planetsnomoon
+  str: Which of the following planets don't have any moons?
+  correct: [planetsnomoon-mercury, planetsnomoon-venus]
+  opt:
+  - uid: planetsnomoon-uranus
+    str: Uranus
+  - uid: planetsnomoon-saturn
+    str: Saturn
+  - uid: planetsnomoon-mercury
+    str: Mercury
+  - uid: planetsnomoon-venus
+    str: Venus
+  positive: 2.5
+  negative: 3
+  tags: [medium,demo]
+
+- id: hottestplanet
+  str: Which is the hottest planet in our Solar System?
+  correct: [hottestplanet-venus]
+  opt:
+  - uid: hottestplanet-mercury
+    str: Mercury
+  - uid: hottestplanet-mars
+    str: Mars
+  - uid: hottestplanet-venus
+    str: Venus
+  - uid: hottestplanet-earth
+    str: Earth
+  positive: 5
+  negative: 2.5
+  tags: [medium,demo]
+
+- id: planetromangod
+  str: Which is the only planet not named after a Roman god?
+  correct: [planetromangod-earth]
+  opt:
+  - uid: planetromangod-earth
+    str: Earth
+  - uid: planetromangod-saturn
+    str: Saturn
+  - uid: planetromangod-uranus
+    str: Uranus
+  - uid: planetromangod-jupiter
+    str: Jupiter
+  positive: 5
+  negative: 2.5
+  tags: [medium,demo]
+
+- id: daymercury
+  str: How long does a day last on Mercury compared to a day on earth?
+  correct: [daymercury-58]
+  opt:
+  - uid: daymercury-2
+    str: 2 days
+  - uid: daymercury-58
+    str: 58 days
+  - uid: daymercury-580
+    str: 580 days
+  - uid: daymercury-point1
+    str: 0.1 day
+  positive: 5
+  negative: 2.5
+  tags: [medium,demo]
+
+- id: comets
+  str: What are comets mostly made of?
+  correct: [comets-ice]
+  opt:
+  - uid: comets-liquid
+    str: Hot, liquid rock
+  - uid: comets-poisonous
+    str: Poisonous liquid
+  - uid: comets-ice
+    str: Dirty ice and rust
+  - uid: comets-metal
+    str: Rusty metal
+  positive: 5
+  negative: 2.5
+  tags: [medium,demo]
+
+- id: asteroid
+  str: Where is the asteroid belt?
+  correct: [asteroid-mj]
+  opt:
+  - uid: asteroid-mj
+    str: Between Mars and Jupiter
+  - uid: asteroid-js
+    str: Between Jupiter and Saturn
+  - uid: asteroid-ev
+    str: Between Earth and Venus
+  - uid: asteroid-em
+    str: Between Earth and Mars
+  positive: 3
+  negative: 1.5
   tags: [easy,quiz]
-
-- id: demo-2
-  str: Which among the following were originally developed at Google?
-  correct: [demo-2a,demo-2c]
-  opt:
-  - uid: demo-2a
-    str: Go programming language
-  - uid: demo-2b
-    str: Ruby
-  - uid: demo-2c
-    str: Angular
-  - uid: demo-2d
-    str: Rust
-  positive: 5
-  negative: 5
-  tags: [easy,demo]
-
-- id: demo-3
-  str: Which one is the largest ocean in the world?
-  correct: [demo-3b]
-  opt:
-  - uid: demo-3a
-    str: Indian
-  - uid: demo-3b
-    str: Pacific
-  - uid: demo-3c
-    str: Atlantic
-  - uid: demo-3d
-    str: Arctic
-  positive: 5
-  negative: 2.5
-  tags: [easy,demo]
-
-- id: demo-4
-  str: Which one is the largest ocean in the world?
-  correct: [demo-4b]
-  opt:
-  - uid: demo-4a
-    str: Indian
-  - uid: demo-4b
-    str: Pacific
-  - uid: demo-4c
-    str: Atlantic
-  - uid: demo-4d
-    str: Arctic
-  positive: 5
-  negative: 2.5
-  tags: [easy,demo]
-
-- id: demo-5
-  str: Which one is the largest ocean in the world?
-  correct: [demo-5b]
-  opt:
-  - uid: demo-5a
-    str: Indian
-  - uid: demo-5b
-    str: Pacific
-  - uid: demo-5c
-    str: Atlantic
-  - uid: demo-5d
-    str: Arctic
-  positive: 5
-  negative: 2.5
-  tags: [easy,demo]
-
-- id: demo-6
-  str: Which one is the largest ocean in the world?
-  correct: [demo-6b]
-  opt:
-  - uid: demo-6a
-    str: Indian
-  - uid: demo-6b
-    str: Pacific
-  - uid: demo-6c
-    str: Atlantic
-  - uid: demo-6d
-    str: Arctic
-  positive: 5
-  negative: 2.5
-  tags: [easy,demo]
-
-- id: demo-7
-  str: Which one is the largest ocean in the world?
-  correct: [demo-7b]
-  opt:
-  - uid: demo-7a
-    str: Indian
-  - uid: demo-7b
-    str: Pacific
-  - uid: demo-7c
-    str: Atlantic
-  - uid: demo-7d
-    str: Arctic
-  positive: 5
-  negative: 2.5
-  tags: [easy,demo]
-
-- id: demo-8
-  str: Which one is the largest ocean in the world?
-  correct: [demo-8b]
-  opt:
-  - uid: demo-8a
-    str: Indian
-  - uid: demo-8b
-    str: Pacific
-  - uid: demo-8c
-    str: Atlantic
-  - uid: demo-8d
-    str: Arctic
-  positive: 5
-  negative: 2.5
-  tags: [easy,demo]
-
 

@@ -18,13 +18,14 @@ package main
 
 import (
 	"bufio"
+	"encoding/json"
 	"errors"
 	"flag"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"math/rand"
-	"net"
+	"net/http"
 	"os"
 	"strconv"
 	"strings"
@@ -33,10 +34,7 @@ import (
 
 	"golang.org/x/net/context"
 
-	"github.com/dgraph-io/gru/gruserver/interact"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials"
-
+	quizmeta "github.com/dgraph-io/gru/gruserver/quiz"
 	"gopkg.in/yaml.v2"
 )
 
@@ -89,6 +87,16 @@ var (
 )
 
 type server struct{}
+
+func addCorsHeaders(w http.ResponseWriter) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+	w.Header().Set("Access-Control-Allow-Headers",
+		"Authorization,Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token,"+
+			"X-Auth-Token, Cache-Control, X-Requested-With")
+	w.Header().Set("Access-Control-Allow-Credentials", "true")
+	w.Header().Set("Connection", "close")
+}
 
 func checkToken(c Candidate) error {
 	if time.Now().UTC().After(c.validity) {
@@ -260,7 +268,7 @@ func stringInSlice(a string, list []string) bool {
 	return false
 }
 
-func shuffleOptions(opts []*interact.Answer) {
+func shuffleOptions(opts []*quizmeta.Answer) {
 	for i := range opts {
 		j := rand.Intn(i + 1)
 		opts[i], opts[j] = opts[j], opts[i]
@@ -309,89 +317,119 @@ func demoCandInfo(token string) Candidate {
 	return c
 }
 
-func state(c Candidate) interact.QUIZState {
+type QuizState int32
+
+const (
+	QUIZ_DEMO_NOT_TAKEN QuizState = 0
+	QUIZ_DEMO_STARTED   QuizState = 1
+	QUIZ_TEST_NOT_TAKEN QuizState = 2
+	QUIZ_TEST_STARTED   QuizState = 3
+	QUIZ_TEST_FINISHED  QuizState = 4
+)
+
+func state(c Candidate) QuizState {
 	if len(c.questions) == len(questions) {
-		return interact.QUIZ_DEMO_NOT_TAKEN
+		return QUIZ_DEMO_NOT_TAKEN
 	}
 	if len(questions)-len(c.questions) < c.demoQnsToAsk {
-		return interact.QUIZ_DEMO_STARTED
+		return QUIZ_DEMO_STARTED
 	}
 	if len(questions)-len(c.questions) == c.demoQnsToAsk {
-		return interact.QUIZ_TEST_NOT_TAKEN
+		return QUIZ_TEST_NOT_TAKEN
 	}
 	if len(c.questions) == 0 {
-		return interact.QUIZ_TEST_FINISHED
+		return QUIZ_TEST_FINISHED
 	}
-	return interact.QUIZ_TEST_STARTED
+	return QUIZ_TEST_STARTED
 }
 
-func authenticate(ctx context.Context,
-	t *interact.Token) (*interact.Session, error) {
-	if d, ok := ctx.Deadline(); ok && d.Before(time.Now()) {
-		return &interact.Session{}, errors.New("Context deadline has passed.")
-	}
+type Session struct {
+	Id           string    `json:"id"`
+	State        QuizState `json:"state"`
+	TimeLeft     string    `json:"timeleft"`
+	TestDuration string    `json:"testduration"`
+	DemoDuration string    `json:"demoduration"`
+}
 
+func authenticate(token string) (s Session, err error) {
 	var c Candidate
 	var ok bool
-	var session interact.Session
-
-	if strings.HasPrefix(t.Id, "test-") {
-		c = demoCandInfo(t.Id)
-		session = interact.Session{
+	if strings.HasPrefix(token, "test-") {
+		c = demoCandInfo(token)
+		s = Session{
 			Id:           RandStringBytes(36),
-			State:        interact.QUIZ_DEMO_NOT_TAKEN,
-			TimeLeft:     timeLeft(demoDuration, c.demoStart).String(),
+			State:        QUIZ_DEMO_NOT_TAKEN,
 			TestDuration: quizDuration.String(),
 			DemoDuration: demoDuration.String(),
 		}
-		return &session, nil
+		if !c.demoStart.IsZero() {
+			s.TimeLeft = timeLeft(demoDuration, c.demoStart).String()
+		} else {
+			s.TimeLeft = demoDuration.String()
+		}
+		writeLog(c, fmt.Sprintf("%v session_token %s\n", UTCTime(), s.Id))
+		return
 	}
-	if c, ok = readMap(t.Id); !ok {
-		return nil, errors.New("Invalid token.")
+	if c, ok = readMap(token); !ok {
+		err = errors.New("Invalid token")
+		return
 	}
 
-	var err error
-	if c, err = candInfo(t.Id, c); err != nil {
-		return &session, err
+	if c, err = candInfo(token, c); err != nil {
+		return
 	}
 	if err = checkToken(c); err != nil {
-		return &session, err
+		return
 	}
 
 	timeSinceLastExchange := time.Now().Sub(c.lastExchange)
 	if !c.lastExchange.IsZero() && timeSinceLastExchange < 10*time.Second {
-		fmt.Println("Duplicate session for same auth token", t.Id, c.name)
-		return nil, errors.New("Duplicate Session. You already have an open session. If not try after 10 seconds.")
+		fmt.Println("Duplicate session for same auth token", token, c.name)
+		err = errors.New("Duplicate Session. You already have an open session. If not try after 10 seconds.")
+		return
 	}
 
-	session = interact.Session{
+	s = Session{
 		Id:           RandStringBytes(36),
 		State:        state(c),
 		TestDuration: quizDuration.String(),
 		DemoDuration: demoDuration.String(),
 	}
 
-	if state(c) == interact.QUIZ_DEMO_NOT_TAKEN || state(c) == interact.QUIZ_DEMO_STARTED {
-		session.TimeLeft = timeLeft(demoDuration, c.demoStart).String()
+	if state(c) == QUIZ_DEMO_NOT_TAKEN || state(c) == QUIZ_DEMO_STARTED {
+		s.TimeLeft = timeLeft(demoDuration, c.demoStart).String()
 	} else {
-		session.TimeLeft = timeLeft(quizDuration, c.quizStart).String()
+		s.TimeLeft = timeLeft(quizDuration, c.quizStart).String()
 	}
-	writeLog(c, fmt.Sprintf("%v session_token %s\n", UTCTime(), session.Id))
-	c.sid = session.Id
+	writeLog(c, fmt.Sprintf("%v session_token %s\n", UTCTime(), s.Id))
+	c.sid = s.Id
 	c.lastExchange = time.Now()
-	updateMap(t.Id, c)
-	return &session, nil
+	updateMap(token, c)
+	return
 }
 
-func (s *server) Authenticate(ctx context.Context,
-	t *interact.Token) (*interact.Session, error) {
+func Authenticate(w http.ResponseWriter, r *http.Request) {
+	addCorsHeaders(w)
+	if r.Method == "OPTIONS" {
+		return
+	}
+	var s Session
+	var err error
 
 	select {
 	case <-throttle:
-		return authenticate(ctx, t)
+		s, err = authenticate(r.Header.Get("Authorization"))
 	case <-time.After(time.Second * 1):
-		return nil, errors.New("Please try again later. Too much load on server.")
+		err = errors.New("Please try again later. Too much load on server.")
 	}
+
+	w.Header().Set("Content-Type", "application/json")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusForbidden)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(s)
 }
 
 type Option struct {
@@ -409,10 +447,10 @@ type Question struct {
 	Tags     []string
 }
 
-func formQuestion(q Question, score float32) *interact.Question {
-	var opts []*interact.Answer
+func formQuestion(q Question, score float32) *quizmeta.Question {
+	var opts []*quizmeta.Answer
 	for _, o := range q.Opt {
-		a := &interact.Answer{Id: o.Uid, Str: o.Str}
+		a := &quizmeta.Answer{Id: o.Uid, Str: o.Str}
 		opts = append(opts, a)
 	}
 	shuffleOptions(opts)
@@ -420,12 +458,12 @@ func formQuestion(q Question, score float32) *interact.Question {
 	if len(q.Correct) > 1 {
 		isM = true
 	}
-	return &interact.Question{Id: q.Id, Str: q.Str, Options: opts,
+	return &quizmeta.Question{Id: q.Id, Str: q.Str, Options: opts,
 		IsMultiple: isM, Positive: q.Positive, Negative: q.Negative,
 		Score: score}
 }
 
-func nextQuestion(c Candidate, token string, qnType string) (*interact.Question,
+func nextQuestion(c Candidate, token string, qnType string) (*quizmeta.Question,
 	error) {
 	for idx, q := range c.questions {
 		for _, t := range q.Tags {
@@ -442,24 +480,26 @@ func nextQuestion(c Candidate, token string, qnType string) (*interact.Question,
 			}
 		}
 	}
-	return &interact.Question{},
+	return &quizmeta.Question{},
 		fmt.Errorf("Didn't find qn with label: %s, for candidate: %s",
 			qnType, token)
 }
 
-func getQuestion(req *interact.Req) (*interact.Question, error) {
-	c, _ := readMap(req.Token)
+func getQuestion(token string) (*quizmeta.Question, error) {
+	var q *quizmeta.Question
+
+	c, _ := readMap(token)
 	c.lastExchange = time.Now()
-	updateMap(req.Token, c)
+	updateMap(token, c)
 
 	if c.demoQnsAsked < c.demoQnsToAsk {
 		if c.demoQnsAsked == 0 {
 			c.demoStart = time.Now().UTC()
 			writeLog(c, fmt.Sprintf("%v demo_start\n", UTCTime()))
 		}
-		q, err := nextQuestion(c, req.Token, demo)
+		q, err := nextQuestion(c, token, demo)
 		if err != nil {
-			return nil, err
+			return q, err
 		}
 		writeLog(c, fmt.Sprintf("%v question %v\n", UTCTime(), q.Id))
 		return q, nil
@@ -468,20 +508,20 @@ func getQuestion(req *interact.Req) (*interact.Question, error) {
 	if c.demoQnsAsked == c.demoQnsToAsk && c.quizStart.IsZero() {
 		if !c.demoTaken {
 			c.demoTaken = true
-			updateMap(req.Token, c)
-			return &interact.Question{Id: demoEnd,
+			updateMap(token, c)
+			return &quizmeta.Question{Id: demoEnd,
 				Score: c.score}, nil
 		}
 		c.score = 0
-		updateMap(req.Token, c)
+		updateMap(token, c)
 		// This means it is his first quiz question.
 		writeLog(c, fmt.Sprintf("%v quiz_start\n", UTCTime()))
 		c.quizStart = time.Now().UTC()
 	}
-	q, err := nextQuestion(c, req.Token, quiz)
+	q, err := nextQuestion(c, token, quiz)
 	// This means that quiz qns are over.
 	if err != nil {
-		q = &interact.Question{Id: end, Score: c.score}
+		q = &quizmeta.Question{Id: end, Score: c.score}
 		writeLog(c, fmt.Sprintf("%v End of quiz. Questions over\n",
 			UTCTime()))
 		return q, nil
@@ -495,43 +535,52 @@ func isValidSession(token string, sid string) (Candidate, error) {
 	var ok bool
 
 	if c, ok = readMap(token); !ok {
-		return Candidate{}, errors.New("Invalid token.")
+		return Candidate{}, fmt.Errorf("Invalid token.")
 	}
 
 	if c.sid != "" && c.sid != sid {
-		return Candidate{}, errors.New("You already have another session active.")
+		return Candidate{}, fmt.Errorf("You already have another session active.")
 	}
 	return c, nil
 }
 
-func (s *server) GetQuestion(ctx context.Context,
-	req *interact.Req) (*interact.Question, error) {
-	if d, ok := ctx.Deadline(); ok && d.Before(time.Now()) {
-		return &interact.Question{}, errors.New("Context deadline has passed.")
+func GetQuestion(w http.ResponseWriter, r *http.Request) {
+	addCorsHeaders(w)
+	if r.Method == "OPTIONS" {
+		return
 	}
-	_, err := isValidSession(req.Token, req.Sid)
+	token := r.Header.Get("Authorization")
+
+	_, err := isValidSession(token, r.FormValue("sid"))
 	if err != nil {
-		return &interact.Question{}, err
+		http.Error(w, err.Error(), http.StatusForbidden)
+		return
 	}
 
-	return getQuestion(req)
+	q, err := getQuestion(token)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(q)
 }
 
-func isCorrectAnswer(resp *interact.Response) (int, float32) {
+func isCorrectAnswer(qid string, aids []string) (int, float32) {
 	for idx, qn := range questions {
-		if qn.Id == resp.Qid {
-			if resp.Aid[0] == "skip" {
+		if qn.Id == qid {
+			if aids[0] == "skip" {
 				return idx, 0
 			}
 			// For multiple choice qnstions, we have partial scoring.
 			if len(qn.Correct) == 1 {
-				if resp.Aid[0] == qn.Correct[0] {
+				if aids[0] == qn.Correct[0] {
 					return idx, qn.Positive
 				}
 				return idx, -qn.Negative
 			}
 			var score float32
-			for _, aid := range resp.Aid {
+			for _, aid := range aids {
 				correct := false
 				for _, caid := range qn.Correct {
 					if caid == aid {
@@ -565,44 +614,54 @@ func writeLog(c Candidate, s string) {
 	wrtLock.Unlock()
 }
 
-func status(resp *interact.Response) (*interact.AnswerStatus, error) {
-	var status interact.AnswerStatus
-
-	c, _ := readMap(resp.Token)
+func status(token string, sid string, qid string, aids []string) (*quizmeta.AnswerStatus, error) {
+	var status quizmeta.AnswerStatus
+	c, _ := readMap(token)
 	c.lastExchange = time.Now()
-	updateMap(resp.Token, c)
-	if len(resp.Aid) == 0 {
+	updateMap(token, c)
+	if len(aids) == 0 {
 		log.Printf("Got empty response for qn:%v, token: %v, session: %v",
-			resp.Qid, resp.Token, resp.Sid)
+			qid, token, sid)
 		return &status, nil
 	}
 
-	if resp.Aid[0] == "skip" && len(resp.Aid) > 1 {
+	if aids[0] == "skip" && len(aids) > 1 {
 		log.Printf("Got extra options with SKIP for qn:%v, token: %v, session: %v",
-			resp.Qid, resp.Token, resp.Sid)
+			qid, token, sid)
 	}
-	idx, score := isCorrectAnswer(resp)
-	writeLog(c, fmt.Sprintf("%s response %s %s %.1f\n", UTCTime(), resp.Qid,
-		strings.Join(resp.Aid, ","), score))
+	idx, score := isCorrectAnswer(qid, aids)
+	writeLog(c, fmt.Sprintf("%s response %s %s %.1f\n", UTCTime(), qid,
+		strings.Join(aids, ","), score))
 	if idx == -1 {
 		log.Printf("Didn't find qn: %v, token: %v, session: %v",
-			resp.Qid, resp.Token, resp.Sid)
+			qid, token, sid)
 	}
 	c.score += score
-	updateMap(resp.Token, c)
+	updateMap(token, c)
 	return &status, nil
 }
 
-func (s *server) Status(ctx context.Context,
-	resp *interact.Response) (*interact.AnswerStatus, error) {
-	if d, ok := ctx.Deadline(); ok && d.Before(time.Now()) {
-		return &interact.AnswerStatus{}, errors.New("Context deadline has passed.")
+func Status(w http.ResponseWriter, r *http.Request) {
+	addCorsHeaders(w)
+	if r.Method == "OPTIONS" {
+		return
 	}
-	_, err := isValidSession(resp.Token, resp.Sid)
+	token := r.Header.Get("Authorization")
+	sid := r.FormValue("sid")
+
+	_, err := isValidSession(token, sid)
 	if err != nil {
-		return &interact.AnswerStatus{}, err
+		http.Error(w, err.Error(), http.StatusForbidden)
+		return
 	}
-	return status(resp)
+
+	q, err := status(token, sid, r.FormValue("qid"), r.Form["aid"])
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(q)
 }
 
 func timeLeft(dur time.Duration, ts time.Time) time.Duration {
@@ -610,11 +669,8 @@ func timeLeft(dur time.Duration, ts time.Time) time.Duration {
 }
 
 func (s *server) Ping(ctx context.Context,
-	stat *interact.ClientStatus) (*interact.ServerStatus, error) {
-	if d, ok := ctx.Deadline(); ok && d.Before(time.Now()) {
-		return &interact.ServerStatus{}, errors.New("Context deadline has passed.")
-	}
-	var sstat interact.ServerStatus
+	stat *quizmeta.ClientStatus) (*quizmeta.ServerStatus, error) {
+	var sstat quizmeta.ServerStatus
 	var c Candidate
 	var ok bool
 
@@ -664,28 +720,11 @@ func (s *server) Ping(ctx context.Context,
 	return &sstat, nil
 }
 
-func runGrpcServer(address string) {
-	ln, err := net.Listen("tcp", address)
-	if err != nil {
-		log.Printf("Error running quiz server %v", err)
-		return
-	}
-	log.Printf("Server listening on address: %v", ln.Addr())
-
-	var opts []grpc.ServerOption
-	if *tls {
-		creds, err := credentials.NewServerTLSFromFile(*certFile, *keyFile)
-		if err != nil {
-			log.Fatalf("Failed to generate credentials %v", err)
-		}
-		opts = append(opts, grpc.Creds(creds))
-	}
-	s := grpc.NewServer(opts...)
-	interact.RegisterGruQuizServer(s, &server{})
-	if err = s.Serve(ln); err != nil {
-		log.Fatalf("While serving gRpc requests %v", err)
-	}
-	return
+func runHTTPServer(address string) {
+	http.HandleFunc("/authenticate", Authenticate)
+	http.HandleFunc("/nextquestion", GetQuestion)
+	http.HandleFunc("/status", Status)
+	log.Fatal(http.ListenAndServe(address, nil))
 }
 
 // This method is used to parse the candidate file which contains information
@@ -856,5 +895,5 @@ func main() {
 	}
 	go parseCandRepeat(*candFile)
 	go rateLimit()
-	runGrpcServer(*port)
+	runHTTPServer(*port)
 }
