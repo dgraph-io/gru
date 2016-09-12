@@ -3,6 +3,12 @@
 	"ignore": "test",
 	"package": [
 		{
+			"checksumSHA1": "C93s48E15pGG190y44BSALXMxqo=",
+			"path": "github.com/dgraph-io/dgraphgoclient/graph",
+			"revision": "2a03872f8167a969e14fda5f122acb4bbf3f6001",
+			"revisionTime": "2016-09-09T09:49:30Z"
+		},
+		{
 			"checksumSHA1": "hsu4NFmecJxyzYCz8pOZyHqggGM=",
 			"path": "github.com/gizak/termui",
 			"revision": "6a96276a036b97e1de2ee191e8ca041c5e779099",
