@@ -20,9 +20,12 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
+	// "reflect"
 
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
@@ -30,13 +33,28 @@ import (
 	"github.com/dgraph-io/dgraphgoclient/graph"
 )
 
-type tag struct {
+type Tag struct {
 	Name string
 }
 
-type status struct {
-	message string
-	error string
+type Question struct {
+	Text     string
+	Positive string
+	Negative string
+}
+
+type Status struct { // HTTP Response status
+	Success bool
+	Error   bool
+	Message string
+}
+
+type DgraphResponse struct { // HTTP Response status
+	Code    string
+	Message string
+	UIDS    struct {
+		Question string
+	}
 }
 
 var (
@@ -45,8 +63,56 @@ var (
 	conn      *grpc.ClientConn
 )
 
-func TagsHandler(w http.ResponseWriter, r *http.Request) {
-	var t tag
+func AddQuestionHandler(w http.ResponseWriter, r *http.Request) {
+	var ques Question
+	var dresp DgraphResponse
+
+	// Decoding post data
+	err := json.NewDecoder(r.Body).Decode(&ques)
+	if err != nil {
+		panic(err)
+	}
+
+	//Running a Mutation - Saving Question Infos
+	q := "mutation { set { <_new_:question> <text> \"" + ques.Text +
+		"\" . \n <_new_:question> <positive> \"" + ques.Positive +
+		"\" . \n <_new_:question> <negative> \"" + ques.Negative + "\" . " +
+		" }}"
+	resp, err := http.Post("http://localhost:8080/query", "application/x-www-form-urlencoded", strings.NewReader(q))
+	if err != nil {
+		panic(err)
+	}
+	defer resp.Body.Close()
+
+	err = json.NewDecoder(resp.Body).Decode(dresp)
+	fmt.Println(dresp.Code)
+	fmt.Println(dresp.UIDS.Question)
+
+	//Dgraph Query :  Returning Stored Question as response for Cross Check
+	q = "{root(_uid_:" + dresp.Code + ") { text negative positive _uid_ }}"
+	httpRes, _ := http.Post("http://localhost:8080/query", "application/x-www-form-urlencoded", strings.NewReader(q))
+	defer httpRes.Body.Close()
+	body, err := ioutil.ReadAll(httpRes.Body)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(string(body))
+
+	jsonResp, err := json.Marshal(string(body))
+
+	// stats := &Status{true, false, "Question Successfully Saved!"}
+	// jsonResp, err := json.Marshal(jsonResp)
+	if err != nil {
+		panic(err)
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(jsonResp)
+}
+
+// ADD NEW TAGS HANDLER
+func AddTagsHandler(w http.ResponseWriter, r *http.Request) {
+	var t Tag
 
 	// Decoding post data
 	err := json.NewDecoder(r.Body).Decode(&t)
@@ -54,27 +120,48 @@ func TagsHandler(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	//Running a Mutation
 	c := graph.NewDgraphClient(conn)
+
+	//Running a Mutation
 	q := "mutation { set {<_new_:tag> <name> \"" + t.Name + "\" . }}"
 	resp, err := c.Query(context.Background(), &graph.Request{Query: q})
 	if err != nil {
 		panic(err)
 	}
 
-	// Fetching the data
-	q = "{root(_uid_:"+ strconv.FormatUint(resp.AssignedUids["tag"], 10) +") { name _uid_ }}"
-	resp, err = c.Query(context.Background(), &graph.Request{Query: q})
+	fmt.Println(resp)
+
+	stats := &Status{true, false, "Tag Successfully Saved!"}
+	jsonResp, err := json.Marshal(stats)
 	if err != nil {
 		panic(err)
 	}
 
-	fmt.Println(resp.N)
-  jsonResp, err := json.Marshal(resp)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(jsonResp)
+}
+
+// FETCH TAGS HANDLER: Incomplete
+func GetTagsHandler(w http.ResponseWriter, r *http.Request) {
+
+	// Need to change the hardcoded tag UID
+	q := "{root(_uid_:" + strconv.FormatUint(11971855182167083540, 10) + ") { name _uid_ }}"
+
+	resp, _ := http.Post("http://localhost:8080/query", "application/x-www-form-urlencoded", strings.NewReader(q))
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(string(body))
+
+	jsonResp, err := json.Marshal(string(body))
 
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(jsonResp)
 }
+
+// INITIALIZERS
 
 func connectDgraphClient() {
 	var err error
@@ -85,8 +172,9 @@ func connectDgraphClient() {
 }
 
 func runHTTPServer(address string) {
-	http.HandleFunc("/add-tag", TagsHandler)
-	// http.HandleFunc("/get-tag", GetTags)
+	http.HandleFunc("/add-tag", AddTagsHandler)
+	http.HandleFunc("/add-question", AddQuestionHandler)
+	http.HandleFunc("/get-tag", GetTagsHandler)
 
 	fmt.Println("Server Running on 8082")
 	log.Fatal(http.ListenAndServe(address, nil))
@@ -99,4 +187,3 @@ func init() {
 func main() {
 	runHTTPServer(*port)
 }
-
