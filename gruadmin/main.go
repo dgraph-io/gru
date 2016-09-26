@@ -29,51 +29,50 @@ import (
 
 	//"golang.org/x/net/context"
 	"google.golang.org/grpc"
-
 )
 
 type Tag struct {
-	Id string
+	Id   string
 	Name string
 }
 
 type Option struct {
-		Name string
-    Is_correct bool
-	}
+	Name       string
+	Is_correct bool
+}
 
 type Question struct {
 	Text     string
-	Positive float64 
+	Positive float64
 	Negative float64
 	Tags     []Tag
-	Options []Option
+	Options  []Option
 }
 
 type EditQuestion struct {
-	Id string
+	Id       string
 	Text     string
-	Positive float64 
+	Positive float64
 	Negative float64
 	Tags     []Tag
-	Options []Option
+	Options  []Option
 }
 
 type Quiz struct {
-	Name      string
-	Duration  string
+	Name       string
+	Duration   string
 	Start_Date string
 	End_Date   string
-	Questions []string
+	Questions  []string
 }
 
 type EditQuiz struct {
-	Id string
-	Name      string
-	Duration  string
+	Id         string
+	Name       string
+	Duration   string
 	Start_Date string
 	End_Date   string
-	Questions []string
+	Questions  []string
 }
 
 type GetQuestion struct {
@@ -145,42 +144,42 @@ func AddQuestionHandler(w http.ResponseWriter, r *http.Request) {
 	// // Creating query mutation to save question informations.
 	question_info_mutation := "mutation { set { <rootQuestion> <question> <_new_:question> . \n	<_new_:question> <text> \"" + ques.Text +
 		"\" . \n <_new_:question> <positive> \"" + strconv.FormatFloat(ques.Positive, 'g', -1, 64) +
-		"\" . \n <_new_:question> <negative> \"" + strconv.FormatFloat(ques.Negative, 'g', -1, 64) + "\" . \n " 
+		"\" . \n <_new_:question> <negative> \"" + strconv.FormatFloat(ques.Negative, 'g', -1, 64) + "\" . \n "
 
-		// Create and associate Options
-		for l := range ques.Options {
-			fmt.Println(ques.Options[l].Is_correct)
-			index := strconv.Itoa(l)
-			question_info_mutation += "<_new_:option"+index+ "> <name> \"" + ques.Options[l].Name + 
-			"\" .\n <_new_:question> <question.option> <_new_:option"+index+ "> . \n "
+	// Create and associate Options
+	for l := range ques.Options {
+		fmt.Println(ques.Options[l].Is_correct)
+		index := strconv.Itoa(l)
+		question_info_mutation += "<_new_:option" + index + "> <name> \"" + ques.Options[l].Name +
+			"\" .\n <_new_:question> <question.option> <_new_:option" + index + "> . \n "
 
-			// If this option is correct answer
-			if ques.Options[l].Is_correct == true {
-				question_info_mutation += "<_new_:question> <question.correct> <_new_:option"+index+ "> . \n "
-			}		
-    }
-
-    // Create and associate Tags
-    for i := range ques.Tags {
-    	if ques.Tags[i].Id != "" {
-    		question_info_mutation += "<_new_:question> <question.tag> <_uid_:"+ ques.Tags[i].Id + 
-				"> . \n <_uid_:"+ ques.Tags[i].Id + "> <tag.question> <_new_:question> . \n "
-    	} else {
-    		index := strconv.Itoa(i)
-				question_info_mutation += "<_new_:tag"+index+ "> <name> \"" + ques.Tags[i].Name + 
-				"\" .\n <_new_:question> <question.tag> <_new_:tag"+ index + 
-				"> . \n <_new_:tag"+ index + "> <tag.question> <_new_:question> . \n "
-    	}
+		// If this option is correct answer
+		if ques.Options[l].Is_correct == true {
+			question_info_mutation += "<_new_:question> <question.correct> <_new_:option" + index + "> . \n "
 		}
+	}
 
-	question_info_mutation +=	" }}"
+	// Create and associate Tags
+	for i := range ques.Tags {
+		if ques.Tags[i].Id != "" {
+			question_info_mutation += "<_new_:question> <question.tag> <_uid_:" + ques.Tags[i].Id +
+				"> . \n <_uid_:" + ques.Tags[i].Id + "> <tag.question> <_new_:question> . \n "
+		} else {
+			index := strconv.Itoa(i)
+			question_info_mutation += "<_new_:tag" + index + "> <name> \"" + ques.Tags[i].Name +
+				"\" .\n <_new_:question> <question.tag> <_new_:tag" + index +
+				"> . \n <_new_:tag" + index + "> <tag.question> <_new_:question> . \n "
+		}
+	}
+
+	question_info_mutation += " }}"
 	fmt.Println(question_info_mutation)
-	
+
 	_, err = http.Post(endPoint, "application/x-www-form-urlencoded", strings.NewReader(question_info_mutation))
 	if err != nil {
 		panic(err)
 	}
-	
+
 	stats := &Status{true, false, "Question Successfully Saved!"}
 	question_json_response, err := json.Marshal(stats)
 	if err != nil {
@@ -189,7 +188,6 @@ func AddQuestionHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(question_json_response)
 }
-
 
 // FETCH All Questions HANDLER: Incomplete
 func GetAllQuestionsHandler(w http.ResponseWriter, r *http.Request) {
@@ -211,7 +209,7 @@ func GetAllQuestionsHandler(w http.ResponseWriter, r *http.Request) {
 		question_mutation = "{debug(_xid_: rootQuestion) { question (after: " + ques.Id + ", first: 10) { _uid_ text negative positive question.tag { name } question.option { name } question.correct { name } }  } }"
 	} else {
 		question_mutation = "{debug(_xid_: rootQuestion) { question (first: 10) { _uid_ text negative positive question.tag { name } question.option { name } question.correct { name } }  } }"
-	}	
+	}
 	fmt.Println(question_mutation)
 	question_response, err := http.Post(endPoint, "application/x-www-form-urlencoded", strings.NewReader(question_mutation))
 	if err != nil {
@@ -243,7 +241,6 @@ func parseQuestionResponse(question_body []byte) (*QuestionAPIResponse, error) {
 	return question_response, err
 }
 
-
 //API for "Adding Quiz" to Database
 func AddQuizHandler(w http.ResponseWriter, r *http.Request) {
 	addCorsHeaders(w)
@@ -251,7 +248,7 @@ func AddQuizHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var quiz Quiz
-	
+
 	err := json.NewDecoder(r.Body).Decode(&quiz)
 	if err != nil {
 		panic(err)
@@ -259,8 +256,8 @@ func AddQuizHandler(w http.ResponseWriter, r *http.Request) {
 	//question_ids = quiz.Questions
 	quiz_mutation := "mutation { set { <rootQuiz> <quiz> <_new_:quiz> . \n	<_new_:quiz> <name> \"" + quiz.Name +
 		"\" . \n <_new_:quiz> <duration> \"" + quiz.Duration +
-		"\" . \n <_new_:quiz> <start_date> \"" + quiz.Start_Date + 
-		"\" . \n <_new_:quiz> <end_date> \"" + quiz.End_Date + "\" . \n" 
+		"\" . \n <_new_:quiz> <start_date> \"" + quiz.Start_Date +
+		"\" . \n <_new_:quiz> <end_date> \"" + quiz.End_Date + "\" . \n"
 	for i := 0; i < len(quiz.Questions); i++ {
 		quiz_mutation += "<_new_:quiz> <quiz.question> <_uid_:" + quiz.Questions[i] + "> .\n"
 	}
@@ -284,7 +281,10 @@ func AddQuizHandler(w http.ResponseWriter, r *http.Request) {
 func GetAllTagsHandler(w http.ResponseWriter, r *http.Request) {
 	addCorsHeaders(w)
 	tag_mutation := "{debug(_xid_: rootQuestion) { question { question.tag { name _uid_} }}}"
-	tag_response, _ := http.Post("http://localhost:8080/query", "application/x-www-form-urlencoded", strings.NewReader(tag_mutation))
+	tag_response, err := http.Post("http://localhost:8080/query", "application/x-www-form-urlencoded", strings.NewReader(tag_mutation))
+	if err != nil {
+		panic(err)
+	}
 	defer tag_response.Body.Close()
 	tag_body, err := ioutil.ReadAll(tag_response.Body)
 	if err != nil {
@@ -313,42 +313,41 @@ func EditQuestionHandler(w http.ResponseWriter, r *http.Request) {
 	// Creating query mutation to save question informations.
 	question_info_mutation := "mutation { set { <_uid_:" + ques.Id + "> <text> \"" + ques.Text +
 		"\" . \n <_uid_:" + ques.Id + "> <positive> \"" + strconv.FormatFloat(ques.Positive, 'g', -1, 64) +
-		"\" . \n  <_uid_:" + ques.Id + "> <negative> \"" + strconv.FormatFloat(ques.Negative, 'g', -1, 64) + "\" . \n " 
+		"\" . \n  <_uid_:" + ques.Id + "> <negative> \"" + strconv.FormatFloat(ques.Negative, 'g', -1, 64) + "\" . \n "
 
-	
-		// Create and associate Options
-		for l := range ques.Options {
-			index := strconv.Itoa(l)
-			question_info_mutation += "<_new_:option"+index+ "> <name> \"" + ques.Options[l].Name + 
-			"\" .\n <_uid_:" + ques.Id + "> <question.option> <_new_:option"+index+ "> . \n "
+	// Create and associate Options
+	for l := range ques.Options {
+		index := strconv.Itoa(l)
+		question_info_mutation += "<_new_:option" + index + "> <name> \"" + ques.Options[l].Name +
+			"\" .\n <_uid_:" + ques.Id + "> <question.option> <_new_:option" + index + "> . \n "
 
-			// If this option is correct answer
-			if ques.Options[l].Is_correct == true {
-				question_info_mutation += "<_uid_:" + ques.Id + "> <question.correct> <_new_:option"+index+ "> . \n "
-			}		
-    }
-
-    // Create and associate Tags
-    for i := range ques.Tags {
-    	if ques.Tags[i].Id != "" {
-    		question_info_mutation += "<_uid_:" + ques.Id + "> <question.tag> <_uid_:"+ ques.Tags[i].Id + 
-				"> . \n <_uid_:"+ ques.Tags[i].Id + "> <tag.question> <_uid_:" + ques.Id + "> . \n "
-    	} else {
-    		index := strconv.Itoa(i)
-				question_info_mutation += "<_new_:tag"+index+ "> <name> \"" + ques.Tags[i].Name + 
-				"\" .\n <_uid_:" + ques.Id + "> <question.tag> <_new_:tag"+ index + 
-				"> . \n <_new_:tag"+ index + "> <tag.question> <_uid_:" + ques.Id + "> . \n "
-    	}
+		// If this option is correct answer
+		if ques.Options[l].Is_correct == true {
+			question_info_mutation += "<_uid_:" + ques.Id + "> <question.correct> <_new_:option" + index + "> . \n "
 		}
+	}
 
-	question_info_mutation +=	" }}"
+	// Create and associate Tags
+	for i := range ques.Tags {
+		if ques.Tags[i].Id != "" {
+			question_info_mutation += "<_uid_:" + ques.Id + "> <question.tag> <_uid_:" + ques.Tags[i].Id +
+				"> . \n <_uid_:" + ques.Tags[i].Id + "> <tag.question> <_uid_:" + ques.Id + "> . \n "
+		} else {
+			index := strconv.Itoa(i)
+			question_info_mutation += "<_new_:tag" + index + "> <name> \"" + ques.Tags[i].Name +
+				"\" .\n <_uid_:" + ques.Id + "> <question.tag> <_new_:tag" + index +
+				"> . \n <_new_:tag" + index + "> <tag.question> <_uid_:" + ques.Id + "> . \n "
+		}
+	}
+
+	question_info_mutation += " }}"
 	fmt.Println(question_info_mutation)
-	
+
 	_, err = http.Post(endPoint, "application/x-www-form-urlencoded", strings.NewReader(question_info_mutation))
 	if err != nil {
 		panic(err)
 	}
-	
+
 	stats := &Status{true, false, "Question Successfully Updated!"}
 	question_json_response, err := json.Marshal(stats)
 	if err != nil {
@@ -369,8 +368,8 @@ func EditQuizHandler(w http.ResponseWriter, r *http.Request) {
 	//question_ids = quiz.Questions
 	quiz_mutation := "mutation { set { <_uid_:" + quiz.Id + "> <name> \"" + quiz.Name +
 		"\" . \n <_uid_:" + quiz.Id + "> <duration> \"" + quiz.Duration +
-		"\" . \n <_uid_:" + quiz.Id + "> <start_date> \"" + quiz.Start_Date + 
-		"\" . \n <_uid_:" + quiz.Id + "> <end_date> \"" + quiz.End_Date + "\" . \n" 
+		"\" . \n <_uid_:" + quiz.Id + "> <start_date> \"" + quiz.Start_Date +
+		"\" . \n <_uid_:" + quiz.Id + "> <end_date> \"" + quiz.End_Date + "\" . \n"
 	for i := 0; i < len(quiz.Questions); i++ {
 		// question_id := strconv.FormatUint(quiz.Questions[i], 10)
 		quiz_mutation = quiz_mutation + "<_uid_:" + quiz.Id + "> <quiz.question> <_uid_:" + quiz.Questions[i] + "> .\n"
@@ -393,7 +392,10 @@ func EditQuizHandler(w http.ResponseWriter, r *http.Request) {
 func GetAllQuizsHandler(w http.ResponseWriter, r *http.Request) {
 	addCorsHeaders(w)
 	quiz_mutation := "{debug(_xid_: rootQuiz) { quiz { _uid_ name duration quiz.question { text }  }  }}"
-	quiz_response, _ := http.Post("http://localhost:8080/query", "application/x-www-form-urlencoded", strings.NewReader(quiz_mutation))
+	quiz_response, err := http.Post("http://localhost:8080/query", "application/x-www-form-urlencoded", strings.NewReader(quiz_mutation))
+	if err != nil {
+		panic(err)
+	}
 	defer quiz_response.Body.Close()
 	quiz_body, err := ioutil.ReadAll(quiz_response.Body)
 	if err != nil {
