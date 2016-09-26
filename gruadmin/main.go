@@ -33,21 +33,51 @@ import (
 )
 
 type Tag struct {
+	Id string
 	Name string
 }
 
+type Option struct {
+		Name string
+    Is_correct bool
+	}
+
 type Question struct {
 	Text     string
-	Positive string
-	Negative string
-	Tags     []string
+	Positive float64 
+	Negative float64
+	Tags     []Tag
+	Options []Option
+}
+
+type EditQuestion struct {
+	Id string
+	Text     string
+	Positive float64 
+	Negative float64
+	Tags     []Tag
+	Options []Option
 }
 
 type Quiz struct {
 	Name      string
 	Duration  string
-	StartDate string
-	EndDate   string
+	Start_Date string
+	End_Date   string
+	Questions []string
+}
+
+type EditQuiz struct {
+	Id string
+	Name      string
+	Duration  string
+	Start_Date string
+	End_Date   string
+	Questions []string
+}
+
+type GetQuestion struct {
+	Id string
 }
 
 type Status struct { // HTTP Response status
@@ -87,118 +117,106 @@ var (
 	endPoint  = "http://localhost:8080/query"
 )
 
+func addCorsHeaders(w http.ResponseWriter) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+	w.Header().Set("Access-Control-Allow-Headers",
+		"Authorization,Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token,"+
+			"X-Auth-Token, Cache-Control, X-Requested-With")
+	w.Header().Set("Access-Control-Allow-Credentials", "true")
+	w.Header().Set("Connection", "close")
+}
+
 // API for "Adding Question" to Database
 func AddQuestionHandler(w http.ResponseWriter, r *http.Request) {
+	addCorsHeaders(w)
 	var ques Question
+
+	if r.Method == "OPTIONS" {
+		return
+	}
 
 	// Decoding post data
 	err := json.NewDecoder(r.Body).Decode(&ques)
 	if err != nil {
 		panic(err)
 	}
-	//Running a Mutation - Generate question UID and attach to root node.
-	question_mutation := "mutation { set { 	<root> <question> <_new_:question> . } }"
-	question_response, err := http.Post(endPoint, "application/x-www-form-urlencoded", strings.NewReader(question_mutation))
-	if err != nil {
-		panic(err)
-	}
 
-	question_body, err := ioutil.ReadAll(question_response.Body)
-	if err != nil {
-		panic(err.Error())
-	}
-	parsed_question_response, err := parseQuestionResponse([]byte(question_body)) //Parse Http respnse
-	if err != nil {
-		panic(err.Error())
-	}
-	strUID := strconv.FormatUint(parsed_question_response.UIDS.Question, 10)
+	// // Creating query mutation to save question informations.
+	question_info_mutation := "mutation { set { <rootQuestion> <question> <_new_:question> . \n	<_new_:question> <text> \"" + ques.Text +
+		"\" . \n <_new_:question> <positive> \"" + strconv.FormatFloat(ques.Positive, 'g', -1, 64) +
+		"\" . \n <_new_:question> <negative> \"" + strconv.FormatFloat(ques.Negative, 'g', -1, 64) + "\" . \n " 
 
-	fmt.Println(strUID)
-	for i := 0; i < len(ques.Tags); i++ {
-		//fmt.Println(ques.Tags[i])
-		tag_id := createTags(ques.Tags[i]) // call method to save the tag
-		err = attachTagAndQuestion(strUID, tag_id)
-		if err != nil {
-			panic(err.Error())
+		// Create and associate Options
+		for l := range ques.Options {
+			fmt.Println(ques.Options[l].Is_correct)
+			index := strconv.Itoa(l)
+			question_info_mutation += "<_new_:option"+index+ "> <name> \"" + ques.Options[l].Name + 
+			"\" .\n <_new_:question> <question.option> <_new_:option"+index+ "> . \n "
+
+			// If this option is correct answer
+			if ques.Options[l].Is_correct == true {
+				question_info_mutation += "<_new_:question> <question.correct> <_new_:option"+index+ "> . \n "
+			}		
+    }
+
+    // Create and associate Tags
+    for i := range ques.Tags {
+    	if ques.Tags[i].Id != "" {
+    		question_info_mutation += "<_new_:question> <question.tag> <_uid_:"+ ques.Tags[i].Id + 
+				"> . \n <_uid_:"+ ques.Tags[i].Id + "> <tag.question> <_new_:question> . \n "
+    	} else {
+    		index := strconv.Itoa(i)
+				question_info_mutation += "<_new_:tag"+index+ "> <name> \"" + ques.Tags[i].Name + 
+				"\" .\n <_new_:question> <question.tag> <_new_:tag"+ index + 
+				"> . \n <_new_:tag"+ index + "> <tag.question> <_new_:question> . \n "
+    	}
 		}
-	}
-	// Running mutation to save question informations.
-	question_info_mutation := "mutation { set { 	<" + strUID + "> <text> \"" + ques.Text +
-		"\" . \n <" + strUID + "> <positive> \"" + ques.Positive +
-		"\" . \n <" + strUID + "> <negative> \"" + ques.Negative + "\" . " +
-		" }}"
-	question_info_response, err := http.Post(endPoint, "application/x-www-form-urlencoded", strings.NewReader(question_info_mutation))
+
+	question_info_mutation +=	" }}"
+	fmt.Println(question_info_mutation)
+	
+	_, err = http.Post(endPoint, "application/x-www-form-urlencoded", strings.NewReader(question_info_mutation))
 	if err != nil {
 		panic(err)
 	}
-	question_info_body, err := ioutil.ReadAll(question_info_response.Body)
+	
+	stats := &Status{true, false, "Question Successfully Saved!"}
+	question_json_response, err := json.Marshal(stats)
 	if err != nil {
-		panic(err.Error())
+		panic(err)
 	}
-	_, err = parseQuestionResponse([]byte(question_info_body)) //Parse Http respnse
-	if err != nil {
-		panic(err.Error())
-	}
-	question_json_response, err := json.Marshal(parsed_question_response)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(question_json_response)
 }
 
-// Running mutation to save tag information
-func createTags(tag string) (tag_id string ) {
-	tag_mutation := "mutation { set {<_new_:tag> <name> \"" + tag + "\" . }}"
-	tag_response, err := http.Post(endPoint, "application/x-www-form-urlencoded", strings.NewReader(tag_mutation))
-	if err != nil {
-		panic(err)
-	}
-
-	tag_body, err := ioutil.ReadAll(tag_response.Body)
-	if err != nil {
-		panic(err.Error())
-	}
-	parsed_tag_response, err := parseTagResponse([]byte(tag_body)) //Parse Http respnse
-	if err != nil {
-		panic(err)
-	}
-	strTagUID := strconv.FormatUint(parsed_tag_response.UIDS.Tag, 10)
-	fmt.Println(strTagUID)
-	return strTagUID
-}
-
-// Running mutation to establish relationship between question and tag
-func attachTagAndQuestion(question_id string, tag_id string) (error){
-	relationship_mutation := "mutation { set { 	<" + question_id + "> <question.tag> <" + tag_id +
-		"> . \n <" + tag_id + "> <tag.question> <" + question_id +
-		"> . }}"
-	relationship_response, err := http.Post(endPoint, "application/x-www-form-urlencoded", strings.NewReader(relationship_mutation))
-	if err != nil {
-		panic(err)
-	}
-	relationship_body, err := ioutil.ReadAll(relationship_response.Body)
-	if err != nil {
-		panic(err.Error())
-	}
-	_, err = parseTagResponse([]byte(relationship_body)) //Parse Http respnse
-	if err != nil {
-		panic(err.Error())
-	}
-	return err
-}
-
-// method to parse tag response
-func parseTagResponse(tag_body []byte) (*TagAPIResponse, error) {
-	var tag_response = new(TagAPIResponse)
-	err := json.Unmarshal(tag_body, &tag_response)
-	if err != nil {
-		fmt.Println("oops:", err)
-	}
-	return tag_response, err
-}
 
 // FETCH All Questions HANDLER: Incomplete
 func GetAllQuestionsHandler(w http.ResponseWriter, r *http.Request) {
-	question_mutation := "{root(_xid_: root) { question { text negative positive  }  } }"
-	question_response, _ := http.Post(endPoint, "application/x-www-form-urlencoded", strings.NewReader(question_mutation))
+	addCorsHeaders(w)
+	if r.Method == "OPTIONS" {
+		return
+	}
+
+	var ques GetQuestion
+
+	err := json.NewDecoder(r.Body).Decode(&ques)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(ques)
+	addCorsHeaders(w)
+	var question_mutation string
+	if ques.Id != "" {
+		question_mutation = "{debug(_xid_: rootQuestion) { question (after: " + ques.Id + ", first: 10) { _uid_ text negative positive question.tag { name } question.option { name } question.correct { name } }  } }"
+	} else {
+		question_mutation = "{debug(_xid_: rootQuestion) { question (first: 10) { _uid_ text negative positive question.tag { name } question.option { name } question.correct { name } }  } }"
+	}	
+	fmt.Println(question_mutation)
+	question_response, err := http.Post(endPoint, "application/x-www-form-urlencoded", strings.NewReader(question_mutation))
+	if err != nil {
+		panic(err)
+	}
 	defer question_response.Body.Close()
 	question_body, err := ioutil.ReadAll(question_response.Body)
 	if err != nil {
@@ -206,18 +224,13 @@ func GetAllQuestionsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	fmt.Println(string(question_body))
 
-	// data := map[string]interface{}{}
-	// dec := json.NewDecoder(body)
-	// dec.Decode(&data)
-
-	// jsonResp, err := json.Marshal(data)
-
-	// fmt.Println("start")
-	// fmt.Println(jsonResp)
-	// fmt.Println("end")
+	jsonResp, err := json.Marshal(string(question_body))
+	if err != nil {
+		panic(err)
+	}
 
 	w.Header().Set("Content-Type", "application/json")
-	// w.Write(jsonResp)
+	w.Write(jsonResp)
 }
 
 // method to parse question response
@@ -230,82 +243,165 @@ func parseQuestionResponse(question_body []byte) (*QuestionAPIResponse, error) {
 	return question_response, err
 }
 
-//API for "Adding Tags" to Database
-func AddTagsHandler(w http.ResponseWriter, r *http.Request) {
-	var tag Tag
-	err := json.NewDecoder(r.Body).Decode(&tag)
+
+//API for "Adding Quiz" to Database
+func AddQuizHandler(w http.ResponseWriter, r *http.Request) {
+	addCorsHeaders(w)
+	if r.Method == "OPTIONS" {
+		return
+	}
+	var quiz Quiz
+	
+	err := json.NewDecoder(r.Body).Decode(&quiz)
 	if err != nil {
 		panic(err)
 	}
-	_ = createTags(tag.Name) // method to save the tag
-	stats := &Status{true, false, "Tag Successfully Saved!"}
-	tag_json_response, err := json.Marshal(stats)
+	//question_ids = quiz.Questions
+	quiz_mutation := "mutation { set { <rootQuiz> <quiz> <_new_:quiz> . \n	<_new_:quiz> <name> \"" + quiz.Name +
+		"\" . \n <_new_:quiz> <duration> \"" + quiz.Duration +
+		"\" . \n <_new_:quiz> <start_date> \"" + quiz.Start_Date + 
+		"\" . \n <_new_:quiz> <end_date> \"" + quiz.End_Date + "\" . \n" 
+	for i := 0; i < len(quiz.Questions); i++ {
+		quiz_mutation += "<_new_:quiz> <quiz.question> <_uid_:" + quiz.Questions[i] + "> .\n"
+	}
+	quiz_mutation += " }}"
+	fmt.Println(quiz_mutation)
+	_, err = http.Post(endPoint, "application/x-www-form-urlencoded", strings.NewReader(quiz_mutation))
+	if err != nil {
+		panic(err)
+	}
+	stats := &Status{true, false, "Quiz Successfully Saved!"}
+	quiz_json_response, err := json.Marshal(stats)
+	if err != nil {
+		panic(err)
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(quiz_json_response)
+}
+
+// fetch all the tags
+func GetAllTagsHandler(w http.ResponseWriter, r *http.Request) {
+	addCorsHeaders(w)
+	tag_mutation := "{debug(_xid_: rootQuestion) { question { question.tag { name _uid_} }}}"
+	tag_response, _ := http.Post("http://localhost:8080/query", "application/x-www-form-urlencoded", strings.NewReader(tag_mutation))
+	defer tag_response.Body.Close()
+	tag_body, err := ioutil.ReadAll(tag_response.Body)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(string(tag_body))
+
+	jsonResp, err := json.Marshal(string(tag_body))
+	if err != nil {
+		panic(err)
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(jsonResp)
+}
+
+func EditQuestionHandler(w http.ResponseWriter, r *http.Request) {
+	var ques EditQuestion
+
+	// Decoding post data
+	err := json.NewDecoder(r.Body).Decode(&ques)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(ques)
+	// Creating query mutation to save question informations.
+	question_info_mutation := "mutation { set { <_uid_:" + ques.Id + "> <text> \"" + ques.Text +
+		"\" . \n <_uid_:" + ques.Id + "> <positive> \"" + strconv.FormatFloat(ques.Positive, 'g', -1, 64) +
+		"\" . \n  <_uid_:" + ques.Id + "> <negative> \"" + strconv.FormatFloat(ques.Negative, 'g', -1, 64) + "\" . \n " 
+
+	
+		// Create and associate Options
+		for l := range ques.Options {
+			index := strconv.Itoa(l)
+			question_info_mutation += "<_new_:option"+index+ "> <name> \"" + ques.Options[l].Name + 
+			"\" .\n <_uid_:" + ques.Id + "> <question.option> <_new_:option"+index+ "> . \n "
+
+			// If this option is correct answer
+			if ques.Options[l].Is_correct == true {
+				question_info_mutation += "<_uid_:" + ques.Id + "> <question.correct> <_new_:option"+index+ "> . \n "
+			}		
+    }
+
+    // Create and associate Tags
+    for i := range ques.Tags {
+    	if ques.Tags[i].Id != "" {
+    		question_info_mutation += "<_uid_:" + ques.Id + "> <question.tag> <_uid_:"+ ques.Tags[i].Id + 
+				"> . \n <_uid_:"+ ques.Tags[i].Id + "> <tag.question> <_uid_:" + ques.Id + "> . \n "
+    	} else {
+    		index := strconv.Itoa(i)
+				question_info_mutation += "<_new_:tag"+index+ "> <name> \"" + ques.Tags[i].Name + 
+				"\" .\n <_uid_:" + ques.Id + "> <question.tag> <_new_:tag"+ index + 
+				"> . \n <_new_:tag"+ index + "> <tag.question> <_uid_:" + ques.Id + "> . \n "
+    	}
+		}
+
+	question_info_mutation +=	" }}"
+	fmt.Println(question_info_mutation)
+	
+	_, err = http.Post(endPoint, "application/x-www-form-urlencoded", strings.NewReader(question_info_mutation))
+	if err != nil {
+		panic(err)
+	}
+	
+	stats := &Status{true, false, "Question Successfully Updated!"}
+	question_json_response, err := json.Marshal(stats)
 	if err != nil {
 		panic(err)
 	}
 	w.Header().Set("Content-Type", "application/json")
-	w.Write(tag_json_response)
+	w.Write(question_json_response)
 }
 
-//API for "Adding Quiz" to Database
-func AddQuizHandler(w http.ResponseWriter, r *http.Request) {
-	var quiz Quiz
-	var quizResp QuizAPIResponse
+func EditQuizHandler(w http.ResponseWriter, r *http.Request) {
+	var quiz EditQuiz
+	// var quizResp QuizAPIResponse
 
 	err := json.NewDecoder(r.Body).Decode(&quiz)
 	if err != nil {
 		panic(err)
 	}
-	quiz_mutation := "mutation { set { 	<_new_:quiz> <name> \"" + quiz.Name +
-		"\" . \n <_new_:quiz> <duration> \"" + quiz.Duration +
-		"\" . \n <_new_:quiz> <start-date> \"" + quiz.StartDate + "\" . " +
-		"\" . \n <_new_:quiz> <end-date> \"" + quiz.EndDate + "\" . " +
-		" }}"
-	quiz_response, err := http.Post(endPoint, "application/x-www-form-urlencoded", strings.NewReader(quiz_mutation))
+	//question_ids = quiz.Questions
+	quiz_mutation := "mutation { set { <_uid_:" + quiz.Id + "> <name> \"" + quiz.Name +
+		"\" . \n <_uid_:" + quiz.Id + "> <duration> \"" + quiz.Duration +
+		"\" . \n <_uid_:" + quiz.Id + "> <start_date> \"" + quiz.Start_Date + 
+		"\" . \n <_uid_:" + quiz.Id + "> <end_date> \"" + quiz.End_Date + "\" . \n" 
+	for i := 0; i < len(quiz.Questions); i++ {
+		// question_id := strconv.FormatUint(quiz.Questions[i], 10)
+		quiz_mutation = quiz_mutation + "<_uid_:" + quiz.Id + "> <quiz.question> <_uid_:" + quiz.Questions[i] + "> .\n"
+	}
+	quiz_mutation += " }}"
+	fmt.Println(quiz_mutation)
+	_, err = http.Post(endPoint, "application/x-www-form-urlencoded", strings.NewReader(quiz_mutation))
 	if err != nil {
 		panic(err)
 	}
-
-	quiz_body, err := ioutil.ReadAll(quiz_response.Body)
-	if err != nil {
-		panic(err.Error())
-	}
-	err = json.Unmarshal(quiz_body, &quizResp)
+	stats := &Status{true, false, "Quiz Successfully Updated!"}
+	quiz_json_response, err := json.Marshal(stats)
 	if err != nil {
 		panic(err)
 	}
-
-	// Query to fetch stored Quix, display on console for Cross check
-	quiz_query := "{root(_uid_:" + strconv.FormatUint(quizResp.UIDS.Quiz, 10) + ") { name duration start-date _uid_ }}"
-	query_response, _ := http.Post(endPoint, "application/x-www-form-urlencoded", strings.NewReader(quiz_query))
-	defer query_response.Body.Close()
-	query_body, err := ioutil.ReadAll(query_response.Body)
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println(string(query_body))
-
-	quiz_json_response, err := json.Marshal(quizResp)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(quiz_json_response)
 }
 
-// FETCH TAGS HANDLER: Incomplete
-func GetTagsHandler(w http.ResponseWriter, r *http.Request) {
-
-	// Need to change the hardcoded tag UID
-	q := "{root(_xid_:root) { question { text positive } }}"
-	// q := "{root(_xid_:" + strconv.FormatUint(3773063241899813845, 10) + ") { text positive question.tag { name _uid_ } _uid_ }}"
-	//q := "{question(_uid_:" + strconv.FormatUint(2878207119269946827, 10) + ") {question.tag {name _uid_ }}"
-	resp, _ := http.Post("http://localhost:8080/query", "application/x-www-form-urlencoded", strings.NewReader(q))
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
+func GetAllQuizsHandler(w http.ResponseWriter, r *http.Request) {
+	addCorsHeaders(w)
+	quiz_mutation := "{debug(_xid_: rootQuiz) { quiz { _uid_ name duration quiz.question { text }  }  }}"
+	quiz_response, _ := http.Post("http://localhost:8080/query", "application/x-www-form-urlencoded", strings.NewReader(quiz_mutation))
+	defer quiz_response.Body.Close()
+	quiz_body, err := ioutil.ReadAll(quiz_response.Body)
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(string(body))
+	fmt.Println(string(quiz_body))
 
-	jsonResp, err := json.Marshal(string(body))
+	jsonResp, err := json.Marshal(string(quiz_body))
 	if err != nil {
 		panic(err)
 	}
@@ -315,11 +411,14 @@ func GetTagsHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func runHTTPServer(address string) {
-	http.HandleFunc("/add-tag", AddTagsHandler)
+	//http.HandleFunc("/add-tag", AddTagsHandler)
 	http.HandleFunc("/add-question", AddQuestionHandler)
 	http.HandleFunc("/add-quiz", AddQuizHandler)
-	http.HandleFunc("/get-tag", GetTagsHandler)
+	http.HandleFunc("/get-all-tags", GetAllTagsHandler)
 	http.HandleFunc("/get-all-questions", GetAllQuestionsHandler)
+	http.HandleFunc("/edit-question", EditQuestionHandler)
+	http.HandleFunc("/edit-quiz", EditQuizHandler)
+	http.HandleFunc("/get-all-quizes", GetAllQuizsHandler)
 
 	fmt.Println("Server Running on 8082")
 	log.Fatal(http.ListenAndServe(address, nil))
