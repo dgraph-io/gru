@@ -1,0 +1,56 @@
+<div class="mdl-grid">
+	<div class="mdl-cell mdl-cell--6-col">
+		<h4>Add quiz details</h4>
+		<form ng-submit="quizVm.addQuizForm()">
+			<div class="mdl-grid no-pad">
+				<div class="mdl-cell mdl-cell--12-col">
+				  <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+				    <input class="mdl-textfield__input" type="text" name="text" id="quiz-name" ng-model="quizVm.newQuiz.name">
+				    <label class="mdl-textfield__label" for="quiz-name">Quiz name</label>
+				  </div>
+				</div>
+			</div>
+			<div class="mdl-grid no-pad">
+				<div class="mdl-cell mdl-cell--12-col">
+				  <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+				    <input class="mdl-textfield__input" type="text" name="text" id="quiz-duration" ng-model="quizVm.newQuiz.duration">
+				    <label class="mdl-textfield__label" for="quiz-duration">Duration</label>
+				  </div>
+				</div>
+			</div>
+			<div class="mdl-grid no-pad">
+				<div class="mdl-cell mdl-cell--6-col">
+					<div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+				    <input class="mdl-textfield__input" type="text" name="start_date" id="start-date" ng-model="quizVm.newQuiz.start_date" step="0.1">
+				    <label class="mdl-textfield__label" for="start-date">Start Date</label>
+				  </div>
+				</div>
+				<div class="mdl-cell mdl-cell--6-col">
+				  <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+				    <input class="mdl-textfield__input" type="text" name="end_date" id="end-date" ng-model="quizVm.newQuiz.end_date">
+				    <label class="mdl-textfield__label" for="end-date">End Date</label>
+				  </div>
+				</div>
+			</div>
+
+			<div class="mt-20" ng-if="quizVm.newQuiz.questions">
+				<label class="bold"> Selected Questions</label>
+				<div ng-repeat="(key, question) in quizVm.newQuiz.questions" ng-if="question.text">
+					<span class="mdl-chip mdl-chip--deletable">
+				    <span class="mdl-chip__text">{{question.text}}</span>
+				    <button type="button" class="mdl-chip__action" ng-click="quizVm.removeSelecteQuestion(key)">
+				    	<i class="material-icons">cancel</i>
+				    </button>
+					</span>
+				</div>
+			</div>
+
+			<button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--accent">
+			  Save Quiz
+			</button>
+		</form>
+	</div>
+	<div class="mdl-cell mdl-cell--5-col mdl-cell--1-offset">
+		<div ng-include="'app/components/question/show-all-question.html'"></div>
+	</div>
+</div>

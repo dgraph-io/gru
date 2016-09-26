@@ -1,0 +1,30 @@
+<div class="" ng-if="mainVm.allQuestions">
+	<h5>List of all questions</h5>
+	<div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+	  <input class="mdl-textfield__input" type="text" id="search_question" ng-model="searchQ">
+	  <label class="mdl-textfield__label" for="search_question">Search question name</label>
+	</div>
+	<div class="question mt-20" ng-repeat="question in mainVm.allQuestions | filter:searchQ">
+		<div class="mdl-grid no-pad">
+			<div class="mdl-cell mdl-cell--8-col mv-0 mdl-cell--middle">
+				{{$index+1}}.  {{question.text}}
+			</div>
+			<div class="mdl-cell mdl-cell--2-col mv-0">
+				<a ui-sref="question.add({qid: question._uid_, index:$index})" class="mdl-button action-btn">
+					Edit
+				</a>
+			</div>
+			<div class="mdl-cell mdl-cell--1-col mv-0">
+				<a class="mdl-button action-btn">
+					Details
+				</a>
+			</div>
+		</div>
+	</div>
+</div>
+<div class="text-center" ng-if="!mainVm.allQuestions">
+	<h4 class="text-center">
+		Could not find any question.
+	</h4>
+	Go to <a ui-sref="question.add">Add Question</a> page to add some.
+</div>
