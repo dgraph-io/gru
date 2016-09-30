@@ -32,16 +32,19 @@ import (
 )
 
 type Tag struct {
-	Id   string
+	Uid   string `json:"_uid_"`
 	Name string
+	Is_delete bool 
 }
 
 type Option struct {
+	Uid       string `json:"_uid_"`
 	Name       string
 	Is_correct bool
 }
 
 type Question struct {
+	Uid       string `json:"_uid_"`
 	Text     string
 	Positive float64
 	Negative float64
@@ -49,14 +52,18 @@ type Question struct {
 	Options  []Option
 }
 
-type EditQuestion struct {
-	Id       string
-	Text     string
-	Positive float64
-	Negative float64
-	Tags     []Tag
-	Options  []Option
+type TagFilter struct {
+	UID   string
 }
+
+// type EditQuestion struct {
+// 	Uid       string `json:"_uid_"`
+// 	Text     string
+// 	Positive float64
+// 	Negative float64
+// 	Tags     []Tag
+// 	Options  []Option
+// }
 
 type Quiz struct {
 	Name       string
@@ -141,6 +148,8 @@ func AddQuestionHandler(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
+	fmt.Println(ques)
+
 	// // Creating query mutation to save question informations.
 	question_info_mutation := "mutation { set { <rootQuestion> <question> <_new_:question> . \n	<_new_:question> <text> \"" + ques.Text +
 		"\" . \n <_new_:question> <positive> \"" + strconv.FormatFloat(ques.Positive, 'g', -1, 64) +
@@ -148,7 +157,6 @@ func AddQuestionHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Create and associate Options
 	for l := range ques.Options {
-		fmt.Println(ques.Options[l].Is_correct)
 		index := strconv.Itoa(l)
 		question_info_mutation += "<_new_:option" + index + "> <name> \"" + ques.Options[l].Name +
 			"\" .\n <_new_:question> <question.option> <_new_:option" + index + "> . \n "
@@ -158,12 +166,13 @@ func AddQuestionHandler(w http.ResponseWriter, r *http.Request) {
 			question_info_mutation += "<_new_:question> <question.correct> <_new_:option" + index + "> . \n "
 		}
 	}
-
+	fmt.Println(ques.Tags)
 	// Create and associate Tags
 	for i := range ques.Tags {
-		if ques.Tags[i].Id != "" {
-			question_info_mutation += "<_new_:question> <question.tag> <_uid_:" + ques.Tags[i].Id +
-				"> . \n <_uid_:" + ques.Tags[i].Id + "> <tag.question> <_new_:question> . \n "
+		if ques.Tags[i].Uid != "" {
+			fmt.Println(ques.Tags[i].Uid)
+			question_info_mutation += "<_new_:question> <question.tag> <_uid_:" + ques.Tags[i].Uid +
+				"> . \n <_uid_:" + ques.Tags[i].Uid + "> <tag.question> <_new_:question> . \n "
 		} else {
 			index := strconv.Itoa(i)
 			question_info_mutation += "<_new_:tag" + index + "> <name> \"" + ques.Tags[i].Name +
@@ -206,9 +215,9 @@ func GetAllQuestionsHandler(w http.ResponseWriter, r *http.Request) {
 	addCorsHeaders(w)
 	var question_mutation string
 	if ques.Id != "" {
-		question_mutation = "{debug(_xid_: rootQuestion) { question (after: " + ques.Id + ", first: 10) { _uid_ text negative positive question.tag { name } question.option { name } question.correct { name } }  } }"
+		question_mutation = "{debug(_xid_: rootQuestion) { question (after: "  + ques.Id + ", first: 10) { _uid_ text negative positive question.tag { name } question.option { name } question.correct { name } }  } }"
 	} else {
-		question_mutation = "{debug(_xid_: rootQuestion) { question (first: 10) { _uid_ text negative positive question.tag { name } question.option { name } question.correct { name } }  } }"
+		question_mutation = "{debug(_xid_: rootQuestion) { question (first: 5) { _uid_ text negative positive question.tag { name } question.option { name } question.correct { name } }  } }"
 	}
 	fmt.Println(question_mutation)
 	question_response, err := http.Post(endPoint, "application/x-www-form-urlencoded", strings.NewReader(question_mutation))
@@ -302,7 +311,11 @@ func GetAllTagsHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func EditQuestionHandler(w http.ResponseWriter, r *http.Request) {
-	var ques EditQuestion
+	addCorsHeaders(w)
+	if r.Method == "OPTIONS" {
+		return
+	}
+	var ques Question
 
 	// Decoding post data
 	err := json.NewDecoder(r.Body).Decode(&ques)
@@ -311,32 +324,48 @@ func EditQuestionHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	fmt.Println(ques)
 	// Creating query mutation to save question informations.
-	question_info_mutation := "mutation { set { <_uid_:" + ques.Id + "> <text> \"" + ques.Text +
-		"\" . \n <_uid_:" + ques.Id + "> <positive> \"" + strconv.FormatFloat(ques.Positive, 'g', -1, 64) +
-		"\" . \n  <_uid_:" + ques.Id + "> <negative> \"" + strconv.FormatFloat(ques.Negative, 'g', -1, 64) + "\" . \n "
+	question_info_mutation := "mutation { set { <_uid_:" + ques.Uid + "> <text> \"" + ques.Text +
+		"\" . \n <_uid_:" + ques.Uid + "> <positive> \"" + strconv.FormatFloat(ques.Positive, 'g', -1, 64) +
+		"\" . \n  <_uid_:" + ques.Uid + "> <negative> \"" + strconv.FormatFloat(ques.Negative, 'g', -1, 64) + "\" . \n "
 
 	// Create and associate Options
 	for l := range ques.Options {
-		index := strconv.Itoa(l)
-		question_info_mutation += "<_new_:option" + index + "> <name> \"" + ques.Options[l].Name +
-			"\" .\n <_uid_:" + ques.Id + "> <question.option> <_new_:option" + index + "> . \n "
+		// index := strconv.Itoa(l)
+		question_info_mutation += "<_uid_:" + ques.Options[l].Uid + "> <name> \"" + ques.Options[l].Name +
+			"\" .\n <_uid_:" + ques.Uid + "> <question.option> <_uid_:" + ques.Options[l].Uid + "> . \n "
 
 		// If this option is correct answer
 		if ques.Options[l].Is_correct == true {
-			question_info_mutation += "<_uid_:" + ques.Id + "> <question.correct> <_new_:option" + index + "> . \n "
+			fmt.Println(ques.Options[l])
+			question_info_mutation += "<_uid_:" + ques.Uid + "> <question.correct> <_uid_:" + ques.Options[l].Uid + "> . \n "
+		} 
+		if ques.Options[l].Is_correct == false {
+			delete_correct := "mutation { delete { <_uid_:" + ques.Uid + "> <question.correct> <_uid_:" + ques.Options[l].Uid + "> .}}"
+			_, err = http.Post(endPoint, "application/x-www-form-urlencoded", strings.NewReader(delete_correct))
+			if err != nil {
+				panic(err)
+			}
 		}
 	}
 
 	// Create and associate Tags
 	for i := range ques.Tags {
-		if ques.Tags[i].Id != "" {
-			question_info_mutation += "<_uid_:" + ques.Id + "> <question.tag> <_uid_:" + ques.Tags[i].Id +
-				"> . \n <_uid_:" + ques.Tags[i].Id + "> <tag.question> <_uid_:" + ques.Id + "> . \n "
+		if ques.Tags[i].Uid != "" && ques.Tags[i].Is_delete == true {
+			query_mutation := "mutation { delete { <_uid_:" + ques.Uid + "> <question.tag> <_uid_:" + ques.Tags[i].Uid + "> .}}"
+			fmt.Println(query_mutation)
+			_, err = http.Post(endPoint, "application/x-www-form-urlencoded", strings.NewReader(query_mutation))
+			if err != nil {
+				panic(err)
+			}
+			
+		} else if ques.Tags[i].Uid != "" {
+			question_info_mutation += "<_uid_:" + ques.Uid + "> <question.tag> <_uid_:" + ques.Tags[i].Uid +
+				"> . \n <_uid_:" + ques.Tags[i].Uid + "> <tag.question> <_uid_:" + ques.Uid + "> . \n "
 		} else {
 			index := strconv.Itoa(i)
 			question_info_mutation += "<_new_:tag" + index + "> <name> \"" + ques.Tags[i].Name +
-				"\" .\n <_uid_:" + ques.Id + "> <question.tag> <_new_:tag" + index +
-				"> . \n <_new_:tag" + index + "> <tag.question> <_uid_:" + ques.Id + "> . \n "
+				"\" .\n <_uid_:" + ques.Uid + "> <question.tag> <_new_:tag" + index +
+				"> . \n <_new_:tag" + index + "> <tag.question> <_uid_:" + ques.Uid + "> . \n "
 		}
 	}
 
@@ -411,16 +440,51 @@ func GetAllQuizsHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(jsonResp)
 }
+	
+// FILTER QUESTION HANDLER: Fileter By Tags
+func FilterQuestionHandler(w http.ResponseWriter, r *http.Request) {
+	addCorsHeaders(w)
+	if r.Method == "OPTIONS" {
+		return
+	}
+	var tag TagFilter
+
+	err := json.NewDecoder(r.Body).Decode(&tag)
+	if err != nil {
+		panic(err)
+	}
+
+	filter_query := "{root(_uid_: "+ tag.UID +") { tag.question { text }}"
+	filter_response, err := http.Post("http://localhost:8080/query", "application/x-www-form-urlencoded", strings.NewReader(filter_query))
+	if err != nil {
+		panic(err)
+	}
+	defer filter_response.Body.Close()
+	filter_body, err := ioutil.ReadAll(filter_response.Body)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(string(filter_body))
+	jsonResp, err := json.Marshal(string(filter_body))
+	if err != nil {
+		panic(err)
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(jsonResp)
+}
 
 func runHTTPServer(address string) {
-	//http.HandleFunc("/add-tag", AddTagsHandler)
 	http.HandleFunc("/add-question", AddQuestionHandler)
-	http.HandleFunc("/add-quiz", AddQuizHandler)
-	http.HandleFunc("/get-all-tags", GetAllTagsHandler)
-	http.HandleFunc("/get-all-questions", GetAllQuestionsHandler)
 	http.HandleFunc("/edit-question", EditQuestionHandler)
+	http.HandleFunc("/get-all-questions", GetAllQuestionsHandler)
+
+	http.HandleFunc("/add-quiz", AddQuizHandler)
 	http.HandleFunc("/edit-quiz", EditQuizHandler)
 	http.HandleFunc("/get-all-quizes", GetAllQuizsHandler)
+
+	http.HandleFunc("/get-all-tags", GetAllTagsHandler)
+	http.HandleFunc("/filter-questions", FilterQuestionHandler)
 
 	fmt.Println("Server Running on 8082")
 	log.Fatal(http.ListenAndServe(address, nil))
