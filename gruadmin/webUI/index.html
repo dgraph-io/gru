@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en" data-ng-app="GruiRoutes" data-ng-class="{ 'noscroll' : is_mobile_filter}">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="fragment" content="!">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="{{SEO.description}}">
+
+    <title ng-bind="SEO.title">Gru-Ui - Test</title>
+    <link rel="stylesheet" href="assets/lib/css/material.indigo-pink.min.css">
+    <!-- Material Design core CSS -->
+    <link href='https://fonts.googleapis.com/css?family=Montserrat' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Tangerine">
+        
+    <link rel="stylesheet" href="assets/css/main.css?v=20160404-3">
+    <link rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/select2/3.4.5/select2.css">
+    <!-- Google analytics tracking code -->
+
+</head>
+<body ng-controller="MainController as mainVm" class="position-relative" autoscroll="">
+    <div class="web-layout-transparent mdl-layout mdl-js-layout mdl-layout--fixed-header" >
+      <header class="mdl-layout__header mdl-shadow--2dp" ng-class="{ 'red-header' : mainVm.pageName != 'home'}">
+        <div class="mdl-layout__header-row">
+          <!-- Title -->
+          <a ui-sref="root">
+           <span class="mdl-layout-title font-tangerine" >
+                GRU-Admin
+            </span>
+          </a>
+          <!-- Add spacer, to align navigation to the right -->
+          <div class="mdl-layout-spacer"></div>
+          
+          <!-- Navigation -->
+          <nav class="mdl-navigation">
+            <div class="dropdown-wrapper mdl-navigation__link">
+              <div class="dropdown-link">
+                QUESTION
+                <i class="material-icons">arrow_drop_down</i>
+              </div>
+              <div class="dropdown-content mdl-shadow--2dp">
+                <a class="dropdown-item reload-same-url" ui-sref="question.add">
+                  Add New
+                </a>
+                <a class="dropdown-item" ui-sref="question.all">
+                  Show All
+                </a>
+              </div>
+            </div>
+            <div class="dropdown-wrapper mdl-navigation__link">
+              <div class="dropdown-link">
+                QUIZ
+                <i class="material-icons">arrow_drop_down</i>
+              </div>
+              <div class="dropdown-content mdl-shadow--2dp">
+                <a class="dropdown-item" ui-sref="quiz.add">
+                  Add New
+                </a>
+                <a class="dropdown-item" ui-sref="quiz.all">
+                  Show All
+                </a>
+              </div>
+            </div>
+          </nav>
+          <ul class="demo-list-icon mdl-list">
+            <li class="mdl-list__item">
+                <span class="mdl-list__item-primary-content">
+                    <i class="material-icons mdl-list__item-icon">person</i>
+                    {{mainVm.quizInfo.userId}}
+                </span>
+            </li>
+          </ul>
+        </div>
+      </header>        
+      <div class="mdl-layout__drawer">
+        <a ui-sref="root">
+            <span class="mdl-layout-title font-tangerine" ui-sref="root">
+                GRU-Admin
+            </span>
+        </a>
+        <nav class="mdl-navigation" ng-if="mainVm.pageName != 'quiz'">
+            <div class="mdl-navigation__link clickable" ng-class="{'active-page': currentPage == 'root'}" ng-click="homeVm.startDemo()">
+                <i class="material-icons">account_circle</i> START DEMO
+            </div>
+        </nav>
+      </div>
+
+      <main data-ui-view="" class="mdl-layout__content">
+      </main>
+      <!-- <div data-ng-include data-src="'app/shared/_footer.html'"></div> -->
+    </div>
+
+    <div id="snackbar-container" class="mdl-js-snackbar mdl-snackbar mb-20">
+      <div class="mdl-snackbar__text center-aligned"></div>
+      <button class="mdl-snackbar__action" type="button" aria-hidden="true"></button>
+    </div>
+
+    <div class="loader ng-cloak" ng-show="mainVm.showAjaxLoader">
+      <div class="show-overlay overlay"></div>
+      <div class="mdl-spinner mdl-js-spinner is-active"></div>
+    </div>
+
+    <!-- Javascript Loading, Asynchronously -->
+    <script>
+      [
+        '/assets/lib/js/angular.min.js',
+        '/assets/lib/js/angular-sanitize.min.js',
+        'assets/lib/js/angular-route.min.js',
+        'assets/lib/js/angular-ui-router.min.js',
+        'assets/lib/js/angular-css.min.js',
+        'assets/lib/js/angular-select.min.js',
+        'assets/lib/js/jquery-2.1.1.min.js',
+        'assets/lib/js/material.min.js',
+        'assets/lib/js/ocLazyLoad.min.js',
+        'app/app.module.js?v=20160415-1',
+        'app/app.route.js?v=20160405-1',
+        'assets/js/gru.js?v=20160405-1'
+      ].forEach(function(src) {
+        var script = document.createElement('script');
+        script.src = src;
+        script.async = false;
+        document.head.appendChild(script);
+      });
+    </script>
+
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+</body>
+</html>
+
+
