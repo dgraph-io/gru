@@ -32,19 +32,19 @@ import (
 )
 
 type Tag struct {
-	Uid   string `json:"_uid_"`
-	Name string
-	Is_delete bool 
+	Uid       string `json:"_uid_"`
+	Name      string
+	Is_delete bool
 }
 
 type Option struct {
-	Uid       string `json:"_uid_"`
+	Uid        string `json:"_uid_"`
 	Name       string
 	Is_correct bool
 }
 
 type Question struct {
-	Uid       string `json:"_uid_"`
+	Uid      string `json:"_uid_"`
 	Text     string
 	Positive float64
 	Negative float64
@@ -53,7 +53,7 @@ type Question struct {
 }
 
 type TagFilter struct {
-	UID   string
+	UID string
 }
 
 // type EditQuestion struct {
@@ -215,7 +215,7 @@ func GetAllQuestionsHandler(w http.ResponseWriter, r *http.Request) {
 	addCorsHeaders(w)
 	var question_mutation string
 	if ques.Id != "" {
-		question_mutation = "{debug(_xid_: rootQuestion) { question (after: "  + ques.Id + ", first: 10) { _uid_ text negative positive question.tag { name } question.option { name } question.correct { name } }  } }"
+		question_mutation = "{debug(_xid_: rootQuestion) { question (after: " + ques.Id + ", first: 10) { _uid_ text negative positive question.tag { name } question.option { name } question.correct { name } }  } }"
 	} else {
 		question_mutation = "{debug(_xid_: rootQuestion) { question (first: 5) { _uid_ text negative positive question.tag { name } question.option { name } question.correct { name } }  } }"
 	}
@@ -338,7 +338,7 @@ func EditQuestionHandler(w http.ResponseWriter, r *http.Request) {
 		if ques.Options[l].Is_correct == true {
 			fmt.Println(ques.Options[l])
 			question_info_mutation += "<_uid_:" + ques.Uid + "> <question.correct> <_uid_:" + ques.Options[l].Uid + "> . \n "
-		} 
+		}
 		if ques.Options[l].Is_correct == false {
 			delete_correct := "mutation { delete { <_uid_:" + ques.Uid + "> <question.correct> <_uid_:" + ques.Options[l].Uid + "> .}}"
 			_, err = http.Post(endPoint, "application/x-www-form-urlencoded", strings.NewReader(delete_correct))
@@ -357,7 +357,7 @@ func EditQuestionHandler(w http.ResponseWriter, r *http.Request) {
 			if err != nil {
 				panic(err)
 			}
-			
+
 		} else if ques.Tags[i].Uid != "" {
 			question_info_mutation += "<_uid_:" + ques.Uid + "> <question.tag> <_uid_:" + ques.Tags[i].Uid +
 				"> . \n <_uid_:" + ques.Tags[i].Uid + "> <tag.question> <_uid_:" + ques.Uid + "> . \n "
@@ -440,7 +440,7 @@ func GetAllQuizsHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(jsonResp)
 }
-	
+
 // FILTER QUESTION HANDLER: Fileter By Tags
 func FilterQuestionHandler(w http.ResponseWriter, r *http.Request) {
 	addCorsHeaders(w)
@@ -454,7 +454,7 @@ func FilterQuestionHandler(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	filter_query := "{root(_uid_: "+ tag.UID +") { tag.question { text }}"
+	filter_query := "{root(_uid_: " + tag.UID + ") { tag.question { text }}"
 	filter_response, err := http.Post("http://localhost:8080/query", "application/x-www-form-urlencoded", strings.NewReader(filter_query))
 	if err != nil {
 		panic(err)
