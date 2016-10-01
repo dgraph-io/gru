@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
-	"net/http/httputil"
 	"strings"
 
 	"github.com/dgraph-io/gru/gruadmin/server"
@@ -52,7 +52,7 @@ func Query(q string) []byte {
 	}
 	defer res.Body.Close()
 
-	b, err := httputil.DumpResponse(res, true)
+	b, err := ioutil.ReadAll(res.Body)
 	if err != nil {
 		log.Fatal(err)
 	}
