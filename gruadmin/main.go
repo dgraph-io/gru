@@ -25,10 +25,15 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-	// "reflect"
 
-	//"golang.org/x/net/context"
-	"google.golang.org/grpc"
+	"github.com/dgraph-io/gru/dgraph"
+	"github.com/dgraph-io/gru/gruadmin/candidate"
+	"github.com/dgraph-io/gru/gruadmin/server"
+	"github.com/gorilla/mux"
+)
+
+var (
+	port = flag.String("port", ":8082", "Port on which server listens")
 )
 
 type Tag struct {
@@ -55,15 +60,6 @@ type Question struct {
 type TagFilter struct {
 	UID string
 }
-
-// type EditQuestion struct {
-// 	Uid       string `json:"_uid_"`
-// 	Text     string
-// 	Positive float64
-// 	Negative float64
-// 	Tags     []Tag
-// 	Options  []Option
-// }
 
 type Quiz struct {
 	Name       string
@@ -116,26 +112,9 @@ type QuizAPIResponse struct {
 	}
 }
 
-var (
-	port      = flag.String("port", ":8082", "Port on which server listens")
-	graphPort = flag.String("graphPort", ":8080", "Port on which dgraph listens")
-	conn      *grpc.ClientConn
-	endPoint  = "http://localhost:8080/query"
-)
-
-func addCorsHeaders(w http.ResponseWriter) {
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
-	w.Header().Set("Access-Control-Allow-Headers",
-		"Authorization,Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token,"+
-			"X-Auth-Token, Cache-Control, X-Requested-With")
-	w.Header().Set("Access-Control-Allow-Credentials", "true")
-	w.Header().Set("Connection", "close")
-}
-
 // API for "Adding Question" to Database
 func AddQuestionHandler(w http.ResponseWriter, r *http.Request) {
-	addCorsHeaders(w)
+	server.AddCorsHeaders(w)
 	var ques Question
 
 	if r.Method == "OPTIONS" {
@@ -183,14 +162,11 @@ func AddQuestionHandler(w http.ResponseWriter, r *http.Request) {
 
 	question_info_mutation += " }}"
 	fmt.Println(question_info_mutation)
-
-	_, err = http.Post(endPoint, "application/x-www-form-urlencoded", strings.NewReader(question_info_mutation))
-	if err != nil {
-		panic(err)
+	res := dgraph.SendMutation(question_info_mutation)
+	if res.Success {
+		res.Message = "Question Successfully Saved!"
 	}
-
-	stats := &Status{true, false, "Question Successfully Saved!"}
-	question_json_response, err := json.Marshal(stats)
+	question_json_response, err := json.Marshal(res)
 	if err != nil {
 		panic(err)
 	}
@@ -200,19 +176,17 @@ func AddQuestionHandler(w http.ResponseWriter, r *http.Request) {
 
 // FETCH All Questions HANDLER: Incomplete
 func GetAllQuestionsHandler(w http.ResponseWriter, r *http.Request) {
-	addCorsHeaders(w)
+	server.AddCorsHeaders(w)
 	if r.Method == "OPTIONS" {
 		return
 	}
 
 	var ques GetQuestion
-
 	err := json.NewDecoder(r.Body).Decode(&ques)
 	if err != nil {
 		panic(err)
 	}
 	fmt.Println(ques)
-	addCorsHeaders(w)
 	var question_mutation string
 	if ques.Id != "" {
 		question_mutation = "{debug(_xid_: rootQuestion) { question (after: " + ques.Id + ", first: 10) { _uid_ text negative positive question.tag { name } question.option { name } question.correct { name } }  } }"
@@ -220,7 +194,9 @@ func GetAllQuestionsHandler(w http.ResponseWriter, r *http.Request) {
 		question_mutation = "{debug(_xid_: rootQuestion) { question (first: 5) { _uid_ text negative positive question.tag { name } question.option { name } question.correct { name } }  } }"
 	}
 	fmt.Println(question_mutation)
-	question_response, err := http.Post(endPoint, "application/x-www-form-urlencoded", strings.NewReader(question_mutation))
+	w.Header().Set("Content-Type", "application/json")
+
+	question_response, err := http.Post(dgraph.QueryEndpoint, "application/x-www-form-urlencoded", strings.NewReader(question_mutation))
 	if err != nil {
 		panic(err)
 	}
@@ -236,7 +212,6 @@ func GetAllQuestionsHandler(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	w.Header().Set("Content-Type", "application/json")
 	w.Write(jsonResp)
 }
 
@@ -252,7 +227,7 @@ func parseQuestionResponse(question_body []byte) (*QuestionAPIResponse, error) {
 
 //API for "Adding Quiz" to Database
 func AddQuizHandler(w http.ResponseWriter, r *http.Request) {
-	addCorsHeaders(w)
+	server.AddCorsHeaders(w)
 	if r.Method == "OPTIONS" {
 		return
 	}
@@ -272,7 +247,7 @@ func AddQuizHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	quiz_mutation += " }}"
 	fmt.Println(quiz_mutation)
-	_, err = http.Post(endPoint, "application/x-www-form-urlencoded", strings.NewReader(quiz_mutation))
+	_, err = http.Post(dgraph.QueryEndpoint, "application/x-www-form-urlencoded", strings.NewReader(quiz_mutation))
 	if err != nil {
 		panic(err)
 	}
@@ -281,14 +256,13 @@ func AddQuizHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(quiz_json_response)
 }
 
 // fetch all the tags
 func GetAllTagsHandler(w http.ResponseWriter, r *http.Request) {
-	addCorsHeaders(w)
+	server.AddCorsHeaders(w)
 	tag_mutation := "{debug(_xid_: rootQuestion) { question { question.tag { name _uid_} }}}"
 	tag_response, err := http.Post("http://localhost:8080/query", "application/x-www-form-urlencoded", strings.NewReader(tag_mutation))
 	if err != nil {
@@ -305,13 +279,12 @@ func GetAllTagsHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(jsonResp)
 }
 
 func EditQuestionHandler(w http.ResponseWriter, r *http.Request) {
-	addCorsHeaders(w)
+	server.AddCorsHeaders(w)
 	if r.Method == "OPTIONS" {
 		return
 	}
@@ -341,7 +314,7 @@ func EditQuestionHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		if ques.Options[l].Is_correct == false {
 			delete_correct := "mutation { delete { <_uid_:" + ques.Uid + "> <question.correct> <_uid_:" + ques.Options[l].Uid + "> .}}"
-			_, err = http.Post(endPoint, "application/x-www-form-urlencoded", strings.NewReader(delete_correct))
+			_, err = http.Post(dgraph.QueryEndpoint, "application/x-www-form-urlencoded", strings.NewReader(delete_correct))
 			if err != nil {
 				panic(err)
 			}
@@ -353,7 +326,7 @@ func EditQuestionHandler(w http.ResponseWriter, r *http.Request) {
 		if ques.Tags[i].Uid != "" && ques.Tags[i].Is_delete == true {
 			query_mutation := "mutation { delete { <_uid_:" + ques.Uid + "> <question.tag> <_uid_:" + ques.Tags[i].Uid + "> .}}"
 			fmt.Println(query_mutation)
-			_, err = http.Post(endPoint, "application/x-www-form-urlencoded", strings.NewReader(query_mutation))
+			_, err = http.Post(dgraph.QueryEndpoint, "application/x-www-form-urlencoded", strings.NewReader(query_mutation))
 			if err != nil {
 				panic(err)
 			}
@@ -372,7 +345,7 @@ func EditQuestionHandler(w http.ResponseWriter, r *http.Request) {
 	question_info_mutation += " }}"
 	fmt.Println(question_info_mutation)
 
-	_, err = http.Post(endPoint, "application/x-www-form-urlencoded", strings.NewReader(question_info_mutation))
+	_, err = http.Post(dgraph.QueryEndpoint, "application/x-www-form-urlencoded", strings.NewReader(question_info_mutation))
 	if err != nil {
 		panic(err)
 	}
@@ -405,7 +378,7 @@ func EditQuizHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	quiz_mutation += " }}"
 	fmt.Println(quiz_mutation)
-	_, err = http.Post(endPoint, "application/x-www-form-urlencoded", strings.NewReader(quiz_mutation))
+	_, err = http.Post(dgraph.QueryEndpoint, "application/x-www-form-urlencoded", strings.NewReader(quiz_mutation))
 	if err != nil {
 		panic(err)
 	}
@@ -419,7 +392,7 @@ func EditQuizHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetAllQuizsHandler(w http.ResponseWriter, r *http.Request) {
-	addCorsHeaders(w)
+	server.AddCorsHeaders(w)
 	quiz_mutation := "{debug(_xid_: rootQuiz) { quiz { _uid_ name duration quiz.question { text }  }  }}"
 	quiz_response, err := http.Post("http://localhost:8080/query", "application/x-www-form-urlencoded", strings.NewReader(quiz_mutation))
 	if err != nil {
@@ -437,13 +410,13 @@ func GetAllQuizsHandler(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	w.Header().Set("Content-Type", "application/json")
 	w.Write(jsonResp)
+	w.Header().Set("Content-Type", "application/json")
 }
 
 // FILTER QUESTION HANDLER: Fileter By Tags
 func FilterQuestionHandler(w http.ResponseWriter, r *http.Request) {
-	addCorsHeaders(w)
+	server.AddCorsHeaders(w)
 	if r.Method == "OPTIONS" {
 		return
 	}
@@ -475,19 +448,27 @@ func FilterQuestionHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func runHTTPServer(address string) {
-	http.HandleFunc("/add-question", AddQuestionHandler)
-	http.HandleFunc("/edit-question", EditQuestionHandler)
-	http.HandleFunc("/get-all-questions", GetAllQuestionsHandler)
+	r := mux.NewRouter()
+	// TODO - Change the API's to RESTful API's
+	r.HandleFunc("/add-question", AddQuestionHandler).Methods("POST", "OPTIONS")
+	// TODO - Change to PUT.
+	r.HandleFunc("/edit-question", EditQuestionHandler).Methods("POST", "OPTIONS")
+	r.HandleFunc("/get-all-questions", GetAllQuestionsHandler).Methods("POST", "OPTIONS")
 
-	http.HandleFunc("/add-quiz", AddQuizHandler)
-	http.HandleFunc("/edit-quiz", EditQuizHandler)
-	http.HandleFunc("/get-all-quizes", GetAllQuizsHandler)
+	r.HandleFunc("/add-quiz", AddQuizHandler).Methods("POST", "OPTIONS")
+	// TODO - Change to PUT.
+	r.HandleFunc("/edit-quiz", EditQuizHandler).Methods("POST", "OPTIONS")
+	r.HandleFunc("/get-all-quizes", GetAllQuizsHandler).Methods("GET", "OPTIONS")
 
-	http.HandleFunc("/get-all-tags", GetAllTagsHandler)
-	http.HandleFunc("/filter-questions", FilterQuestionHandler)
+	r.HandleFunc("/get-all-tags", GetAllTagsHandler).Methods("GET", "OPTIONS")
+	r.HandleFunc("/filter-questions", FilterQuestionHandler).Methods("POST", "OPTIONS")
 
+	r.HandleFunc("/candidate", candidate.Add).Methods("POST", "OPTIONS")
+	r.HandleFunc("/candidate/{id}", candidate.Edit).Methods("PUT", "OPTIONS")
+	r.HandleFunc("/candidate/{id}", candidate.Get).Methods("GET", "OPTIONS")
+	r.HandleFunc("/candidates", candidate.Index).Methods("GET", "OPTIONS")
 	fmt.Println("Server Running on 8082")
-	log.Fatal(http.ListenAndServe(address, nil))
+	log.Fatal(http.ListenAndServe(address, r))
 }
 
 func main() {
