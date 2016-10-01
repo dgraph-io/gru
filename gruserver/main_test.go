@@ -153,13 +153,8 @@ func TestGetQuestion(t *testing.T) {
 
 	c, _ = readMap(token)
 	q3, err := getQuestion(token)
-<<<<<<< HEAD
 	if q3.Id != "moonorbit" {
 		t.Errorf("Expected qn Id to be %v. Got: %v", "moonorbit", q3.Id)
-=======
-	if q3.Id != "demo-3" {
-		t.Errorf("Expected qn Id to be %v. Got: %v", "demo-3", q3.Id)
->>>>>>> feature/admin-backend
 	}
 
 	c, _ = readMap(token)
@@ -170,13 +165,8 @@ func TestGetQuestion(t *testing.T) {
 
 	c, _ = readMap(token)
 	q5, err := getQuestion(token)
-<<<<<<< HEAD
 	if q5.Id != "asteroid" {
 		t.Errorf("Expected qn Id to be %v. Got: %v", "asteroid", q5.Id)
-=======
-	if q5.Id != "test-2" {
-		t.Errorf("Expected qn Id to be %v. Got: %v", "test-2", q5.Id)
->>>>>>> feature/admin-backend
 	}
 
 	if len(cmap["abcd1234"].questions) != 25 {
@@ -354,11 +344,7 @@ func TestSendAnswer(t *testing.T) {
 	cmap = make(map[string]Candidate)
 	cmap["test_token"] = c
 
-<<<<<<< HEAD
 	_, err = status(token, sid, "ringplanets", []string{"ringplanets-saturn"})
-=======
-	_, err = status(token, sid, "demo-2", []string{"demo-2a", "demo-2c"})
->>>>>>> feature/admin-backend
 	if err != nil {
 		t.Error("Expected error to be nil.")
 	}
@@ -368,11 +354,7 @@ func TestSendAnswer(t *testing.T) {
 	c.score = 0.0
 	cmap["test_token"] = c
 
-<<<<<<< HEAD
 	_, err = status(token, sid, "ringplanets", []string{"ringplanets-venus"})
-=======
-	_, err = status(token, sid, "demo-2", []string{"demo-2b"})
->>>>>>> feature/admin-backend
 	if err != nil {
 		t.Error("Expected error to be nil.")
 	}
@@ -382,11 +364,7 @@ func TestSendAnswer(t *testing.T) {
 
 	c.score = 0.0
 	cmap["test_token"] = c
-<<<<<<< HEAD
 	_, err = status(token, sid, "ringplanets", []string{"skip"})
-=======
-	_, err = status(token, sid, "demo-2", []string{"skip"})
->>>>>>> feature/admin-backend
 	if err != nil {
 		t.Error("Expected error to be nil.")
 	}
