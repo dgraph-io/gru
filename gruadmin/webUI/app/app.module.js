@@ -218,7 +218,12 @@ angular.module('GruiApp').provider('RouteHelpers', ['APP_REQUIRES', function (ap
             deferred.resolve(data.data);
           },
           function(response, code) {
+            mainVm.showAjaxLoader = false;
             deferred.reject(response);
+            SNACKBAR({
+              message: "Something went wrong",
+              messageType: "error"
+            })
           }
         );
 

@@ -21,6 +21,7 @@
             deferred.resolve(data.data);
           },
           function(response, code) {
+            mainVm.showAjaxLoader = false;
             deferred.reject(response);
           }
         );
@@ -44,6 +45,7 @@
             deferred.resolve(data.data);
           },
           function(response, code) {
+            mainVm.showAjaxLoader = false;
             deferred.reject(response);
           }
         );
@@ -67,6 +69,7 @@
             deferred.resolve(data.data);
           },
           function(response, code) {
+            mainVm.showAjaxLoader = false;
             deferred.reject(response);
           }
         );
