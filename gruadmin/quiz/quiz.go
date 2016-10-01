@@ -2,13 +2,13 @@ package quiz
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"strings"
 
 	"github.com/dgraph-io/gru/dgraph"
 	"github.com/dgraph-io/gru/gruadmin/server"
+	"github.com/dgraph-io/gru/x"
 )
 
 type Quiz struct {
@@ -48,7 +48,7 @@ func Add(w http.ResponseWriter, r *http.Request) {
 		quiz_mutation += "<_new_:quiz> <quiz.question> <_uid_:" + quiz.Questions[i] + "> .\n"
 	}
 	quiz_mutation += " }}"
-	fmt.Println(quiz_mutation)
+	x.Debug(quiz_mutation)
 	_, err = http.Post(dgraph.QueryEndpoint, "application/x-www-form-urlencoded", strings.NewReader(quiz_mutation))
 	if err != nil {
 		panic(err)
@@ -79,7 +79,7 @@ func Edit(w http.ResponseWriter, r *http.Request) {
 		quiz_mutation = quiz_mutation + "<_uid_:" + quiz.Id + "> <quiz.question> <_uid_:" + quiz.Questions[i] + "> .\n"
 	}
 	quiz_mutation += " }}"
-	fmt.Println(quiz_mutation)
+	x.Debug(quiz_mutation)
 	_, err = http.Post(dgraph.QueryEndpoint, "application/x-www-form-urlencoded", strings.NewReader(quiz_mutation))
 	if err != nil {
 		panic(err)
@@ -105,7 +105,7 @@ func Index(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(string(quiz_body))
+	x.Debug(string(quiz_body))
 
 	jsonResp, err := json.Marshal(string(quiz_body))
 	if err != nil {

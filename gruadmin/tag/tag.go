@@ -2,12 +2,12 @@ package tag
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"strings"
 
 	"github.com/dgraph-io/gru/gruadmin/server"
+	"github.com/dgraph-io/gru/x"
 )
 
 type Tag struct {
@@ -29,7 +29,7 @@ func Index(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(string(tag_body))
+	x.Debug(string(tag_body))
 
 	jsonResp, err := json.Marshal(string(tag_body))
 	if err != nil {

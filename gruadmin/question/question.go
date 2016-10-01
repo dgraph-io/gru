@@ -2,8 +2,8 @@ package question
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -11,6 +11,7 @@ import (
 	"github.com/dgraph-io/gru/dgraph"
 	"github.com/dgraph-io/gru/gruadmin/server"
 	"github.com/dgraph-io/gru/gruadmin/tag"
+	"github.com/dgraph-io/gru/x"
 )
 
 type Question struct {
@@ -43,7 +44,7 @@ func Add(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	fmt.Println(ques)
+	x.Debug(ques)
 
 	// // Creating query mutation to save question informations.
 	question_info_mutation := "mutation { set { <rootQuestion> <question> <_new_:question> . \n	<_new_:question> <text> \"" + ques.Text +
@@ -61,11 +62,11 @@ func Add(w http.ResponseWriter, r *http.Request) {
 			question_info_mutation += "<_new_:question> <question.correct> <_new_:option" + index + "> . \n "
 		}
 	}
-	fmt.Println(ques.Tags)
+	x.Debug(ques.Tags)
 	// Create and associate Tags
 	for i := range ques.Tags {
 		if ques.Tags[i].Uid != "" {
-			fmt.Println(ques.Tags[i].Uid)
+			x.Debug(ques.Tags[i].Uid)
 			question_info_mutation += "<_new_:question> <question.tag> <_uid_:" + ques.Tags[i].Uid +
 				"> . \n <_uid_:" + ques.Tags[i].Uid + "> <tag.question> <_new_:question> . \n "
 		} else {
@@ -77,7 +78,7 @@ func Add(w http.ResponseWriter, r *http.Request) {
 	}
 
 	question_info_mutation += " }}"
-	fmt.Println(question_info_mutation)
+	x.Debug(question_info_mutation)
 	res := dgraph.SendMutation(question_info_mutation)
 	if res.Success {
 		res.Message = "Question Successfully Saved!"
@@ -102,14 +103,14 @@ func Index(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(ques)
+	x.Debug(ques)
 	var question_mutation string
 	if ques.Id != "" {
 		question_mutation = "{debug(_xid_: rootQuestion) { question (after: " + ques.Id + ", first: 10) { _uid_ text negative positive question.tag { name } question.option { name } question.correct { name } }  } }"
 	} else {
 		question_mutation = "{debug(_xid_: rootQuestion) { question (first: 5) { _uid_ text negative positive question.tag { name } question.option { name } question.correct { name } }  } }"
 	}
-	fmt.Println(question_mutation)
+	x.Debug(question_mutation)
 	w.Header().Set("Content-Type", "application/json")
 
 	question_response, err := http.Post(dgraph.QueryEndpoint, "application/x-www-form-urlencoded", strings.NewReader(question_mutation))
@@ -121,7 +122,7 @@ func Index(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(string(question_body))
+	x.Debug(string(question_body))
 
 	jsonResp, err := json.Marshal(string(question_body))
 	if err != nil {
@@ -144,7 +145,7 @@ func parseQuestionResponse(question_body []byte) (*QuestionAPIResponse, error) {
 	var question_response = new(QuestionAPIResponse)
 	err := json.Unmarshal(question_body, &question_response)
 	if err != nil {
-		fmt.Println("oops:", err)
+		log.Fatal(err)
 	}
 	return question_response, err
 }
@@ -161,7 +162,7 @@ func Edit(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(ques)
+	x.Debug(ques)
 	// Creating query mutation to save question informations.
 	question_info_mutation := "mutation { set { <_uid_:" + ques.Uid + "> <text> \"" + ques.Text +
 		"\" . \n <_uid_:" + ques.Uid + "> <positive> \"" + strconv.FormatFloat(ques.Positive, 'g', -1, 64) +
@@ -175,7 +176,7 @@ func Edit(w http.ResponseWriter, r *http.Request) {
 
 		// If this option is correct answer
 		if ques.Options[l].Is_correct == true {
-			fmt.Println(ques.Options[l])
+			x.Debug(ques.Options[l])
 			question_info_mutation += "<_uid_:" + ques.Uid + "> <question.correct> <_uid_:" + ques.Options[l].Uid + "> . \n "
 		}
 		if ques.Options[l].Is_correct == false {
@@ -191,7 +192,7 @@ func Edit(w http.ResponseWriter, r *http.Request) {
 	for i := range ques.Tags {
 		if ques.Tags[i].Uid != "" && ques.Tags[i].Is_delete == true {
 			query_mutation := "mutation { delete { <_uid_:" + ques.Uid + "> <question.tag> <_uid_:" + ques.Tags[i].Uid + "> .}}"
-			fmt.Println(query_mutation)
+			x.Debug(query_mutation)
 			_, err = http.Post(dgraph.QueryEndpoint, "application/x-www-form-urlencoded", strings.NewReader(query_mutation))
 			if err != nil {
 				panic(err)
@@ -209,7 +210,7 @@ func Edit(w http.ResponseWriter, r *http.Request) {
 	}
 
 	question_info_mutation += " }}"
-	fmt.Println(question_info_mutation)
+	x.Debug(question_info_mutation)
 
 	_, err = http.Post(dgraph.QueryEndpoint, "application/x-www-form-urlencoded", strings.NewReader(question_info_mutation))
 	if err != nil {
@@ -256,7 +257,7 @@ func Filter(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(string(filter_body))
+	x.Debug(string(filter_body))
 	jsonResp, err := json.Marshal(string(filter_body))
 	if err != nil {
 		panic(err)
