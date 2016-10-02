@@ -47,14 +47,16 @@
 			console.log(inviteVm.newInvite);
 			inviteService.inviteCandidate(inviteVm.newInvite).then(function(data){
 				console.log(data);
-				if(data.Success) {
-					inviteVm.newInvite = {}
-					
-				}
 				SNACKBAR({
 					message: data.Message,
 					messageType: "success",
-				})
+				});
+				if(data.Success) {
+					$state.transitionTo("invite.dashboard", {
+						quizID: inviteVm.newInvite.quiz_id,
+					})
+					inviteVm.newInvite = {}
+				}
 			}, function(err){
 				console.log(err)
 			});
@@ -130,6 +132,14 @@
 			console.log(candidatesVm.quizID);
 			inviteService.getInvitedCandidates(candidatesVm.quizID).then(function(data){
 				candidatesVm.quizCandidates = data.quiz[0]["quiz.candidate"];
+
+				if(!candidatesVm.quizCandidates) {
+					SNACKBAR({
+						message: "Invite Candidate first to see all candidate",
+						messageType: "error",
+					});
+					$state.transitionTo("invite.add");
+				}
 			}, function(err){
 				console.log(err);
 			});

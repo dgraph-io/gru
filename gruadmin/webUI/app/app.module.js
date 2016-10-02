@@ -300,7 +300,7 @@ angular.module('GruiApp').provider('RouteHelpers', ['APP_REQUIRES', function (ap
           $http.defaults.headers.common['Authorization'] = 'Basic ' + btoa(data.user + ':' + data.password);
           delete req.data;
         } else {
-          setAuth('Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.e30.eb0qBs-z-zbhRorx4PZxakiDfSC_HyY741ZES0hOVdU');
+          setAuth('Bearer ' + localStorage.getItem('token'));
         }
 
         mainVm.showAjaxLoader = true;
@@ -320,7 +320,7 @@ angular.module('GruiApp').provider('RouteHelpers', ['APP_REQUIRES', function (ap
 
       function get(url) {
         var deferred = $q.defer();
-        setAuth('Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.e30.eb0qBs-z-zbhRorx4PZxakiDfSC_HyY741ZES0hOVdU');
+        setAuth('Bearer ' + localStorage.getItem('token'));
         var req = {
           method: 'GET',
           url: mainVm.base_url + url,
