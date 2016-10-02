@@ -102,14 +102,17 @@
 			editInviteVm.candidate.old_quiz_id = quizID;
 			editInviteVm.candidate.validity = formatDate(editInviteVm.candidate.dates);
 
-			console.log(editInviteVm.candidate);
+			requestData = angular.copy(editInviteVm.candidate);
 
+			console.log(requestData);
 			inviteService.editInvite(editInviteVm.candidate)
 			.then(function(data){
-				console.log(data);
 				SNACKBAR({
 					message: data.Message,
 					messageType: "success",
+				})
+				$state.transitionTo("invite.dashboard", {
+					quizID:  requestData.quiz_id,
 				})
 			}, function(err){
 				console.log(err)

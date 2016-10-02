@@ -292,10 +292,6 @@ angular.module('GruiApp').provider('RouteHelpers', ['APP_REQUIRES', function (ap
           data: data,
         }
 
-        // if(data) {
-        //   req.data = data;
-        // }
-
         if(url == "/login") {
           $http.defaults.headers.common['Authorization'] = 'Basic ' + btoa(data.user + ':' + data.password);
           delete req.data;
@@ -340,7 +336,7 @@ angular.module('GruiApp').provider('RouteHelpers', ['APP_REQUIRES', function (ap
         return deferred.promise;
       }
       
-      function put(url) {
+      function put(url, data) {
         var deferred = $q.defer();
         var auth_token = 'Bearer ' + localStorage.getItem('token')
         console.log(auth_token)
@@ -348,6 +344,7 @@ angular.module('GruiApp').provider('RouteHelpers', ['APP_REQUIRES', function (ap
         var req = {
           method: 'PUT',
           url: mainVm.base_url + url,
+          data: data,
         }
         mainVm.showAjaxLoader = true;
         $http(req)
