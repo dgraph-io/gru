@@ -6,7 +6,15 @@
   color: #EC3D2E;
 }
 .mdl-layout__header-row .mdl-navigation__link {
+  cursor: pointer;
+  min-width: 50px;
+  padding: 0 10px;
   color: black;
+}
+.mdl-layout__header-row .mdl-navigation__link:hover,
+.dropdown-wrapper:hover .mdl-navigation__link {
+  box-shadow: inset 0 -3px 0 0 #EC3D2E;
+  color: #EC3D2E;
 }
 .mdl-layout-title {
   font-weight: bold;
@@ -16,6 +24,9 @@
 }
 .mdl-layout__header .mdl-layout__drawer-button {
   color: black;
+}
+.mdl-layout__header .mdl-layout__drawer-button i {
+  margin-top: -10px;
 }
 .mdl-list__item-primary-content {
   color: black;
@@ -74,19 +85,28 @@
 }
 .mdl-textfield {
   width: 100%;
-  padding-bottom: 0;
 }
 .mdl-tabs__tab-bar {
   justify-content: flex-start;
 }
-.mdl-textfield__label:after {
-  bottom: 0px;
-}
 .material-icons {
   vertical-align: middle;
 }
-form button.mdl-button {
-    margin-top: 20px;
+.mdl-button {
+  height: 48px;
+  background: #FF5722;
+  color: white;
+}
+.mdl-button.btn {
+  margin-top: 20px;
+}
+.mdl-button:hover {
+  background-color: #E91E63;
+}
+
+.mdl-button .material-icons {
+  vertical-align: sub;
+  font-size: 20px;
 }
 
 /*QUESTION PAGE CSS*/

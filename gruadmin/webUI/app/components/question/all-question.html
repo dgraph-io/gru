@@ -1,9 +1,15 @@
 <div ng-controller="allQuestionController as allQVm">	
 	<div class="" ng-if="mainVm.allQuestions">
-		<h5>
-			List of all questions
-			<a class="mdl-button btn-succes bg-green pull-right" ui-sref="question.add">Add New</a>
-		</h5>
+		<div class="mdl-grid">
+			<div class="mdl-cell mdl-cell--6-col">
+				<h5>
+					List of all questions
+				</h5>
+			</div>
+			<div class="mdl-cell mdl-cell--6-col">
+				<button class="mdl-button btn-succes bg-green pull-right" ng-click="mainVm.goTo('question.add')">Add New</button>
+			</div>
+		</div>
 		<div class="mdl-grid mdl-grid--no-spacing mb-20">
 			<div class="mdl-cell mdl-cell--8-col mv-0 mdl-cell--middle">
 				<div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">

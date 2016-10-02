@@ -1,5 +1,5 @@
-// APP START'angular.embed.timepicker'
-// -----------------------------------
+//Main Config file for Angular.js
+//Initialize Angular app, Declare Controller files, Main Controller.
 componentHandler.upgradeAllRegistered();
 angular.module('GruiApp', ['ngRoute', 'ui.router', "oc.lazyLoad", "door3.css", 'ngSanitize', 'ui.select',])
     .run(["$rootScope", "$state", "$stateParams", '$window', '$templateCache',
@@ -23,19 +23,34 @@ angular.module('GruiApp').run(function($rootScope, $location, $timeout, $state) 
     });
 
     $rootScope.$on("$locationChangeStart", function(e, currentLocation, previousLocation){
-      // window.currentLocation = currentLocation;
-      // window.previousLocation = previousLocation;
-      // $rootScope.is_direct_url = (currentLocation == previousLocation);
+      window.currentLocation = currentLocation;
+      window.previousLocation = previousLocation;
+      $rootScope.is_direct_url = (currentLocation == previousLocation);
+      isAuthenticated = window.localStorage.getItem("username");
 
-      // if($rootScope.is_direct_url) {
-      //     console.log("Hola!");
-      // }
+      if($rootScope.is_direct_url) {
+          console.log("Hola!");
+      }
     });
 
     var stateChangeStartHandler = function(e, toState, toParams, fromState, fromParams) {
-      if(toState.name = "question.add" && fromState.name) {
-        // console.log(fromState);
+      if(toState.authenticate && !mainVm.isLoggedIn()) {
+        $state.transitionTo("login");
+        e.preventDefault();
       }
+      (function(){
+        setTimeout(function() {
+          $mdl_input = $(".mdl-textfield__input")
+          for(var i=0; i < $mdl_input.length; i++) {
+            var this_field = $($mdl_input[i]);
+            this_field.removeClass("is-invalid");
+
+            if(this_field.attr('type') == "date"){
+              this_field.parent().addClass("is-focused");
+            }
+          }
+        }, 700);
+      })();
     };
     $rootScope.$on('$stateChangeStart', stateChangeStartHandler);
 
@@ -75,10 +90,14 @@ angular.module('GruiApp').constant('APP_REQUIRES', {
     // jQuery based/Cusomt/standalone scripts
     scripts: {
         'homeController': ['app/components/home/homeController.js'],
+        'loginController': ['app/components/login/loginController.js'],
+        'loginService': ['app/components/login/loginService.js'],
         'questionController': ['app/components/question/questionController.js'],
         'questionServices': ['app/components/question/questionServices.js'],
         'quizController': ['app/components/quiz/quizController.js'],
         'quizServices': ['app/components/quiz/quizServices.js'],
+        'inviteController': ['app/components/invite/inviteController.js'],
+        'inviteService': ['app/components/invite/inviteService.js'],
         'angular-select': ['assets/lib/js/angular-select.min.js'],
     },
 });
@@ -144,28 +163,32 @@ angular.module('GruiApp').provider('RouteHelpers', ['APP_REQUIRES', function (ap
     
     // MAIN CONTROLLER declaration
     var MainDependency = [
-        "$scope",
         "$rootScope",
-        "$window",
-        "$compile",
-        "$timeout",
         "$state",
         "$stateParams",
-        "$location",
         "$http",
         "$q",
+        "MainService",
         MainController,
     ];
     angular.module('GruiApp').controller("MainController", MainDependency);
 
+    var MainServiceDependency = [
+        "$http",
+        "$q",
+        MainService,
+    ];
+    angular.module('GruiApp').service("MainService", MainServiceDependency);
+
 // CONTROLLERS, SERVICES FUNCTION DEFINITION
 
     // MAIN CONTROLLER
-    function MainController($scope, $rootScope, $window, $compile,$timeout,$state,$stateParams,$location,$http, $q){
+    function MainController($rootScope, $state,$stateParams, $http, $q, MainService){
       //ViewModal binding using this, instead of $scope
       //Must be use with ControllerAs syntax in view
       mainVm = this; // $Scope aliase
       mainVm.timerObj;
+      mainVm.base_url = "http://localhost:8082";
 
       //General Methods
 
@@ -173,7 +196,9 @@ angular.module('GruiApp').provider('RouteHelpers', ['APP_REQUIRES', function (ap
       mainVm.indexOfObject = indexOfObject;
       mainVm.hasKey = hasKey;
       mainVm.isObject = isObject;
-      mainVm.base_url = "http://localhost:8082";
+      mainVm.goTo = goTo;
+      mainVm.isLoggedIn = isLoggedIn;
+      mainVm.logout = logout;
 
       mainVm.getAllTags = getAllTags;
 
@@ -194,6 +219,18 @@ angular.module('GruiApp').provider('RouteHelpers', ['APP_REQUIRES', function (ap
         return -1;
       }
 
+      function isLoggedIn() {
+        if(localStorage.getItem('token')) {
+          return true;
+        }
+        return false
+      }
+
+      function logout(){
+        localStorage.removeItem('token');
+        $state.transitionTo("login");
+      }
+
       function hasKey(obj, key){
         if(!obj) {
           return false;
@@ -205,9 +242,17 @@ angular.module('GruiApp').provider('RouteHelpers', ['APP_REQUIRES', function (ap
         return Object.prototype.toString.call(obj) == "[object Object]"
       }
 
+      function goTo(state) {
+        $state.transitionTo(state);
+      }
+
       function getAllTags(){
+        // MainService("/get-all-tags")
         var deferred = $q.defer();
 
+        $http.defaults.headers.common['Authorization'] = 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.e30.eb0qBs-z-zbhRorx4PZxakiDfSC_HyY741ZES0hOVdU';
+
+        console.log($http.defaults.headers.common['Authorization']);
         var req = {
           method: 'GET',
           url: mainVm.base_url + '/get-all-tags',
@@ -229,6 +274,97 @@ angular.module('GruiApp').provider('RouteHelpers', ['APP_REQUIRES', function (ap
 
         return deferred.promise;
       }
+    }
+
+    // MAIN Service
+    function MainService($http, $q){
+      var services = {}; //Object to return
+      services.post = post;
+      services.get = get;
+      services.put = put;
+
+      function post(url, data){
+        var deferred = $q.defer();
+
+        var req = {
+          method: 'POST',
+          url: mainVm.base_url + url,
+          data: data,
+        }
+
+        if(url == "/login") {
+          $http.defaults.headers.common['Authorization'] = 'Basic ' + btoa(data.user + ':' + data.password);
+          delete req.data;
+        } else {
+          setAuth('Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.e30.eb0qBs-z-zbhRorx4PZxakiDfSC_HyY741ZES0hOVdU');
+        }
+
+        mainVm.showAjaxLoader = true;
+        $http(req)
+        .then(function(data) { 
+            mainVm.showAjaxLoader = false;
+            deferred.resolve(data.data);
+          },
+          function(response, code) {
+            mainVm.showAjaxLoader = false;
+            deferred.reject(response);
+          }
+        );
+
+        return deferred.promise;
+      }
+
+      function get(url) {
+        var deferred = $q.defer();
+        setAuth('Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.e30.eb0qBs-z-zbhRorx4PZxakiDfSC_HyY741ZES0hOVdU');
+        var req = {
+          method: 'GET',
+          url: mainVm.base_url + url,
+        }
+        mainVm.showAjaxLoader = true;
+        $http(req)
+        .then(function(data) { 
+            mainVm.showAjaxLoader = false;
+            deferred.resolve(data.data);
+          },
+          function(response, code) {
+            mainVm.showAjaxLoader = false;
+            deferred.reject(response);
+          }
+        );
+
+        return deferred.promise;
+      }
+      
+      function put(url) {
+        var deferred = $q.defer();
+        var auth_token = 'Bearer ' + localStorage.getItem('token')
+        console.log(auth_token)
+        setAuth(auth_token);
+        var req = {
+          method: 'PUT',
+          url: mainVm.base_url + url,
+        }
+        mainVm.showAjaxLoader = true;
+        $http(req)
+        .then(function(data) { 
+            mainVm.showAjaxLoader = false;
+            deferred.resolve(data.data);
+          },
+          function(response, code) {
+            mainVm.showAjaxLoader = false;
+            deferred.reject(response);
+          }
+        );
+
+        return deferred.promise;
+      }
+
+      function setAuth(auth) {
+        $http.defaults.headers.common['Authorization'] = auth;
+      }
+
+      return services;
     }
 
 

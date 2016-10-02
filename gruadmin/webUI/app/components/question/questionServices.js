@@ -53,30 +53,6 @@
         return deferred.promise;
       }
 
-      services.editQuestion = function(data){
-        var deferred = $q.defer();
-
-        var req = {
-          method: 'POST',
-          url: base_url + '/edit-question',
-          data: data,
-          dataType: 'json',
-        }
-        mainVm.showAjaxLoader = true;
-        $http(req)
-        .then(function(data) { 
-            mainVm.showAjaxLoader = false;
-            deferred.resolve(data.data);
-          },
-          function(response, code) {
-            mainVm.showAjaxLoader = false;
-            deferred.reject(response);
-          }
-        );
-
-        return deferred.promise;
-      }
-
       services.getAllQuestions = function(requestData){
         var deferred = $q.defer();
 

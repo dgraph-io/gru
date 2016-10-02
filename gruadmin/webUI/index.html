@@ -34,8 +34,8 @@
           
           <!-- Navigation -->
           <nav class="mdl-navigation">
-            <div class="dropdown-wrapper mdl-navigation__link">
-              <div class="dropdown-link">
+            <div class="dropdown-wrapper">
+              <div class="dropdown-link mdl-navigation__link">
                 QUESTION
                 <i class="material-icons">arrow_drop_down</i>
               </div>
@@ -48,8 +48,8 @@
                 </a>
               </div>
             </div>
-            <div class="dropdown-wrapper mdl-navigation__link">
-              <div class="dropdown-link">
+            <div class="dropdown-wrapper">
+              <div class="dropdown-link mdl-navigation__link">
                 QUIZ
                 <i class="material-icons">arrow_drop_down</i>
               </div>
@@ -59,18 +59,23 @@
                 </a>
                 <a class="dropdown-item" ui-sref="quiz.all">
                   Show All
-                </a>
+                </a> 
               </div>
             </div>
+            <a class="mdl-navigation__link" ui-sref="invite.add">
+                INVITE
+            </a>
           </nav>
-          <ul class="demo-list-icon mdl-list">
-            <li class="mdl-list__item">
-                <span class="mdl-list__item-primary-content">
-                    <i class="material-icons mdl-list__item-icon">person</i>
-                    {{mainVm.quizInfo.userId}}
-                </span>
-            </li>
-          </ul>
+          <div class="dropdown-wrapper">
+            <div class="dropdown-link mdl-navigation__link text-center">
+              <i class="material-icons mdl-list__item-icon">person</i>
+            </div>
+            <div class="dropdown-content mdl-shadow--2dp">
+              <a class="dropdown-item clickable" ng-click="mainVm.logout()">
+                LOGOUT
+              </a>
+            </div>
+          </div>
         </div>
       </header>        
       <div class="mdl-layout__drawer">

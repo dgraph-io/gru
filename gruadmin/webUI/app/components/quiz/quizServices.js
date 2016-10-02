@@ -1,28 +1,12 @@
 (function(){
 
-  function quizService($q, $http, $rootScope) {
+  function quizService($q, $http, $rootScope, MainService) {
 
   	var services = {}; //Object to return
     var base_url = "http://localhost:8082";
 
-    services.getAllQuizes = function(data){
-      var deferred = $q.defer();
-
-      var req = {
-        method: 'GET',
-        url: base_url + '/get-all-quizes',
-      }
-
-      $http(req)
-      .then(function(data) { 
-          deferred.resolve(data.data);
-        },
-        function(response, code) {
-          deferred.reject(response);
-        }
-      );
-
-      return deferred.promise;
+    services.getAllQuizes = function(){
+      return MainService.get('/get-all-quizes');
     }
 
     services.saveQuiz = function(data){
@@ -45,6 +29,46 @@
       return deferred.promise;
     }
 
+    services.getInvitedCandidates = function(data){
+      var deferred = $q.defer();
+
+      var req = {
+        method: 'GET',
+        url: base_url + '/get-all-candidates',
+      }
+
+      $http(req)
+      .then(function(data) { 
+          deferred.resolve(data.data);
+        },
+        function(response, code) {
+          deferred.reject(response);
+        }
+      );
+
+      return deferred.promise;
+    }
+
+    services.resendEmail = function(data){
+      var deferred = $q.defer();
+
+      var req = {
+        method: 'GET',
+        url: base_url + '/get-all-candidates',
+      }
+
+      $http(req)
+      .then(function(data) { 
+          deferred.resolve(data.data);
+        },
+        function(response, code) {
+          deferred.reject(response);
+        }
+      );
+
+      return deferred.promise;
+    }
+
     // private functions
     function handleSuccess(data) { //SUCCESS API HIT
         deferred.resolve(data);
@@ -61,7 +85,8 @@
       "$q",
       "$http",
       "$rootScope",
-      quizService
+      "MainService",
+      quizService,
   ];
 
   angular.module('GruiApp').service('quizService', quizServiceArray); 

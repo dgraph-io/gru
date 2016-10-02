@@ -8,3 +8,11 @@ body, html {
 a {
 	text-decoration: none;
 }
+
+table {
+	width: 100%;
+}
+
+th {
+	text-transform: uppercase;
+}

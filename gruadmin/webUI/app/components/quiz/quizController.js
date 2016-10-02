@@ -34,46 +34,22 @@
 
 		quizService.getAllQuizes().then(function(data){
 			var data = JSON.parse(data);
-
-			if(data.Success) {
-				SNACKBAR({
-					message: data.message,
-					messageType: "error",
-				})
-			}
-
-			var quizArr = [];
-			var ifObject = mainVm.isObject(data.debug.quiz)
-			if(ifObject) {
-				tagsArr.push(data.debug.quiz)
-				quizVm.allQuizes = tagsArr;
-			} else {
-				tagsArr = data.debug.quiz;
-				quizVm.allQuizes = data.debug.quiz;
-			}
+			quizVm.allQuizes = data.debug[0].quiz;
 		}, function(err){
 			console.log(err);
 		})
 
 		questionService.getAllQuestions().then(function(data){
 			var data = JSON.parse(data);
-
-			var questionArr = [];
-			var ifObject = mainVm.isObject(data.debug.question)
-			if(ifObject) {
-				questionArr.push(data.debug.question)
-				mainVm.allQuestions = questionArr;
-			} else {
-				mainVm.allQuestions = data.debug.question;
-			}
+			mainVm.allQuestions = data.debug[0].question;			
 		}, function(err){
 			console.log(err)
 		})
 
 		function removeSelecteQuestion(key) {
-			delete quizVm.newQuiz.selectedQuestion[key];
-			if(!Object.keys(quizVm.newQuiz.selectedQuestion).length) {
-				delete quizVm.newQuiz.selectedQuestion;
+			delete quizVm.newQuiz.questions[key];
+			if(!Object.keys(quizVm.newQuiz.questions).length) {
+				delete quizVm.newQuiz.questions;
 			}
 		}
 

@@ -44,7 +44,13 @@ var (
 
 func login(w http.ResponseWriter, r *http.Request) {
 	server.AddCorsHeaders(w)
+	if r.Method == "OPTIONS" {
+    return
+  }
 	u, p, ok := r.BasicAuth()
+	fmt.Println(u)
+	fmt.Println(p)
+	fmt.Println(ok)
 	if !ok || u != *username || p != *password {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
@@ -72,7 +78,7 @@ func runHTTPServer(address string) {
 
 	router.HandleFunc("/login", login).Methods("POST", "OPTIONS")
 
-	adminRouter := mux.NewRouter().PathPrefix("/admin").Subrouter().StrictSlash(true)
+	adminRouter := mux.NewRouter().PathPrefix("/").Subrouter().StrictSlash(true)
 	// TODO - Change the API's to RESTful API's
 	adminRouter.HandleFunc("/add-question", question.Add).Methods("POST", "OPTIONS")
 	// TODO - Change to PUT.
@@ -99,7 +105,7 @@ func runHTTPServer(address string) {
 		SigningMethod: jwt.SigningMethodHS256,
 	})
 
-	router.PathPrefix("/admin").Handler(negroni.New(
+	router.PathPrefix("/").Handler(negroni.New(
 		negroni.HandlerFunc(jwtMiddleware.HandlerWithNext),
 		negroni.Wrap(adminRouter),
 	))

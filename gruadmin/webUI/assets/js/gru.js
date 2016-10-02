@@ -4,13 +4,61 @@
   $(document).ready(function() {
     componentHandler.upgradeAllRegistered();
 
+    window.formatDate = formatDate;
+
     (function(){
-      $mdl_input = $(".mdl-textfield__input")
-      for(var i=0; i < $mdl_input.length; i++) {
-        var this_field = $mdl_input[i];
-        this_field.removeClass("is-invalid");
-      }
+      setTimeout(function() {
+        $mdl_input = $(".mdl-textfield__input")
+        for(var i=0; i < $mdl_input.length; i++) {
+          var this_field = $($mdl_input[i]);
+          this_field.removeClass("is-invalid");
+
+          if(this_field.attr('type') == "date"){
+            this_field.parent().addClass("is-focused");
+          }
+        }
+      }, 1000);
     })();
+
+    window.getDate = function(date) {
+      var now = new Date(date);
+ 
+      var day = ("0" + now.getDate()).slice(-2);
+      var month = ("0" + (now.getMonth() + 1)).slice(-2);
+
+      var today = now.getFullYear()+"-/"+(month)+"/"+(day) ;
+
+
+     return today;
+    }
+
+    window.isValidEmail = function(email) {
+      var re;
+      re = /^([\w-]+(?:\.[\w-]+)*)@((?:[\w-]+\.)*\w[\w-]{0,66})\.([a-z]{2,6}(?:\.[a-z]{2})?)$/i;
+      return re.test(email);
+    };
+
+    window.lsSupported = (function(){
+      return (typeof Storage !== "undefined") ? true : false;
+    })();
+
+    Date.prototype.toDateInputValue = (function() {
+      var local = new Date(this);
+      local.setMinutes(this.getMinutes() - this.getTimezoneOffset());
+      return local.toJSON().slice(0,10);
+    });
+
+    function formatDate(date) {
+      var d = new Date(date),
+          month = '' + (d.getMonth() + 1),
+          day = '' + d.getDate(),
+          year = d.getFullYear();
+
+      if (month.length < 2) month = '0' + month;
+      if (day.length < 2) day = '0' + day;
+
+      return [year, month, day].join('-');
+    }
 
     $(document).on("click", ".slide-wrapper .slide-link", function(){
         $this = $(this);
@@ -34,10 +82,10 @@
     
     var snackbarContainer = document.querySelector('#snackbar-container');
     window.SNACKBAR = function(setting) {
-      if(setting.messageType == "error") {
-          $(snackbarContainer).addClass("error");
+      if(setting.messageType) {
+          $(snackbarContainer).addClass(setting.messageType);
       } else {
-          $(snackbarContainer).removeClass("success");
+          $(snackbarContainer).addClass("error");
       }
 
       var data = {

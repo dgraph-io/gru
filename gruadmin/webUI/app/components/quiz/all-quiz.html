@@ -10,13 +10,13 @@
 				{{$index + 1}}. {{quiz.name}}
 			</div>
 			<div class="mdl-cell mdl-cell--2-col text-right m-0">
-				<a ui-sref="quiz.add({qid: quiz._uid_, index:$index})" class="mdl-button action-btn">
-					Edit						
+				<a ui-sref="invite.dashboard({quizID: quiz._uid_})">
+					Candidates						
 				</a>
 			</div>
 			<div class="mdl-cell mdl-cell--2-col text-right">
-				<a class="mdl-button action-btn">
-					Details
+				<a ui-sref="invite.add" class="">
+					Invite
 				</a>
 			</div>
 	  </div>
