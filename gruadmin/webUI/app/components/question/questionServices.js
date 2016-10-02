@@ -1,32 +1,12 @@
 (function(){
 
-    function questionService($q, $http, $rootScope) {
+    function questionService($q, $http, $rootScope, MainService) {
 
     	var services = {}; //Object to return
       var base_url = "http://localhost:8082";
 
       services.saveQuestion = function(data){
-        var deferred = $q.defer();
-
-        var req = {
-          method: 'POST',
-          url: base_url + '/add-question',
-          data: data,
-          dataType: 'json',
-        }
-        mainVm.showAjaxLoader = true;
-        $http(req)
-        .then(function(data) { 
-            mainVm.showAjaxLoader = false;
-            deferred.resolve(data.data);
-          },
-          function(response, code) {
-            mainVm.showAjaxLoader = false;
-            deferred.reject(response);
-          }
-        );
-
-        return deferred.promise;
+        return MainService.post('/add-question', data)
       }
 
       services.editQuestion = function(data){
@@ -54,27 +34,7 @@
       }
 
       services.getAllQuestions = function(requestData){
-        var deferred = $q.defer();
-
-        var req = {
-					method: 'POST',
-					url: base_url + '/get-all-questions',
-          data: {
-            "id": ""
-          },
-				}
-        mainVm.showAjaxLoader = true;
-        $http(req)
-        .then(function(data) {
-            mainVm.showAjaxLoader = false; 
-			      deferred.resolve(data.data);
-			    },
-		     	function(response, code) {
-		        deferred.reject(response);
-		     	}
-			  );
-
-        return deferred.promise;
+        return MainService.post('/get-all-questions', {"id": ""})
       }
 
       // private functions
@@ -93,6 +53,7 @@
         "$q",
         "$http",
         "$rootScope",
+        "MainService",
         questionService
     ];
 

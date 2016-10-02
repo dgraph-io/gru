@@ -1,4 +1,4 @@
-<div class="mdl-grid">
+<div class="mdl-grid" ng-controller="allQuizController as allQVm">
 	<div class="mdl-cell mdl-cell--6-col">
 		<h4>Add quiz details</h4>
 		<form ng-submit="quizVm.addQuizForm()">
@@ -45,7 +45,7 @@
 				</div>
 			</div>
 
-			<button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--accent">
+			<button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--accent mt-20">
 			  Save Quiz
 			</button>
 		</form>

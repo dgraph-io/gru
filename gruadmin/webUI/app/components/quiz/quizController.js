@@ -7,23 +7,6 @@
 		quizVm = this;
 		quizVm.newQuiz = {};
 
-		var quiz = {
-			debug: {
-				quiz: [
-					{
-						"name": "Quiz for Backend Developer",
-						"_uid_": "0x1232323434"
-					},{
-						"name": "Quiz for Frontend Developer",
-						"_uid_": "0x145355y356"
-					},{
-						"name": "Quiz for Devops",
-						"_uid_": "0x1465868434"
-					},
-				],
-			}
-		}
-
 	// FUNCTION DECLARATION
 		quizVm.removeSelecteQuestion = removeSelecteQuestion;
 		quizVm.addQuizForm = addQuizForm;
@@ -31,13 +14,6 @@
 	// FUNCTION DEFINITION
 		
 		// Function for fetching next question
-
-		quizService.getAllQuizes().then(function(data){
-			var data = JSON.parse(data);
-			quizVm.allQuizes = data.debug[0].quiz;
-		}, function(err){
-			console.log(err);
-		})
 
 		questionService.getAllQuestions().then(function(data){
 			var data = JSON.parse(data);
@@ -57,10 +33,15 @@
 			var questions = []
 			var requestData = {};
 			requestData = angular.copy(quizVm.newQuiz);
+			console.log(requestData);
 
-			if(!quizVm.newQuiz.questions) {
-				alert("Please add questin to the quiz!");
-				return;
+			areInValidateInput = validateInput(requestData);
+			if(areInValidateInput) {
+				SNACKBAR({
+					message: areInValidateInput,
+					messageType: "error",
+				})
+				return
 			}
 			var qustionsClone = angular.copy(quizVm.newQuiz.questions)
 			angular.forEach(qustionsClone, function(value, key) {
@@ -71,14 +52,63 @@
 			quizService.saveQuiz(requestData)
 			.then(function(data){
 				quizVm.newQuiz = {}
-				console.log(data);
-				alert(data.Message);
+				SNACKBAR({
+					message: data.Message,
+					messageType: "error",
+				})
+				$state.transitionTo("quiz.all");
 			}, function(err){
 				console.log(err);
 			})
 		}
 
+		function validateInput(inputs) {
+			if(!inputs.name) {
+				return "Please enter valid Quiz name"
+			}
+			if(!inputs.duration) {
+				return "Please enter valid Duration"
+			}
+			if(!inputs.duration) {
+				return "Please enter valid Duration"
+			}
+			if(!inputs.start_date) {
+				return "Please enter valid Start date"
+			}
+			if(!inputs.end_date) {
+				return "Please enter valid End date"
+			}	
+			if(!inputs.questions) {
+				return "Please add question to the quiz before submitting"
+			}
+
+			return false
+		}
+
 	}
+
+	function allQuizController($scope, $rootScope, $stateParams, $http, $state, quizService, questionService) {
+
+		quizService.getAllQuizes().then(function(data){
+			var data = JSON.parse(data);
+			quizVm.allQuizes = data.debug[0].quiz;
+		}, function(err){
+			console.log(err);
+		})
+
+	}
+
+	var allQuizDependency = [
+	    "$scope",
+	    "$rootScope",
+	    "$stateParams",
+	    "$http",
+	    "$state",
+	    "quizService",
+	    "questionService",
+	    allQuizController
+	];
+	angular.module('GruiApp').controller('allQuizController', allQuizDependency);
 
 	var quizDependency = [
 	    "$scope",

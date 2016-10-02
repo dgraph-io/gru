@@ -108,7 +108,7 @@ func Index(w http.ResponseWriter, r *http.Request) {
 	if ques.Id != "" {
 		question_mutation = "{debug(_xid_: rootQuestion) { question (after: " + ques.Id + ", first: 10) { _uid_ text negative positive question.tag { name } question.option { name } question.correct { name } }  } }"
 	} else {
-		question_mutation = "{debug(_xid_: rootQuestion) { question (first: 5) { _uid_ text negative positive question.tag { name } question.option { name } question.correct { name } }  } }"
+		question_mutation = "{debug(_xid_: rootQuestion) { question (first: 10) { _uid_ text negative positive question.tag { name } question.option { name } question.correct { name } }  } }"
 	}
 	x.Debug(question_mutation)
 	w.Header().Set("Content-Type", "application/json")

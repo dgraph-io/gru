@@ -15,6 +15,7 @@
 	// FUNCTION DECLARATION
 		questionVm.addQuestionForm = addQuestionForm;
 		questionVm.addNewTag = addNewTag;
+		questionVm.validateInput = validateInput;
 
 	// FUNCTION DEFINITION
 
@@ -28,21 +29,25 @@
 
 		// Check if user is authorized
 		function addQuestionForm() {
-			if(questionVm.is_update) {
-				alert("Can not update question right now!");
-				return
-			}
 			var options = []
-			var newOptions = angular.copy(questionVm.newQuestion.options)
+			var newOptions = angular.copy(questionVm.newQuestion.optionsBak)
 			angular.forEach(newOptions, function(value, key) {
 				if(!value.is_correct) {
 					value.is_correct = false;
 				}
 			  options.push(value);
 			});
-			questionVm.newQuestion.options = options
+			questionVm.newQuestion.options = options;
+			areInValidateInput = validateInput(questionVm.newQuestion);
+			if(areInValidateInput) {
+				SNACKBAR({
+					message: areInValidateInput,
+					messageType: "error",
+				})
+				return
+			}
 
-			console.log()
+			// Hit the API
 			questionService.saveQuestion(questionVm.newQuestion)
 			.then(function(data){
 				questionVm.newQuestion = {};
@@ -80,6 +85,38 @@
 				} 
 			}
 			return allUniqueTags;
+		}
+
+		function validateInput(inputs) {
+			console.log(inputs)
+			if(!inputs.text) {
+				return "Please enter valid question text"
+			}
+			if(!inputs.positive) {
+				return "Please enter valid positve marks"
+			}
+			if(!inputs.negative) {
+				return "Please enter valid negative marks"
+			}
+			if(Object.keys(inputs.options).length != questionVm.optionsCount) {
+				return "Please enter all the options"
+			}
+
+			hasCorrectAnswer = false
+			angular.forEach(inputs.options, function(value, key) {
+				if(value.is_correct) {
+					hasCorrectAnswer = true;
+				}
+			});
+			if(!hasCorrectAnswer) {
+				return "Please mark atleast one correct answer"
+			}
+
+			if(!inputs.tags.length) {
+				return "Please minimum one tag is required"
+			}
+
+			return false;
 		}
 	}
 

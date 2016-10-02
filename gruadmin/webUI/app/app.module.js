@@ -292,6 +292,10 @@ angular.module('GruiApp').provider('RouteHelpers', ['APP_REQUIRES', function (ap
           data: data,
         }
 
+        // if(data) {
+        //   req.data = data;
+        // }
+
         if(url == "/login") {
           $http.defaults.headers.common['Authorization'] = 'Basic ' + btoa(data.user + ':' + data.password);
           delete req.data;
