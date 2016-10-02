@@ -16,6 +16,7 @@
 		questionVm.addQuestionForm = addQuestionForm;
 		questionVm.addNewTag = addNewTag;
 		questionVm.validateInput = validateInput;
+		questionVm.changeQuestion = changeQuestion;
 
 	// FUNCTION DEFINITION
 
@@ -38,6 +39,7 @@
 			  options.push(value);
 			});
 			questionVm.newQuestion.options = options;
+			questionVm.newQuestion.text = questionVm.cmModel;
 			areInValidateInput = validateInput(questionVm.newQuestion);
 			if(areInValidateInput) {
 				SNACKBAR({
@@ -46,7 +48,6 @@
 				})
 				return
 			}
-
 			// Hit the API
 			questionService.saveQuestion(questionVm.newQuestion)
 			.then(function(data){
@@ -118,6 +119,23 @@
 
 			return false;
 		}
+
+		function changeQuestion() {
+			console.log(typed)
+			quesitionVm.question_text = questionVm.mirror.getValue();
+		}
+
+		$(document).ready(function(){
+			$rootScope.$on('$viewContentLoaded', function() {
+				setTimeout(function() {
+					$scope.cmOption = {
+				    lineNumbers: true,
+				    indentWithTabs: true,
+				    mode: 'javascript',
+				  }
+				}, 100);
+			});
+		})
 	}
 
 	function addQuestionController($scope, $rootScope, $http, $q, $state, $stateParams, questionService) {

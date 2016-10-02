@@ -208,6 +208,23 @@
     min-width: 34px;
     width: 34px;
 }
+
+/* CODEMIRROR*/
+.CodeMirror {
+  border-bottom: 1px solid black;
+}
+
+#preview-panel {
+  min-height: 300px;
+  border-left: 30px solid #DDDDDD;
+  background: #F7F7F7;
+}
+
+#preview-panel pre {
+  margin-top: 0;
+  padding-top: 10px
+  padding-left: 3px;
+}
     
 /*TABLET + MOBILE SPECIFIC CSS*/
 @media (max-width: 840px) {

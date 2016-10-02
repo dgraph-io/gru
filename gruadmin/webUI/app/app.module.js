@@ -1,7 +1,7 @@
 //Main Config file for Angular.js
 //Initialize Angular app, Declare Controller files, Main Controller.
 componentHandler.upgradeAllRegistered();
-angular.module('GruiApp', ['ngRoute', 'ui.router', "oc.lazyLoad", "door3.css", 'ngSanitize', 'ui.select',])
+angular.module('GruiApp', ['ngRoute', 'ui.router', "oc.lazyLoad", "door3.css", 'ngSanitize', 'ui.select', 'ui.codemirror',])
     .run(["$rootScope", "$state", "$stateParams", '$window', '$templateCache',
         function ($rootScope, $state, $stateParams, $window, $templateCache) {
             // Set reference to access them from any scope
@@ -99,6 +99,8 @@ angular.module('GruiApp').constant('APP_REQUIRES', {
         'inviteController': ['app/components/invite/inviteController.js'],
         'inviteService': ['app/components/invite/inviteService.js'],
         'angular-select': ['assets/lib/js/angular-select.min.js'],
+        'codeMirror': ['assets/lib/js/codemirror.js'],
+        'javascript': ['assets/lib/js/javascript.js'],
     },
 });
 

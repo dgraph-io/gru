@@ -78,7 +78,7 @@ func runHTTPServer(address string) {
 
 	router.HandleFunc("/login", login).Methods("POST", "OPTIONS")
 
-	adminRouter := mux.NewRouter().PathPrefix("/").Subrouter().StrictSlash(true)
+	adminRouter := mux.NewRouter().PathPrefix("/admin").Subrouter().StrictSlash(true)
 	// TODO - Change the API's to RESTful API's
 	adminRouter.HandleFunc("/add-question", question.Add).Methods("POST", "OPTIONS")
 	// TODO - Change to PUT.
@@ -105,7 +105,7 @@ func runHTTPServer(address string) {
 		SigningMethod: jwt.SigningMethodHS256,
 	})
 
-	router.PathPrefix("/").Handler(negroni.New(
+	router.PathPrefix("/admin").Handler(negroni.New(
 		negroni.HandlerFunc(jwtMiddleware.HandlerWithNext),
 		negroni.Wrap(adminRouter),
 	))

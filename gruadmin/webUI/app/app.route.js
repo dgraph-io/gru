@@ -26,6 +26,7 @@
     // CSS for View/Directives
     var select2CSS = "assets/lib/css/select2.min.css";
     var angularSelectCSS = "assets/lib/css/angular-select.min.css";
+    var codeMirrorCSS = "assets/lib/css/codemirror.css";
 
     function MainRoutes($stateProvider, $locationProvider, $urlRouterProvider, helper) {
       'use strict';
@@ -52,11 +53,11 @@
           resolve: helper.resolveFor('loginController', 'loginService'),
         })
         .state('question', {
-          url: '/question',
+          url: '/admin/question',
           abstract: true,
           templateUrl: questionTemplate,
           css: [angularSelectCSS],
-          resolve: helper.resolveFor('questionController', 'questionServices', 'angular-select'),
+          resolve: helper.resolveFor('questionController', 'questionServices', 'angular-select', 'codeMirror', 'javascript'),
         })
           .state('question.all', {
             url: '/all-questions',
@@ -69,11 +70,11 @@
             url: '/add-question',
             parent: 'question',
             templateUrl: addQuestionTemplate,
-            css: [angularSelectCSS],
+            css: [angularSelectCSS, codeMirrorCSS],
             authenticate: true,
           })
         .state('quiz', {
-          url: '/quiz',
+          url: '/admin/quiz',
           abstract: true,
           templateUrl: quizTemplate,
           resolve: helper.resolveFor('quizController', 'quizServices', 'questionServices'),
@@ -91,7 +92,7 @@
             authenticate: true,
           })
         .state('invite', {
-          url: '/invite',
+          url: '/admin/invite',
           abstract: true,
           templateUrl: inviteTemplate,
           resolve: helper.resolveFor('inviteController', 'quizServices', 'inviteService'),
