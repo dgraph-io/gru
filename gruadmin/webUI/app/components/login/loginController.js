@@ -28,7 +28,7 @@
 				}
 			}, function(err){
 				SNACKBAR({
-					message: "Wrong username and password",
+					message: "Something went wrong",
 					messageType: "error",
 				})
 			})

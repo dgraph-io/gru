@@ -5,18 +5,14 @@
 	// VARIABLE DECLARATION
 		mainVm.pageName = "question"
 		questionVm = this;
-		questionVm.newQuestion = {};
 		questionVm.optionsCount = 4;
-		questionVm.newQuestion.tags = [];
 		
 		// See if update
 		var qid = $stateParams.qid;
 
 	// FUNCTION DECLARATION
-		questionVm.addQuestionForm = addQuestionForm;
 		questionVm.addNewTag = addNewTag;
 		questionVm.validateInput = validateInput;
-		questionVm.changeQuestion = changeQuestion;
 
 	// FUNCTION DEFINITION
 
@@ -27,43 +23,6 @@
 		}, function(err){
 			console.log(err);
 		})	
-
-		// Check if user is authorized
-		function addQuestionForm() {
-			var options = []
-			var newOptions = angular.copy(questionVm.newQuestion.optionsBak)
-			angular.forEach(newOptions, function(value, key) {
-				if(!value.is_correct) {
-					value.is_correct = false;
-				}
-			  options.push(value);
-			});
-			questionVm.newQuestion.options = options;
-			questionVm.newQuestion.text = questionVm.cmModel;
-			areInValidateInput = validateInput(questionVm.newQuestion);
-			if(areInValidateInput) {
-				SNACKBAR({
-					message: areInValidateInput,
-					messageType: "error",
-				})
-				return
-			}
-			// Hit the API
-			questionService.saveQuestion(questionVm.newQuestion)
-			.then(function(data){
-				questionVm.newQuestion = {};
-
-				if(data.Success) {
-					SNACKBAR({
-						message: data.Message,
-						// messageType: "error",
-					})
-				}
-				$state.transitionTo("question.all")
-			}, function(err){
-				console.log(err);
-			})
-		}
 
 		function addNewTag(new_tag) {
 			return {
@@ -120,67 +79,72 @@
 			return false;
 		}
 
-		function changeQuestion() {
-			console.log(typed)
-			quesitionVm.question_text = questionVm.mirror.getValue();
-		}
-
 		$(document).ready(function(){
-			$rootScope.$on('$viewContentLoaded', function() {
-				setTimeout(function() {
-					$scope.cmOption = {
-				    lineNumbers: true,
-				    indentWithTabs: true,
-				    mode: 'javascript',
-				  }
-				}, 100);
-			});
-		})
+		});
 	}
 
 	function addQuestionController($scope, $rootScope, $http, $q, $state, $stateParams, questionService) {
 		// See if update
-		var qid = $stateParams.qid;
-		var idx = $stateParams.index;
-		questionVm.is_update = false;
-		questionVm.update_label = "Add";
-		if(mainVm.allQuestions && mainVm.allQuestions[idx]) {
-			questionVm.is_update = true;
-			questionVm.update_label = "Update";
+		allQueVm = this;
+		allQueVm.newQuestion = {};
+		allQueVm.newQuestion.tags = [];
+		allQueVm.cmModel = "";
 
-			var current_question = mainVm.allQuestions[idx];
-			questionVm.newQuestion = current_question;
-			questionVm.newQuestion.positive = parseFloat(current_question.positive);
-			questionVm.newQuestion.negative = parseFloat(current_question.negative);
+		//FUnction Declaration
+		allQueVm.addQuestionForm = addQuestionForm;
 
-			var qOptions = current_question["question.option"]
-			questionVm.newQuestion.options = {};
-			for(var i=0; i<qOptions.length; i++) {
-				questionVm.newQuestion.options['option' + i] = {};
-				questionVm.newQuestion.options['option' + i].name = qOptions[i].name;
-
-				var correct_options = current_question["question.correct"];
-				if(mainVm.isObject(correct_options)) {
-					if(current_question["question.correct"].name == qOptions[i].name) {
-						questionVm.newQuestion.options['option' + i].is_correct = true;
-					}
-				} else {
-					for(var j = 0; j < correct_options.length; j++) {
-						if(correct_options[j].name == qOptions[i].name) {
-							questionVm.newQuestion.options['option' + i].is_correct = true;
-						}
-					}
+		// Check if user is authorized
+		function addQuestionForm() {
+			var options = []
+			var newOptions = angular.copy(allQueVm.newQuestion.optionsBak)
+			angular.forEach(newOptions, function(value, key) {
+				if(!value.is_correct) {
+					value.is_correct = false;
 				}
+			  options.push(value);
+			});
+			allQueVm.newQuestion.options = options;
+			allQueVm.newQuestion.text = allQueVm.cmModel;
+			areInValidateInput = questionVm.validateInput(allQueVm.newQuestion);
+			if(areInValidateInput) {
+				SNACKBAR({
+					message: areInValidateInput,
+					messageType: "error",
+				})
+				return
 			}
+			// Hit the API
+			questionService.saveQuestion(allQueVm.newQuestion)
+			.then(function(data){
+				allQueVm.newQuestion = {};
+				allQueVm.cmModel = "";
 
-			if(mainVm.isObject(current_question["question.tag"])) {
-				var tagArr = []
-				tagArr.push(current_question["question.tag"])
-				questionVm.newQuestion.tags = tagArr;
-			} else {
-				questionVm.newQuestion.tags = current_question["question.tag"];
-			}
+				if(data.Success) {
+					SNACKBAR({
+						message: data.Message,
+						// messageType: "error",
+					})
+				}
+				$state.transitionTo("question.all")
+			}, function(err){
+				console.log(err);
+			})
 		}
+
+		$rootScope.$on('$viewContentLoaded', function() {
+			initCodeMirror();
+		});
+		function initCodeMirror(){
+			setTimeout(function() {
+				$scope.cmOption = {
+			    lineNumbers: true,
+			    indentWithTabs: true,
+			    mode: 'javascript',
+			  }
+			}, 100);
+		}
+
+		initCodeMirror();
 	}
 
 	function allQuestionController($scope, $rootScope, $http, $q, $state, $stateParams, questionService) {

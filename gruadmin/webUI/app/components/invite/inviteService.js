@@ -19,15 +19,7 @@
     services.editInvite = function(data){
       return MainService.put('/candidate/' + data.id, data);
     }
-
-    // private functions
-    function handleSuccess(data) { //SUCCESS API HIT
-        deferred.resolve(data);
-    }
-    function handleError(error) { //ERROR ON API HIT
-        deferred.reject(error);
-    }
-
+    
     return services;
 
   }

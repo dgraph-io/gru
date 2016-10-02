@@ -190,7 +190,7 @@ angular.module('GruiApp').provider('RouteHelpers', ['APP_REQUIRES', function (ap
       //Must be use with ControllerAs syntax in view
       mainVm = this; // $Scope aliase
       mainVm.timerObj;
-      mainVm.base_url = "http://localhost:8082";
+      mainVm.base_url = "http://localhost:8082/admin";
 
       //General Methods
 
@@ -295,6 +295,8 @@ angular.module('GruiApp').provider('RouteHelpers', ['APP_REQUIRES', function (ap
         }
 
         if(url == "/login") {
+          var url = mainVm.base_url
+          req.url = url.replace("/admin", "/login")
           $http.defaults.headers.common['Authorization'] = 'Basic ' + btoa(data.user + ':' + data.password);
           delete req.data;
         } else {

@@ -101,11 +101,11 @@
     }
 
     $(document).on("click", ".reload-same-url", function(){
-      var href = this.href
-      window.location = window.location.href.split("?")[0];
-      setTimeout(function() {
-        window.location.reload();
-      }, 10);
+      // var href = this.href
+      // window.location = window.location.href.split("?")[0];
+      // setTimeout(function() {
+      //   window.location.reload();
+      // }, 10);
     });
   })  
 })();
