@@ -12,6 +12,7 @@ import (
 	"github.com/dgraph-io/gru/gruadmin/server"
 	"github.com/dgraph-io/gru/gruadmin/tag"
 	"github.com/dgraph-io/gru/x"
+	"github.com/gorilla/mux"
 )
 
 type Question struct {
@@ -150,82 +151,6 @@ func parseQuestionResponse(question_body []byte) (*QuestionAPIResponse, error) {
 	return question_response, err
 }
 
-func Edit(w http.ResponseWriter, r *http.Request) {
-	server.AddCorsHeaders(w)
-	if r.Method == "OPTIONS" {
-		return
-	}
-	var ques Question
-
-	// Decoding post data
-	err := json.NewDecoder(r.Body).Decode(&ques)
-	if err != nil {
-		panic(err)
-	}
-	x.Debug(ques)
-	// Creating query mutation to save question informations.
-	question_info_mutation := "mutation { set { <_uid_:" + ques.Uid + "> <text> \"" + ques.Text +
-		"\" . \n <_uid_:" + ques.Uid + "> <positive> \"" + strconv.FormatFloat(ques.Positive, 'g', -1, 64) +
-		"\" . \n  <_uid_:" + ques.Uid + "> <negative> \"" + strconv.FormatFloat(ques.Negative, 'g', -1, 64) + "\" . \n "
-
-	// Create and associate Options
-	for l := range ques.Options {
-		// index := strconv.Itoa(l)
-		question_info_mutation += "<_uid_:" + ques.Options[l].Uid + "> <name> \"" + ques.Options[l].Name +
-			"\" .\n <_uid_:" + ques.Uid + "> <question.option> <_uid_:" + ques.Options[l].Uid + "> . \n "
-
-		// If this option is correct answer
-		if ques.Options[l].Is_correct == true {
-			x.Debug(ques.Options[l])
-			question_info_mutation += "<_uid_:" + ques.Uid + "> <question.correct> <_uid_:" + ques.Options[l].Uid + "> . \n "
-		}
-		if ques.Options[l].Is_correct == false {
-			delete_correct := "mutation { delete { <_uid_:" + ques.Uid + "> <question.correct> <_uid_:" + ques.Options[l].Uid + "> .}}"
-			_, err = http.Post(dgraph.QueryEndpoint, "application/x-www-form-urlencoded", strings.NewReader(delete_correct))
-			if err != nil {
-				panic(err)
-			}
-		}
-	}
-
-	// Create and associate Tags
-	for i := range ques.Tags {
-		if ques.Tags[i].Uid != "" && ques.Tags[i].Is_delete == true {
-			query_mutation := "mutation { delete { <_uid_:" + ques.Uid + "> <question.tag> <_uid_:" + ques.Tags[i].Uid + "> .}}"
-			x.Debug(query_mutation)
-			_, err = http.Post(dgraph.QueryEndpoint, "application/x-www-form-urlencoded", strings.NewReader(query_mutation))
-			if err != nil {
-				panic(err)
-			}
-
-		} else if ques.Tags[i].Uid != "" {
-			question_info_mutation += "<_uid_:" + ques.Uid + "> <question.tag> <_uid_:" + ques.Tags[i].Uid +
-				"> . \n <_uid_:" + ques.Tags[i].Uid + "> <tag.question> <_uid_:" + ques.Uid + "> . \n "
-		} else {
-			index := strconv.Itoa(i)
-			question_info_mutation += "<_new_:tag" + index + "> <name> \"" + ques.Tags[i].Name +
-				"\" .\n <_uid_:" + ques.Uid + "> <question.tag> <_new_:tag" + index +
-				"> . \n <_new_:tag" + index + "> <tag.question> <_uid_:" + ques.Uid + "> . \n "
-		}
-	}
-
-	question_info_mutation += " }}"
-	x.Debug(question_info_mutation)
-
-	_, err = http.Post(dgraph.QueryEndpoint, "application/x-www-form-urlencoded", strings.NewReader(question_info_mutation))
-	if err != nil {
-		panic(err)
-	}
-
-	stats := &server.Response{true, "Question Successfully Updated!"}
-	question_json_response, err := json.Marshal(stats)
-	if err != nil {
-		panic(err)
-	}
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(question_json_response)
-}
-
 type TagFilter struct {
 	UID string
 }
@@ -265,4 +190,113 @@ func Filter(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(jsonResp)
+}
+
+// get question information
+
+func get(questionId string) string {
+	return `
+    {
+        root(_uid_:` + questionId + `) {
+        	_uid_
+          text
+          positive
+          negative
+          question.option { _uid_ name }
+          question.correct { _uid_ name }
+          question.tag { _uid_ name }
+        }
+    }`
+}
+
+func Get(w http.ResponseWriter, r *http.Request) {
+	server.AddCorsHeaders(w)
+	if r.Method == "OPTIONS" {
+		return
+	}
+	vars := mux.Vars(r)
+	qid := vars["id"]
+	// TODO - Return error.
+	if qid == "" {
+	}
+	q := get(qid)
+	x.Debug(q)
+	res := dgraph.Query(q)
+	w.Write(res)
+}
+
+
+// update question 
+
+func edit(q Question) string {
+	m := `
+    mutation {
+      set {
+          <_uid_:` + q.Uid + `> <text> "` + q.Text + `" .
+          <_uid_:` + q.Uid + `> <positive> "` + strconv.FormatFloat(q.Positive, 'g', -1, 64) + `" .
+          <_uid_:` + q.Uid + `> <negative> "` + strconv.FormatFloat(q.Negative, 'g', -1, 64) + `" .`
+     
+    for l := range q.Options {
+			m += "<_uid_:" + q.Options[l].Uid + "> <name> \"" + q.Options[l].Name +
+				"\" .\n <_uid_:" + q.Uid + "> <question.option> <_uid_:" + q.Options[l].Uid + "> . \n "
+
+			if q.Options[l].Is_correct == true {
+				x.Debug(q.Options[l])
+				m += "<_uid_:" + q.Uid + "> <question.correct> <_uid_:" + q.Options[l].Uid + "> . \n "
+			}
+			if q.Options[l].Is_correct == false {
+				delete_correct := "mutation { delete { <_uid_:" + q.Uid + "> <question.correct> <_uid_:" + q.Options[l].Uid + "> .}}"
+				_, err := http.Post(dgraph.QueryEndpoint, "application/x-www-form-urlencoded", strings.NewReader(delete_correct))
+				if err != nil {
+					panic(err)
+				}
+			}
+		}
+
+		// Create and associate Tags
+		for i := range q.Tags {
+			if q.Tags[i].Uid != "" && q.Tags[i].Is_delete == true {
+				query_mutation := "mutation { delete { <_uid_:" + q.Uid + "> <question.tag> <_uid_:" + q.Tags[i].Uid + "> .}}"
+				x.Debug(query_mutation)
+				_, err := http.Post(dgraph.QueryEndpoint, "application/x-www-form-urlencoded", strings.NewReader(query_mutation))
+				if err != nil {
+					panic(err)
+				}
+			} else if q.Tags[i].Uid != "" {
+				m += "<_uid_:" + q.Uid + "> <question.tag> <_uid_:" + q.Tags[i].Uid +
+					"> . \n <_uid_:" + q.Tags[i].Uid + "> <tag.question> <_uid_:" + q.Uid + "> . \n "
+			} else {
+				index := strconv.Itoa(i)
+				m += "<_new_:tag" + index + "> <name> \"" + q.Tags[i].Name +
+					"\" .\n <_uid_:" + q.Uid + "> <question.tag> <_new_:tag" + index +
+					"> . \n <_new_:tag" + index + "> <tag.question> <_uid_:" + q.Uid + "> . \n "
+			}
+		}
+		m += " }}"
+		x.Debug(m)
+	return m
+}
+
+func Edit(w http.ResponseWriter, r *http.Request) {
+	server.AddCorsHeaders(w)
+	if r.Method == "OPTIONS" {
+		return
+	}
+	vars := mux.Vars(r)
+	qid := vars["id"]
+	// TODO - Return error.
+	if qid == "" {
+	}
+	var q Question
+	server.ReadBody(r, &q)
+	q.Uid = qid
+	// TODO - Validate candidate fields shouldn't be empty.
+	x.Debug(q)
+	m := edit(q)
+	x.Debug(m)
+	res := dgraph.SendMutation(m)
+	if res.Success {
+		res.Message = "Question info updated successfully."
+	}
+	server.WriteBody(w, res)
 }

@@ -82,14 +82,16 @@ func runHTTPServer(address string) {
 	// TODO - Change the API's to RESTful API's
 	adminRouter.HandleFunc("/add-question", question.Add).Methods("POST", "OPTIONS")
 	// TODO - Change to PUT.
-	adminRouter.HandleFunc("/edit-question", question.Edit).Methods("POST", "OPTIONS")
 	adminRouter.HandleFunc("/get-all-questions", question.Index).Methods("POST", "OPTIONS")
 	adminRouter.HandleFunc("/filter-questions", question.Filter).Methods("POST", "OPTIONS")
+	adminRouter.HandleFunc("/question/{id}", question.Get).Methods("GET", "OPTIONS")
+	adminRouter.HandleFunc("/question/{id}", question.Edit).Methods("PUT", "OPTIONS")
 
 	adminRouter.HandleFunc("/add-quiz", quiz.Add).Methods("POST", "OPTIONS")
 	// TODO - Change to PUT.
-	adminRouter.HandleFunc("/edit-quiz", quiz.Edit).Methods("POST", "OPTIONS")
 	adminRouter.HandleFunc("/get-all-quizes", quiz.Index).Methods("GET", "OPTIONS")
+	adminRouter.HandleFunc("/quiz/{id}", quiz.Get).Methods("GET", "OPTIONS")
+	adminRouter.HandleFunc("/quiz/{id}", quiz.Edit).Methods("PUT", "OPTIONS")
 
 	adminRouter.HandleFunc("/get-all-tags", tag.Index).Methods("GET", "OPTIONS")
 

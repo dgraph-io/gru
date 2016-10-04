@@ -12,12 +12,15 @@
       return MainService.post('/add-quiz', data);
     }
 
-    services.getInvitedCandidates = function(){
-      return MainService.post('/get-all-candidates');
+    services.editQuiz = function(data){
+      return MainService.put('/quiz/' + data._uid_, data);
+    }
+
+    services.getQuiz = function(data){
+      return MainService.get('/quiz/' + data);
     }
 
     return services;
-
   }
 
   var quizServiceArray = [

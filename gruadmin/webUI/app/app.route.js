@@ -15,8 +15,9 @@
     var  addQuestionTemplate = 'app/components/question/add-question.html';
 
     var  quizTemplate = 'app/components/quiz/index.html';
-    var  allQuizTemplate = 'app/components/quiz/all-quiz.html';
     var  addQuizTemplate = 'app/components/quiz/add-quiz.html';
+    var  editQuizTemplate = 'app/components/quiz/edit-quiz.html';
+    var  allQuizTemplate = 'app/components/quiz/all-quiz.html';
 
     var  inviteTemplate = 'app/components/invite/index.html';
     var  inviteDashboardTemplate = 'app/components/invite/views/invite-dashboard.html';
@@ -89,6 +90,12 @@
             url: '/add-quiz?:index?:qid',
             parent: 'quiz',
             templateUrl: addQuizTemplate,
+            authenticate: true,
+          })
+          .state('quiz.edit', {
+            url: '/edit-quiz/:quizID',
+            parent: 'quiz',
+            templateUrl: editQuizTemplate,
             authenticate: true,
           })
         .state('invite', {

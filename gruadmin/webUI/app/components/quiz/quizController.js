@@ -10,6 +10,7 @@
 	// FUNCTION DECLARATION
 		quizVm.removeSelecteQuestion = removeSelecteQuestion;
 		quizVm.addQuizForm = addQuizForm;
+		quizVm.validateInput = validateInput;
 
 	// FUNCTION DEFINITION
 		
@@ -35,7 +36,7 @@
 			requestData = angular.copy(quizVm.newQuiz);
 			console.log(requestData);
 
-			areInValidateInput = validateInput(requestData);
+			areInValidateInput = quizVm.validateInput(requestData);
 			if(areInValidateInput) {
 				SNACKBAR({
 					message: areInValidateInput,
@@ -45,7 +46,7 @@
 			}
 			var qustionsClone = angular.copy(quizVm.newQuiz.questions)
 			angular.forEach(qustionsClone, function(value, key) {
-			  questions.push(value._uid_);
+			  questions.push({_uid_: value._uid_});
 			});
 			requestData.questions = questions;
 
@@ -87,23 +88,86 @@
 
 	}
 
-	function allQuizController($scope, $rootScope, $stateParams, $http, $state, quizService, questionService) {
-
+	function allQuizController(quizService, questionService) {
 		quizService.getAllQuizes().then(function(data){
 			var data = JSON.parse(data);
 			quizVm.allQuizes = data.debug[0].quiz;
 		}, function(err){
 			console.log(err);
 		})
-
 	}
 
-	var allQuizDependency = [
-	    "$scope",
+	function editQuizController($rootScope, $stateParams, $state, quizService) {
+		editQuizVm = this;
+		quizVm.newQuiz = {};
+
+		// Function Declaration
+		editQuizVm.editQuiz = editQuiz;
+		editQuizVm.onQuestionRemove = onQuestionRemove;
+
+
+		quizService.getQuiz($stateParams.quizID)
+		.then(function(data){
+			quizVm.newQuiz = data.root[0];
+
+			selectedQuestion = data.root[0]['quiz.question'];
+		}, function(err){
+			console.log(err);
+		});
+
+		function editQuiz() {
+			quizVm.newQuiz.questions = quizVm.newQuiz['quiz.question'];
+			areInValidateInput = quizVm.validateInput(quizVm.newQuiz);
+			if(areInValidateInput) {
+				SNACKBAR({
+					message: areInValidateInput,
+					messageType: "error",
+				})
+				return
+			}
+			console.log(quizVm.newQuiz);
+
+			quizService.editQuiz(quizVm.newQuiz)
+			.then(function(data){
+				SNACKBAR({
+					message: data.Message,
+					messageType: "error",
+				});
+
+				$state.transitionTo("quiz.all");
+			}, function(err){
+				console.log(err);
+			})
+
+		}
+
+		function onQuestionRemove(question) {
+			if(question._uid_) {
+				question.is_delete = true;
+			}
+			console.log(question);
+		}
+
+		// editQuizVm.isSelected = function(question_id) {
+		// 	for(var i=0; i<selectedQuestion.length; i++) {
+		// 		if(selectedQuestion[i]._uid_ == question_id) {
+		// 			return true;
+		// 		}
+		// 	}
+		// 	return false;
+		// }
+	}
+
+	var editQuizDependency = [
 	    "$rootScope",
 	    "$stateParams",
-	    "$http",
 	    "$state",
+	    "quizService",
+	    editQuizController
+	];
+	angular.module('GruiApp').controller('editQuizController', editQuizDependency);
+
+	var allQuizDependency = [
 	    "quizService",
 	    "questionService",
 	    allQuizController
