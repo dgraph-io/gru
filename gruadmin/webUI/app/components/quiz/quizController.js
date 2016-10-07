@@ -8,7 +8,7 @@
 		quizVm.newQuiz = {};
 
 	// FUNCTION DECLARATION
-		quizVm.removeSelecteQuestion = removeSelecteQuestion;
+		quizVm.removeSelectedQuestion = removeSelectedQuestion;
 		quizVm.addQuizForm = addQuizForm;
 		quizVm.validateInput = validateInput;
 
@@ -23,7 +23,7 @@
 			console.log(err)
 		})
 
-		function removeSelecteQuestion(key) {
+		function removeSelectedQuestion(key) {
 			delete quizVm.newQuiz.questions[key];
 			if(!Object.keys(quizVm.newQuiz.questions).length) {
 				delete quizVm.newQuiz.questions;

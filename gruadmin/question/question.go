@@ -256,16 +256,18 @@ func edit(q Question) string {
 		// Create and associate Tags
 		for i := range q.Tags {
 			if q.Tags[i].Uid != "" && q.Tags[i].Is_delete == true {
-				query_mutation := "mutation { delete { <_uid_:" + q.Uid + "> <question.tag> <_uid_:" + q.Tags[i].Uid + "> .}}"
+				query_mutation := "mutation { delete { <_uid_:" + q.Uid + "> <question.tag> <_uid_:" + q.Tags[i].Uid + 
+				"> .\n <_uid_:" + q.Tags[i].Uid + "> <tag.question> <_uid_:" + q.Uid + "> . \n }}"
 				x.Debug(query_mutation)
-				_, err := http.Post(dgraph.QueryEndpoint, "application/x-www-form-urlencoded", strings.NewReader(query_mutation))
-				if err != nil {
-					panic(err)
+				resp := dgraph.SendMutation(query_mutation)
+				if !resp.Success {
+					resp.Message = "Question can't be deattached."
 				}
+				
 			} else if q.Tags[i].Uid != "" {
 				m += "<_uid_:" + q.Uid + "> <question.tag> <_uid_:" + q.Tags[i].Uid +
 					"> . \n <_uid_:" + q.Tags[i].Uid + "> <tag.question> <_uid_:" + q.Uid + "> . \n "
-			} else {
+			} else if q.Tags[i].Uid == "" {
 				index := strconv.Itoa(i)
 				m += "<_new_:tag" + index + "> <name> \"" + q.Tags[i].Name +
 					"\" .\n <_uid_:" + q.Uid + "> <question.tag> <_new_:tag" + index +

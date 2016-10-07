@@ -33,7 +33,7 @@
           <div class="mdl-layout-spacer"></div>
           
           <!-- Navigation -->
-          <nav class="mdl-navigation">
+          <nav class="mdl-navigation ng-cloak" ng-show="mainVm.isLoggedIn()">
             <div class="dropdown-wrapper">
               <div class="dropdown-link mdl-navigation__link">
                 QUESTION
@@ -65,29 +65,32 @@
             <a class="mdl-navigation__link" ui-sref="invite.add">
                 INVITE
             </a>
+            <div class="dropdown-wrapper">
+              <div class="dropdown-link mdl-navigation__link text-center">
+                <i class="material-icons mdl-list__item-icon">person</i>
+              </div>
+              <div class="dropdown-content mdl-shadow--2dp">
+                <a class="dropdown-item clickable" ng-click="mainVm.logout()">
+                  LOGOUT
+                </a>
+              </div>
+            </div>
           </nav>
-          <div class="dropdown-wrapper">
-            <div class="dropdown-link mdl-navigation__link text-center">
-              <i class="material-icons mdl-list__item-icon">person</i>
-            </div>
-            <div class="dropdown-content mdl-shadow--2dp">
-              <a class="dropdown-item clickable" ng-click="mainVm.logout()">
-                LOGOUT
-              </a>
-            </div>
-          </div>
         </div>
       </header>        
       <div class="mdl-layout__drawer">
         <a ui-sref="root">
-            <span class="mdl-layout-title font-tangerine" ui-sref="root">
-                GRU-Admin
-            </span>
+          <span class="mdl-layout-title mt-10 ml-10" ui-sref="root">
+            GRU-Admin
+          </span>
         </a>
-        <nav class="mdl-navigation" ng-if="mainVm.pageName != 'quiz'">
-            <div class="mdl-navigation__link clickable" ng-class="{'active-page': currentPage == 'root'}" ng-click="homeVm.startDemo()">
-                <i class="material-icons">account_circle</i> START DEMO
-            </div>
+        <nav class="mdl-navigation" ng-show="mainVm.isLoggedIn()">
+          <a class="dropdown-item" ui-sref="question.all">
+            QUESTIONS
+          </a>
+          <a class="dropdown-item" ui-sref="quiz.all">
+            QUIZ
+          </a>
         </nav>
       </div>
 

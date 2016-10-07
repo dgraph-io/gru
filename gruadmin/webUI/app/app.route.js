@@ -13,6 +13,7 @@
     var  questionTemplate = 'app/components/question/index.html';
     var  allQuestionTemplate = 'app/components/question/all-question.html';
     var  addQuestionTemplate = 'app/components/question/add-question.html';
+    var  editQuestionTemplate = 'app/components/question/views/edit-question.html';
 
     var  quizTemplate = 'app/components/quiz/index.html';
     var  addQuizTemplate = 'app/components/quiz/add-quiz.html';
@@ -71,6 +72,13 @@
             url: '/add-question',
             parent: 'question',
             templateUrl: addQuestionTemplate,
+            css: [angularSelectCSS, codeMirrorCSS],
+            authenticate: true,
+          })
+          .state('question.edit', {
+            url: '/edit-question/:quesID',
+            parent: 'question',
+            templateUrl: editQuestionTemplate,
             css: [angularSelectCSS, codeMirrorCSS],
             authenticate: true,
           })

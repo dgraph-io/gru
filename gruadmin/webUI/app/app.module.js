@@ -199,6 +199,8 @@ angular.module('GruiApp').provider('RouteHelpers', ['APP_REQUIRES', function (ap
       mainVm.hasKey = hasKey;
       mainVm.isObject = isObject;
       mainVm.goTo = goTo;
+      mainVm.unescapeText = unescapeText;
+
       mainVm.isLoggedIn = isLoggedIn;
       mainVm.logout = logout;
 
@@ -219,6 +221,10 @@ angular.module('GruiApp').provider('RouteHelpers', ['APP_REQUIRES', function (ap
             }
         };
         return -1;
+      }
+
+      function unescapeText(question) {
+        return unescape(question);
       }
 
       function isLoggedIn() {

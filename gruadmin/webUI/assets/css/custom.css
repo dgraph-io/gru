@@ -108,12 +108,30 @@
   vertical-align: sub;
   font-size: 20px;
 }
+.mdl-chip.danger-chip:hover {
+  background: #F44336;
+}
+.mdl-chip.danger-chip {
+  background: #FF5722;
+  color: white;
+}
+.slide-link.is-active .mdl-chip {
+  background: white;
+  color: black;
+}
 
 /*QUESTION PAGE CSS*/
 
 .question-cover.mdl-card__title {
   background: url("../img/question-cover.png");
   background-size: 100% 100%;
+}
+
+.question-item {
+  background: rgba(158, 158, 158, 0.2);
+  color: black;
+  border-radius: 10px;
+  margin-bottom: 10px;
 }
 
 .typesearch {

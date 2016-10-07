@@ -155,8 +155,7 @@
 .slide-link:hover {
   background: rgba(158, 158, 158, 0.2);
 }
-.slide-link.is-active,
-.slide-link.is-active a {
+.slide-link.is-active {
   background: #EC3D2E;
   color: white;
 }

@@ -37,8 +37,8 @@
 				<label class="bold"> Selected Questions</label>
 				<div ng-repeat="(key, question) in quizVm.newQuiz.questions" ng-if="question.text">
 					<span class="mdl-chip mdl-chip--deletable">
-				    <span class="mdl-chip__text">{{question.text}}</span>
-				    <button type="button" class="mdl-chip__action" ng-click="quizVm.removeSelecteQuestion(key)">
+				    <span class="mdl-chip__text">{{mainVm.unescapeText(question.text)}}</span>
+				    <button type="button" class="mdl-chip__action" ng-click="quizVm.removeSelectedQuestion(key)">
 				    	<i class="material-icons">cancel</i>
 				    </button>
 					</span>

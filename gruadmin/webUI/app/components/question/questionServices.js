@@ -5,15 +5,19 @@
   	var services = {}; //Object to return
 
     services.saveQuestion = function(data){
-      return MainService.post('/add-question', data)
+      return MainService.post('/add-question', data);
     }
 
     services.editQuestion = function(data){
-      return MainService.post('/edit-question', data)
+      return MainService.put('/question/' + data._uid_, data);
     }
 
     services.getAllQuestions = function(requestData){
-      return MainService.post('/get-all-questions', {"id": ""})
+      return MainService.post('/get-all-questions', {"id": ""});
+    }
+
+    services.getQuestion = function(questionID){
+      return MainService.get('/question/' + questionID);
     }
 
     return services;

@@ -21,129 +21,73 @@
 				</div>
 			</div>
 		</div>
-		<div class="question slide-wrapper b-border" ng-repeat="question in mainVm.allQuestions | filter:searchQ">
-			<div class="mdl-grid slide-link">
-				<div class="mdl-cell mdl-cell--8-col mdl-cell--middle">
-					{{$index+1}}.  {{question.text}}
+		<div class="question slide-wrapper" ng-repeat="question in mainVm.allQuestions | filter:searchQ">
+			<div class="mdl-grid slide-link question-item">
+				<div class="mdl-cell mdl-cell--10-col mdl-cell--middle">
+					<pre>{{mainVm.unescapeText(question.text)}}</pre>
 				</div>
-				<!-- <div class="mdl-cell mdl-cell--2-col mv-0 text-right">
-					<a ui-sref="question.add({qid: question._uid_, index:$index})" class="mdl-button action-btn">
-						Edit
+				<div class="mdl-cell mdl-cell--2-col mv-0 text-right">
+					<a href="" class="question-action mr-10">
+						<span class="mdl-chip danger-chip">
+						  <span class="mdl-chip__text">VIEW</span>
+						</span>
 					</a>
-				</div> -->
-				<div class="mdl-cell mdl-cell--2-col mv-0 text-right mdl-cell--middle">
-					<a href="">
-						View Details
+					<a ui-sref="question.edit({quesID: question._uid_})" class="question-action mr-10">
+						<span class="mdl-chip danger-chip">
+						  <span class="mdl-chip__text">EDIT</span>
+						</span>
 					</a>
 				</div>
 			</div>
-			<div class="mdl-grid  slide-content">
+			<div class="mdl-grid slide-content">
 				<div class="mdl-cell mdl-cell--12-col pb-20">
 					<div class="mdl-grid no-pad">
-						<div class="mdl-cell mdl-cell--3-col">
-							<span ng-show="!editQuestion" class="bold">Name</span>
-						</div>
-						<div class="mdl-cell mdl-cell--8-col">
-							<div ng-show="!editQuestion">	
-								{{question.text}}
-							</div>
-							<div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label" ng-show="editQuestion">
-						    <input class="mdl-textfield__input" type="text" id="questin-text" ng-model="question.text">
-						    <label class="mdl-textfield__label" for="questin-text">Name</label>
-						  </div>
-						</div>
-					</div>
-					<div class="mdl-grid no-pad">
-						<div class="mdl-cell mdl-cell--3-col">
-							<span ng-show="!editQuestion" class="bold"> Positive Mark</span>
-						</div>
-						<div class="mdl-cell mdl-cell--8-col">
-							<div ng-show="!editQuestion">	
-								<span ng-show="!editQuestion">{{question.positive}}</span>
-							</div>
-							<div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label" ng-show="editQuestion">
-						    <input class="mdl-textfield__input" type="text" id="questin-positive" ng-model="question.positive">
-						    <label class="mdl-textfield__label" for="questin-positive">Positive Mark</label>
-						  </div>
-						</div>
-					</div>
-					<div class="mdl-grid no-pad">
-						<div class="mdl-cell mdl-cell--3-col">
-							<span ng-show="!editQuestion" class="bold">Negative Mark</span>
-						</div>
-						<div class="mdl-cell mdl-cell--8-col">
-							<div ng-show="!editQuestion">	
-								{{question.negative}}
-							</div>
-							<div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label" ng-show="editQuestion">
-						    <input class="mdl-textfield__input" type="text" id="questin-negative" ng-model="question.negative">
-						    <label class="mdl-textfield__label" for="questin-negative">Negative Mark</label>
-						  </div>
-						</div>
-					</div>
-					<div class="mdl-grid no-pad">
-						<div class="mdl-cell mdl-cell--3-col">
-							<span ng-show="!editQuestion" class="bold">Options</span>
-						</div>
-						<div class="mdl-cell mdl-cell--8-col">
-							<div class="mdl-grid no-pad" ng-repeat="option in question['question.option'] track by $index"  ng-init="is_correct=allQVm.isCorrect(option, question['question.correct'])">
-								<div class="mdl-cell mdl-cell--6-col ml-0">
-									<div ng-show="!editQuestion">	
+						<div class="mdl-cell mdl-cell--6-col">
+							<div class="mdl-grid no-pad">
+								<div class="mdl-cell mdl-cell--3-col">
+									<span ng-show="!editQuestion" class="bold">Options</span>
+								</div>
+								<div class="mdl-cell mdl-cell--9-col">
+									<div class="mb-10" ng-repeat="option in question['question.option'] track by $index"  ng-init="is_correct=questionVm.isCorrect(option, question['question.correct'])">
 										{{option.name}} &nbsp <span class="text-green" ng-show="is_correct"> - <i class="material-icons text-green mdi-sm">check_circle</i> Correct</span>
 									</div>
-									<div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label" ng-show="editQuestion">
-								    <input class="mdl-textfield__input" type="text" name="option-{{$index + 1}}" id="option-{{$parent.$index}}{{$index + 1}}" ng-model="question['question.option'][$index].name">
-								    <label class="mdl-textfield__label" for="option-{{$parent.$index}}{{$index + 1}}">Options</label>
-								  </div>
-								</div>
-								<div class="mdl-cell mdl-cell--6-col pt-20">
-								  <label class="mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect" for="correct-{{$parent.$index}}{{$index + 1}}" ng-show="editQuestion">
-									  <input type="checkbox" id="correct-{{$parent.$index}}{{$index + 1}}" class="mdl-checkbox__input" ng-model="question['question.option'][$index].is_correct">
-									  <span class="mdl-checkbox__label">Is correct<span ng-show="!is_correct">?</span></span>
-									</label>
 								</div>
 							</div>
 						</div>
-					</div>
-
-					<div class="mdl-grid no-pad" ng-show="question['question.tag']">
-						<div class="mdl-cell mdl-cell--3-col">
-							<span ng-show="!editQuestion" class="bold">Tags</span>
-						</div>
-						<div class="mdl-cell mdl-cell--8-col">
-							<span ng-repeat="tags in question['question.tag'] track by $index" ng-show="!editQuestion">
-								<span class="mdl-chip">
-							    <span class="mdl-chip__text">{{tags.name}}</span>
-								</span>
-							</span>
-							<ui-select multiple tagging="questionVm.addNewTag" theme="select2" ng-model="question['question.tag']" class="mdl-select" ng-show="editQuestion" on-remove="allQVm.onRemoveTag($item, $model, question)">
-						    <ui-select-match  placeholder="Enter tags">
-						        <span ng-bind="$item.name"></span>
-						    </ui-select-match>
-						    <ui-select-choices repeat="tag in (questionVm.allTags | filter: $select.search)">
-						        <span ng-bind="tag.name"></span>
-						    </ui-select-choices>
-							</ui-select>
-						</div>
-					</div>
-	
-					<div class="mdl-grid no-pad">
-
-						<div class="mdl-cell mdl-cell--6-col mdl-cell--3-offset form-actions">
-							<button  class="mdl-button action-btn" ng-click="editQuestion = !editQuestion" ng-show="!editQuestion">
-								<span>Edit</span>
-							</button>
-							<button  class="mdl-button action-btn" ng-click="allQVm.editQuestion($index, question, $event)" ng-show="editQuestion">
-								<span>Update</span>
-							</button>
-							<button  class="mdl-button action-btn cancel-update" ng-click="allQVm.resetQuestion($index, question); editQuestion = !editQuestion" ng-show="editQuestion">
-								<span>Cancel</span>
-							</button>
+						<div class="mdl-cell mdl-cell--6-col">
+							<div class="mdl-grid no-pad">
+								<div class="mdl-cell mdl-cell--4-col">
+									<span ng-show="!editQuestion" class="bold"> Positive Mark</span>
+								</div>
+								<div class="mdl-cell mdl-cell--4-col">
+									<span ng-show="!editQuestion">{{question.positive}}</span>
+								</div>
+							</div>
+							<div class="mdl-grid no-pad">
+								<div class="mdl-cell mdl-cell--4-col">
+									<span ng-show="!editQuestion" class="bold">Negative Mark</span>
+								</div>
+								<div class="mdl-cell mdl-cell--4-col">
+									{{question.negative}}
+								</div>
+							</div>
+							<div class="mdl-grid no-pad" ng-show="question['question.tag']">
+								<div class="mdl-cell mdl-cell--4-col">
+									<span ng-show="!editQuestion" class="bold">Tags</span>
+								</div>
+								<div class="mdl-cell mdl-cell--4-col">
+									<span ng-repeat="tags in question['question.tag'] track by $index">
+										<span class="mdl-chip">
+									    <span class="mdl-chip__text">{{tags.name}}</span>
+										</span>
+									</span>
+								</div>
+							</div>
 						</div>
 					</div>
 				</div>
 			</div>
-		</div>
+ 		</div>
 	</div>
 	<div class="text-center" ng-if="!mainVm.allQuestions">
 		<h4 class="text-center">

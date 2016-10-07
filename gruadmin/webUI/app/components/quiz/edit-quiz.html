@@ -37,7 +37,7 @@
 				<label class="bold">Added Questions</label>
 				<div ng-repeat="(key, question) in quizVm.newQuiz['quiz.question']" ng-if="question.text">
 					<span class="mdl-chip mdl-chip--deletable" ng-if="!question.is_delete">
-				    <span class="mdl-chip__text">{{question.text}}</span>
+				    <span class="mdl-chip__text">{{mainVm.unescapeText(question.text)}}</span>
 				    <button type="button" class="mdl-chip__action" ng-click="editQuizVm.onQuestionRemove(question)">
 				    	<i class="material-icons">cancel</i>
 				    </button>

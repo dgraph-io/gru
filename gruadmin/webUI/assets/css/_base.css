@@ -16,3 +16,7 @@ table {
 th {
 	text-transform: uppercase;
 }
+
+pre {
+  margin: 0;
+}
