@@ -50,7 +50,7 @@
 			</div>
 			<div class="mdl-grid no-pad">
 				<div class="mdl-cell mdl-cell--6-col ml-0">
-				 	<ui-select multiple tagging="questionVm.addNewTag" theme="select2" ng-model="editQuesVm.newQuestion['question.tag']" class="mdl-select" on-remove="editQuesVm.onRemoveTag($item, $model, editQuesVm.newQuestion)">
+				 	<ui-select multiple tagging="questionVm.addNewTag" theme="select2" ng-model="editQuesVm.newQuestion['question.tag']" class="mdl-select" on-remove="editQuesVm.onRemoveTag($item, $model, editQuesVm.newQuestion)" on-select="questionVm.onTagSelect($item, $model)">
 				    <ui-select-match  placeholder="Enter tags">
 				        <span ng-bind="$item.name"></span>
 				    </ui-select-match>

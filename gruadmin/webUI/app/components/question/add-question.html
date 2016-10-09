@@ -50,11 +50,11 @@
 			</div>
 			<div class="mdl-grid no-pad">
 				<div class="mdl-cell mdl-cell--6-col ml-0">
-				 	<ui-select multiple tagging="questionVm.addNewTag" theme="select2" ng-model="addQueVm.newQuestion.tags" class="mdl-select">
+				 	<ui-select multiple tagging="questionVm.addNewTag" theme="select2" ng-model="addQueVm.newQuestion.tags" class="mdl-select" on-select="questionVm.onTagSelect($item, $model)">
 				    <ui-select-match  placeholder="Enter tags">
 				        <span ng-bind="$item.name"></span>
 				    </ui-select-match>
-				    <ui-select-choices repeat="tag in (questionVm.allTags | filter: $select.search)">
+				    <ui-select-choices repeat="tag in (questionVm.allTags | filter: $select.search) track by $index">
 				        <span ng-bind="tag.name"></span>
 				    </ui-select-choices>
 					</ui-select>

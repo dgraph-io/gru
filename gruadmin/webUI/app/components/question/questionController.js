@@ -16,6 +16,7 @@
 		questionVm.initCodeMirror = initCodeMirror;
 		questionVm.isCorrect = isCorrect;
 		questionVm.getAllTags = getAllTags;
+		questionVm.onTagSelect = onTagSelect;
 
 		questionVm.getAllTags();
 
@@ -111,6 +112,16 @@
 				}
 			}
 			return false
+		}
+
+		function onTagSelect(item, model) {
+			for(var i = 0; i < questionVm.allTags.length; i++) { 
+				if(item.name == questionVm.allTags[i].name && !item._uid_){ 
+					delete model.id;
+					delete model.isTag;
+					model._uid_ = questionVm.allTags[i]._uid_;
+				} 
+			}
 		}
 	}
 
