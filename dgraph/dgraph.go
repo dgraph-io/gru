@@ -8,8 +8,6 @@ import (
 	"log"
 	"net/http"
 	"strings"
-
-	"github.com/dgraph-io/gru/gruadmin/server"
 )
 
 var (
@@ -25,7 +23,7 @@ type MutationRes struct {
 	Uids    map[string]string `json:"uids"`
 }
 
-func SendMutation(m string) server.Response {
+func SendMutation(m string) MutationRes {
 	res, err := http.Post(endpoint, "application/x-www-form-urlencoded", strings.NewReader(m))
 	if err != nil {
 		log.Fatal(err)
@@ -35,14 +33,7 @@ func SendMutation(m string) server.Response {
 	var mr MutationRes
 	json.NewDecoder(res.Body).Decode(&mr)
 	fmt.Println(mr)
-	if mr.Code == "ErrorOk" {
-		return server.Response{
-			Success: true,
-		}
-	}
-	return server.Response{
-		Success: false,
-	}
+	return mr
 }
 
 func Query(q string) []byte {

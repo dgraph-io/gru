@@ -2,10 +2,11 @@ package quiz
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
-	"fmt"
 	"strings"
+
 	"github.com/dgraph-io/gru/dgraph"
 	"github.com/dgraph-io/gru/gruadmin/server"
 	"github.com/dgraph-io/gru/x"
@@ -13,7 +14,7 @@ import (
 )
 
 type Quiz struct {
-	Uid         string 
+	Uid        string
 	Name       string
 	Duration   string
 	Start_Date string
@@ -22,11 +23,10 @@ type Quiz struct {
 }
 
 type Question struct {
-	Uid        string `json:"_uid_"`
-	Text       string
+	Uid       string `json:"_uid_"`
+	Text      string
 	Is_delete bool
 }
-
 
 func Add(w http.ResponseWriter, r *http.Request) {
 	server.AddCorsHeaders(w)
@@ -62,7 +62,6 @@ func Add(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(quiz_json_response)
 }
-
 
 func Index(w http.ResponseWriter, r *http.Request) {
 	server.AddCorsHeaders(w)
@@ -130,19 +129,19 @@ func edit(q Quiz) string {
           <_uid_:` + q.Uid + `> <start_date> "` + q.Start_Date + `" .
           <_uid_:` + q.Uid + `> <end_date> "` + q.End_Date + `" .`
 
-  // Create and associate Tags
-		for i := range q.Questions{
-			if q.Questions[i].Is_delete == true {
-				mutation := "mutation { delete { <_uid_:" + q.Uid + "> <quiz.question> <_uid_:" + q.Questions[i].Uid + "> .}}"
-				x.Debug(mutation)
-				_, err := http.Post(dgraph.QueryEndpoint, "application/x-www-form-urlencoded", strings.NewReader(mutation))
-				if err != nil {
-					panic(err)
-				}
-			} else if q.Questions[i].Uid != "" {
-				m += "\n<_uid_:" + q.Uid + "> <quiz.question> <_uid_:" + q.Questions[i].Uid + "> .\n"
-			} 
-		}        
+	// Create and associate Tags
+	for i := range q.Questions {
+		if q.Questions[i].Is_delete == true {
+			mutation := "mutation { delete { <_uid_:" + q.Uid + "> <quiz.question> <_uid_:" + q.Questions[i].Uid + "> .}}"
+			x.Debug(mutation)
+			_, err := http.Post(dgraph.QueryEndpoint, "application/x-www-form-urlencoded", strings.NewReader(mutation))
+			if err != nil {
+				panic(err)
+			}
+		} else if q.Questions[i].Uid != "" {
+			m += "\n<_uid_:" + q.Uid + "> <quiz.question> <_uid_:" + q.Questions[i].Uid + "> .\n"
+		}
+	}
 	m += "}\n}"
 	x.Debug(m)
 	return m
@@ -165,10 +164,11 @@ func Edit(w http.ResponseWriter, r *http.Request) {
 	x.Debug(q)
 	m := edit(q)
 	x.Debug(m)
-	res := dgraph.SendMutation(m)
-	if res.Success {
+	mr := dgraph.SendMutation(m)
+	res := server.Response{}
+	if mr.Code == "ErrorOk" {
+		res.Success = true
 		res.Message = "Quiz info updated successfully."
 	}
 	server.WriteBody(w, res)
 }
-
