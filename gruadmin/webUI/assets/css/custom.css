@@ -120,6 +120,29 @@
   color: black;
 }
 
+/*HOME PAGE*/
+
+body.home {
+  background: url("../img/home-cover.jpg") no-repeat;
+  background-size: cover;
+}
+
+.mdl-card__actions .mdl-button {
+  width: 49%;
+  background: #607D8B;
+}
+
+.mdl-card__actions .mdl-button:hover {
+  background: #FF5722;
+}
+
+.home-grid {
+  padding: 100px 0 50px;
+}
+
+.panel-card {
+  margin-left: 30px;
+}
 /*QUESTION PAGE CSS*/
 
 .question-cover.mdl-card__title {

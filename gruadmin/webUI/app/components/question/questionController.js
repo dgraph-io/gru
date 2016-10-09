@@ -15,6 +15,9 @@
 		questionVm.validateInput = validateInput;
 		questionVm.initCodeMirror = initCodeMirror;
 		questionVm.isCorrect = isCorrect;
+		questionVm.getAllTags = getAllTags;
+
+		questionVm.getAllTags();
 
 	// FUNCTION DEFINITION
 
@@ -30,12 +33,14 @@
 		}
 
 		// Get all Tags
-		mainVm.getAllTags().then(function(data){
-			var data = JSON.parse(data);
-			questionVm.allTags = getUniqueTags(data.debug[0].question);
-		}, function(err){
-			console.log(err);
-		})	
+		function getAllTags() {
+			mainVm.getAllTags().then(function(data){
+				var data = JSON.parse(data);
+				questionVm.allTags = getUniqueTags(data.debug[0].question);
+			}, function(err){
+				console.log(err);
+			})	
+		}
 
 		function addNewTag(new_tag) {
 			return {
@@ -107,9 +112,6 @@
 			}
 			return false
 		}
-
-		$(document).ready(function(){
-		});
 	}
 
 	function addQuestionController($scope, $rootScope, $http, $q, $state, $stateParams, questionService) {
@@ -168,68 +170,81 @@
 	}
 
 	function allQuestionController($scope, $rootScope, $http, $q, $state, $stateParams, questionService) {
+		// VARIABLE DECLARATION
 		allQVm = this;
-		allQVm.updatedQuestion = {}; //Updated question modal
-		allQVm.updatedQuestion.options = {};
+		allQVm.showLazyLoader = false;
+		allQVm.lazyStatus = true;
+		allQVm.noItemFound = false;
+		mainVm.allQuestions = [];
 
-		questionService.getAllQuestions().then(function(data){
-			var data = JSON.parse(data);
+		// FUNCTION DECLARATION
+		allQVm.getAllQuestions = getAllQuestions;
 
-			mainVm.allQuestions = data.debug[0].question;
-			mainVm.allQuestionsBak = angular.copy(mainVm.allQuestions);
-		}, function(err){
-			console.log(err)
-		})
+		// INITITIALIZERS
+		allQVm.getAllQuestions();
 
-		// allQVm.editQuestion = editQuestion;
-		// allQVm.isCorrect = isCorrect;
-		// allQVm.resetQuestion = resetQuestion;
-		// allQVm.onRemoveTag = onRemoveTag;
+		// FUNCTION DEFINITIONS
+		function getAllQuestions(questionID) {
+			if(questionID && !allQVm.lazyStatus && allQVm.noItemFound) {
+				return 
+			}
+			// API HIT
+			var data = {
+				"id": questionID || "",
+			};
+			var hideLoader = questionID ? true : false;
 
-		// function editQuestion(index, question) {
-		// 	if(isNaN(question.positive) || isNaN(question.negative)) {
-		// 		SNACKBAR({
-		// 			message: "Question marks must be a number!",
-		// 			messageType: "error",
-		// 		})
-		// 		return
-		// 	}
+			allQVm.showLazyLoader = true;
+			questionService.getAllQuestions(data, hideLoader).then(function(data){
+				var data = JSON.parse(data);
+				if(data.code == "ErrorInvalidRequest") {
+					allQVm.noItemFound = true;
+					allQVm.showLazyLoader = false;
+					return
+				}
 
+				var dataArray = data.debug[0].question;
+				if(data.debug && dataArray) {
+					if(mainVm.allQuestions) {
+						dataArrayLength = dataArray.length;
+						for(var i = 0; i < dataArrayLength; i++) {
+               mainVm.allQuestions.push(dataArray[i]);
+            }
+					} else {
+						mainVm.allQuestions = data.debug[0].question;
+					}
 
-		// 	if(question.deletedTag) {
-		// 		question.tags = question["question.tag"].concat(question.deletedTag);
-		// 	} else {
-		// 		question.tags = question["question.tag"];
-		// 	}
-		// 	question.options = question["question.option"]
-		// 	question.positive = parseFloat(question.positive)
-		// 	question.negative = parseFloat(question.negative)
-			
-		// 	questionService.editQuestion(question).then(function(data){
-		// 		SNACKBAR({
-		// 			message: data.Message,
-		// 		})
-		// 	}, function(err){
-		// 		console.log(err);
-		// 	})
-		// }
+					mainVm.allQuestionsBak = angular.copy(mainVm.allQuestions);
+					allQVm.lastQuestion = mainVm.allQuestions[mainVm.allQuestions.length - 1]._uid_;
+				}
 
-		// function onRemoveTag(tag, model, question) {
-		// 	if(tag._uid_) {
-		// 		tag.is_delete = true;
-		// 		question.deletedTag = question.deletedTag || [];
-		// 		question.deletedTag.push(tag);
-		// 	}
-		// }
+				allQVm.lazyStatus = true;
+				allQVm.showLazyLoader = false;
+			}, function(err){
+				allQVm.showLazyLoader = false;
+				console.log(err)
+			});
+		}
 
-		// function resetQuestion(index) {
-		// 	$scope.editQuestion = false;
-		// 	mainVm.allQuestions[index] = angular.copy(mainVm.allQuestionsBak[index]);
+		$(document).ready(function(){
 
-		// 	$rootScope.updgradeMDL();
-		// }
+			$(window).unbind('scroll');
+			setTimeout(function() {
+				window.addEventListener('scroll', function(){
+				  if($("#question-listing").length){
+				    var contentLen = $('.mdl-layout__content').scrollTop() + $('.mdl-layout__content').height();
+				    var docHeight = getDocHeight("question-listing");
+						if(contentLen >= docHeight && allQVm.lazyStatus && mainVm.allQuestions && mainVm.allQuestions.length) {
+							allQVm.getAllQuestions(allQVm.lastQuestion);
+							allQVm.lazyStatus = false;
+						}
+					}
+				}, true);
+			}, 100);
 
-	}
+		});
+
+	} // AllQuestionController
 
 	function editQuestionController($state, $stateParams, questionService) {
 		editQuesVm = this;

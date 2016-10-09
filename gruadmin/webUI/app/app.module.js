@@ -113,42 +113,43 @@ angular.module('GruiApp').provider('RouteHelpers', ['APP_REQUIRES', function (ap
     // Generates a resolve object by passing script names
     // previously configured in constant.APP_REQUIRES
     this.resolveFor = function () {
-        var _args = arguments;
-        return {
-            deps: ['$ocLazyLoad', '$q', function ($ocLL, $q) {
-                // Creates a promise chain for each argument
-                var promise = $q.when(1); // empty promise
-                for (var i = 0, len = _args.length; i < len; i++) {
-                    promise = andThen(_args[i]);
-                }
-                return promise;
+      var _args = arguments;
+      return {
+        deps: ['$ocLazyLoad', '$q', function ($ocLL, $q) {
+          // Creates a promise chain for each argument
+          var promise = $q.when(1); // empty promise
+          for (var i = 0, len = _args.length; i < len; i++) {
+            promise = andThen(_args[i]);
+          }
+          return promise;
 
-                // creates promise to chain dynamically
-                function andThen(_arg) {
-                    // also support a function that returns a promise
-                    if (typeof _arg == 'function')
-                        return promise.then(_arg);
-                    else
-                        return promise.then(function () {
-                            // if is a module, pass the name. If not, pass the array
-                            var whatToLoad = getRequired(_arg);
-                            // simple error check
-                            if (!whatToLoad) return $.error('Route resolve: Bad resource name [' + _arg + ']');
-                            // finally, return a promise
-                            return $ocLL.load(whatToLoad);
-                        });
-                }
+          // creates promise to chain dynamically
+          function andThen(_arg) {
+            // also support a function that returns a promise
+            if (typeof _arg == 'function'){
+              return promise.then(_arg);
+            }
+            else {
+              return promise.then(function () {
+                // if is a module, pass the name. If not, pass the array
+                var whatToLoad = getRequired(_arg);
+                // simple error check
+                if (!whatToLoad) return $.error('Route resolve: Bad resource name [' + _arg + ']');
+                // finally, return a promise
+                return $ocLL.load(whatToLoad);
+              });
+            }
+          }
 
-                function getRequired(name) {
-                    if (appRequires.modules)
-                        for (var m in appRequires.modules)
-                            if (appRequires.modules[m].name && appRequires.modules[m].name === name)
-                                return appRequires.modules[m];
-                    return appRequires.scripts && appRequires.scripts[name];
-                }
-
-            }]
-        };
+          function getRequired(name) {
+            if (appRequires.modules)
+                for (var m in appRequires.modules)
+                    if (appRequires.modules[m].name && appRequires.modules[m].name === name)
+                        return appRequires.modules[m];
+            return appRequires.scripts && appRequires.scripts[name];
+          }
+        }]
+      };
     }; // resolveFor
 
     // not necessary, only used in config block for routes
@@ -291,7 +292,7 @@ angular.module('GruiApp').provider('RouteHelpers', ['APP_REQUIRES', function (ap
       services.get = get;
       services.put = put;
 
-      function post(url, data){
+      function post(url, data, hideLoader){
         var deferred = $q.defer();
 
         var req = {
@@ -309,7 +310,9 @@ angular.module('GruiApp').provider('RouteHelpers', ['APP_REQUIRES', function (ap
           setAuth('Bearer ' + localStorage.getItem('token'));
         }
 
-        mainVm.showAjaxLoader = true;
+        if(!hideLoader) {
+          mainVm.showAjaxLoader = true;
+        }
         $http(req)
         .then(function(data) { 
             mainVm.showAjaxLoader = false;

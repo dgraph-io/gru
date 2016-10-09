@@ -1,12 +1,12 @@
-<div ng-controller="allQuestionController as allQVm">	
-	<div class="" ng-if="mainVm.allQuestions">
+<div ng-controller="allQuestionController as allQVm" class="question-listing" id="question-listing">	
+	<div class="" ng-if="mainVm.allQuestions.length">
 		<div class="mdl-grid mdl-grid--no-spacing mt-20">
-			<div class="mdl-cell mdl-cell--6-col">
+			<div class="mdl-cell mdl-cell--6-col mdl-cell--4-col-tablet">
 				<h5>
 					List of all questions
 				</h5>
 			</div>
-			<div class="mdl-cell mdl-cell--6-col">
+			<div class="mdl-cell mdl-cell--6-col mdl-cell--4-col-tablet">
 				<button class="mdl-button btn-succes bg-green pull-right" ng-click="mainVm.goTo('question.add')">Add New</button>
 			</div>
 		</div>
@@ -23,10 +23,10 @@
 		</div>
 		<div class="question slide-wrapper" ng-repeat="question in mainVm.allQuestions | filter:searchQ">
 			<div class="mdl-grid slide-link question-item">
-				<div class="mdl-cell mdl-cell--10-col mdl-cell--middle">
+				<div class="mdl-cell mdl-cell--10-col mdl-cell--middle mdl-cell--5-col-tablet">
 					<pre>{{mainVm.unescapeText(question.text)}}</pre>
 				</div>
-				<div class="mdl-cell mdl-cell--2-col mv-0 text-right">
+				<div class="mdl-cell mdl-cell--2-col mdl-cell--3-col-tablet mv-0 text-right">
 					<a href="" class="question-action mr-10">
 						<span class="mdl-chip danger-chip">
 						  <span class="mdl-chip__text">VIEW</span>
@@ -87,9 +87,17 @@
 					</div>
 				</div>
 			</div>
+ 		</div> <!--  Ng-repeat End -->
+
+ 		<div class="pt-20 text-center text-red" ng-show="allQVm.noItemFound">
+			<h5>No more questoins available</h5>
+ 		</div>
+	
+		<div class="lazy-loader text-center" ng-show="allQVm.showLazyLoader">
+ 			<div class="mdl-spinner mdl-js-spinner is-active"></div>
  		</div>
 	</div>
-	<div class="text-center" ng-if="!mainVm.allQuestions">
+	<div class="text-center" ng-if="!mainVm.allQuestions.length">
 		<h4 class="text-center">
 			Could not find any question.
 		</h4>

@@ -12,8 +12,8 @@
       return MainService.put('/question/' + data._uid_, data);
     }
 
-    services.getAllQuestions = function(requestData){
-      return MainService.post('/get-all-questions', {"id": ""});
+    services.getAllQuestions = function(requestData, hideLoader){
+      return MainService.post('/get-all-questions', requestData, hideLoader);
     }
 
     services.getQuestion = function(questionID){

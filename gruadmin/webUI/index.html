@@ -19,7 +19,7 @@
     <!-- Google analytics tracking code -->
 
 </head>
-<body ng-controller="MainController as mainVm" class="position-relative" autoscroll="">
+<body ng-controller="MainController as mainVm" class="position-relative {{mainVm.pageName}}" autoscroll="">
     <div class="web-layout-transparent mdl-layout mdl-js-layout mdl-layout--fixed-header" >
       <header class="mdl-layout__header mdl-shadow--2dp" ng-class="{ 'red-header' : mainVm.pageName != 'home'}">
         <div class="mdl-layout__header-row">

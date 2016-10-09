@@ -5,6 +5,18 @@
     componentHandler.upgradeAllRegistered();
 
     window.formatDate = formatDate;
+    window.getDocHeight = getDocHeight;
+
+
+    function getDocHeight(pageID) {
+      var D = document;
+      return Math.max(
+          document.getElementById(pageID).scrollHeight,
+          document.getElementById(pageID).offsetHeight,
+          document.getElementById(pageID).clientHeight
+      );
+    }
+
 
     (function(){
       setTimeout(function() {
@@ -107,5 +119,6 @@
       //   window.location.reload();
       // }, 10);
     });
+
   })  
 })();

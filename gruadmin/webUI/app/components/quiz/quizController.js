@@ -11,17 +11,22 @@
 		quizVm.removeSelectedQuestion = removeSelectedQuestion;
 		quizVm.addQuizForm = addQuizForm;
 		quizVm.validateInput = validateInput;
+		quizVm.getAllQuestions = getAllQuestions;
 
 	// FUNCTION DEFINITION
+		quizVm.getAllQuestions();
 		
 		// Function for fetching next question
 
-		questionService.getAllQuestions().then(function(data){
-			var data = JSON.parse(data);
-			mainVm.allQuestions = data.debug[0].question;			
-		}, function(err){
-			console.log(err)
-		})
+		function getAllQuestions() {
+			quesRequest = {id: ""};
+			questionService.getAllQuestions(quesRequest).then(function(data){
+				var data = JSON.parse(data);
+				mainVm.allQuestions = data.debug[0].question;			
+			}, function(err){
+				console.log(err)
+			});
+		}
 
 		function removeSelectedQuestion(key) {
 			delete quizVm.newQuiz.questions[key];
@@ -100,23 +105,29 @@
 	function editQuizController($rootScope, $stateParams, $state, quizService) {
 		editQuizVm = this;
 		quizVm.newQuiz = {};
+		editQuizVm.selectedQuestion;
 
 		// Function Declaration
 		editQuizVm.editQuiz = editQuiz;
 		editQuizVm.onQuestionRemove = onQuestionRemove;
+		editQuizVm.onNewQuestionRemove = onNewQuestionRemove;
+		editQuizVm.addNewQuestion = addNewQuestion;
 
+		// INITITALIZER
+		quizVm.getAllQuestions();
 
 		quizService.getQuiz($stateParams.quizID)
 		.then(function(data){
 			quizVm.newQuiz = data.root[0];
 
-			selectedQuestion = data.root[0]['quiz.question'];
+			editQuizVm.selectedQuestion = data.root[0]['quiz.question'];
+			quizVm.newQuiz.newQuestions = [];
 		}, function(err){
 			console.log(err);
 		});
 
 		function editQuiz() {
-			quizVm.newQuiz.questions = quizVm.newQuiz['quiz.question'];
+			quizVm.newQuiz.questions = angular.copy(quizVm.newQuiz['quiz.question']);
 			areInValidateInput = quizVm.validateInput(quizVm.newQuiz);
 			if(areInValidateInput) {
 				SNACKBAR({
@@ -127,6 +138,15 @@
 			}
 			console.log(quizVm.newQuiz);
 
+			var newQues = quizVm.newQuiz.newQuestions;
+			if(newQues) {
+				for(var i =0; i < newQues.length; i++) {
+					quizVm.newQuiz.questions.push({
+						_uid_: newQues[i]._uid_,
+						text: newQues[i].text,
+					});
+				}
+			}
 			quizService.editQuiz(quizVm.newQuiz)
 			.then(function(data){
 				SNACKBAR({
@@ -141,6 +161,45 @@
 
 		}
 
+		function addNewQuestion(question, index) {
+			var questionLength = editQuizVm.selectedQuestion.length;
+
+			if(question.is_checked) {
+				for(var i = 0; i< questionLength; i++) {
+					var currentQues = editQuizVm.selectedQuestion[i];
+					if(currentQues._uid_ == question._uid_) {
+						if(currentQues.is_delete === true) {
+							currentQues.is_delete = false;
+							return;
+						} else {
+							SNACKBAR({
+								message: "Already selected, uncheck to remove it",
+								messageType: "error",
+							});
+							return;
+						}
+					}
+				}
+
+				question.index = index;
+				quizVm.newQuiz.newQuestions.push(question);
+			} else {
+				for(var i = 0; i< questionLength; i++) {
+					var currentQues = editQuizVm.selectedQuestion[i];
+					if(currentQues._uid_ == question._uid_) {
+						if(!currentQues.is_delete) {
+							currentQues.is_delete = true;
+							return;
+						}
+					}
+				}
+				var idx = mainVm.indexOfObject(quizVm.newQuiz.newQuestions, question);
+				if (idx >= 0) {
+					quizVm.newQuiz.newQuestions.splice(idx, 1)
+				}
+			}
+		}
+
 		function onQuestionRemove(question) {
 			if(question._uid_) {
 				question.is_delete = true;
@@ -148,14 +207,24 @@
 			console.log(question);
 		}
 
-		// editQuizVm.isSelected = function(question_id) {
-		// 	for(var i=0; i<selectedQuestion.length; i++) {
-		// 		if(selectedQuestion[i]._uid_ == question_id) {
-		// 			return true;
-		// 		}
-		// 	}
-		// 	return false;
-		// }
+		function onNewQuestionRemove(question) {
+			mainVm.allQuestions[question.index].is_checked = false;
+
+			var idx = mainVm.indexOfObject(quizVm.newQuiz.newQuestions, question);
+
+			if (idx >= 0) {
+				quizVm.newQuiz.newQuestions.splice(idx, 1)
+			}
+		}
+
+		editQuizVm.isSelected = function(question_id) {
+			for(var i = 0; i<editQuizVm.selectedQuestion.length; i++) {
+				if(editQuizVm.selectedQuestion[i]._uid_ == question_id) {
+					return true;
+				}
+			}
+			return false;
+		}
 	}
 
 	var editQuizDependency = [

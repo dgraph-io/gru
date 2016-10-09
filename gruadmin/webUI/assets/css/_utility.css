@@ -178,6 +178,12 @@
   z-index: 7;
 }
 
+/*LAZY LOADER*/
+
+.lazy-loader {
+  padding: 20px 0;
+}
+
 /*ICONS WITH INPUT*/
 .mdl-textfield {
   position: relative;

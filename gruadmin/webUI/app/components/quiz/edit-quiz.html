@@ -44,6 +44,16 @@
 					</span>
 				</div>
 			</div>
+			<div ng-if="quizVm.newQuiz.newQuestions">
+				<div ng-repeat="(key, question) in quizVm.newQuiz.newQuestions" ng-if="question.text">
+					<span class="mdl-chip mdl-chip--deletable">
+				    <span class="mdl-chip__text">{{mainVm.unescapeText(question.text)}}</span>
+				    <button type="button" class="mdl-chip__action" ng-click="editQuizVm.onNewQuestionRemove(question)">
+				    	<i class="material-icons">cancel</i>
+				    </button>
+					</span>
+				</div>
+			</div>
 
 			<div class="mt-20">
 				<button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect action-btn" type="submit">
@@ -54,6 +64,25 @@
 	</div>
 
 	<div class="mdl-cell mdl-cell--6-col  mdl-cell--1-offset">
-		<div ng-include="'app/components/quiz/question-selection.html'"></div>
+		<h5>Select Question to add it to quiz</h5>
+		<div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+		  <input class="mdl-textfield__input" type="text" id="search_question" ng-model="searchQ">
+		  <label class="mdl-textfield__label" for="search_question">Search question name</label>
+		</div>
+		<div class="question mt-20" ng-repeat="question in mainVm.allQuestions | filter:searchQ">
+			<div class="mdl-grid no-pad">
+				<div class="mdl-cell mdl-cell--1-col">
+					<label class="mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect" for="question-{{$index}}" ng-class="{'is-checked': question.is_checked}">
+					  <input type="checkbox" id="question-{{$index}}" class="mdl-checkbox__input" ng-change="editQuizVm.addNewQuestion(question, $index)" ng-model="question.is_checked">
+					  <span class="mdl-checkbox__label"></span>
+					</label>
+				</div>
+				<div class="mdl-cell mdl-cell--8-col">
+					<a href="">
+				    <pre>{{mainVm.unescapeText(question.text)}}</pre>
+					</a>
+				</div>
+			</div>
+		</div>
 	</div>
 </div>
