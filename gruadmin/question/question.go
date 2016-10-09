@@ -235,8 +235,7 @@ func Get(w http.ResponseWriter, r *http.Request) {
 	w.Write(res)
 }
 
-
-// update question 
+// update question
 
 func edit(q Question) string {
 	m := `
@@ -245,47 +244,47 @@ func edit(q Question) string {
           <_uid_:` + q.Uid + `> <text> "` + q.Text + `" .
           <_uid_:` + q.Uid + `> <positive> "` + strconv.FormatFloat(q.Positive, 'g', -1, 64) + `" .
           <_uid_:` + q.Uid + `> <negative> "` + strconv.FormatFloat(q.Negative, 'g', -1, 64) + `" .`
-     
-    for l := range q.Options {
-			m += "<_uid_:" + q.Options[l].Uid + "> <name> \"" + q.Options[l].Name +
-				"\" .\n <_uid_:" + q.Uid + "> <question.option> <_uid_:" + q.Options[l].Uid + "> . \n "
 
-			if q.Options[l].Is_correct == true {
-				x.Debug(q.Options[l])
-				m += "<_uid_:" + q.Uid + "> <question.correct> <_uid_:" + q.Options[l].Uid + "> . \n "
-			}
-			if q.Options[l].Is_correct == false {
-				delete_correct := "mutation { delete { <_uid_:" + q.Uid + "> <question.correct> <_uid_:" + q.Options[l].Uid + "> .}}"
-				_, err := http.Post(dgraph.QueryEndpoint, "application/x-www-form-urlencoded", strings.NewReader(delete_correct))
-				if err != nil {
-					panic(err)
-				}
+	for l := range q.Options {
+		m += "<_uid_:" + q.Options[l].Uid + "> <name> \"" + q.Options[l].Name +
+			"\" .\n <_uid_:" + q.Uid + "> <question.option> <_uid_:" + q.Options[l].Uid + "> . \n "
+
+		if q.Options[l].Is_correct == true {
+			x.Debug(q.Options[l])
+			m += "<_uid_:" + q.Uid + "> <question.correct> <_uid_:" + q.Options[l].Uid + "> . \n "
+		}
+		if q.Options[l].Is_correct == false {
+			delete_correct := "mutation { delete { <_uid_:" + q.Uid + "> <question.correct> <_uid_:" + q.Options[l].Uid + "> .}}"
+			_, err := http.Post(dgraph.QueryEndpoint, "application/x-www-form-urlencoded", strings.NewReader(delete_correct))
+			if err != nil {
+				panic(err)
 			}
 		}
+	}
 
-		// Create and associate Tags
-		for i := range q.Tags {
-			if q.Tags[i].Uid != "" && q.Tags[i].Is_delete == true {
-				query_mutation := "mutation { delete { <_uid_:" + q.Uid + "> <question.tag> <_uid_:" + q.Tags[i].Uid + 
+	// Create and associate Tags
+	for i := range q.Tags {
+		if q.Tags[i].Uid != "" && q.Tags[i].Is_delete == true {
+			query_mutation := "mutation { delete { <_uid_:" + q.Uid + "> <question.tag> <_uid_:" + q.Tags[i].Uid +
 				"> .\n <_uid_:" + q.Tags[i].Uid + "> <tag.question> <_uid_:" + q.Uid + "> . \n }}"
-				x.Debug(query_mutation)
-				resp := dgraph.SendMutation(query_mutation)
-				if !resp.Success {
-					resp.Message = "Question can't be deattached."
-				}
-				
-			} else if q.Tags[i].Uid != "" {
-				m += "<_uid_:" + q.Uid + "> <question.tag> <_uid_:" + q.Tags[i].Uid +
-					"> . \n <_uid_:" + q.Tags[i].Uid + "> <tag.question> <_uid_:" + q.Uid + "> . \n "
-			} else if q.Tags[i].Uid == "" {
-				index := strconv.Itoa(i)
-				m += "<_new_:tag" + index + "> <name> \"" + q.Tags[i].Name +
-					"\" .\n <_uid_:" + q.Uid + "> <question.tag> <_new_:tag" + index +
-					"> . \n <_new_:tag" + index + "> <tag.question> <_uid_:" + q.Uid + "> . \n "
-			}
+			x.Debug(query_mutation)
+			dgraph.SendMutation(query_mutation)
+			// 				if !resp.Success {
+			// 					resp.Message = "Question can't be deattached."
+			// 				}
+
+		} else if q.Tags[i].Uid != "" {
+			m += "<_uid_:" + q.Uid + "> <question.tag> <_uid_:" + q.Tags[i].Uid +
+				"> . \n <_uid_:" + q.Tags[i].Uid + "> <tag.question> <_uid_:" + q.Uid + "> . \n "
+		} else if q.Tags[i].Uid == "" {
+			index := strconv.Itoa(i)
+			m += "<_new_:tag" + index + "> <name> \"" + q.Tags[i].Name +
+				"\" .\n <_uid_:" + q.Uid + "> <question.tag> <_new_:tag" + index +
+				"> . \n <_new_:tag" + index + "> <tag.question> <_uid_:" + q.Uid + "> . \n "
 		}
-		m += " }}"
-		x.Debug(m)
+	}
+	m += " }}"
+	x.Debug(m)
 	return m
 }
 
@@ -306,8 +305,10 @@ func Edit(w http.ResponseWriter, r *http.Request) {
 	x.Debug(q)
 	m := edit(q)
 	x.Debug(m)
-	res := dgraph.SendMutation(m)
-	if res.Success {
+	mr := dgraph.SendMutation(m)
+	res := server.Response{}
+	if mr.Code == "ErrorOk" {
+		res.Success = true
 		res.Message = "Question info updated successfully."
 	}
 	server.WriteBody(w, res)

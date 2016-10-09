@@ -161,12 +161,12 @@ func candInfo(token string, c Candidate) (Candidate, error) {
 		return c, nil
 	}
 
-	var err error
-	// If we reach here it means logfile for candidate exists but his info
-	// doesn't exist in memory, so we need to load it back from the file.
-	if err = c.loadCandInfo(token); err != nil {
-		return c, err
-	}
+	// var err error
+	// // If we reach here it means logfile for candidate exists but his info
+	// // doesn't exist in memory, so we need to load it back from the file.
+	// if err = c.loadCandInfo(token); err != nil {
+	// 	return c, err
+	// }
 	updateMap(token, c)
 	return c, nil
 }
@@ -321,7 +321,6 @@ func authenticate(token string) (s Session, err error) {
 }
 
 func Authenticate(w http.ResponseWriter, r *http.Request) {
-	addCorsHeaders(w)
 	if r.Method == "OPTIONS" {
 		return
 	}
@@ -457,7 +456,6 @@ func isValidSession(token string, sid string) (Candidate, error) {
 }
 
 func GetQuestion(w http.ResponseWriter, r *http.Request) {
-	addCorsHeaders(w)
 	if r.Method == "OPTIONS" {
 		return
 	}
@@ -554,7 +552,6 @@ func status(token string, sid string, qid string, aids []string) (*quizmeta.Answ
 }
 
 func Status(w http.ResponseWriter, r *http.Request) {
-	addCorsHeaders(w)
 	if r.Method == "OPTIONS" {
 		return
 	}
@@ -767,12 +764,7 @@ func rateLimit() {
 func main() {
 	rand.Seed(time.Now().UTC().UnixNano())
 	flag.Parse()
-	var err error
 	cmap = make(map[string]Candidate)
-	if questions, err = extractQuizInfo(*quizFile); err != nil {
-		log.Fatal(err)
-	}
-	go parseCandRepeat(*candFile)
 	go rateLimit()
 	runHTTPServer(*port)
 }
