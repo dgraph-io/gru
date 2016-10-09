@@ -1,12 +1,17 @@
 package candidate
 
 import (
+	"encoding/json"
+	"log"
 	"math/rand"
 	"net/http"
 
+	"github.com/dgraph-io/gru/auth"
 	"github.com/dgraph-io/gru/dgraph"
+	"github.com/dgraph-io/gru/gruadmin/mail"
 	"github.com/dgraph-io/gru/gruadmin/server"
 	"github.com/dgraph-io/gru/x"
+	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/mux"
 )
 
@@ -14,7 +19,7 @@ type Candidate struct {
 	Uid       string
 	Name      string `json:"name"`
 	Email     string `json:"email"`
-	Token     string
+	Token     string `json:"token"`
 	Validity  string `json:"validity"`
 	QuizId    string `json:"quiz_id"`
 	OldQuizId string `json:"old_quiz_id"`
@@ -91,11 +96,24 @@ func Add(w http.ResponseWriter, r *http.Request) {
 	m := add(c)
 	x.Debug(m)
 	res := dgraph.SendMutation(m)
-	// TODO - Send a mail to the candidate with the link.
-	if res.Success {
-		res.Message = "Candidate added successfully."
+	sr := server.Response{}
+	if res.Code != "ErrorOk" {
+		sr.Message = "Mutation couldn't be applied by Dgraph."
+		server.WriteBody(w, sr)
+		return
 	}
-	server.WriteBody(w, res)
+	// mutation applied successfully, lets send a mail to the candidate.
+	uid, ok := res.Uids["c"]
+	if !ok {
+		log.Fatal("Uid not returned for newly created candidate by Dgraph.")
+	}
+	x.Debug(uid)
+	// Token sent in mail is uid + the random string.
+	// TODO - Move this to a background goroutine.
+	go mail.Send(c.Name, c.Email, uid+c.Token)
+	sr.Message = "Candidate added successfully."
+	sr.Success = true
+	server.WriteBody(w, sr)
 }
 
 func edit(c Candidate) string {
@@ -137,10 +155,12 @@ func Edit(w http.ResponseWriter, r *http.Request) {
 	m := edit(c)
 	x.Debug(m)
 	res := dgraph.SendMutation(m)
-	if res.Success {
-		res.Message = "Candidate info updated successfully."
+	sr := server.Response{}
+	if res.Message == "ErrorOk" {
+		sr.Success = true
+		sr.Message = "Candidate info updated successfully."
 	}
-	server.WriteBody(w, res)
+	server.WriteBody(w, sr)
 }
 
 func get(candidateId string) string {
@@ -149,6 +169,7 @@ func get(candidateId string) string {
         quiz.candidate(_uid_:` + candidateId + `) {
           name
           email
+		  token
           validity
         }
     }`
@@ -168,4 +189,55 @@ func Get(w http.ResponseWriter, r *http.Request) {
 	x.Debug(q)
 	res := dgraph.Query(q)
 	w.Write(res)
+}
+
+func Validate(w http.ResponseWriter, r *http.Request) {
+	server.AddCorsHeaders(w)
+	if r.Method == "OPTIONS" {
+		return
+	}
+
+	vars := mux.Vars(r)
+	id := vars["id"]
+	// This is the length of the random string. The id is uid + random string.
+	if len(id) < 33 {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+	uid, token := id[:len(id)-33], id[len(id)-33:]
+	q := get(uid)
+	res := dgraph.Query(q)
+	x.Debug(string(res))
+
+	type Resp struct {
+		QuizCand []Candidate `json:"quiz.candidate"`
+	}
+	var resp Resp
+	json.Unmarshal(res, &resp)
+	if len(resp.QuizCand) == 0 {
+		// No candidiate found with given uid
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+	if resp.QuizCand[0].Token != token {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+	// TODO - Check token validity.
+	jwtToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{})
+
+	tokenString, err := jwtToken.SignedString([]byte(*auth.Secret))
+	if err != nil {
+		log.Fatal(err)
+	}
+	x.Debug(tokenString)
+
+	// TODO - Incase candidate already has a active session return error after
+	// implementing Ping.
+	// TODO - Also send quiz duration and time left incase candidate restarts.
+	type Res struct {
+		Token string `json:"token"`
+	}
+
+	json.NewEncoder(w).Encode(Res{Token: tokenString})
 }

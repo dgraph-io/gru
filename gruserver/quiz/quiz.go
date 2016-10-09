@@ -35,3 +35,8 @@ type ClientStatus struct {
 	CurQuestion string `protobuf:"bytes,1,opt,name=curQuestion,proto3" json:"curQuestion,omitempty"`
 	Token       string `protobuf:"bytes,2,opt,name=token,proto3" json:"token,omitempty"`
 }
+
+type Candidate struct {
+	score     float32
+	questions []Question
+}

@@ -52,6 +52,7 @@ func Add(w http.ResponseWriter, r *http.Request) {
 		"\" . \n <_new_:question> <positive> \"" + strconv.FormatFloat(ques.Positive, 'g', -1, 64) +
 		"\" . \n <_new_:question> <negative> \"" + strconv.FormatFloat(ques.Negative, 'g', -1, 64) + "\" . \n "
 
+	correct := 0
 	// Create and associate Options
 	for l := range ques.Options {
 		index := strconv.Itoa(l)
@@ -61,6 +62,7 @@ func Add(w http.ResponseWriter, r *http.Request) {
 		// If this option is correct answer
 		if ques.Options[l].Is_correct == true {
 			question_info_mutation += "<_new_:question> <question.correct> <_new_:option" + index + "> . \n "
+			correct++
 		}
 	}
 	x.Debug(ques.Tags)
@@ -78,11 +80,19 @@ func Add(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	if correct > 1 {
+		question_info_mutation += "<_new_:question> <multiple> \"true\" . "
+	} else {
+		question_info_mutation += "<_new_:question> <multiple> \"false\" . "
+	}
+
 	question_info_mutation += " }}"
 	x.Debug(question_info_mutation)
 	res := dgraph.SendMutation(question_info_mutation)
-	if res.Success {
-		res.Message = "Question Successfully Saved!"
+	sr := server.Response{}
+	if res.Code == "ErrorOk" {
+		sr.Success = true
+		sr.Message = "Question Successfully Saved!"
 	}
 	question_json_response, err := json.Marshal(res)
 	if err != nil {

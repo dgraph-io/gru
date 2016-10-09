@@ -24,6 +24,7 @@ import (
 	"net/http"
 
 	jwtmiddleware "github.com/auth0/go-jwt-middleware"
+	"github.com/dgraph-io/gru/auth"
 	"github.com/dgraph-io/gru/gruadmin/candidate"
 	"github.com/dgraph-io/gru/gruadmin/question"
 	"github.com/dgraph-io/gru/gruadmin/quiz"
@@ -39,18 +40,14 @@ var (
 	port     = flag.String("port", ":8082", "Port on which server listens")
 	username = flag.String("user", "", "Username to login to admin panel")
 	password = flag.String("pass", "", "Username to login to admin panel")
-	secret   = flag.String("secret", "", "Secret used to sign JWT token")
 )
 
 func login(w http.ResponseWriter, r *http.Request) {
 	server.AddCorsHeaders(w)
 	if r.Method == "OPTIONS" {
-    return
-  }
+		return
+	}
 	u, p, ok := r.BasicAuth()
-	fmt.Println(u)
-	fmt.Println(p)
-	fmt.Println(ok)
 	if !ok || u != *username || p != *password {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
@@ -58,7 +55,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 	// TODO - Add relevant claims like expiry.
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{})
 
-	tokenString, err := token.SignedString([]byte(*secret))
+	tokenString, err := token.SignedString([]byte(*auth.Secret))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -77,8 +74,10 @@ func runHTTPServer(address string) {
 	router := mux.NewRouter()
 
 	router.HandleFunc("/login", login).Methods("POST", "OPTIONS")
+	router.HandleFunc("/quiz/{id}", candidate.Validate).Methods("POST", "OPTIONS")
 
 	adminRouter := mux.NewRouter().PathPrefix("/admin").Subrouter().StrictSlash(true)
+
 	// TODO - Change the API's to RESTful API's
 	adminRouter.HandleFunc("/add-question", question.Add).Methods("POST", "OPTIONS")
 	// TODO - Change to PUT.
@@ -102,7 +101,7 @@ func runHTTPServer(address string) {
 
 	jwtMiddleware := jwtmiddleware.New(jwtmiddleware.Options{
 		ValidationKeyGetter: func(token *jwt.Token) (interface{}, error) {
-			return []byte(*secret), nil
+			return []byte(*auth.Secret), nil
 		},
 		SigningMethod: jwt.SigningMethodHS256,
 	})

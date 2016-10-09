@@ -22,12 +22,10 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"math/rand"
 	"net/http"
 	"os"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -35,7 +33,6 @@ import (
 	"golang.org/x/net/context"
 
 	quizmeta "github.com/dgraph-io/gru/gruserver/quiz"
-	"gopkg.in/yaml.v2"
 )
 
 const (
@@ -88,16 +85,6 @@ var (
 
 type server struct{}
 
-func addCorsHeaders(w http.ResponseWriter) {
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
-	w.Header().Set("Access-Control-Allow-Headers",
-		"Authorization,Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token,"+
-			"X-Auth-Token, Cache-Control, X-Requested-With")
-	w.Header().Set("Access-Control-Allow-Credentials", "true")
-	w.Header().Set("Connection", "close")
-}
-
 func checkToken(c Candidate) error {
 	if time.Now().UTC().After(c.validity) {
 		return errors.New("Your token has expired.")
@@ -148,81 +135,6 @@ func sliceDiff(qnList []Question, qnsAsked []string) []Question {
 		}
 	}
 	return qns
-}
-
-// Parses a candidate log file and loads information about him in memory.
-func (c *Candidate) loadCandInfo(token string) error {
-	f, err := os.OpenFile(fmt.Sprintf("logs/%s.log", token),
-		os.O_RDWR|os.O_APPEND, 0666)
-	if err != nil {
-		return err
-	}
-
-	var score float32
-	qnsAsked := []string{}
-	format := "2006/01/02 15:04:05 MST"
-	scanner := bufio.NewScanner(f)
-	for scanner.Scan() {
-		line := strings.TrimSpace(scanner.Text())
-		splits := strings.Split(line, " ")
-		if len(splits) < 4 {
-			log.Printf("Log for token: %v, line: %v has less than 4 words",
-				token, line)
-			continue
-		}
-		if splits[3] == "session_token" {
-			continue
-		}
-
-		switch splits[3] {
-		case "demo_start":
-			c.demoStart, err = time.Parse(format, fmt.Sprintf("%s %s %s",
-				splits[0], splits[1], splits[2]))
-			if err != nil {
-				return err
-			}
-		case "quiz_start":
-			c.quizStart, err = time.Parse(format, fmt.Sprintf("%s %s %s",
-				splits[0], splits[1], splits[2]))
-			if err != nil {
-				return err
-			}
-		case "response":
-			if len(splits) < 7 {
-				log.Printf(
-					"Response log for token: %v, line: %v has less than 7 words",
-					token, line)
-				continue
-			}
-			s, err := strconv.ParseFloat(splits[6], 32)
-			if err != nil {
-				return err
-			}
-			// We only want to add score from actual quiz questions
-			// and not demo qns.
-			if len(qnsAsked) > beforeQuiz {
-				score += float32(s)
-			}
-		case "question":
-			if len(splits) < 5 {
-				log.Printf(
-					"Question log for token: %v, line: %v has less than 5 words",
-					token, line)
-				continue
-			}
-			qnsAsked = append(qnsAsked, splits[4])
-		}
-	}
-	c.score = score
-	c.logFile = f
-	c.questions = sliceDiff(questions, qnsAsked)
-	if len(qnsAsked) >= beforeQuiz {
-		c.demoQnsAsked = beforeQuiz
-		c.demoTaken = true
-	} else {
-		c.demoQnsAsked = len(qnsAsked)
-	}
-	return nil
 }
 
 func candInfo(token string, c Candidate) (Candidate, error) {
@@ -838,39 +750,6 @@ func checkQuiz(qns []Question) error {
 		return fmt.Errorf("Need more demo questions in quiz file")
 	}
 	return nil
-}
-
-// Reads the quiz file and converts the questions into the internal question format.
-func extractQuizInfo(file string) ([]Question, error) {
-	var info []Question
-	b, err := ioutil.ReadFile(file)
-	if err != nil {
-		return []Question{}, err
-	}
-	err = yaml.Unmarshal(b, &info)
-	if err != nil {
-		return []Question{}, err
-	}
-	err = checkQuiz(info)
-	if err != nil {
-		return []Question{}, err
-	}
-	return info, nil
-}
-
-func parseCandRepeat(file string) {
-	if err := parseCandidateFile(file); err != nil {
-		log.Fatal(err)
-	}
-	tickChan := time.NewTicker(time.Minute).C
-	for {
-		select {
-		case <-tickChan:
-			if err := parseCandidateFile(file); err != nil {
-				log.Fatal(err)
-			}
-		}
-	}
 }
 
 func rateLimit() {
