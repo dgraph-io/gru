@@ -117,9 +117,9 @@ func Index(w http.ResponseWriter, r *http.Request) {
 	x.Debug(ques)
 	var question_mutation string
 	if ques.Id != "" {
-		question_mutation = "{debug(_xid_: rootQuestion) { question (after: " + ques.Id + ", first: 5) { _uid_ text negative positive question.tag { name } question.option { name } question.correct { name } }  } }"
+		question_mutation = "{debug(_xid_: rootQuestion) { question (after: " + ques.Id + ", first: 10) { _uid_ text negative positive question.tag { name } question.option { name } question.correct { name } }  } }"
 	} else {
-		question_mutation = "{debug(_xid_: rootQuestion) { question (first:5) { _uid_ text negative positive question.tag { name } question.option { name } question.correct { name } }  } }"
+		question_mutation = "{debug(_xid_: rootQuestion) { question (first:10) { _uid_ text negative positive question.tag { name } question.option { name } question.correct { name } }  } }"
 	}
 	x.Debug(question_mutation)
 	w.Header().Set("Content-Type", "application/json")
@@ -268,10 +268,7 @@ func edit(q Question) string {
 			query_mutation := "mutation { delete { <_uid_:" + q.Uid + "> <question.tag> <_uid_:" + q.Tags[i].Uid +
 				"> .\n <_uid_:" + q.Tags[i].Uid + "> <tag.question> <_uid_:" + q.Uid + "> . \n }}"
 			x.Debug(query_mutation)
-			resp := dgraph.SendMutation(query_mutation)
-			if !resp.Success {
-				resp.Message = "Question can't be deattached."
-			}
+			dgraph.SendMutation(query_mutation)
 
 		} else if q.Tags[i].Uid != "" {
 			m += "<_uid_:" + q.Uid + "> <question.tag> <_uid_:" + q.Tags[i].Uid +

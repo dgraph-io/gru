@@ -25,6 +25,9 @@
     var  inviteUserTemplate = 'app/components/invite/views/invite-user.html';
     var  editInviteTemplate = 'app/components/invite/views/edit-invite.html';
 
+    var  candidateIndexTemplate = 'app/components/candidate/index.html';
+    var  candidateLandingTemplate = 'app/components/candidate/views/landing.html';
+
     // CSS for View/Directives
     var select2CSS = "assets/lib/css/select2.min.css";
     var angularSelectCSS = "assets/lib/css/angular-select.min.css";
@@ -44,7 +47,7 @@
       // --------------Application Routes---------------
       $stateProvider
         .state('root', {
-          url: '/',
+          url: '/admin',
           templateUrl: homeTemplate,
           resolve: helper.resolveFor('homeController'),
           authenticate: true,
@@ -129,6 +132,17 @@
             parent: 'invite',
             templateUrl: editInviteTemplate,
             authenticate: true,
+          })
+        .state('candidate', {
+          url: '/candidate',
+          abstract: true,
+          templateUrl: candidateIndexTemplate,
+          resolve: helper.resolveFor('candidateController'),
+        })
+          .state('candidate.landing', {
+            url: '/home',
+            parent: 'candidate',
+            templateUrl: candidateLandingTemplate,
           })
 
     }

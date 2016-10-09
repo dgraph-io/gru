@@ -253,7 +253,10 @@
 		// Functin Declaratin
 		editQuesVm.updateQuestionForm = updateQuestionForm;
 		editQuesVm.onRemoveTag = onRemoveTag;
+		
+		// INITIALIZERS
 		questionVm.initCodeMirror();
+		questionVm.getAllTags();
 
 		questionService.getQuestion($stateParams.quesID)
 		.then(function(data){

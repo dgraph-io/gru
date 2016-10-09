@@ -98,6 +98,8 @@ angular.module('GruiApp').constant('APP_REQUIRES', {
         'quizServices': ['app/components/quiz/quizServices.js'],
         'inviteController': ['app/components/invite/inviteController.js'],
         'inviteService': ['app/components/invite/inviteService.js'],
+        'candidateController': ['app/components/candidate/candidateController.js'],
+        'candidateService': ['app/components/candidate/candidateService.js'],
         'angular-select': ['assets/lib/js/angular-select.min.js'],
         'codeMirror': ['assets/lib/js/codemirror.js'],
         'javascript': ['assets/lib/js/javascript.js'],
