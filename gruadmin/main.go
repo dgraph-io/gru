@@ -30,6 +30,7 @@ import (
 	"github.com/dgraph-io/gru/gruadmin/quiz"
 	"github.com/dgraph-io/gru/gruadmin/server"
 	"github.com/dgraph-io/gru/gruadmin/tag"
+	quizp "github.com/dgraph-io/gru/gruserver/quiz"
 	"github.com/dgraph-io/gru/x"
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/mux"
@@ -71,10 +72,24 @@ func login(w http.ResponseWriter, r *http.Request) {
 }
 
 func runHTTPServer(address string) {
+	jwtMiddleware := jwtmiddleware.New(jwtmiddleware.Options{
+		ValidationKeyGetter: func(token *jwt.Token) (interface{}, error) {
+			return []byte(*auth.Secret), nil
+		},
+		SigningMethod: jwt.SigningMethodHS256,
+	})
+
 	router := mux.NewRouter()
 
 	router.HandleFunc("/login", login).Methods("POST", "OPTIONS")
-	router.HandleFunc("/quiz/{id}", candidate.Validate).Methods("POST", "OPTIONS")
+	router.HandleFunc("/validate/{id}", candidate.Validate).Methods("POST", "OPTIONS")
+
+	quizRouter := mux.NewRouter().PathPrefix("/quiz").Subrouter().StrictSlash(true)
+	quizRouter.HandleFunc("/question", quizp.QuestionHandler).Methods("POST", "OPTIONS")
+	quizRouter.HandleFunc("/answer", quizp.AnswerHandler).Methods("POST", "OPTIONS")
+	router.PathPrefix("/quiz").Handler(negroni.New(
+		negroni.Wrap(quizRouter),
+	))
 
 	adminRouter := mux.NewRouter().PathPrefix("/admin").Subrouter().StrictSlash(true)
 
@@ -98,13 +113,6 @@ func runHTTPServer(address string) {
 	adminRouter.HandleFunc("/candidate/{id}", candidate.Edit).Methods("PUT", "OPTIONS")
 	adminRouter.HandleFunc("/candidate/{id}", candidate.Get).Methods("GET", "OPTIONS")
 	adminRouter.HandleFunc("/candidates", candidate.Index).Methods("GET", "OPTIONS")
-
-	jwtMiddleware := jwtmiddleware.New(jwtmiddleware.Options{
-		ValidationKeyGetter: func(token *jwt.Token) (interface{}, error) {
-			return []byte(*auth.Secret), nil
-		},
-		SigningMethod: jwt.SigningMethodHS256,
-	})
 
 	router.PathPrefix("/admin").Handler(negroni.New(
 		negroni.HandlerFunc(jwtMiddleware.HandlerWithNext),

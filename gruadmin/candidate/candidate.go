@@ -2,6 +2,7 @@ package candidate
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"math/rand"
 	"net/http"
@@ -15,15 +16,6 @@ import (
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/mux"
 )
-
-type question struct {
-	Id string `json:"_uid_"`
-}
-
-type quiz struct {
-	Id        string     `json:"_uid_"`
-	Questions []question `json:"quiz.question"`
-}
 
 type Candidate struct {
 	Uid       string
@@ -205,15 +197,28 @@ func Get(w http.ResponseWriter, r *http.Request) {
 	w.Write(res)
 }
 
+type quiz struct {
+	Id        string           `json:"_uid_"`
+	Questions []quizp.Question `json:"quiz.question"`
+}
+
 type qnIdsResp struct {
 	Quizzes []quiz `json:"quiz"`
 }
 
-func qnIds(quizId string) []string {
+func quizQns(quizId string) []quizp.Question {
 	q := `{
 			quiz(_uid_: ` + quizId + `) {
 				quiz.question {
 				_uid_
+				text
+				positive
+				negative
+				question.option {
+					_uid_
+					name
+				}
+				multiple
 			}
 		}`
 	res := dgraph.Query(q)
@@ -222,11 +227,7 @@ func qnIds(quizId string) []string {
 	if len(resp.Quizzes) != 1 {
 		log.Fatal("Length of quizzes should just be 1")
 	}
-	ids := []string{}
-	for _, qn := range resp.Quizzes[0].Questions {
-		ids = append(ids, qn.Id)
-	}
-	return ids
+	return resp.Quizzes[0].Questions
 }
 
 type resp struct {
@@ -249,10 +250,12 @@ func Validate(w http.ResponseWriter, r *http.Request) {
 	uid, token := id[:len(id)-33], id[len(id)-33:]
 	q := get(uid)
 	res := dgraph.Query(q)
+	fmt.Println()
 	x.Debug(string(res))
 
 	var resp resp
 	json.Unmarshal(res, &resp)
+	fmt.Println()
 	x.Debug(resp)
 	if len(resp.Cand) != 1 || len(resp.Cand[0].Quiz) != 1 {
 		// No candidiate found with given uid
@@ -265,15 +268,16 @@ func Validate(w http.ResponseWriter, r *http.Request) {
 	}
 	// TODO - Assign questions to candidate according to his quiz id.
 	quizId := resp.Cand[0].Quiz[0].Id
-	ids := qnIds(quizId)
-	x.Debug(ids)
-	x.Shuffle(ids)
-	quizp.UpdateMap(uid, ids)
+	qns := quizQns(quizId)
+	fmt.Println("uid", uid)
+	// x.Shuffle(ids)
+	quizp.New(uid, qns)
 
 	// TODO - Check token validity.
-	jwtToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"userId": uid,
-	})
+	claims := x.Claims{
+		UserId: uid,
+	}
+	jwtToken := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
 	tokenString, err := jwtToken.SignedString([]byte(*auth.Secret))
 	if err != nil {

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package main
+package quiz
 
 import (
 	"bufio"
@@ -761,10 +761,10 @@ func rateLimit() {
 	}
 }
 
-func main() {
-	rand.Seed(time.Now().UTC().UnixNano())
-	flag.Parse()
-	cmap = make(map[string]Candidate)
-	go rateLimit()
-	runHTTPServer(*port)
-}
+// func main() {
+// 	rand.Seed(time.Now().UTC().UnixNano())
+// 	flag.Parse()
+// 	cmap = make(map[string]Candidate)
+// 	go rateLimit()
+// 	runHTTPServer(*port)
+// }
