@@ -2,6 +2,7 @@ package question
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -25,9 +26,60 @@ type Question struct {
 }
 
 type Option struct {
-	Uid        string `json:"_uid_"`
-	Name       string
-	Is_correct bool
+	Uid string `json:"_uid_"`
+	// TODO - Change this to text later.
+	Text      string `json:"name"`
+	IsCorrect bool   `json:"is_correct"`
+}
+
+func add(q Question) string {
+	m := `mutation {
+		set {
+		  <rootQuestion> <question> <_new_:qn> .
+		  <_new_:qn> <text> "` + q.Text + `" .
+		  <_new_:qn> <positive> "` + strconv.FormatFloat(q.Positive, 'g', -1, 64) + `" .
+		  <_new_:qn> <negative> "` + strconv.FormatFloat(q.Negative, 'g', -1, 64) + `" .`
+
+	correct := 0
+	for i, opt := range q.Options {
+		idx := strconv.Itoa(i)
+		m += `
+		<_new_:qn> <question.option> <_new_:o` + idx + `> .
+		<_new_:o` + idx + `> <name> "` + opt.Text + `" .`
+		if opt.IsCorrect {
+			m += `
+			<_new_:qn> <question.correct> <_new_:o` + idx + `> .`
+			correct++
+		}
+	}
+
+	for i, t := range q.Tags {
+		idx := strconv.Itoa(i)
+		if t.Uid != "" {
+			x.Debug(t.Uid)
+			m += `
+			<_new_:qn> <question.tag> <_uid_:` + t.Uid + `> .
+			<_uid_:` + t.Uid + `> <tag.question> <_new_:qn> . `
+		} else {
+			m += `
+			<_new_:t` + idx + `> <name> "` + t.Name + `" .
+			<_new_:qn> <question.tag> <_new_:tag` + idx + `> .
+			<_new_:tag` + idx + `> <tag.question> <_new_:qn> . `
+		}
+	}
+
+	if correct > 1 {
+		m += `
+		<_new_:qn> <multiple> "true" . `
+	} else {
+		m += `
+		<_new_:qn> <multiple> "false" . `
+	}
+	m += `
+	  }
+  }	`
+	fmt.Println(m)
+	return m
 }
 
 // API for "Adding Question" to Database
@@ -38,57 +90,15 @@ func Add(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "OPTIONS" {
 		return
 	}
-
 	// Decoding post data
 	err := json.NewDecoder(r.Body).Decode(&ques)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
-
 	x.Debug(ques)
 
-	// // Creating query mutation to save question informations.
-	question_info_mutation := "mutation { set { <rootQuestion> <question> <_new_:question> . \n	<_new_:question> <text> \"" + ques.Text +
-		"\" . \n <_new_:question> <positive> \"" + strconv.FormatFloat(ques.Positive, 'g', -1, 64) +
-		"\" . \n <_new_:question> <negative> \"" + strconv.FormatFloat(ques.Negative, 'g', -1, 64) + "\" . \n "
-
-	correct := 0
-	// Create and associate Options
-	for l := range ques.Options {
-		index := strconv.Itoa(l)
-		question_info_mutation += "<_new_:option" + index + "> <name> \"" + ques.Options[l].Name +
-			"\" .\n <_new_:question> <question.option> <_new_:option" + index + "> . \n "
-
-		// If this option is correct answer
-		if ques.Options[l].Is_correct == true {
-			question_info_mutation += "<_new_:question> <question.correct> <_new_:option" + index + "> . \n "
-			correct++
-		}
-	}
-	x.Debug(ques.Tags)
-	// Create and associate Tags
-	for i := range ques.Tags {
-		if ques.Tags[i].Uid != "" {
-			x.Debug(ques.Tags[i].Uid)
-			question_info_mutation += "<_new_:question> <question.tag> <_uid_:" + ques.Tags[i].Uid +
-				"> . \n <_uid_:" + ques.Tags[i].Uid + "> <tag.question> <_new_:question> . \n "
-		} else {
-			index := strconv.Itoa(i)
-			question_info_mutation += "<_new_:tag" + index + "> <name> \"" + ques.Tags[i].Name +
-				"\" .\n <_new_:question> <question.tag> <_new_:tag" + index +
-				"> . \n <_new_:tag" + index + "> <tag.question> <_new_:question> . \n "
-		}
-	}
-
-	if correct > 1 {
-		question_info_mutation += "<_new_:question> <multiple> \"true\" . "
-	} else {
-		question_info_mutation += "<_new_:question> <multiple> \"false\" . "
-	}
-
-	question_info_mutation += " }}"
-	x.Debug(question_info_mutation)
-	res := dgraph.SendMutation(question_info_mutation)
+	m := add(ques)
+	res := dgraph.SendMutation(m)
 	sr := server.Response{}
 	if res.Code == "ErrorOk" {
 		sr.Success = true
@@ -208,7 +218,7 @@ func get(questionId string) string {
 	return `
     {
         root(_uid_:` + questionId + `) {
-        	_uid_
+		  _uid_
           text
           positive
           negative
@@ -245,15 +255,16 @@ func edit(q Question) string {
           <_uid_:` + q.Uid + `> <positive> "` + strconv.FormatFloat(q.Positive, 'g', -1, 64) + `" .
           <_uid_:` + q.Uid + `> <negative> "` + strconv.FormatFloat(q.Negative, 'g', -1, 64) + `" .`
 
+	correct := 0
 	for l := range q.Options {
-		m += "<_uid_:" + q.Options[l].Uid + "> <name> \"" + q.Options[l].Name +
+		m += "<_uid_:" + q.Options[l].Uid + "> <name> \"" + q.Options[l].Text +
 			"\" .\n <_uid_:" + q.Uid + "> <question.option> <_uid_:" + q.Options[l].Uid + "> . \n "
 
-		if q.Options[l].Is_correct == true {
-			x.Debug(q.Options[l])
+		if q.Options[l].IsCorrect == true {
+			correct++
 			m += "<_uid_:" + q.Uid + "> <question.correct> <_uid_:" + q.Options[l].Uid + "> . \n "
 		}
-		if q.Options[l].Is_correct == false {
+		if q.Options[l].IsCorrect == false {
 			delete_correct := "mutation { delete { <_uid_:" + q.Uid + "> <question.correct> <_uid_:" + q.Options[l].Uid + "> .}}"
 			_, err := http.Post(dgraph.QueryEndpoint, "application/x-www-form-urlencoded", strings.NewReader(delete_correct))
 			if err != nil {
@@ -280,6 +291,12 @@ func edit(q Question) string {
 				"> . \n <_new_:tag" + index + "> <tag.question> <_uid_:" + q.Uid + "> . \n "
 		}
 	}
+	if correct > 1 {
+		m += "<_uid_:" + q.Uid + "> <multiple> \"true\" . \n"
+	} else {
+		m += "<_uid_:" + q.Uid + "> <multiple> \"false\" . \n"
+	}
+
 	m += " }}"
 	x.Debug(m)
 	return m

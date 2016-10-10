@@ -10,10 +10,20 @@ import (
 	"github.com/dgraph-io/gru/dgraph"
 	"github.com/dgraph-io/gru/gruadmin/mail"
 	"github.com/dgraph-io/gru/gruadmin/server"
+	quizp "github.com/dgraph-io/gru/gruserver/quiz"
 	"github.com/dgraph-io/gru/x"
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/mux"
 )
+
+type question struct {
+	Id string `json:"_uid_"`
+}
+
+type quiz struct {
+	Id        string     `json:"_uid_"`
+	Questions []question `json:"quiz.question"`
+}
 
 type Candidate struct {
 	Uid       string
@@ -23,6 +33,7 @@ type Candidate struct {
 	Validity  string `json:"validity"`
 	QuizId    string `json:"quiz_id"`
 	OldQuizId string `json:"old_quiz_id"`
+	Quiz      []quiz `json:"candidate.quiz"`
 }
 
 const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890"
@@ -171,7 +182,10 @@ func get(candidateId string) string {
           email
 		  token
           validity
-        }
+          candidate.quiz {
+		    _uid_
+		  }
+	  }
     }`
 }
 
@@ -189,6 +203,34 @@ func Get(w http.ResponseWriter, r *http.Request) {
 	x.Debug(q)
 	res := dgraph.Query(q)
 	w.Write(res)
+}
+
+type qnIdsResp struct {
+	Quizzes []quiz `json:"quiz"`
+}
+
+func qnIds(quizId string) []string {
+	q := `{
+			quiz(_uid_: ` + quizId + `) {
+				quiz.question {
+				_uid_
+			}
+		}`
+	res := dgraph.Query(q)
+	var resp qnIdsResp
+	json.Unmarshal(res, &resp)
+	if len(resp.Quizzes) != 1 {
+		log.Fatal("Length of quizzes should just be 1")
+	}
+	ids := []string{}
+	for _, qn := range resp.Quizzes[0].Questions {
+		ids = append(ids, qn.Id)
+	}
+	return ids
+}
+
+type resp struct {
+	Cand []Candidate `json:"quiz.candidate"`
 }
 
 func Validate(w http.ResponseWriter, r *http.Request) {
@@ -209,22 +251,29 @@ func Validate(w http.ResponseWriter, r *http.Request) {
 	res := dgraph.Query(q)
 	x.Debug(string(res))
 
-	type Resp struct {
-		QuizCand []Candidate `json:"quiz.candidate"`
-	}
-	var resp Resp
+	var resp resp
 	json.Unmarshal(res, &resp)
-	if len(resp.QuizCand) == 0 {
+	x.Debug(resp)
+	if len(resp.Cand) != 1 || len(resp.Cand[0].Quiz) != 1 {
 		// No candidiate found with given uid
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
-	if resp.QuizCand[0].Token != token {
+	if resp.Cand[0].Token != token || resp.Cand[0].Quiz[0].Id == "" {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
+	// TODO - Assign questions to candidate according to his quiz id.
+	quizId := resp.Cand[0].Quiz[0].Id
+	ids := qnIds(quizId)
+	x.Debug(ids)
+	x.Shuffle(ids)
+	quizp.UpdateMap(uid, ids)
+
 	// TODO - Check token validity.
-	jwtToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{})
+	jwtToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"userId": uid,
+	})
 
 	tokenString, err := jwtToken.SignedString([]byte(*auth.Secret))
 	if err != nil {
