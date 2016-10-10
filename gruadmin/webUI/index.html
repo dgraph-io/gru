@@ -26,7 +26,7 @@
           <!-- Title -->
           <a ui-sref="root">
            <span class="mdl-layout-title font-tangerine" >
-                GRU-Admin
+                GRU<span ng-if="mainVm.isLoggedIn()" class="ng-cloak">-Admin</span>
             </span>
           </a>
           <!-- Add spacer, to align navigation to the right -->

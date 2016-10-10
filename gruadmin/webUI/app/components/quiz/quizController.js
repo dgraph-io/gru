@@ -55,6 +55,7 @@
 			});
 			requestData.questions = questions;
 
+			requestData.duration = (requestData.hours || 0) + "-" + (requestData.minutes || 0) + "-" + (requestData.seconds || 0);
 			quizService.saveQuiz(requestData)
 			.then(function(data){
 				quizVm.newQuiz = {}
@@ -72,18 +73,18 @@
 			if(!inputs.name) {
 				return "Please enter valid Quiz name"
 			}
-			if(!inputs.duration) {
-				return "Please enter valid Duration"
+			if(!inputs.minutes && !inputs.hours) {
+				return "Please enter valid time"
 			}
-			if(!inputs.duration) {
-				return "Please enter valid Duration"
-			}
-			if(!inputs.start_date) {
-				return "Please enter valid Start date"
-			}
-			if(!inputs.end_date) {
-				return "Please enter valid End date"
-			}	
+			// if(!inputs.duration) {
+			// 	return "Please enter valid Duration"
+			// }
+			// if(!inputs.start_date) {
+			// 	return "Please enter valid Start date"
+			// }
+			// if(!inputs.end_date) {
+			// 	return "Please enter valid End date"
+			// }	
 			if(!inputs.questions) {
 				return "Please add question to the quiz before submitting"
 			}
@@ -112,6 +113,7 @@
 		editQuizVm.onQuestionRemove = onQuestionRemove;
 		editQuizVm.onNewQuestionRemove = onNewQuestionRemove;
 		editQuizVm.addNewQuestion = addNewQuestion;
+		editQuizVm.getTimeObj = getTimeObj;
 
 		// INITITALIZER
 		quizVm.getAllQuestions();
@@ -122,6 +124,11 @@
 
 			editQuizVm.selectedQuestion = data.root[0]['quiz.question'];
 			quizVm.newQuiz.newQuestions = [];
+
+			var timeObj = editQuizVm.getTimeObj(quizVm.newQuiz.duration);
+			quizVm.newQuiz.hours = timeObj.hours;
+			quizVm.newQuiz.minutes = timeObj.minutes;
+			quizVm.newQuiz.seconds = timeObj.seconds;
 		}, function(err){
 			console.log(err);
 		});
@@ -136,7 +143,6 @@
 				})
 				return
 			}
-			console.log(quizVm.newQuiz);
 
 			var newQues = quizVm.newQuiz.newQuestions;
 			if(newQues) {
@@ -147,6 +153,11 @@
 					});
 				}
 			}
+
+			quizVm.newQuiz.duration = (quizVm.newQuiz.hours || 0) + "-" + (quizVm.newQuiz.minutes || 0) + "-" + (quizVm.newQuiz.seconds || 0);
+			console.log(quizVm.newQuiz);
+
+			// API CALL
 			quizService.editQuiz(quizVm.newQuiz)
 			.then(function(data){
 				SNACKBAR({
@@ -224,6 +235,16 @@
 				}
 			}
 			return false;
+		}
+
+		function getTimeObj(duration){
+			console.log(duration);
+			var timeArr = duration.split("-") 
+			return {
+				hours: parseInt(timeArr[0]),
+				minutes: parseInt(timeArr[1]),
+				seconds: parseInt(timeArr[2]),
+			}
 		}
 	}
 

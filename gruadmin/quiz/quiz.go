@@ -41,9 +41,9 @@ func Add(w http.ResponseWriter, r *http.Request) {
 	}
 	//question_ids = quiz.Questions
 	quiz_mutation := "mutation { set { <rootQuiz> <quiz> <_new_:quiz> . \n	<_new_:quiz> <name> \"" + quiz.Name +
-		"\" . \n <_new_:quiz> <duration> \"" + quiz.Duration +
-		"\" . \n <_new_:quiz> <start_date> \"" + quiz.Start_Date +
-		"\" . \n <_new_:quiz> <end_date> \"" + quiz.End_Date + "\" . \n"
+		"\" . \n <_new_:quiz> <duration> \"" + quiz.Duration + "\" . \n"
+	// "\" . \n <_new_:quiz> <start_date> \"" + quiz.Start_Date +
+	// "\" . \n <_new_:quiz> <end_date> \"" + quiz.End_Date
 	fmt.Println(quiz.Questions)
 	for i := 0; i < len(quiz.Questions); i++ {
 		quiz_mutation += "<_new_:quiz> <quiz.question> <_uid_:" + quiz.Questions[i].Uid + "> .\n"
@@ -125,9 +125,7 @@ func edit(q Quiz) string {
     mutation {
       set {
           <_uid_:` + q.Uid + `> <name> "` + q.Name + `" .
-          <_uid_:` + q.Uid + `> <duration> "` + q.Duration + `" .
-          <_uid_:` + q.Uid + `> <start_date> "` + q.Start_Date + `" .
-          <_uid_:` + q.Uid + `> <end_date> "` + q.End_Date + `" .`
+          <_uid_:` + q.Uid + `> <duration> "` + q.Duration + `" .`
 
 	// Create and associate Tags
 	for i := range q.Questions {

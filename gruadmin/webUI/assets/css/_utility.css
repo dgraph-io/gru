@@ -66,6 +66,12 @@
 .b-border {
   border-bottom: 1px solid rgba(0,0,0,.12);
 }
+.l-border {
+  border-left: 1px solid rgba(0,0,0,.12);
+}
+.lc-border {
+  border-left: 1px solid #FF5722;
+}
 .full-border {
   border: 1px solid !important;
 }
@@ -83,10 +89,11 @@
   outline: none;
   cursor: pointer;
 }
-
-.mdl-button.btn-danger {
-  background: #EC3D2E;
-  color: white;
+.mdl-button.btn-success {
+  background: #4CB973;
+}
+.mdl-button.btn-black {
+    background: black;
 }
 .mdl-button.btn-succes:hover {
   background-color: #009688;
@@ -146,18 +153,25 @@
 }
 
 /*SLIDED - ACCORDION*/
+.slide-wrapper {
+  border-radius: 10px;
+}
 .slide-content {
   display: none;
 }
 .slide-link {
   cursor: pointer;
+  border-radius: 10px;
 }
 .slide-link:hover {
   background: rgba(158, 158, 158, 0.2);
+  color: black;
 }
 .slide-link.is-active {
-  background: #EC3D2E;
+  background: rgba(16, 12, 12, 0.52);
   color: white;
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
 }
 
 /*AJAX LOADER - OVERLAY*/
