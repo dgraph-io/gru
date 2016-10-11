@@ -17,7 +17,6 @@
 package quiz
 
 import (
-	"bufio"
 	"encoding/json"
 	"errors"
 	"flag"
@@ -137,40 +136,6 @@ func sliceDiff(qnList []Question, qnsAsked []string) []Question {
 	return qns
 }
 
-func candInfo(token string, c Candidate) (Candidate, error) {
-	// We don't want to load up cand info for dummy quiz candidates.
-	if strings.HasPrefix(token, "test-") {
-		return c, nil
-	}
-	if len(c.questions) > 0 || c.demoTaken {
-		return c, nil
-	}
-
-	// If file for the token doesn't exist means client is trying to connect
-	// for the first time. So we create a file
-	if _, err := os.Stat(fmt.Sprintf("logs/%s.log", token)); os.IsNotExist(err) {
-		f, err := os.OpenFile(fmt.Sprintf("logs/%s.log", token),
-			os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
-		if err != nil {
-			return c, err
-		}
-		c.logFile = f
-		c.questions = make([]Question, len(questions))
-		copy(c.questions, questions)
-		updateMap(token, c)
-		return c, nil
-	}
-
-	// var err error
-	// // If we reach here it means logfile for candidate exists but his info
-	// // doesn't exist in memory, so we need to load it back from the file.
-	// if err = c.loadCandInfo(token); err != nil {
-	// 	return c, err
-	// }
-	updateMap(token, c)
-	return c, nil
-}
-
 func stringInSlice(a string, list []string) bool {
 	for _, b := range list {
 		if b == a {
@@ -192,41 +157,6 @@ func shuffleQuestions(qns []Question) {
 		j := rand.Intn(i + 1)
 		qns[i], qns[j] = qns[j], qns[i]
 	}
-}
-
-func onlyDemoQuestions() []Question {
-	var qns []Question
-	count := 0
-	for _, x := range questions {
-		if stringInSlice("demo", x.Tags) && count < *maxDemoQns {
-			qns = append(qns, x)
-			count++
-		}
-	}
-	shuffleQuestions(qns)
-	return qns
-}
-
-func demoCandInfo(token string) Candidate {
-	var c Candidate
-	c.name = token
-	c.email = "no-mail@given"
-	c.validity = time.Now().Add(time.Duration(100 * time.Hour))
-	c.demoQnsToAsk = *maxDemoQns
-
-	if _, err := os.Stat(fmt.Sprintf("logs/%s.log", token)); os.IsNotExist(err) {
-		f, err := os.OpenFile(fmt.Sprintf("logs/%s.log", token),
-			os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
-		if err != nil {
-			log.Fatalf("error opening file: %v", err)
-		}
-		c.logFile = f
-		c.questions = onlyDemoQuestions()
-		updateMap(token, c)
-		return c
-	}
-	updateMap(token, c)
-	return c
 }
 
 type QuizState int32
@@ -343,37 +273,6 @@ func Authenticate(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(s)
 }
 
-type Option struct {
-	Uid string
-	Str string
-}
-
-type Question struct {
-	Id       string
-	Str      string
-	Correct  []string
-	Opt      []Option
-	Positive float32
-	Negative float32
-	Tags     []string
-}
-
-func formQuestion(q Question, score float32) *quizmeta.Question {
-	var opts []*quizmeta.Answer
-	for _, o := range q.Opt {
-		a := &quizmeta.Answer{Id: o.Uid, Str: o.Str}
-		opts = append(opts, a)
-	}
-	shuffleOptions(opts)
-	var isM bool
-	if len(q.Correct) > 1 {
-		isM = true
-	}
-	return &quizmeta.Question{Id: q.Id, Str: q.Str, Options: opts,
-		IsMultiple: isM, Positive: q.Positive, Negative: q.Negative,
-		Score: score}
-}
-
 func nextQuestion(c Candidate, token string, qnType string) (*quizmeta.Question,
 	error) {
 	for idx, q := range c.questions {
@@ -474,54 +373,6 @@ func GetQuestion(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(q)
-}
-
-func isCorrectAnswer(qid string, aids []string) (int, float32) {
-	for idx, qn := range questions {
-		if qn.Id == qid {
-			if aids[0] == "skip" {
-				return idx, 0
-			}
-			// For multiple choice qnstions, we have partial scoring.
-			if len(qn.Correct) == 1 {
-				if aids[0] == qn.Correct[0] {
-					return idx, qn.Positive
-				}
-				return idx, -qn.Negative
-			}
-			var score float32
-			for _, aid := range aids {
-				correct := false
-				for _, caid := range qn.Correct {
-					if caid == aid {
-						correct = true
-						break
-					}
-				}
-				if correct {
-					score += qn.Positive
-				} else {
-					score -= qn.Negative
-				}
-			}
-			return idx, score
-		}
-	}
-	return -1, 0
-}
-
-func UTCTime() string {
-	return time.Now().UTC().Format("2006/01/02 15:04:05 MST")
-}
-
-func writeLog(c Candidate, s string) {
-	wrtLock.Lock()
-	_, err := c.logFile.WriteString(s)
-	if err != nil {
-		log.Printf("Error: %v while writing logs to file for Cand: %v",
-			err, c.name)
-	}
-	wrtLock.Unlock()
 }
 
 func status(token string, sid string, qid string, aids []string) (*quizmeta.AnswerStatus, error) {
@@ -636,50 +487,6 @@ func runHTTPServer(address string) {
 	log.Fatal(http.ListenAndServe(address, nil))
 }
 
-// This method is used to parse the candidate file which contains information
-// about the candidates allowed to take the quiz.
-func parseCandidateFile(file string) error {
-	format := "2006/01/02 (MST)"
-	f, err := os.Open(file)
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-
-	scanner := bufio.NewScanner(f)
-	for scanner.Scan() {
-		line := strings.TrimSpace(scanner.Text())
-		if line == "" || line[0] == ';' {
-			continue
-		}
-
-		splits := strings.Split(line, " ")
-		if len(splits) < 6 {
-			log.Fatalf("Candidate info isn't sufficient for line %v",
-				line)
-		}
-
-		// If the token already exists, skip that line.
-		token := splits[5]
-		if _, ok := readMap(token); ok {
-			continue
-		}
-
-		var c Candidate
-		c.demoQnsToAsk = beforeQuiz
-		c.name = strings.Join(splits[:2], " ")
-		c.email = splits[2]
-		c.validity, err = time.Parse(format,
-			fmt.Sprintf("%s (%s)", splits[3], splits[4]))
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		updateMap(token, c)
-	}
-	return nil
-}
-
 func partOfOptions(opts []Option, s string) bool {
 	for _, opt := range opts {
 		if s == opt.Uid {
@@ -687,66 +494,6 @@ func partOfOptions(opts []Option, s string) bool {
 		}
 	}
 	return false
-}
-
-// This method performs sanity checks on the data in the quiz file.
-func checkQuiz(qns []Question) error {
-	// None of the ids should be repeated, so we check that using a map.
-	idsMap := make(map[string]bool)
-	demoQnCount := 0
-
-	for _, q := range qns {
-		if _, ok := idsMap[q.Id]; ok {
-			return fmt.Errorf("Id has been used before: %v", q.Id)
-		}
-
-		if stringInSlice("demo", q.Tags) {
-			demoQnCount++
-		}
-
-		idsMap[q.Id] = true
-		for _, ans := range q.Opt {
-			if _, ok := idsMap[ans.Uid]; ok {
-				return fmt.Errorf("Id has been used before: %v",
-					ans.Uid)
-			}
-			idsMap[ans.Uid] = true
-		}
-
-		for _, tag := range q.Tags {
-			if tag[0] < 'a' || tag[0] > 'z' {
-				return fmt.Errorf(
-					"Tag: %v for qn: %v should start with a lowercase character",
-					tag, q.Id)
-			}
-		}
-
-		if len(q.Correct) == 0 {
-			return fmt.Errorf("Correct list is empty")
-		}
-
-		if q.Negative < 0 || q.Positive < 0 {
-			return fmt.Errorf("Score for qn: %v is less than zero.",
-				q.Id)
-		}
-		// As we do partial scoring for multiple questions, the negative
-		// score shouldn't be less than positive score.
-		if len(q.Correct) > 1 && q.Negative < q.Positive {
-			return fmt.Errorf("Negative score less than positive for multi-choice qn: %v",
-				q.Id)
-		}
-
-		for _, corr := range q.Correct {
-			if ok := partOfOptions(q.Opt, corr); !ok {
-				return fmt.Errorf("Correct not part of options: %v ",
-					corr)
-			}
-		}
-	}
-	if demoQnCount < *maxDemoQns {
-		return fmt.Errorf("Need more demo questions in quiz file")
-	}
-	return nil
 }
 
 func rateLimit() {

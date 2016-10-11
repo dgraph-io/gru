@@ -3,11 +3,12 @@ package quiz
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"strings"
 	"sync"
+	"time"
 
+	"github.com/dgraph-io/gru/auth"
 	"github.com/dgraph-io/gru/dgraph"
 	"github.com/dgraph-io/gru/gruadmin/server"
 	"github.com/dgraph-io/gru/x"
@@ -35,11 +36,15 @@ type Candidate struct {
 	score float64
 	qns   []Question
 	// Used to check the order of answers.
-	lastQnId string
+	lastQnId     string
+	lastExchange time.Time
+}
+
+func (c Candidate) LastExchange() time.Time {
+	return c.lastExchange
 }
 
 func New(uid string, qns []Question) Candidate {
-	fmt.Println(len(qns))
 	c := Candidate{}
 	c.qns = make([]Question, len(qns))
 	copy(c.qns, qns)
@@ -48,6 +53,7 @@ func New(uid string, qns []Question) Candidate {
 }
 
 func init() {
+	// TODO - Handler server crashes and restarts. That would mean reload cmap from DB.
 	cmap = make(map[string]Candidate)
 }
 
@@ -57,7 +63,6 @@ var (
 )
 
 func UpdateMap(uid string, c Candidate) {
-	fmt.Println("in update map", c)
 	mu.Lock()
 	defer mu.Unlock()
 	cmap[uid] = c
@@ -73,47 +78,73 @@ func ReadMap(uid string) (Candidate, error) {
 	return c, nil
 }
 
+func validate(r *http.Request) (string, error) {
+	s := strings.SplitN(r.Header.Get("Authorization"), " ", 2)
+	if len(s) != 2 || s[0] != "Bearer" {
+		return "", fmt.Errorf("Format of authorization header isn't correct")
+	}
+	token, err := jwt.ParseWithClaims(s[1], &x.Claims{}, func(token *jwt.Token) (interface{}, error) {
+		return []byte(*auth.Secret), nil
+	})
+	if err != nil {
+		return "", err
+	}
+
+	if claims, ok := token.Claims.(*x.Claims); ok {
+		return claims.UserId, nil
+	}
+	return "", fmt.Errorf("Cannot parse claims.")
+}
+
 func QuestionHandler(w http.ResponseWriter, r *http.Request) {
 	server.AddCorsHeaders(w)
-	s := strings.SplitN(r.Header.Get("Authorization"), " ", 2)
-	// TODO - Validate format
-	token, err := jwt.ParseWithClaims(s[1], &x.Claims{}, func(token *jwt.Token) (interface{}, error) {
-		return []byte("AllYourBase"), nil
-	})
 
-	userId := ""
-	if claims, ok := token.Claims.(*x.Claims); ok {
-		userId = claims.UserId
-	} else {
-		w.Write([]byte("Unauthorized"))
+	var userId string
+	var err error
+	if userId, err = validate(r); err != nil {
+		fmt.Println(err)
 		w.WriteHeader(http.StatusUnauthorized)
+		w.Write([]byte("Unauthorized"))
 		return
 	}
 
 	c, err := ReadMap(userId)
 	if err != nil {
-		w.Write([]byte("Unauthorized"))
-		w.WriteHeader(http.StatusUnauthorized)
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("User not found."))
 		return
 	}
+
 	x.Debug(c)
 	// TODO - Send END qn if len qns == 0.
-	qn := c.qns[0]
-	// TODO - Write to DB the qn asked.
-	fmt.Println("question", qn)
-	c.qns = c.qns[1:]
-	c.lastQnId = qn.Id
-	qn.Score = c.score
-	UpdateMap(userId, c)
-	b, err := json.Marshal(qn)
-	if err != nil {
-		w.Write([]byte("Unauthorized"))
-		w.WriteHeader(http.StatusUnauthorized)
+	if len(c.qns) == 0 {
+		q := Question{
+			Id:    "END",
+			Score: c.score,
+		}
+		b, err := json.Marshal(q)
+		if err != nil {
+			w.WriteHeader(http.StatusBadGateway)
+			w.Write([]byte("Unauthorized"))
+			return
+		}
+		w.Write(b)
 		return
 	}
-	fmt.Println("marshalled", string(b))
+
+	qn := c.qns[0]
+	// TODO - Write to DB the qn asked.
+	c.qns = c.qns[1:]
+	c.lastQnId = qn.Id
+	UpdateMap(userId, c)
+	qn.Score = c.score
+	b, err := json.Marshal(qn)
+	if err != nil {
+		w.WriteHeader(http.StatusUnauthorized)
+		w.Write([]byte("Unauthorized"))
+		return
+	}
 	w.Write(b)
-	return
 }
 
 func isCorrectAnswer(selected []string, actual []string, pos, neg float64) float64 {
@@ -149,10 +180,12 @@ type correct struct {
 	Uid string `json:"_uid_"`
 }
 
+// Used to marshal response from Dgraph.
 type questionMeta struct {
 	Negative float64 `json:"negative,string"`
 	Positive float64 `json:"positive,string"`
-	// TODO - Maybe store correct later as a comma separated string uids.
+	// TODO - Maybe store correct later as a comma separated string uids so that
+	// processing isn't required.
 	Correct []correct `json:"question.correct"`
 }
 
@@ -160,7 +193,13 @@ type qmRes struct {
 	QuestionMeta []questionMeta `json:"question"`
 }
 
-func qnMeta(qid string) (float64, float64, []string) {
+type questionCorrectMeta struct {
+	negative float64
+	positive float64
+	correct  []string
+}
+
+func qnMeta(qid string) (questionCorrectMeta, error) {
 	q := `{
         question(_uid_: ` + qid + `) {
                 question.correct {
@@ -175,7 +214,8 @@ func qnMeta(qid string) (float64, float64, []string) {
 	json.Unmarshal(res, &resp)
 
 	if len(resp.QuestionMeta) != 1 {
-		log.Fatal("There should be just question returned")
+		return questionCorrectMeta{},
+			fmt.Errorf("There should be just one question returned")
 	}
 	question := resp.QuestionMeta[0]
 	// TODO - Maybe cache this stuff later.
@@ -183,26 +223,20 @@ func qnMeta(qid string) (float64, float64, []string) {
 	for _, answer := range question.Correct {
 		correctAnswers = append(correctAnswers, answer.Uid)
 	}
-	return question.Positive, question.Negative, correctAnswers
-}
 
-func calcScore(qid string, selected []string) float64 {
-	pos, neg, actual := qnMeta(qid)
-	return isCorrectAnswer(selected, actual, pos, neg)
+	return questionCorrectMeta{
+		negative: question.Negative,
+		positive: question.Positive,
+		correct:  correctAnswers,
+	}, nil
 }
 
 func AnswerHandler(w http.ResponseWriter, r *http.Request) {
 	server.AddCorsHeaders(w)
-	s := strings.SplitN(r.Header.Get("Authorization"), " ", 2)
-	// TODO - Validate format
-	token, err := jwt.ParseWithClaims(s[1], &x.Claims{}, func(token *jwt.Token) (interface{}, error) {
-		return []byte("AllYourBase"), nil
-	})
 
-	userId := ""
-	if claims, ok := token.Claims.(*x.Claims); ok {
-		userId = claims.UserId
-	} else {
+	var userId string
+	var err error
+	if userId, err = validate(r); err != nil {
 		w.Write([]byte("Unauthorized"))
 		w.WriteHeader(http.StatusUnauthorized)
 		return
@@ -210,36 +244,58 @@ func AnswerHandler(w http.ResponseWriter, r *http.Request) {
 
 	c, err := ReadMap(userId)
 	if err != nil {
-		w.Write([]byte("Unauthorized"))
-		w.WriteHeader(http.StatusUnauthorized)
+		w.Write([]byte("User not found."))
+		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 	qid := r.PostFormValue("qid")
 	aid := r.PostFormValue("aid")
 	if qid != c.lastQnId {
 		// TODO - Return error
+		w.WriteHeader(http.StatusBadRequest)
+		return
 	}
 	// TODO - Log response to DB.
 	answerIds := strings.Split(aid, ",")
 	if len(answerIds) == 0 {
 		// TODO - Return error
+		w.Write([]byte("Answer ids can't be empty"))
+		w.WriteHeader(http.StatusBadRequest)
+		return
 	}
-	// TODO - Get qn with correct options from DB and calculate score based on the
-	// response.
-	score := calcScore(qid, answerIds)
+	m, err := qnMeta(qid)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(err.Error()))
+	}
+	score := isCorrectAnswer(answerIds, m.correct, m.positive, m.negative)
 	c.score = score
 	UpdateMap(userId, c)
-	// TODO - Update score.
-	return
+}
+
+func PingHandler(w http.ResponseWriter, r *http.Request) {
+	server.AddCorsHeaders(w)
+
+	var userId string
+	var err error
+	if userId, err = validate(r); err != nil {
+		w.Write([]byte("Unauthorized"))
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
+	c, err := ReadMap(userId)
+	if err != nil {
+		w.Write([]byte("User not found."))
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	c.lastExchange = time.Now()
+	UpdateMap(userId, c)
 }
 
 // type ServerStatus struct {
 // 	TimeLeft string `protobuf:"bytes,1,opt,name=timeLeft,proto3" json:"timeLeft,omitempty"`
 // 	Status   string `protobuf:"bytes,2,opt,name=status,proto3" json:"status,omitempty"`
-// }
-//
-// type ClientStatus struct {
-// 	CurQuestion string `protobuf:"bytes,1,opt,name=curQuestion,proto3" json:"curQuestion,omitempty"`
-// 	Token       string `protobuf:"bytes,2,opt,name=token,proto3" json:"token,omitempty"`
-
 // }

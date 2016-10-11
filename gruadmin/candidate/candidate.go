@@ -2,10 +2,10 @@ package candidate
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"math/rand"
 	"net/http"
+	"time"
 
 	"github.com/dgraph-io/gru/auth"
 	"github.com/dgraph-io/gru/dgraph"
@@ -220,8 +220,10 @@ func quizQns(quizId string) []quizp.Question {
 				}
 				multiple
 			}
-		}`
+		}
+	}`
 	res := dgraph.Query(q)
+	x.Debug(string(res))
 	var resp qnIdsResp
 	json.Unmarshal(res, &resp)
 	if len(resp.Quizzes) != 1 {
@@ -232,6 +234,10 @@ func quizQns(quizId string) []quizp.Question {
 
 type resp struct {
 	Cand []Candidate `json:"quiz.candidate"`
+}
+
+type Res struct {
+	Token string `json:"token"`
 }
 
 func Validate(w http.ResponseWriter, r *http.Request) {
@@ -249,14 +255,21 @@ func Validate(w http.ResponseWriter, r *http.Request) {
 	}
 	uid, token := id[:len(id)-33], id[len(id)-33:]
 	q := get(uid)
+	c, err := quizp.ReadMap(uid)
+	// TODO - Check if the validity or the duration already elapsed.
+	if err == nil && !c.LastExchange().IsZero() {
+		timeSinceLastExchange := time.Now().Sub(c.LastExchange())
+		// To avoid duplicate sessions.
+		if timeSinceLastExchange < 10*time.Second {
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			return
+
+		}
+	}
 	res := dgraph.Query(q)
-	fmt.Println()
-	x.Debug(string(res))
 
 	var resp resp
 	json.Unmarshal(res, &resp)
-	fmt.Println()
-	x.Debug(resp)
 	if len(resp.Cand) != 1 || len(resp.Cand[0].Quiz) != 1 {
 		// No candidiate found with given uid
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
@@ -266,10 +279,8 @@ func Validate(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
-	// TODO - Assign questions to candidate according to his quiz id.
 	quizId := resp.Cand[0].Quiz[0].Id
 	qns := quizQns(quizId)
-	fmt.Println("uid", uid)
 	// x.Shuffle(ids)
 	quizp.New(uid, qns)
 
@@ -288,9 +299,5 @@ func Validate(w http.ResponseWriter, r *http.Request) {
 	// TODO - Incase candidate already has a active session return error after
 	// implementing Ping.
 	// TODO - Also send quiz duration and time left incase candidate restarts.
-	type Res struct {
-		Token string `json:"token"`
-	}
-
 	json.NewEncoder(w).Encode(Res{Token: tokenString})
 }

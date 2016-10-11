@@ -4,8 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/dgraph-io/gru/dgraph"
 	"github.com/dgraph-io/gru/gruadmin/server"
@@ -39,6 +41,19 @@ func Add(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
+
+	stats := &server.Response{}
+	// We should be able to parse the duration.
+	_, err = time.ParseDuration(quiz.Duration)
+	if err != nil {
+		stats.Message = "Couldn't parse duration."
+		res, err := json.Marshal(stats)
+		if err != nil {
+			log.Fatalf("Problem in marshalling to JSON: %+v\n", stats)
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(res)
+	}
 	//question_ids = quiz.Questions
 	quiz_mutation := "mutation { set { <rootQuiz> <quiz> <_new_:quiz> . \n	<_new_:quiz> <name> \"" + quiz.Name +
 		"\" . \n <_new_:quiz> <duration> \"" + quiz.Duration + "\" . \n"
@@ -54,7 +69,7 @@ func Add(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-	stats := &server.Response{true, "Quiz Successfully Saved!"}
+	stats = &server.Response{true, "Quiz Successfully Saved!"}
 	quiz_json_response, err := json.Marshal(stats)
 	if err != nil {
 		panic(err)
@@ -157,13 +172,24 @@ func Edit(w http.ResponseWriter, r *http.Request) {
 	}
 	var q Quiz
 	server.ReadBody(r, &q)
+
+	res := server.Response{}
+	_, err := time.ParseDuration(q.Duration)
+	if err != nil {
+		res.Message = "Couldn't parse duration."
+		resp, err := json.Marshal(res)
+		if err != nil {
+			log.Fatalf("Problem in marshalling to JSON: %+v\n", res)
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(resp)
+	}
 	q.Uid = qid
 	// TODO - Validate candidate fields shouldn't be empty.
 	x.Debug(q)
 	m := edit(q)
 	x.Debug(m)
 	mr := dgraph.SendMutation(m)
-	res := server.Response{}
 	if mr.Code == "ErrorOk" {
 		res.Success = true
 		res.Message = "Quiz info updated successfully."

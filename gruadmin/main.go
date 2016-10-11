@@ -87,6 +87,7 @@ func runHTTPServer(address string) {
 	quizRouter := mux.NewRouter().PathPrefix("/quiz").Subrouter().StrictSlash(true)
 	quizRouter.HandleFunc("/question", quizp.QuestionHandler).Methods("POST", "OPTIONS")
 	quizRouter.HandleFunc("/answer", quizp.AnswerHandler).Methods("POST", "OPTIONS")
+	quizRouter.HandleFunc("/ping", quizp.PingHandler).Methods("POST", "OPTIONS")
 	router.PathPrefix("/quiz").Handler(negroni.New(
 		negroni.Wrap(quizRouter),
 	))
