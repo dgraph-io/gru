@@ -43,15 +43,18 @@ type Candidate struct {
 	// Used to check the order of answers.
 	lastQnId     string
 	lastExchange time.Time
+	quizDuration time.Duration
+	quizStart    time.Time
 }
 
 func (c Candidate) LastExchange() time.Time {
 	return c.lastExchange
 }
 
-func New(uid string, qns []Question) Candidate {
+func New(uid string, qns []Question, qd time.Duration) Candidate {
 	c := Candidate{}
 	c.qns = make([]Question, len(qns))
+	c.quizDuration = qd
 	copy(c.qns, qns)
 	UpdateMap(uid, c)
 	return c
@@ -119,6 +122,13 @@ func QuestionHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// This means its the first question he is being asked.
+	// If this is because the server crashed then we should have recovered before
+	// the candidate reaches here.
+	if c.quizStart.IsZero() {
+		c.quizStart = time.Now().UTC()
+		// TODO - Write to DB, so that we can recover this after crash.
+	}
 	x.Debug(c)
 	// TODO - Write to DB here also that quiz ended successfully.
 	if len(c.qns) == 0 {
@@ -305,6 +315,11 @@ func AnswerHandler(w http.ResponseWriter, r *http.Request) {
 	UpdateMap(userId, c)
 }
 
+type pingRes struct {
+	TimeLeft string `json:"time_left"`
+	// Status   string `json:"status"`
+}
+
 func PingHandler(w http.ResponseWriter, r *http.Request) {
 	server.AddCorsHeaders(w)
 
@@ -325,9 +340,9 @@ func PingHandler(w http.ResponseWriter, r *http.Request) {
 
 	c.lastExchange = time.Now()
 	UpdateMap(userId, c)
+	pr := &pingRes{TimeLeft: "-1"}
+	if !c.quizStart.IsZero() {
+		pr.TimeLeft = c.quizStart.Add(c.quizDuration).Sub(time.Now().UTC()).String()
+	}
+	json.NewEncoder(w).Encode(pr)
 }
-
-// type ServerStatus struct {
-// 	TimeLeft string `protobuf:"bytes,1,opt,name=timeLeft,proto3" json:"timeLeft,omitempty"`
-// 	Status   string `protobuf:"bytes,2,opt,name=status,proto3" json:"status,omitempty"`
-// }

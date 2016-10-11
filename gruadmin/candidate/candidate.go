@@ -176,6 +176,7 @@ func get(candidateId string) string {
           validity
           candidate.quiz {
 		    _uid_
+		    duration
 		  }
 	  }
     }`
@@ -199,6 +200,7 @@ func Get(w http.ResponseWriter, r *http.Request) {
 
 type quiz struct {
 	Id        string           `json:"_uid_"`
+	Duration  string           `json:"duration"`
 	Questions []quizp.Question `json:"quiz.question"`
 }
 
@@ -253,21 +255,24 @@ func Validate(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
-	uid, token := id[:len(id)-33], id[len(id)-33:]
-	q := get(uid)
-	c, err := quizp.ReadMap(uid)
 	// TODO - Check if the validity or the duration already elapsed.
+	uid, token := id[:len(id)-33], id[len(id)-33:]
+
+	c, err := quizp.ReadMap(uid)
+	// Check for duplicate session.
 	if err == nil && !c.LastExchange().IsZero() {
 		timeSinceLastExchange := time.Now().Sub(c.LastExchange())
 		// To avoid duplicate sessions.
 		if timeSinceLastExchange < 10*time.Second {
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
-
 		}
 	}
-	res := dgraph.Query(q)
 
+	// Candidate doesn't exist in the map. So we get candidate info from uid and
+	// insert it into map.
+	q := get(uid)
+	res := dgraph.Query(q)
 	var resp resp
 	json.Unmarshal(res, &resp)
 	if len(resp.Cand) != 1 || len(resp.Cand[0].Quiz) != 1 {
@@ -279,10 +284,14 @@ func Validate(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
-	quizId := resp.Cand[0].Quiz[0].Id
-	qns := quizQns(quizId)
+	quiz := resp.Cand[0].Quiz[0]
+	// Get quiz questions for the quiz id.
+	qns := quizQns(quiz.Id)
 	// x.Shuffle(ids)
-	quizp.New(uid, qns)
+	// TODO - Although we verify the duration when the quiz is created, still handle
+	// error here.
+	dur, _ := time.ParseDuration(quiz.Duration)
+	quizp.New(uid, qns, dur)
 
 	// TODO - Check token validity.
 	claims := x.Claims{
