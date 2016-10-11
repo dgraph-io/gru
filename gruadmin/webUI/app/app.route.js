@@ -35,6 +35,7 @@
     var select2CSS = "assets/lib/css/select2.min.css";
     var angularSelectCSS = "assets/lib/css/angular-select.min.css";
     var codeMirrorCSS = "assets/lib/css/codemirror.css";
+    var githubCSS = "assets/lib/css/github.css";
 
     function MainRoutes($stateProvider, $locationProvider, $urlRouterProvider, helper) {
       'use strict';
@@ -64,8 +65,8 @@
           url: '/admin/question',
           abstract: true,
           templateUrl: questionTemplate,
-          css: [angularSelectCSS],
-          resolve: helper.resolveFor('questionController', 'questionServices', 'angular-select', 'codeMirror', 'javascript'),
+          css: [angularSelectCSS, githubCSS],
+          resolve: helper.resolveFor('questionController', 'questionServices', 'angular-select', 'codeMirror', 'javascript', 'marked', 'highlight'),
         })
           .state('question.all', {
             url: '/all-questions',
@@ -145,7 +146,7 @@
           url: '/candidate',
           abstract: true,
           templateUrl: candidateIndexTemplate,
-          resolve: helper.resolveFor('candidateController', 'candidateService'),
+          resolve: helper.resolveFor('candidateController', 'candidateService', 'marked', 'highlight'),
         })
           .state('candidate.landing', {
             url: '/home',

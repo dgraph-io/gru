@@ -151,7 +151,7 @@ body.home {
 }
 /*CANDIDATE*/
 .candidate .question {
-  background: #D4D5D5;
+  background: rgba(212, 213, 213, 0.26);
   padding: 22px 10px;
   border-radius: 5px;
 }
@@ -266,10 +266,11 @@ body.home {
 /* CODEMIRROR*/
 .CodeMirror {
   border-bottom: 1px solid black;
+  min-height: 380px;
 }
 
 #preview-panel {
-  min-height: 300px;
+  min-height: 380px;
   border-left: 30px solid #DDDDDD;
   background: #F7F7F7;
 }

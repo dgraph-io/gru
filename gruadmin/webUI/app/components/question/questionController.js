@@ -6,6 +6,25 @@
 		mainVm.pageName = "question"
 		questionVm = this;
 		questionVm.optionsCount = 4;
+
+		marked.setOptions({
+	    renderer: new marked.Renderer(),
+	    gfm: true,
+	    tables: true,
+	    breaks: false,
+	    pedantic: false,
+	    sanitize: false, // if false -> allow plain old HTML ;)
+	    smartLists: true,
+	    smartypants: false,
+	    highlight: function (code, lang) {
+	      // in case, there is code without language specified
+	      if (lang) {
+	        return hljs.highlight(lang, code).value;
+	      } else {
+	        return hljs.highlightAuto(code).value;
+	      }
+    	}
+	  });
 		
 		// See if update
 		var qid = $stateParams.qid;
@@ -17,7 +36,7 @@
 		questionVm.isCorrect = isCorrect;
 		questionVm.getAllTags = getAllTags;
 		questionVm.onTagSelect = onTagSelect;
-
+		questionVm.markDownFormat = markDownFormat;
 		questionVm.getAllTags();
 
 	// FUNCTION DEFINITION
@@ -28,9 +47,13 @@
 				$scope.cmOption = {
 			    lineNumbers: true,
 			    indentWithTabs: true,
-			    mode: 'javascript',
+			    // mode: 'javascript',
 			  }
 			}, 200);
+		}
+
+		function markDownFormat(content) {
+			return marked(content);
 		}
 
 		// Get all Tags
@@ -134,6 +157,10 @@
 		addQueVm.newQuestion = {};
 		addQueVm.newQuestion.tags = [];
 		addQueVm.cmModel = "";
+
+		$scope.$watch('addQueVm.cmModel', function(current, original) {
+        addQueVm.outputMarked = marked(current);
+    });
 
 		//FUnction Declaration
 		addQueVm.addQuestionForm = addQuestionForm;
@@ -267,13 +294,14 @@
 
 	} // AllQuestionController
 
-	function editQuestionController($state, $stateParams, questionService) {
+	function editQuestionController($scope, $state, $stateParams, questionService) {
 		editQuesVm = this;
 		editQuesVm.newQuestion = {};
 
 		// Functin Declaratin
 		editQuesVm.updateQuestionForm = updateQuestionForm;
 		editQuesVm.onRemoveTag = onRemoveTag;
+		editQuesVm.initMarkeDownPreview = initMarkeDownPreview;
 		
 		// INITIALIZERS
 		questionVm.initCodeMirror();
@@ -288,7 +316,8 @@
 			editQuesVm.newQuestion.negative = parseFloat(data.root[0].negative);
 
 			editQuesVm.originalQuestion = angular.copy(editQuesVm.newQuestion);
-			console.log(editQuesVm.newQuestion);
+
+			editQuesVm.initMarkeDownPreview();
 		}, function(err){
 			console.log(err);
 		})
@@ -327,9 +356,16 @@
 				question.deletedTag.push(tag);
 			}
 		}
+
+		function initMarkeDownPreview() {
+			$scope.$watch('editQuesVm.cmModel', function(current, original) {
+	        editQuesVm.outputMarked = marked(current);
+	    });
+		}
 	}
 
 	var editQuestionDependency = [
+			"$scope",
 	    "$state",
 	    "$stateParams",
 	    "questionService",

@@ -89,21 +89,24 @@ angular.module('GruiApp').config(['$ocLazyLoadProvider','$httpProvider', 'APP_RE
 angular.module('GruiApp').constant('APP_REQUIRES', {
     // jQuery based/Cusomt/standalone scripts
     scripts: {
-        'homeController': ['app/components/home/homeController.js'],
-        'loginController': ['app/components/login/loginController.js'],
-        'loginService': ['app/components/login/loginService.js'],
-        'questionController': ['app/components/question/questionController.js'],
-        'questionServices': ['app/components/question/questionServices.js'],
-        'quizController': ['app/components/quiz/quizController.js'],
-        'quizServices': ['app/components/quiz/quizServices.js'],
-        'inviteController': ['app/components/invite/inviteController.js'],
-        'inviteService': ['app/components/invite/inviteService.js'],
-        'quizLandingController': ['app/components/candidate/quizLandingController.js'],
-        'candidateController': ['app/components/candidate/candidateController.js'],
-        'candidateService': ['app/components/candidate/candidateService.js'],
-        'angular-select': ['assets/lib/js/angular-select.min.js'],
-        'codeMirror': ['assets/lib/js/codemirror.js'],
-        'javascript': ['assets/lib/js/javascript.js'],
+      'homeController': ['app/components/home/homeController.js'],
+      'loginController': ['app/components/login/loginController.js'],
+      'loginService': ['app/components/login/loginService.js'],
+      'questionController': ['app/components/question/questionController.js'],
+      'questionServices': ['app/components/question/questionServices.js'],
+      'quizController': ['app/components/quiz/quizController.js'],
+      'quizServices': ['app/components/quiz/quizServices.js'],
+      'inviteController': ['app/components/invite/inviteController.js'],
+      'inviteService': ['app/components/invite/inviteService.js'],
+      'quizLandingController': ['app/components/candidate/quizLandingController.js'],
+      'candidateController': ['app/components/candidate/candidateController.js'],
+      'candidateService': ['app/components/candidate/candidateService.js'],
+      'angular-select': ['assets/lib/js/angular-select.min.js'],
+      'codeMirror': ['assets/lib/js/codemirror.js'],
+      'javascript': ['assets/lib/js/javascript.js'],
+      'marked': ['https://cdnjs.cloudflare.com/ajax/libs/marked/0.3.2/marked.min.js'],
+      // 'highlight': ['https://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.4/highlight.min.js'],
+      'highlight': ['assets/lib/js/highlight.pack.js'],
     },
 });
 
@@ -209,10 +212,15 @@ angular.module('GruiApp').provider('RouteHelpers', ['APP_REQUIRES', function (ap
       mainVm.isLoggedIn = isLoggedIn;
       mainVm.logout = logout;
       mainVm.isValidCandidate = isValidCandidate;
+      mainVm.markDownFormat = markDownFormat;
 
       mainVm.getAllTags = getAllTags;
 
       // General Functions
+      function markDownFormat(content) {
+        return marked(content);
+      }
+
       function getNumber(num) {
         return new Array(num);   
       }

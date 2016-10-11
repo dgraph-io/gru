@@ -13,7 +13,7 @@
 			<div class="mdl-cell mdl-cell--9-col">
 				<div class="question">
 					<span ng-if="cqVm.question.multiple == 'false'">(Multiple Choice)</span>
-					<pre>{{mainVm.unescapeText(cqVm.question.text)}}</pre>
+					<pre ng-bind-html="mainVm.markDownFormat(mainVm.unescapeText(cqVm.question.text))"></pre>
 				</div>
 
 				<div class="options">
@@ -39,46 +39,47 @@
 				</div>
 			</div>
 
-			<div class="mdl-cell mdl-cell--3-col mdl-shadow--2dp">
-				<div class="alert alert-success">
-					QUESTION STATS
-				</div>
+			<div class="mdl-cell mdl-cell--3-col">
+				<div class="pb-30 mdl-shadow--2dp">
+					<div class="alert alert-success">
+						QUESTION STATS
+					</div>
 
-				<div class="pl-10">
-					<div class="mdl-grid pad-0">
-						<div class="mdl-cell mdl-cell--6-col mdl-cell--middle">
-							<label class="text-green">POSITIVE </label> 
+					<div class="pl-10">
+						<div class="mdl-grid pad-0">
+							<div class="mdl-cell mdl-cell--6-col mdl-cell--middle">
+								<label class="text-green">POSITIVE </label> 
+							</div>
+							<div class="mdl-cell mdl-cell--6-col">
+								<button class="mdl-button mdl-js-button mdl-button--fab mdl-button--mini-fab btn-success">
+								  +{{cqVm.question.positive}}
+								</button>
+							</div>
 						</div>
-						<div class="mdl-cell mdl-cell--6-col">
-							<button class="mdl-button mdl-js-button mdl-button--fab mdl-button--mini-fab btn-success">
-							  +{{cqVm.question.positive}}
-							</button>
+						<div class="mdl-grid pad-0">
+							<div class="mdl-cell mdl-cell--6-col mdl-cell--middle">
+								<label class="text-orange">NEGATIVE </label>
+							</div>
+							<div class="mdl-cell mdl-cell--6-col">
+								<button class="mdl-button mdl-js-button mdl-button--fab mdl-button--mini-fab bg-red">
+								  -{{cqVm.question.negative}}
+								</button>
+							</div>
 						</div>
-					</div>
-					<div class="mdl-grid pad-0">
-						<div class="mdl-cell mdl-cell--6-col mdl-cell--middle">
-							<label class="text-orange">NEGATIVE </label>
-						</div>
-						<div class="mdl-cell mdl-cell--6-col">
-							<button class="mdl-button mdl-js-button mdl-button--fab mdl-button--mini-fab bg-red">
-							  -{{cqVm.question.negative}}
-							</button>
-						</div>
-					</div>
-					<div class="mdl-grid pad-0">
-						<div class="mdl-cell mdl-cell--6-col mdl-cell--middle">
-							<label>SCORE </label>
-						</div>
-						<div class="mdl-cell mdl-cell--6-col">
-							<button class="mdl-button mdl-js-button mdl-button--fab mdl-button--mini-fab btn-black">
-							  <span ng-if="cqVm.question.score">{{cqVm.total_score}}</span>
-							  <span ng-if="!cqVm.question.score">0</span>
-							</button>
+						<div class="mdl-grid pad-0">
+							<div class="mdl-cell mdl-cell--6-col mdl-cell--middle">
+								<label>SCORE </label>
+							</div>
+							<div class="mdl-cell mdl-cell--6-col">
+								<button class="mdl-button mdl-js-button mdl-button--fab mdl-button--mini-fab btn-black">
+								  <span ng-if="cqVm.question.score">{{cqVm.total_score}}</span>
+								  <span ng-if="!cqVm.question.score">0</span>
+								</button>
+							</div>
 						</div>
 					</div>
 				</div>
 			</div>
-
 		</div>
 	</div>
 

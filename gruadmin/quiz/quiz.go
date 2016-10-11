@@ -112,7 +112,7 @@ func get(quizId string) string {
         	duration
         	start_date
         	end_date
-          quiz.question { _uid_ text }
+          quiz.question { _uid_ name text }
         }
     }`
 }

@@ -54,7 +54,7 @@
 				<label class="bold">Added Questions</label>
 				<div ng-repeat="(key, question) in quizVm.newQuiz['quiz.question']" ng-if="question.text">
 					<span class="mdl-chip mdl-chip--deletable" ng-if="!question.is_delete">
-				    <span class="mdl-chip__text">{{mainVm.unescapeText(question.text)}}</span>
+				    <span class="mdl-chip__text">{{question.name}}</span>
 				    <button type="button" class="mdl-chip__action" ng-click="editQuizVm.onQuestionRemove(question)">
 				    	<i class="material-icons">cancel</i>
 				    </button>
@@ -64,7 +64,7 @@
 			<div ng-if="quizVm.newQuiz.newQuestions">
 				<div ng-repeat="(key, question) in quizVm.newQuiz.newQuestions" ng-if="question.text">
 					<span class="mdl-chip mdl-chip--deletable">
-				    <span class="mdl-chip__text">{{mainVm.unescapeText(question.text)}}</span>
+				    <span class="mdl-chip__text">{{question.name}}</span>
 				    <button type="button" class="mdl-chip__action" ng-click="editQuizVm.onNewQuestionRemove(question)">
 				    	<i class="material-icons">cancel</i>
 				    </button>
@@ -96,7 +96,7 @@
 				</div>
 				<div class="mdl-cell mdl-cell--8-col">
 					<a href="">
-				    <pre>{{mainVm.unescapeText(question.text)}}</pre>
+				    {{question.name}}
 					</a>
 				</div>
 			</div>

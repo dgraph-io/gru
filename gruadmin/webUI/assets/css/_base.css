@@ -25,3 +25,14 @@ th {
 pre {
   margin: 0;
 }
+
+pre h1,
+pre h2,
+pre h3,
+pre h4,
+pre h5 {
+	margin: 0;
+}
+pre h1 {
+	line-height: 45px;
+}

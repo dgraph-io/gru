@@ -41,8 +41,8 @@
 			</div>
 			<div class="mdl-grid slide-content">
 				<div class="mdl-cell mdl-cell--12-col pb-20">
-					<div class="mdl-cell mdl-cell--12-col pb-20">
-						<pre>{{mainVm.unescapeText(question.text)}}</pre>
+					<div class="mdl-cell mdl-cell--12-col pb-20 b-border">
+						<pre ng-bind-html="questionVm.markDownFormat(mainVm.unescapeText(question.text))"></pre>
 					</div>
 					<div class="mdl-grid no-pad">
 						<div class="mdl-cell mdl-cell--6-col">
