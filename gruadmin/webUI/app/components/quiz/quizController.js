@@ -95,6 +95,8 @@
 	}
 
 	function allQuizController(quizService, questionService) {
+		quizVm.newQuiz = {};
+		
 		quizService.getAllQuizes().then(function(data){
 			var data = JSON.parse(data);
 			quizVm.allQuizes = data.debug[0].quiz;
@@ -126,9 +128,12 @@
 			quizVm.newQuiz.newQuestions = [];
 
 			var timeObj = editQuizVm.getTimeObj(quizVm.newQuiz.duration);
-			quizVm.newQuiz.hours = timeObj.hours;
-			quizVm.newQuiz.minutes = timeObj.minutes;
-			quizVm.newQuiz.seconds = timeObj.seconds;
+
+			var duration =  Duration.parse(quizVm.newQuiz.duration)
+			var seconds = duration.seconds();
+			quizVm.newQuiz.hours = parseInt( seconds / 3600 ) % 24;
+			quizVm.newQuiz.minutes = parseInt( seconds / 60 ) % 60;
+			quizVm.newQuiz.seconds = parseInt(seconds) % 60;
 		}, function(err){
 			console.log(err);
 		});
@@ -163,7 +168,7 @@
 					message: data.Message,
 					messageType: "error",
 				});
-
+				quizVm.newQuiz = {};
 				$state.transitionTo("quiz.all");
 			}, function(err){
 				console.log(err);

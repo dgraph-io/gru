@@ -161,6 +161,12 @@
 				addQueVm.newQuestion = {};
 				addQueVm.cmModel = "";
 
+				if(data.code == "Error") {
+					SNACKBAR({
+						message: data.message,
+						messageType: "error",
+					})
+				}
 				if(data.Success) {
 					SNACKBAR({
 						message: data.Message,
