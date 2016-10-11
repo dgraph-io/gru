@@ -12,7 +12,7 @@ import (
 
 type Tag struct {
 	Uid       string `json:"_uid_"`
-	Name      string
+	Name      string `json:"name"`
 	Is_delete bool
 }
 

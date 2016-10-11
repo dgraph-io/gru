@@ -2,7 +2,6 @@ package question
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -56,15 +55,14 @@ func add(q Question) string {
 	for i, t := range q.Tags {
 		idx := strconv.Itoa(i)
 		if t.Uid != "" {
-			x.Debug(t.Uid)
 			m += `
 			<_new_:qn> <question.tag> <_uid_:` + t.Uid + `> .
 			<_uid_:` + t.Uid + `> <tag.question> <_new_:qn> . `
 		} else {
 			m += `
 			<_new_:t` + idx + `> <name> "` + t.Name + `" .
-			<_new_:qn> <question.tag> <_new_:tag` + idx + `> .
-			<_new_:tag` + idx + `> <tag.question> <_new_:qn> . `
+			<_new_:qn> <question.tag> <_new_:t` + idx + `> .
+			<_new_:t` + idx + `> <tag.question> <_new_:qn> . `
 		}
 	}
 
@@ -78,7 +76,6 @@ func add(q Question) string {
 	m += `
 	  }
   }	`
-	fmt.Println(m)
 	return m
 }
 
@@ -95,7 +92,6 @@ func Add(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	x.Debug(ques)
 
 	m := add(ques)
 	res := dgraph.SendMutation(m)
@@ -245,7 +241,6 @@ func Get(w http.ResponseWriter, r *http.Request) {
 }
 
 // update question
-
 func edit(q Question) string {
 	m := `
     mutation {
