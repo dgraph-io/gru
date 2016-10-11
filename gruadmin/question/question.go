@@ -17,6 +17,7 @@ import (
 
 type Question struct {
 	Uid      string `json:"_uid_"`
+	Name     string
 	Text     string
 	Positive float64
 	Negative float64
@@ -35,6 +36,7 @@ func add(q Question) string {
 	m := `mutation {
 		set {
 		  <rootQuestion> <question> <_new_:qn> .
+		  <_new_:qn> <name> "` + q.Name + `" .
 		  <_new_:qn> <text> "` + q.Text + `" .
 		  <_new_:qn> <positive> "` + strconv.FormatFloat(q.Positive, 'g', -1, 64) + `" .
 		  <_new_:qn> <negative> "` + strconv.FormatFloat(q.Negative, 'g', -1, 64) + `" .`
@@ -122,9 +124,9 @@ func Index(w http.ResponseWriter, r *http.Request) {
 	x.Debug(ques)
 	var question_mutation string
 	if ques.Id != "" {
-		question_mutation = "{debug(_xid_: rootQuestion) { question (after: " + ques.Id + ", first: 10) { _uid_ text negative positive question.tag { name } question.option { name } question.correct { name } }  } }"
+		question_mutation = "{debug(_xid_: rootQuestion) { question (after: " + ques.Id + ", first: 10) { _uid_ name text negative positive question.tag { name } question.option { name } question.correct { name } }  } }"
 	} else {
-		question_mutation = "{debug(_xid_: rootQuestion) { question (first:10) { _uid_ text negative positive question.tag { name } question.option { name } question.correct { name } }  } }"
+		question_mutation = "{debug(_xid_: rootQuestion) { question (first:10) { _uid_ name text negative positive question.tag { name } question.option { name } question.correct { name } }  } }"
 	}
 	x.Debug(question_mutation)
 	w.Header().Set("Content-Type", "application/json")
@@ -214,6 +216,7 @@ func get(questionId string) string {
     {
         root(_uid_:` + questionId + `) {
 		  _uid_
+		  		name
           text
           positive
           negative
@@ -245,6 +248,7 @@ func edit(q Question) string {
 	m := `
     mutation {
       set {
+          <_uid_:` + q.Uid + `> <name> "` + q.Name + `" .
           <_uid_:` + q.Uid + `> <text> "` + q.Text + `" .
           <_uid_:` + q.Uid + `> <positive> "` + strconv.FormatFloat(q.Positive, 'g', -1, 64) + `" .
           <_uid_:` + q.Uid + `> <negative> "` + strconv.FormatFloat(q.Negative, 'g', -1, 64) + `" .`

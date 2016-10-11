@@ -155,6 +155,7 @@
 /*SLIDED - ACCORDION*/
 .slide-wrapper {
   border-radius: 10px;
+  margin-bottom: 10px;
 }
 .slide-content {
   display: none;

@@ -68,6 +68,9 @@
 
 		function validateInput(inputs) {
 			console.log(inputs)
+			if(!inputs.name) {
+				return "Please enter valid question name"
+			}
 			if(!inputs.text) {
 				return "Please enter valid question text"
 			}
@@ -155,6 +158,7 @@
 				})
 				return
 			}
+
 			// Hit the API
 			questionService.saveQuestion(JSON.stringify(addQueVm.newQuestion))
 			.then(function(data){

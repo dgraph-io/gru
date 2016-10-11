@@ -6,6 +6,14 @@
 		<form ng-submit="addQueVm.addQuestionForm()" class="question-form">
 			<div class="mdl-grid no-pad">
 				<div class="mdl-cell mdl-cell--12-col ml-0">
+				  <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label" ng-class="{'is-dirty': addQueVm.newQuestion.name}">
+				    <input class="mdl-textfield__input" type="text" name="name" id="question-name" ng-model="addQueVm.newQuestion.name">
+				    <label class="mdl-textfield__label" for="question-name">Question Name</label>
+				  </div>
+				</div>
+			</div>
+			<div class="mdl-grid no-pad">
+				<div class="mdl-cell mdl-cell--12-col ml-0">
 					<div class="mdl-tabs mdl-js-tabs mdl-js-ripple-effect">
 					  <div class="mdl-tabs__tab-bar">
 				      <a href="#question-panel" class="mdl-tabs__tab is-active">Question Text</a>

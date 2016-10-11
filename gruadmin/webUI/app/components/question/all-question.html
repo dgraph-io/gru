@@ -24,7 +24,7 @@
 		<div class="question slide-wrapper mdl-shadow--2dp" ng-repeat="question in mainVm.allQuestions | filter:searchQ">
 			<div class="mdl-grid slide-link question-item">
 				<div class="mdl-cell mdl-cell--10-col mdl-cell--middle mdl-cell--5-col-tablet">
-					<pre>{{mainVm.unescapeText(question.text)}}</pre>
+					<div>{{question.name}}</div>					
 				</div>
 				<div class="mdl-cell mdl-cell--2-col mdl-cell--3-col-tablet mv-0 text-right">
 					<a href="" class="question-action mr-10">
@@ -41,6 +41,9 @@
 			</div>
 			<div class="mdl-grid slide-content">
 				<div class="mdl-cell mdl-cell--12-col pb-20">
+					<div class="mdl-cell mdl-cell--12-col pb-20">
+						<pre>{{mainVm.unescapeText(question.text)}}</pre>
+					</div>
 					<div class="mdl-grid no-pad">
 						<div class="mdl-cell mdl-cell--6-col">
 							<div class="mdl-grid no-pad">
@@ -59,7 +62,7 @@
 								<div class="mdl-cell mdl-cell--4-col">
 									<span ng-show="!editQuestion" class="bold"> Positive Score</span>
 								</div>
-								<div class="mdl-cell mdl-cell--4-col">
+								<div class="mdl-cell mdl-cell--8-col">
 									<span ng-show="!editQuestion">{{question.positive}}</span>
 								</div>
 							</div>
@@ -67,7 +70,7 @@
 								<div class="mdl-cell mdl-cell--4-col">
 									<span ng-show="!editQuestion" class="bold">Negative Score</span>
 								</div>
-								<div class="mdl-cell mdl-cell--4-col">
+								<div class="mdl-cell mdl-cell--8-col">
 									{{question.negative}}
 								</div>
 							</div>
@@ -75,7 +78,7 @@
 								<div class="mdl-cell mdl-cell--4-col">
 									<span ng-show="!editQuestion" class="bold">Tags</span>
 								</div>
-								<div class="mdl-cell mdl-cell--4-col">
+								<div class="mdl-cell mdl-cell--8-col">
 									<span ng-repeat="tags in question['question.tag'] track by $index">
 										<span class="mdl-chip">
 									    <span class="mdl-chip__text">{{tags.name}}</span>
