@@ -21,19 +21,19 @@
 				</div>
 			</div>
 		</div>
-		<div class="question slide-wrapper" ng-repeat="question in mainVm.allQuestions | filter:searchQ">
+		<div class="question slide-wrapper mdl-shadow--2dp" ng-repeat="question in mainVm.allQuestions | filter:searchQ">
 			<div class="mdl-grid slide-link question-item">
 				<div class="mdl-cell mdl-cell--10-col mdl-cell--middle mdl-cell--5-col-tablet">
 					<pre>{{mainVm.unescapeText(question.text)}}</pre>
 				</div>
 				<div class="mdl-cell mdl-cell--2-col mdl-cell--3-col-tablet mv-0 text-right">
 					<a href="" class="question-action mr-10">
-						<span class="mdl-chip danger-chip">
+						<span class="mdl-chip white-chip">
 						  <span class="mdl-chip__text">VIEW</span>
 						</span>
 					</a>
 					<a ui-sref="question.edit({quesID: question._uid_})" class="question-action mr-10">
-						<span class="mdl-chip danger-chip">
+						<span class="mdl-chip white-chip">
 						  <span class="mdl-chip__text">EDIT</span>
 						</span>
 					</a>

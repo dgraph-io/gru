@@ -208,7 +208,7 @@
 			allQVm.showLazyLoader = true;
 			questionService.getAllQuestions(data, hideLoader).then(function(data){
 				var data = JSON.parse(data);
-				if(data.code == "ErrorInvalidRequest") {
+				if(data.code == "ErrorInvalidRequest" || !data.debug[0].question) {
 					allQVm.noItemFound = true;
 					allQVm.showLazyLoader = false;
 					return

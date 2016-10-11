@@ -12,13 +12,30 @@
 			</div>
 			<div class="mdl-grid no-pad">
 				<div class="mdl-cell mdl-cell--12-col">
-				  <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label" ng-class="{'is-dirty': quizVm.newQuiz.duration}">
+				  <!-- <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label" ng-class="{'is-dirty': quizVm.newQuiz.duration}">
 				    <input class="mdl-textfield__input" type="text" name="text" id="quiz-duration" ng-model="quizVm.newQuiz.duration">
 				    <label class="mdl-textfield__label" for="quiz-duration">Duration</label>
-				  </div>
+				  </div> -->
+				  <div class="duration-inputs">
+					  <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label" ng-class="{'is-dirty': quizVm.newQuiz.hours}">
+					    <input class="mdl-textfield__input" type="number" pattern="-?[0-9]*(\.[0-9]+)?" ng-model="quizVm.newQuiz.hours" id="hour" min="0" max="24">
+					    <label class="mdl-textfield__label" for="hour">Hour</label>
+					    <span class="mdl-textfield__error">Not Valid</span>
+					  </div>
+					  <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label" ng-class="{'is-dirty': quizVm.newQuiz.minutes}">
+					    <input class="mdl-textfield__input" type="number" pattern="-?[0-9]*(\.[0-9]+)?" ng-model="quizVm.newQuiz.minutes" id="minutes" min="1" max="60">
+					    <label class="mdl-textfield__label" for="minutes">Minute</label>
+					    <span class="mdl-textfield__error">Not Valid</span>
+					  </div>
+						<div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label" ng-class="{'is-dirty': quizVm.newQuiz.seconds}">
+					    <input class="mdl-textfield__input" type="number" pattern="-?[0-9]*(\.[0-9]+)?" ng-model="quizVm.newQuiz.seconds" id="seconds" min="0" max="60">
+					    <label class="mdl-textfield__label" for="seconds">Second</label>
+					    <span class="mdl-textfield__error">Not Valid</span>
+					  </div>
+					</div>
 				</div>
 			</div>
-			<div class="mdl-grid no-pad">
+			<!-- <div class="mdl-grid no-pad">
 				<div class="mdl-cell mdl-cell--6-col">
 					<div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label" ng-class="{'is-dirty': quizVm.newQuiz.start_date}">
 				    <input class="mdl-textfield__input" type="text" name="start_date" id="start-date" ng-model="quizVm.newQuiz.start_date" step="0.1">
@@ -32,7 +49,7 @@
 				  </div>
 				</div>
 			</div>
-
+ -->
 			<div class="mt-20" ng-if="quizVm.newQuiz['quiz.question']">
 				<label class="bold">Added Questions</label>
 				<div ng-repeat="(key, question) in quizVm.newQuiz['quiz.question']" ng-if="question.text">

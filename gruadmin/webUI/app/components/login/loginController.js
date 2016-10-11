@@ -3,6 +3,7 @@
 	function loginController($scope, $rootScope, $stateParams, $state, MainService) {
 		loginVm = this;
 		loginVm.authData = {};
+		mainVm.pageName = "login-page"
 
 		// Function Declaration
 		loginVm.authenticate = authenticate;

@@ -27,6 +27,7 @@
 
     var  candidateIndexTemplate = 'app/components/candidate/index.html';
     var  candidateLandingTemplate = 'app/components/candidate/views/landing.html';
+    var  candidateQuizTemplate = 'app/components/candidate/views/quiz.html';
 
     // CSS for View/Directives
     var select2CSS = "assets/lib/css/select2.min.css";
@@ -143,6 +144,11 @@
             url: '/home',
             parent: 'candidate',
             templateUrl: candidateLandingTemplate,
+          })
+          .state('candidate.quiz', {
+            url: '/quiz',
+            parent: 'candidate',
+            templateUrl: candidateQuizTemplate,
           })
 
     }

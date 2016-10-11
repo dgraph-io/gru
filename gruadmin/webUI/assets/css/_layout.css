@@ -20,6 +20,7 @@
 /* Padding */ 
 
 .pt-0 , .pv-0  {padding-top: 0;}
+.pt-5 , .pv-5 {padding-top: 5px;}
 .pt-10, .pv-10 {padding-top: 10px;}
 .pt-20, .pv-20 {padding-top: 20px;}
 .pt-25, .pv-25 {padding-top: 25px;}
@@ -29,6 +30,7 @@
 .pt-60, .pv-60 {padding-top: 60px;}
 
 .pb-0 , .pv-0  {padding-bottom: 0;}
+.pb-5 , .pv-5  {padding-bottom: 5px;}
 .pb-10, .pv-10 {padding-bottom: 10px;}
 .pb-20, .pv-20 {padding-bottom: 20px;}
 .pb-25, .pv-25 {padding-bottom: 25px;}
