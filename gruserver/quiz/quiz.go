@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -21,7 +22,11 @@ type Answer struct {
 }
 
 type Question struct {
-	Id      string   `json:"_uid_"`
+	Id string `json:"_uid_"`
+
+	// cuid represents the uid of thequestion asked to the candidate, it is linked
+	// to the original question _uid_.
+	Cid     string   `json:"cuid"`
 	Text    string   `json:"text"`
 	Options []Answer `json:"question.option"`
 	// TODO - Remove the ,string after we incorporate Dgraph schema here.
@@ -102,7 +107,6 @@ func QuestionHandler(w http.ResponseWriter, r *http.Request) {
 	var userId string
 	var err error
 	if userId, err = validate(r); err != nil {
-		fmt.Println(err)
 		w.WriteHeader(http.StatusUnauthorized)
 		w.Write([]byte("Unauthorized"))
 		return
@@ -116,7 +120,7 @@ func QuestionHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	x.Debug(c)
-	// TODO - Send END qn if len qns == 0.
+	// TODO - Write to DB here also that quiz ended successfully.
 	if len(c.qns) == 0 {
 		q := Question{
 			Id:    "END",
@@ -124,7 +128,7 @@ func QuestionHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		b, err := json.Marshal(q)
 		if err != nil {
-			w.WriteHeader(http.StatusBadGateway)
+			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte("Unauthorized"))
 			return
 		}
@@ -133,11 +137,25 @@ func QuestionHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	qn := c.qns[0]
-	// TODO - Write to DB the qn asked.
+	m := `mutation {
+		set {
+			<_uid_:` + userId + `> <candidate.question> <_new_:qn> .
+      <_new_:qn> <question.uid> <_uid_:` + qn.Id + `> .
+      <_uid_:` + qn.Id + `> <question.candidate> <_uid_:` + userId + `> .
+      <_new_:qn> <question.asked> "` + time.Now().UTC().String() + `" .
+    }
+}`
+
+	res := dgraph.SendMutation(m)
+	if res.Code != "ErrorOk" {
+		// TODO - Send error.
+	}
 	c.qns = c.qns[1:]
 	c.lastQnId = qn.Id
 	UpdateMap(userId, c)
 	qn.Score = c.score
+	// TODO - Check value of qn in map shouldn't be zero.
+	qn.Cid = res.Uids["qn"]
 	b, err := json.Marshal(qn)
 	if err != nil {
 		w.WriteHeader(http.StatusUnauthorized)
@@ -237,32 +255,35 @@ func AnswerHandler(w http.ResponseWriter, r *http.Request) {
 	var userId string
 	var err error
 	if userId, err = validate(r); err != nil {
-		w.Write([]byte("Unauthorized"))
 		w.WriteHeader(http.StatusUnauthorized)
+		w.Write([]byte("Unauthorized"))
 		return
 	}
 
 	c, err := ReadMap(userId)
 	if err != nil {
-		w.Write([]byte("User not found."))
 		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("User not found."))
 		return
 	}
+
 	qid := r.PostFormValue("qid")
 	aid := r.PostFormValue("aid")
-	if qid != c.lastQnId {
+	cuid := r.PostFormValue("cuid")
+	if qid != c.lastQnId || cuid == "" {
 		// TODO - Return error
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	// TODO - Log response to DB.
+
 	answerIds := strings.Split(aid, ",")
 	if len(answerIds) == 0 {
 		// TODO - Return error
-		w.Write([]byte("Answer ids can't be empty"))
 		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("Answer ids can't be empty"))
 		return
 	}
+
 	m, err := qnMeta(qid)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -270,6 +291,17 @@ func AnswerHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	score := isCorrectAnswer(answerIds, m.correct, m.positive, m.negative)
 	c.score = score
+	mutation := `mutation {
+		set {
+			<_uid_:` + cuid + `> <candidate.answer> "` + aid + `" .
+      <_uid_:` + cuid + `> <candidate.score> "` + strconv.FormatFloat(c.score, 'g', -1, 64) + `" .
+      <_uid_:` + cuid + `> <question.answered> "` + time.Now().UTC().String() + `" .
+    }
+}`
+	res := dgraph.SendMutation(mutation)
+	if res.Code != "ErrorOk" {
+		// TODO - Send error.
+	}
 	UpdateMap(userId, c)
 }
 
