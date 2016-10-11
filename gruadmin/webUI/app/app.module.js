@@ -98,6 +98,7 @@ angular.module('GruiApp').constant('APP_REQUIRES', {
         'quizServices': ['app/components/quiz/quizServices.js'],
         'inviteController': ['app/components/invite/inviteController.js'],
         'inviteService': ['app/components/invite/inviteService.js'],
+        'quizLandingController': ['app/components/candidate/quizLandingController.js'],
         'candidateController': ['app/components/candidate/candidateController.js'],
         'candidateService': ['app/components/candidate/candidateService.js'],
         'angular-select': ['assets/lib/js/angular-select.min.js'],
@@ -193,7 +194,8 @@ angular.module('GruiApp').provider('RouteHelpers', ['APP_REQUIRES', function (ap
       //Must be use with ControllerAs syntax in view
       mainVm = this; // $Scope aliase
       mainVm.timerObj;
-      mainVm.base_url = "http://localhost:8082/admin";
+      mainVm.admin_url = "http://localhost:8082/admin";
+      mainVm.candidate_url = "http://localhost:8082";
 
       //General Methods
 
@@ -206,6 +208,7 @@ angular.module('GruiApp').provider('RouteHelpers', ['APP_REQUIRES', function (ap
 
       mainVm.isLoggedIn = isLoggedIn;
       mainVm.logout = logout;
+      mainVm.isValidCandidate = isValidCandidate;
 
       mainVm.getAllTags = getAllTags;
 
@@ -242,6 +245,13 @@ angular.module('GruiApp').provider('RouteHelpers', ['APP_REQUIRES', function (ap
         $state.transitionTo("login");
       }
 
+      function isValidCandidate() {
+        if(localStorage.getItem('ctoken')) {
+          return true;
+        }
+        return false
+      }
+
       function hasKey(obj, key){
         if(!obj) {
           return false;
@@ -266,7 +276,7 @@ angular.module('GruiApp').provider('RouteHelpers', ['APP_REQUIRES', function (ap
         console.log($http.defaults.headers.common['Authorization']);
         var req = {
           method: 'GET',
-          url: mainVm.base_url + '/get-all-tags',
+          url: mainVm.admin_url + '/get-all-tags',
         }
 
         $http(req)
@@ -299,17 +309,23 @@ angular.module('GruiApp').provider('RouteHelpers', ['APP_REQUIRES', function (ap
 
         var req = {
           method: 'POST',
-          url: mainVm.base_url + url,
+          url: mainVm.admin_url + url,
           data: data,
+        }
+        if(!mainVm.isLoggedIn()) {
+          req.url = mainVm.candidate_url + url;
         }
 
         if(url == "/login") {
-          var url = mainVm.base_url
-          req.url = url.replace("/admin", "/login")
           $http.defaults.headers.common['Authorization'] = 'Basic ' + btoa(data.user + ':' + data.password);
           delete req.data;
         } else {
-          setAuth('Bearer ' + localStorage.getItem('token'));
+          candidateToken = localStorage.getItem('candidate_token');
+          if(candidateToken) {
+            setAuth('Bearer ' + candidateToken);
+          } else {
+            setAuth('Bearer ' + localStorage.getItem('token'));
+          }
         }
 
         if(!hideLoader) {
@@ -334,7 +350,7 @@ angular.module('GruiApp').provider('RouteHelpers', ['APP_REQUIRES', function (ap
         setAuth('Bearer ' + localStorage.getItem('token'));
         var req = {
           method: 'GET',
-          url: mainVm.base_url + url,
+          url: mainVm.admin_url + url,
         }
         mainVm.showAjaxLoader = true;
         $http(req)
@@ -358,7 +374,7 @@ angular.module('GruiApp').provider('RouteHelpers', ['APP_REQUIRES', function (ap
         setAuth(auth_token);
         var req = {
           method: 'PUT',
-          url: mainVm.base_url + url,
+          url: mainVm.admin_url + url,
           data: data,
         }
         mainVm.showAjaxLoader = true;

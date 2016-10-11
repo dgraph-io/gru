@@ -4,6 +4,7 @@
 		inviteVm = this;
 
 		inviteVm.newInvite = {};
+		mainVm.pageName = "invite-page"
 
 		// FUNCTION DECLARATION
 		inviteVm.inviteCandidate = inviteCandidate;

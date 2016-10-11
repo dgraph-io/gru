@@ -1,0 +1,13 @@
+<div class="mdl-grid ng-cloak text-center" ng-controller="quizLandingController as qlVm">
+	<div class="mdl-cell mdl-cell--12-col" ng-if="!qlVm.invalidUser">
+		<!-- MDL Spinner Component with Single Color -->
+		<h4 class="text-center mb-30">Welcome for the quiz</h4>
+		<div class="mdl-spinner mdl-js-spinner is-active"></div>
+		<div class="mt-10">
+			AUTHENTICATING
+		</div>
+	</div>
+	<div class="mdl-cell mdl-cell--12-col text-red" ng-if="qlVm.invalidUser">
+		<div data-ng-include data-src="'app/shared/_not_authorized.html'"></div>
+	</div>
+</div>

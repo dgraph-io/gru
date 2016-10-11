@@ -29,6 +29,8 @@
     var  candidateLandingTemplate = 'app/components/candidate/views/landing.html';
     var  candidateQuizTemplate = 'app/components/candidate/views/quiz.html';
 
+    var  quizLandingTemplate = 'app/components/candidate/views/quiz-landing.html';
+
     // CSS for View/Directives
     var select2CSS = "assets/lib/css/select2.min.css";
     var angularSelectCSS = "assets/lib/css/angular-select.min.css";
@@ -43,7 +45,7 @@
       // $locationProvider.hashPrefix('!');
 
       // default route
-      $urlRouterProvider.otherwise('/');
+      $urlRouterProvider.otherwise('/login');
 
       // --------------Application Routes---------------
       $stateProvider
@@ -134,11 +136,16 @@
             templateUrl: editInviteTemplate,
             authenticate: true,
           })
+        .state('quiz-landing', {
+          url: '/quiz/:quiz_token',
+          templateUrl: quizLandingTemplate,
+          resolve: helper.resolveFor('quizLandingController'),
+        })
         .state('candidate', {
           url: '/candidate',
           abstract: true,
           templateUrl: candidateIndexTemplate,
-          resolve: helper.resolveFor('candidateController'),
+          resolve: helper.resolveFor('candidateController', 'candidateService'),
         })
           .state('candidate.landing', {
             url: '/home',
@@ -146,7 +153,7 @@
             templateUrl: candidateLandingTemplate,
           })
           .state('candidate.quiz', {
-            url: '/quiz',
+            url: '/quiz/:quiz_token',
             parent: 'candidate',
             templateUrl: candidateQuizTemplate,
           })

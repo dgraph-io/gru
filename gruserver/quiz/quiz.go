@@ -106,6 +106,9 @@ func validate(r *http.Request) (string, error) {
 
 func QuestionHandler(w http.ResponseWriter, r *http.Request) {
 	server.AddCorsHeaders(w)
+	if r.Method == "OPTIONS" {
+		return
+	}
 
 	var userId string
 	var err error
@@ -261,6 +264,9 @@ func qnMeta(qid string) (questionCorrectMeta, error) {
 
 func AnswerHandler(w http.ResponseWriter, r *http.Request) {
 	server.AddCorsHeaders(w)
+	if r.Method == "OPTIONS" {
+		return
+	}
 
 	var userId string
 	var err error

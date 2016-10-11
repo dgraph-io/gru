@@ -1,0 +1,101 @@
+<div class="main-content ng-cloak" ng-controller="candidateQuizController as cqVm">	
+	<div class="" ng-if="!cqVm.quizEnded">
+		<div class="mdl-grid">
+			<div class="mdl-cell mdl-cell--9-col">
+				<h5>Quiz</h5>
+			</div>
+			<div class="mdl-cell mdl-cell--3-col mdl-cell--middle">
+				Time: <span id="time"></span>
+			</div>
+		</div>
+
+		<div class="mdl-grid" ng-if="cqVm.question.text">
+			<div class="mdl-cell mdl-cell--9-col">
+				<div class="question">
+					<span ng-if="cqVm.question.multiple == 'false'">(Multiple Choice)</span>
+					<pre>{{mainVm.unescapeText(cqVm.question.text)}}</pre>
+				</div>
+
+				<div class="options">
+					<div ng-repeat="option in cqVm.question['question.option']" ng-if="cqVm.question.multiple == 'false'">
+						<label class="mdl-radio mdl-js-radio mdl-js-ripple-effect mt-10" for="option{{$index}}">
+						  <input type="radio" id="option{{$index}}" class="mdl-radio__button" name="answer" value="{{option._uid_}}" ng-model="cqVm.answer">
+						  <span class="mdl-radio__label">{{option.name}}</span>
+						</label>
+					</div>
+					<div ng-repeat="option in cqVm.question['question.option']" ng-if="cqVm.question.multiple == 'true'">
+						<label class="mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect mt-10" for="option{{$index}}">
+						  <input type="checkbox" name="answer" id="option{{$index}}" class="mdl-checkbox__input" ng-model="cqVm.answer[option._uid_]">
+						  <span class="mdl-checkbox__label">{{option.name}}</span>
+						</label>
+					</div>
+				</div>
+
+				<div class="submission mt-30">
+					<button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect btn-lg" ng-click="cqVm.submitAnswer()">
+					  Submit
+					</button>
+					<a href="" class="ml-20" ng-click="cqVm.submitAnswer(true)">SKIP</a>
+				</div>
+			</div>
+
+			<div class="mdl-cell mdl-cell--3-col mdl-shadow--2dp">
+				<div class="alert alert-success">
+					QUESTION STATS
+				</div>
+
+				<div class="pl-10">
+					<div class="mdl-grid pad-0">
+						<div class="mdl-cell mdl-cell--6-col mdl-cell--middle">
+							<label class="text-green">POSITIVE </label> 
+						</div>
+						<div class="mdl-cell mdl-cell--6-col">
+							<button class="mdl-button mdl-js-button mdl-button--fab mdl-button--mini-fab btn-success">
+							  +{{cqVm.question.positive}}
+							</button>
+						</div>
+					</div>
+					<div class="mdl-grid pad-0">
+						<div class="mdl-cell mdl-cell--6-col mdl-cell--middle">
+							<label class="text-orange">NEGATIVE </label>
+						</div>
+						<div class="mdl-cell mdl-cell--6-col">
+							<button class="mdl-button mdl-js-button mdl-button--fab mdl-button--mini-fab bg-red">
+							  -{{cqVm.question.negative}}
+							</button>
+						</div>
+					</div>
+					<div class="mdl-grid pad-0">
+						<div class="mdl-cell mdl-cell--6-col mdl-cell--middle">
+							<label>SCORE </label>
+						</div>
+						<div class="mdl-cell mdl-cell--6-col">
+							<button class="mdl-button mdl-js-button mdl-button--fab mdl-button--mini-fab btn-black">
+							  <span ng-if="cqVm.question.score">{{cqVm.total_score}}</span>
+							  <span ng-if="!cqVm.question.score">0</span>
+							</button>
+						</div>
+					</div>
+				</div>
+			</div>
+
+		</div>
+	</div>
+
+	<div class="text-center" ng-if="cqVm.quizEnded">
+		
+		<div class="text-green mt-30">
+			<i class="material-icons mdi-lg">check_circle</i>
+		</div>
+
+		<h5> Hi {{quizVm.userId}}, your demo test for GRU ends here! <br><br>
+			<span>Your Final Score is: {{cqVm.total_score}}</span>
+		</h5>
+		<div class="text-red">
+			<!-- <a ui-sref="root">
+				Go back to <i class="material-icons vbottom">home</i>
+			</a> -->
+		</div>
+	</div>
+</div>
+

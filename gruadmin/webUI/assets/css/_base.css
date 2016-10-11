@@ -7,6 +7,11 @@ body, html {
 }
 a {
 	text-decoration: none;
+	color: #F44336;
+}
+
+a:hover {
+    color: #E91E63;
 }
 
 table {
