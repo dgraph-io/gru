@@ -55,7 +55,7 @@
 			});
 			requestData.questions = questions;
 
-			requestData.duration = (requestData.hours || 0) + "-" + (requestData.minutes || 0) + "-" + (requestData.seconds || 0);
+			requestData.duration = (requestData.hours || 0) + "h" + (requestData.minutes || 0) + "m" + (requestData.seconds || 0) + "s";
 			quizService.saveQuiz(requestData)
 			.then(function(data){
 				quizVm.newQuiz = {}
@@ -154,8 +154,7 @@
 				}
 			}
 
-			quizVm.newQuiz.duration = (quizVm.newQuiz.hours || 0) + "-" + (quizVm.newQuiz.minutes || 0) + "-" + (quizVm.newQuiz.seconds || 0);
-			console.log(quizVm.newQuiz);
+			quizVm.newQuiz.duration = (quizVm.newQuiz.hours || 0) + "h" + (quizVm.newQuiz.minutes || 0) + "m" + (quizVm.newQuiz.seconds || 0) + "s";
 
 			// API CALL
 			quizService.editQuiz(quizVm.newQuiz)
