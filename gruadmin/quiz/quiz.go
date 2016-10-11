@@ -51,8 +51,8 @@ func Add(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Fatalf("Problem in marshalling to JSON: %+v\n", stats)
 		}
-		w.Header().Set("Content-Type", "application/json")
 		w.Write(res)
+		return
 	}
 	//question_ids = quiz.Questions
 	quiz_mutation := "mutation { set { <rootQuiz> <quiz> <_new_:quiz> . \n	<_new_:quiz> <name> \"" + quiz.Name +
