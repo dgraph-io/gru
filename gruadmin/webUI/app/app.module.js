@@ -34,11 +34,11 @@ angular.module('GruiApp').run(function($rootScope, $location, $timeout, $state) 
     });
 
     var stateChangeStartHandler = function(e, toState, toParams, fromState, fromParams) {
-      var server_name = location.host + "/#/";
+      console.log(toState);
       if(toState.authenticate || toState.name == "login") {
-        mainVm.base_url = server_name + "admin";
+        mainVm.base_url = "http://localhost:8082/admin";
       } else {
-        mainVm.base_url = server_name;
+        mainVm.base_url = "http://localhost:8082";
       }
       if(toState.authenticate && !mainVm.isLoggedIn()) {
         $state.transitionTo("login");
