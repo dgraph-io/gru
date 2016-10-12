@@ -38,6 +38,7 @@ import (
 )
 
 var (
+	// TODO - Later just have one IP address with port info.
 	port     = flag.String("port", ":8082", "Port on which server listens")
 	username = flag.String("user", "", "Username to login to admin panel")
 	password = flag.String("pass", "", "Username to login to admin panel")
@@ -81,7 +82,7 @@ func runHTTPServer(address string) {
 
 	router := mux.NewRouter()
 
-	router.HandleFunc("/login", login).Methods("POST", "OPTIONS")
+	router.HandleFunc("/admin/login", login).Methods("POST", "OPTIONS")
 	router.HandleFunc("/validate/{id}", candidate.Validate).Methods("POST", "OPTIONS")
 
 	quizRouter := mux.NewRouter().PathPrefix("/quiz").Subrouter().StrictSlash(true)

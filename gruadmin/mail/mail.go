@@ -11,6 +11,9 @@ import (
 
 var SENDGRID_API_KEY = flag.String("sendgrid", "", "Sendgrid API Key")
 
+// TODO - Later just have one IP address with port info.
+var ip = flag.String("ip", "http://localhost", "Public IP address of server")
+
 func Send(name, email, token string) {
 	if *SENDGRID_API_KEY == "" {
 		fmt.Println("localhost:8000/#/quiz/" + token)
@@ -19,12 +22,24 @@ func Send(name, email, token string) {
 	from := mail.NewEmail("Dgraph", "join@dgraph.io")
 	subject := "Invitation for screening quiz from Dgraph"
 	to := mail.NewEmail(name, email)
-	// TODO - Improve formatting of the mail, make the link an actual link.
-	content := mail.NewContent("text/plain", `
-    You have been invited to take the screening quiz by Dgraph. You can take the quiz anytime by
-	visiting localhost:8000/#/quiz/`+token+`.`)
+	// TODO - Move this to a template.
+	url := fmt.Sprintf("%v:8000/#/quiz/%v", *ip, token)
+	body := `
+<html>
+<head>
+    <title></title>
+</head>
+<body>
+Hello ` + name + `,
+<br /><br/>
+You have been invited to take the screening quiz by Dgraph. You can take the quiz anytime by
+visiting <a href="` + url + `" target="_blank">` + url + `</a>.
+<br /><br/>
+</body>
+</html>
+`
+	content := mail.NewContent("text/html", body)
 	m := mail.NewV3MailInit(from, subject, to, content)
-
 	request := sendgrid.GetRequest(*SENDGRID_API_KEY, "/v3/mail/send", "https://api.sendgrid.com")
 	request.Method = "POST"
 	request.Body = mail.GetRequestBody(m)
