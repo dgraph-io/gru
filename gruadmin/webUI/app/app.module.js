@@ -29,11 +29,16 @@ angular.module('GruiApp').run(function($rootScope, $location, $timeout, $state) 
       isAuthenticated = window.localStorage.getItem("username");
 
       if($rootScope.is_direct_url) {
-          console.log("Hola!");
+          // console.log("Hola!");
       }
     });
 
     var stateChangeStartHandler = function(e, toState, toParams, fromState, fromParams) {
+      if(toState.authenticate || toState.name == "login") {
+        mainVm.base_url = "http://localhost:8082/admin";
+      } else {
+        mainVm.base_url = "http://localhost:8082";
+      }
       if(toState.authenticate && !mainVm.isLoggedIn()) {
         $state.transitionTo("login");
         e.preventDefault();
@@ -185,6 +190,7 @@ angular.module('GruiApp').provider('RouteHelpers', ['APP_REQUIRES', function (ap
     var MainServiceDependency = [
         "$http",
         "$q",
+        "$state",
         MainService,
     ];
     angular.module('GruiApp').service("MainService", MainServiceDependency);
@@ -281,7 +287,6 @@ angular.module('GruiApp').provider('RouteHelpers', ['APP_REQUIRES', function (ap
 
         $http.defaults.headers.common['Authorization'] = 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.e30.eb0qBs-z-zbhRorx4PZxakiDfSC_HyY741ZES0hOVdU';
 
-        console.log($http.defaults.headers.common['Authorization']);
         var req = {
           method: 'GET',
           url: mainVm.admin_url + '/get-all-tags',
@@ -306,7 +311,7 @@ angular.module('GruiApp').provider('RouteHelpers', ['APP_REQUIRES', function (ap
     }
 
     // MAIN Service
-    function MainService($http, $q){
+    function MainService($http, $q, $state){
       var services = {}; //Object to return
       services.post = post;
       services.get = get;
@@ -317,21 +322,21 @@ angular.module('GruiApp').provider('RouteHelpers', ['APP_REQUIRES', function (ap
 
         var req = {
           method: 'POST',
-          url: mainVm.admin_url + url,
+          url: mainVm.base_url + url,
           data: data,
-        }
-        if(!mainVm.isLoggedIn()) {
-          req.url = mainVm.candidate_url + url;
         }
 
         if(url == "/login") {
           $http.defaults.headers.common['Authorization'] = 'Basic ' + btoa(data.user + ':' + data.password);
           delete req.data;
         } else {
+          // req.url = mainVm.candidate_url + url;
           candidateToken = localStorage.getItem('candidate_token');
+
           if(candidateToken) {
             setAuth('Bearer ' + candidateToken);
           } else {
+            // req.url = mainVm.admin_url + url;
             setAuth('Bearer ' + localStorage.getItem('token'));
           }
         }
@@ -378,7 +383,7 @@ angular.module('GruiApp').provider('RouteHelpers', ['APP_REQUIRES', function (ap
       function put(url, data) {
         var deferred = $q.defer();
         var auth_token = 'Bearer ' + localStorage.getItem('token')
-        console.log(auth_token)
+        
         setAuth(auth_token);
         var req = {
           method: 'PUT',
