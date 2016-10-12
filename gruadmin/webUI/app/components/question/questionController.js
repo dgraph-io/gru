@@ -35,6 +35,7 @@
 		questionVm.initCodeMirror = initCodeMirror;
 		questionVm.isCorrect = isCorrect;
 		questionVm.getAllTags = getAllTags;
+		questionVm.getUniqueTags = getUniqueTags;
 		questionVm.onTagSelect = onTagSelect;
 		questionVm.markDownFormat = markDownFormat;
 		questionVm.getAllTags();
@@ -78,14 +79,22 @@
 				return []
 			}
 			var allUniqueTags = [];
-			for(var i=0; i< allTags.length; i++) { 
+			for(var i=0; i< allTags.length; i++) {
 				var tagsArr = allTags[i]["question.tag"];
-				if(tagsArr) { 
+				if(tagsArr) {
 					for (var j =0; j< tagsArr.length; j++) {
-						allUniqueTags.push(tagsArr[j]);
-					} 
-				} 
+						isUnique = mainVm.indexOfObject(allUniqueTags, tagsArr[j]) == -1;
+						if(isUnique) {
+							allUniqueTags.push(tagsArr[j]);
+						}
+					}
+				}
 			}
+			// var allUniqueTags = {};
+			// var tagsLength = allTags.length;
+			// for(var i = 0; i < tagsLength; i ++ ) { 
+			// 	allUniqueTags[allTags[i]._uid_] = allTags[i];
+			// }
 			return allUniqueTags;
 		}
 

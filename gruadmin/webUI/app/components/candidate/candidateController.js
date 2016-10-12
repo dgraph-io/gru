@@ -51,7 +51,6 @@
 			candidateService.getQuestion()
 			.then(function(data) {
 				cqVm.question = data;
-				cqVm.total_score = cqVm.total_score + (data.score);
 				if(data._uid_ == "END") {
 					cqVm.quizEnded = true;
 					cqVm.total_score = data.score;
