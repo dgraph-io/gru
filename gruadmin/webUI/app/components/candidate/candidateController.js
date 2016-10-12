@@ -87,23 +87,22 @@
 			if(!skip) {
 				// If multiple Answer
 				if(mainVm.isObject(cqVm.answer)) {
-					requestData.aid = []
+					requestData.aid = ""
 					for (var key in cqVm.answer) {
 					  if (cqVm.answer.hasOwnProperty(key)) {
-					    requestData.aid.push(key);
+					    requestData.aid += key + ",";
 					  }
 					}
+					requestData.aid = requestData.aid.slice(0, -1);
 				} else {
 					requestData.aid = cqVm.answer;
 				}
 			} else {
 				requestData.aid = "skip";
 			}
-
 			candidateService.submitAnswer(requestData)
 			.then(function(data){
 				cqVm.answer = "";
-				console.log(data);	
 				if(data.status == 200) {
 					cqVm.getQuestion();
 				}
