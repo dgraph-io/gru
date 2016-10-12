@@ -9,6 +9,13 @@
 			"revisionTime": "2016-04-21T21:57:38Z"
 		},
 		{
+			"checksumSHA1": "5rPfda8jFccr3A6heL+JAmi9K9g=",
+			"origin": "github.com/stretchr/testify/vendor/github.com/davecgh/go-spew/spew",
+			"path": "github.com/davecgh/go-spew/spew",
+			"revision": "6fe211e493929a8aac0469b93f28b1d0688a9a3a",
+			"revisionTime": "2016-03-05T16:54:46Z"
+		},
+		{
 			"checksumSHA1": "EsJksAKyY2+r3mY+rdNocSCe1wg=",
 			"path": "github.com/dgrijalva/jwt-go",
 			"revision": "24c63f56522a87ec5339cc3567883f1039378fdb",
@@ -25,6 +32,43 @@
 			"path": "github.com/gorilla/mux",
 			"revision": "757bef944d0f21880861c2dd9c871ca543023cba",
 			"revisionTime": "2016-09-20T23:08:13Z"
+		},
+		{
+			"checksumSHA1": "zKKp5SZ3d3ycKe4EKMNT0BqAWBw=",
+			"origin": "github.com/stretchr/testify/vendor/github.com/pmezard/go-difflib/difflib",
+			"path": "github.com/pmezard/go-difflib/difflib",
+			"revision": "6fe211e493929a8aac0469b93f28b1d0688a9a3a",
+			"revisionTime": "2016-03-05T16:54:46Z"
+		},
+		{
+			"checksumSHA1": "eRKkbaq9IvZqS2lQW8RLqZ9IP7s=",
+			"path": "github.com/sendgrid/rest",
+			"revision": "d37acbf70185e33da36a233f4df95848b052427c",
+			"revisionTime": "2016-07-28T16:05:22Z"
+		},
+		{
+			"checksumSHA1": "FCnYbQ+GmjnpVxq2+swzeZ+xBiE=",
+			"path": "github.com/sendgrid/sendgrid-go",
+			"revision": "e0b3a5eae9f862e5f6d9961bf2d3e494d982c39e",
+			"revisionTime": "2016-09-23T06:24:49Z"
+		},
+		{
+			"checksumSHA1": "VGZ56xIw8bTXnSJLrr/qzLzdVho=",
+			"path": "github.com/sendgrid/sendgrid-go/helpers/mail",
+			"revision": "e0b3a5eae9f862e5f6d9961bf2d3e494d982c39e",
+			"revisionTime": "2016-09-23T06:24:49Z"
+		},
+		{
+			"checksumSHA1": "Bn333k9lTndxU3D6n/G5c+GMcYY=",
+			"path": "github.com/stretchr/testify/assert",
+			"revision": "6fe211e493929a8aac0469b93f28b1d0688a9a3a",
+			"revisionTime": "2016-03-05T16:54:46Z"
+		},
+		{
+			"checksumSHA1": "P9FJpir2c4G5PA46qEkaWy3l60U=",
+			"path": "github.com/stretchr/testify/require",
+			"revision": "6fe211e493929a8aac0469b93f28b1d0688a9a3a",
+			"revisionTime": "2016-03-05T16:54:46Z"
 		},
 		{
 			"checksumSHA1": "hMj8vjbjGCAE368E3xAjZGFON+E=",

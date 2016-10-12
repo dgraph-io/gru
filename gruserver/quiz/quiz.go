@@ -132,12 +132,22 @@ func QuestionHandler(w http.ResponseWriter, r *http.Request) {
 		c.quizStart = time.Now().UTC()
 		// TODO - Write to DB, so that we can recover this after crash.
 	}
-	x.Debug(c)
 	// TODO - Write to DB here also that quiz ended successfully.
 	if len(c.qns) == 0 {
 		q := Question{
 			Id:    "END",
 			Score: c.score,
+		}
+		m := `mutation {
+		  set {
+			  <_uid_:` + userId + `> <complete> "true" .
+			}
+		}
+		`
+		res := dgraph.SendMutation(m)
+		if res.Code != "ErrorOk" {
+			fmt.Println(res.Message)
+			// TODO - Send error.
 		}
 		b, err := json.Marshal(q)
 		if err != nil {
@@ -161,6 +171,7 @@ func QuestionHandler(w http.ResponseWriter, r *http.Request) {
 
 	res := dgraph.SendMutation(m)
 	if res.Code != "ErrorOk" {
+		fmt.Println(res.Message)
 		// TODO - Send error.
 	}
 	c.qns = c.qns[1:]
@@ -306,19 +317,20 @@ func AnswerHandler(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(err.Error()))
 	}
 	score := isCorrectAnswer(answerIds, m.correct, m.positive, m.negative)
-	c.score = score
+	c.score = c.score + score
+	UpdateMap(userId, c)
 	mutation := `mutation {
 		set {
 			<_uid_:` + cuid + `> <candidate.answer> "` + aid + `" .
-      <_uid_:` + cuid + `> <candidate.score> "` + strconv.FormatFloat(c.score, 'g', -1, 64) + `" .
+      <_uid_:` + cuid + `> <candidate.score> "` + strconv.FormatFloat(score, 'g', -1, 64) + `" .
       <_uid_:` + cuid + `> <question.answered> "` + time.Now().UTC().String() + `" .
     }
 }`
 	res := dgraph.SendMutation(mutation)
 	if res.Code != "ErrorOk" {
+		fmt.Println(res.Message)
 		// TODO - Send error.
 	}
-	UpdateMap(userId, c)
 }
 
 type pingRes struct {

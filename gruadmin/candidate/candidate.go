@@ -23,6 +23,7 @@ type Candidate struct {
 	Email     string `json:"email"`
 	Token     string `json:"token"`
 	Validity  string `json:"validity"`
+	Complete  bool   `json:"complete,string"`
 	QuizId    string `json:"quiz_id"`
 	OldQuizId string `json:"old_quiz_id"`
 	Quiz      []quiz `json:"candidate.quiz"`
@@ -65,7 +66,6 @@ func Index(w http.ResponseWriter, r *http.Request) {
 		// TODO - Return error.
 	}
 	q := index(quizId)
-	x.Debug(q)
 	res := dgraph.Query(q)
 	w.Write(res)
 }
@@ -81,7 +81,8 @@ func add(c Candidate) string {
           <_new_:c> <name> "` + c.Name + `" .
           <_new_:c> <token> "` + c.Token + `" .
           <_new_:c> <validity> "` + c.Validity + `" .
-      }
+          <_new_:c> <complete> "false" .
+	  }
     }`
 }
 
@@ -95,9 +96,7 @@ func Add(w http.ResponseWriter, r *http.Request) {
 	server.ReadBody(r, &c)
 	// TODO - Validate candidate fields shouldn't be empty.
 	c.Token = randStringBytes(33)
-	x.Debug(c)
 	m := add(c)
-	x.Debug(m)
 	res := dgraph.SendMutation(m)
 	sr := server.Response{}
 	if res.Code != "ErrorOk" {
@@ -110,7 +109,6 @@ func Add(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		log.Fatal("Uid not returned for newly created candidate by Dgraph.")
 	}
-	x.Debug(uid)
 	// Token sent in mail is uid + the random string.
 	// TODO - Move this to a background goroutine.
 	go mail.Send(c.Name, c.Email, uid+c.Token)
@@ -154,9 +152,7 @@ func Edit(w http.ResponseWriter, r *http.Request) {
 	server.ReadBody(r, &c)
 	c.Uid = cid
 	// TODO - Validate candidate fields shouldn't be empty.
-	x.Debug(c)
 	m := edit(c)
-	x.Debug(m)
 	res := dgraph.SendMutation(m)
 	sr := server.Response{}
 	if res.Message == "ErrorOk" {
@@ -174,7 +170,8 @@ func get(candidateId string) string {
           email
 		  token
           validity
-          candidate.quiz {
+          complete
+		  candidate.quiz {
 		    _uid_
 		    duration
 		  }
@@ -193,7 +190,6 @@ func Get(w http.ResponseWriter, r *http.Request) {
 	if cid == "" {
 	}
 	q := get(cid)
-	x.Debug(q)
 	res := dgraph.Query(q)
 	w.Write(res)
 }
@@ -225,7 +221,6 @@ func quizQns(quizId string) []quizp.Question {
 		}
 	}`
 	res := dgraph.Query(q)
-	x.Debug(string(res))
 	var resp qnIdsResp
 	json.Unmarshal(res, &resp)
 	if len(resp.Quizzes) != 1 {
@@ -284,6 +279,9 @@ func Validate(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
+	if resp.Cand[0].Complete {
+		http.Error(w, "Quiz already completed", http.StatusUnauthorized)
+	}
 	quiz := resp.Cand[0].Quiz[0]
 	// Get quiz questions for the quiz id.
 	qns := quizQns(quiz.Id)
@@ -303,7 +301,6 @@ func Validate(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	x.Debug(tokenString)
 
 	// TODO - Incase candidate already has a active session return error after
 	// implementing Ping.
