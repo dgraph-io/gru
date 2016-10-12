@@ -230,6 +230,7 @@
 
 		// INITITIALIZERS
 		allQVm.getAllQuestions();
+		questionVm.getAllTags();
 
 		// FUNCTION DEFINITIONS
 		function getAllQuestions(questionID) {
