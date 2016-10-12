@@ -34,10 +34,11 @@ angular.module('GruiApp').run(function($rootScope, $location, $timeout, $state) 
     });
 
     var stateChangeStartHandler = function(e, toState, toParams, fromState, fromParams) {
+      var server_name = location.host + "/#/";
       if(toState.authenticate || toState.name == "login") {
-        mainVm.base_url = "http://localhost:8082/admin";
+        mainVm.base_url = server_name + "admin";
       } else {
-        mainVm.base_url = "http://localhost:8082";
+        mainVm.base_url = server_name;
       }
       if(toState.authenticate && !mainVm.isLoggedIn()) {
         $state.transitionTo("login");
@@ -383,7 +384,7 @@ angular.module('GruiApp').provider('RouteHelpers', ['APP_REQUIRES', function (ap
       function put(url, data) {
         var deferred = $q.defer();
         var auth_token = 'Bearer ' + localStorage.getItem('token')
-        
+
         setAuth(auth_token);
         var req = {
           method: 'PUT',
