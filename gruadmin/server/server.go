@@ -8,7 +8,10 @@ import (
 
 type Response struct {
 	Success bool
+	// Message to display to the user.
 	Message string
+	// Actual error.
+	Error string
 }
 
 func AddCorsHeaders(w http.ResponseWriter) {
@@ -28,6 +31,23 @@ func ReadBody(r *http.Request, s interface{}) {
 	if err != nil {
 		log.Fatal(err)
 	}
+}
+
+func MarshalResponse(r Response) []byte {
+	fallbackMsg := "Something went wrong"
+
+	if r.Message == "" {
+		r.Message = fallbackMsg
+	}
+	b, err := json.Marshal(r)
+	if err != nil {
+		b, _ = json.Marshal(Response{
+			Success: false,
+			Message: fallbackMsg,
+			Error:   err.Error(),
+		})
+	}
+	return b
 }
 
 func WriteBody(w http.ResponseWriter, res Response) {

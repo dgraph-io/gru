@@ -3,7 +3,6 @@ package dgraph
 import (
 	"encoding/json"
 	"flag"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -23,6 +22,31 @@ type MutationRes struct {
 	Uids    map[string]string `json:"uids"`
 }
 
+type Mutation struct {
+	set string
+	del string
+}
+
+func (m *Mutation) Set(set string) {
+	m.set += strings.Join([]string{m.set, set}, "\n")
+}
+
+func (m *Mutation) Del(del string) {
+	m.del += strings.Join([]string{m.del, del}, "\n")
+}
+
+func (m *Mutation) String() string {
+	var mutation string
+	if len(m.set) > 0 {
+		mutation += strings.Join([]string{"set {", m.set, "}"}, "\n")
+	}
+	if len(m.del) > 0 {
+		mutation += strings.Join([]string{"\ndelete {", m.del, "}"}, "\n")
+	}
+	mutation = strings.Join([]string{"mutation {", mutation, "}"}, "\n")
+	return mutation
+}
+
 func SendMutation(m string) MutationRes {
 	res, err := http.Post(endpoint, "application/x-www-form-urlencoded", strings.NewReader(m))
 	if err != nil {
@@ -32,7 +56,6 @@ func SendMutation(m string) MutationRes {
 
 	var mr MutationRes
 	json.NewDecoder(res.Body).Decode(&mr)
-	fmt.Println(mr)
 	return mr
 }
 

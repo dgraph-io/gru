@@ -2,6 +2,7 @@ package question
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -81,32 +82,65 @@ func add(q Question) string {
 	return m
 }
 
+func validateQuestion(q Question) error {
+	if q.Name == "" || q.Text == "" {
+		return fmt.Errorf("Question name/text can't be empty")
+	}
+	// TODO - Have validation on score.
+	if q.Positive == 0 || q.Negative == 0 {
+		return fmt.Errorf("Positive or negative score can't be zero.")
+	}
+	if len(q.Options) == 0 {
+		return fmt.Errorf("Question should have atleast one option")
+	}
+	correct := 0
+	for _, opt := range q.Options {
+		if opt.IsCorrect {
+			correct++
+		}
+	}
+	if correct == 0 {
+		fmt.Errorf("Atleast one option should be correct")
+	}
+	return nil
+}
+
 // API for "Adding Question" to Database
 func Add(w http.ResponseWriter, r *http.Request) {
 	server.AddCorsHeaders(w)
-	var ques Question
-
 	if r.Method == "OPTIONS" {
 		return
 	}
-	// Decoding post data
-	err := json.NewDecoder(r.Body).Decode(&ques)
+
+	sr := server.Response{}
+	var q Question
+	err := json.NewDecoder(r.Body).Decode(&q)
 	if err != nil {
-		log.Fatal(err)
+		sr.Error = "Couldn't decode JSON"
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write(server.MarshalResponse(sr))
+		return
 	}
 
-	m := add(ques)
+	if err := validateQuestion(q); err != nil {
+		sr.Error = err.Error()
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write(server.MarshalResponse(sr))
+		return
+	}
+
+	m := add(q)
 	res := dgraph.SendMutation(m)
-	sr := server.Response{}
-	if res.Code == "ErrorOk" {
-		sr.Success = true
-		sr.Message = "Question Successfully Saved!"
+	if res.Code != "ErrorOk" {
+		sr.Error = res.Message
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write(server.MarshalResponse(sr))
+		return
 	}
-	question_json_response, err := json.Marshal(res)
-	if err != nil {
-		panic(err)
-	}
-	w.Write(question_json_response)
+
+	sr.Success = true
+	sr.Message = "Question Successfully Saved!"
+	w.Write(server.MarshalResponse(sr))
 }
 
 // FETCH All Questions HANDLER: Incomplete
@@ -245,59 +279,47 @@ func Get(w http.ResponseWriter, r *http.Request) {
 
 // update question
 func edit(q Question) string {
-	m := `
-    mutation {
-      set {
-          <_uid_:` + q.Uid + `> <name> "` + q.Name + `" .
-          <_uid_:` + q.Uid + `> <text> "` + q.Text + `" .
-          <_uid_:` + q.Uid + `> <positive> "` + strconv.FormatFloat(q.Positive, 'g', -1, 64) + `" .
-          <_uid_:` + q.Uid + `> <negative> "` + strconv.FormatFloat(q.Negative, 'g', -1, 64) + `" .`
+	m := new(dgraph.Mutation)
+	m.Set(`<_uid_:` + q.Uid + `> <name> "` + q.Name + `" .`)
+	m.Set(`<_uid_:` + q.Uid + `> <text> "` + q.Text + `" .`)
+	m.Set(`<_uid_:` + q.Uid + `> <positive> "` + strconv.FormatFloat(q.Positive, 'g', -1, 64) + `" .`)
+	m.Set(`<_uid_:` + q.Uid + `> <negative> "` + strconv.FormatFloat(q.Negative, 'g', -1, 64) + `" .`)
 
 	correct := 0
-	for l := range q.Options {
-		m += "<_uid_:" + q.Options[l].Uid + "> <name> \"" + q.Options[l].Text +
-			"\" .\n <_uid_:" + q.Uid + "> <question.option> <_uid_:" + q.Options[l].Uid + "> . \n "
-
-		if q.Options[l].IsCorrect == true {
+	for _, opt := range q.Options {
+		m.Set(`<_uid_:` + opt.Uid + `> <name> "` + opt.Text + `" .`)
+		m.Set(`<_uid_:` + q.Uid + `> <question.option> <_uid_:` + opt.Uid + `> . `)
+		if opt.IsCorrect {
 			correct++
-			m += "<_uid_:" + q.Uid + "> <question.correct> <_uid_:" + q.Options[l].Uid + "> . \n "
-		}
-		if q.Options[l].IsCorrect == false {
-			delete_correct := "mutation { delete { <_uid_:" + q.Uid + "> <question.correct> <_uid_:" + q.Options[l].Uid + "> .}}"
-			_, err := http.Post(dgraph.QueryEndpoint, "application/x-www-form-urlencoded", strings.NewReader(delete_correct))
-			if err != nil {
-				panic(err)
-			}
+			m.Set(`<_uid_:` + q.Uid + `> <question.correct> <_uid_:` + opt.Uid + `> .`)
+		} else {
+			m.Del(`<_uid_:` + q.Uid + `> <question.correct> <_uid_:` + opt.Uid + `> .`)
 		}
 	}
 
 	// Create and associate Tags
-	for i := range q.Tags {
-		if q.Tags[i].Uid != "" && q.Tags[i].Is_delete == true {
-			query_mutation := "mutation { delete { <_uid_:" + q.Uid + "> <question.tag> <_uid_:" + q.Tags[i].Uid +
-				"> .\n <_uid_:" + q.Tags[i].Uid + "> <tag.question> <_uid_:" + q.Uid + "> . \n }}"
-			x.Debug(query_mutation)
-			dgraph.SendMutation(query_mutation)
+	for i, t := range q.Tags {
+		if t.Uid != "" && t.Is_delete {
+			m.Del(`<_uid_:` + q.Uid + `> <question.tag> <_uid_:` + t.Uid + `> .`)
+			m.Del(`<_uid_:` + t.Uid + `> <tag.question> <_uid_:` + q.Uid + `> . `)
 
-		} else if q.Tags[i].Uid != "" {
-			m += "<_uid_:" + q.Uid + "> <question.tag> <_uid_:" + q.Tags[i].Uid +
-				"> . \n <_uid_:" + q.Tags[i].Uid + "> <tag.question> <_uid_:" + q.Uid + "> . \n "
-		} else if q.Tags[i].Uid == "" {
-			index := strconv.Itoa(i)
-			m += "<_new_:tag" + index + "> <name> \"" + q.Tags[i].Name +
-				"\" .\n <_uid_:" + q.Uid + "> <question.tag> <_new_:tag" + index +
-				"> . \n <_new_:tag" + index + "> <tag.question> <_uid_:" + q.Uid + "> . \n "
+		} else if t.Uid != "" {
+			m.Set(`<_uid_:` + q.Uid + `> <question.tag> <_uid_:` + t.Uid + `> .`)
+			m.Set(`<_uid_:` + t.Uid + `> <tag.question> <_uid_:` + q.Uid + `> . `)
+
+		} else if t.Uid == "" {
+			idx := strconv.Itoa(i)
+			m.Set(`<_new_:tag` + idx + `> <name> "` + t.Name + `" .`)
+			m.Set(`<_uid_:` + q.Uid + `> <question.tag> <_new_:tag` + idx + ` .`)
+			m.Set(`<_new_:tag` + idx + `> <tag.question> <_uid_:` + q.Uid + `> . `)
 		}
 	}
 	if correct > 1 {
-		m += "<_uid_:" + q.Uid + "> <multiple> \"true\" . \n"
+		m.Set(`<_uid_:` + q.Uid + `> <multiple> "true" . `)
 	} else {
-		m += "<_uid_:" + q.Uid + "> <multiple> \"false\" . \n"
+		m.Set(`<_uid_:` + q.Uid + `> <multiple> "false" . `)
 	}
-
-	m += " }}"
-	x.Debug(m)
-	return m
+	return m.String()
 }
 
 func Edit(w http.ResponseWriter, r *http.Request) {
