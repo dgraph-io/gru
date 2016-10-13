@@ -17,6 +17,13 @@
 			console.log(err);
 		})
 
+		function setMinDate() {
+			$("#datePicker").attr("min", formatDate(new Date()));
+		}
+		setTimeout(function() {
+			setMinDate();
+		}, 100);
+
 		// FUNCTION DEFINITION
 
 		function inviteCandidate() {
@@ -78,6 +85,10 @@
 
 		//Function Declation
 		editInviteVm.editInvite = editInvite;
+
+		setTimeout(function() {
+			setMinDate();
+		}, 100);
 
 		if(!candidateUID) {
 			SNACKBAR({
