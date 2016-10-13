@@ -173,7 +173,9 @@ func Index(w http.ResponseWriter, r *http.Request) {
 	}
 
 	b := dgraph.Query(query)
-	w.Write(b)
+	// TODO - Remove this stuff.
+	jsonResp, _ := json.Marshal(string(b))
+	w.Write(jsonResp)
 }
 
 type QuestionAPIResponse struct {
@@ -312,7 +314,7 @@ func edit(q Question) (string, error) {
 			}
 			idx := strconv.Itoa(i)
 			m.Set(`<_new_:tag` + idx + `> <name> "` + t.Name + `" .`)
-			m.Set(`<_uid_:` + q.Uid + `> <question.tag> <_new_:tag` + idx + ` .`)
+			m.Set(`<_uid_:` + q.Uid + `> <question.tag> <_new_:tag` + idx + `> .`)
 			m.Set(`<_new_:tag` + idx + `> <tag.question> <_uid_:` + q.Uid + `> . `)
 		}
 	}

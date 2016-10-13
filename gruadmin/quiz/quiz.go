@@ -69,7 +69,7 @@ func Add(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-	stats = &server.Response{true, "Quiz Successfully Saved!"}
+	stats = &server.Response{true, "Quiz Successfully Saved!", ""}
 	quiz_json_response, err := json.Marshal(stats)
 	if err != nil {
 		panic(err)
