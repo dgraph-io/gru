@@ -7,6 +7,8 @@ import (
 	"log"
 	"net/http"
 	"strings"
+
+	"github.com/pkg/errors"
 )
 
 var (
@@ -28,11 +30,11 @@ type Mutation struct {
 }
 
 func (m *Mutation) Set(set string) {
-	m.set += strings.Join([]string{m.set, set}, "\n")
+	m.set = strings.Join([]string{m.set, set}, "\n")
 }
 
 func (m *Mutation) Del(del string) {
-	m.del += strings.Join([]string{m.del, del}, "\n")
+	m.del = strings.Join([]string{m.del, del}, "\n")
 }
 
 func (m *Mutation) String() string {
@@ -50,7 +52,7 @@ func (m *Mutation) String() string {
 func SendMutation(m string) MutationRes {
 	res, err := http.Post(endpoint, "application/x-www-form-urlencoded", strings.NewReader(m))
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(errors.Wrap(err, "Couldn't send mutation"))
 	}
 	defer res.Body.Close()
 
@@ -62,13 +64,13 @@ func SendMutation(m string) MutationRes {
 func Query(q string) []byte {
 	res, err := http.Post(endpoint, "application/x-www-form-urlencoded", strings.NewReader(q))
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(errors.Wrap(err, "Couldn't get response from Dgraph"))
 	}
 	defer res.Body.Close()
 
 	b, err := ioutil.ReadAll(res.Body)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(errors.Wrap(err, "Couldn't read response body"))
 	}
 	return b
 }

@@ -82,6 +82,7 @@ func add(q Question) string {
 	return m
 }
 
+// TODO - Move this inline with add, like we have for edit.
 func validateQuestion(q Question) error {
 	if q.Name == "" || q.Text == "" {
 		return fmt.Errorf("Question name/text can't be empty")
@@ -143,45 +144,36 @@ func Add(w http.ResponseWriter, r *http.Request) {
 	w.Write(server.MarshalResponse(sr))
 }
 
-// FETCH All Questions HANDLER: Incomplete
+type qid struct {
+	Id string
+}
+
 func Index(w http.ResponseWriter, r *http.Request) {
 	server.AddCorsHeaders(w)
 	if r.Method == "OPTIONS" {
 		return
 	}
 
-	var ques GetQuestion
-	err := json.NewDecoder(r.Body).Decode(&ques)
+	sr := server.Response{}
+	var q qid
+	err := json.NewDecoder(r.Body).Decode(&q)
 	if err != nil {
-		panic(err)
+		sr.Error = "Couldn't decode JSON"
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write(server.MarshalResponse(sr))
+		return
 	}
-	x.Debug(ques)
-	var question_mutation string
-	if ques.Id != "" {
-		question_mutation = "{debug(_xid_: rootQuestion) { question (after: " + ques.Id + ", first: 10) { _uid_ name text negative positive question.tag { name } question.option { name } question.correct { name } }  } }"
+
+	var query string
+	// TODO - Maybe dont call with debug, and request appropriate fields.
+	if q.Id != "" {
+		query = "{debug(_xid_: rootQuestion) { question (after: " + q.Id + ", first: 10) { _uid_ name text negative positive question.tag { name } question.option { name } question.correct { name } }  } }"
 	} else {
-		question_mutation = "{debug(_xid_: rootQuestion) { question (first:10) { _uid_ name text negative positive question.tag { name } question.option { name } question.correct { name } }  } }"
-	}
-	x.Debug(question_mutation)
-	w.Header().Set("Content-Type", "application/json")
-
-	question_response, err := http.Post(dgraph.QueryEndpoint, "application/x-www-form-urlencoded", strings.NewReader(question_mutation))
-	if err != nil {
-		panic(err)
-	}
-	defer question_response.Body.Close()
-	question_body, err := ioutil.ReadAll(question_response.Body)
-	if err != nil {
-		panic(err)
-	}
-	x.Debug(string(question_body))
-
-	jsonResp, err := json.Marshal(string(question_body))
-	if err != nil {
-		panic(err)
+		query = "{debug(_xid_: rootQuestion) { question (first:10) { _uid_ name text negative positive question.tag { name } question.option { name } question.correct { name } }  } }"
 	}
 
-	w.Write(jsonResp)
+	b := dgraph.Query(query)
+	w.Write(b)
 }
 
 type QuestionAPIResponse struct {
@@ -206,11 +198,8 @@ type TagFilter struct {
 	UID string
 }
 
-type GetQuestion struct {
-	Id string
-}
-
 // FILTER QUESTION HANDLER: Fileter By Tags
+// TODO - Clean this up.
 func Filter(w http.ResponseWriter, r *http.Request) {
 	server.AddCorsHeaders(w)
 	if r.Method == "OPTIONS" {
@@ -239,7 +228,6 @@ func Filter(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	w.Header().Set("Content-Type", "application/json")
 	w.Write(jsonResp)
 }
 
@@ -250,7 +238,7 @@ func get(questionId string) string {
     {
         root(_uid_:` + questionId + `) {
 		  _uid_
-		  		name
+	  		name
           text
           positive
           negative
@@ -266,27 +254,38 @@ func Get(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "OPTIONS" {
 		return
 	}
+
 	vars := mux.Vars(r)
 	qid := vars["id"]
-	// TODO - Return error.
-	if qid == "" {
-	}
+
 	q := get(qid)
-	x.Debug(q)
 	res := dgraph.Query(q)
+	// TODO - Check if Dgraph returns record not found and wrap it with an error.
 	w.Write(res)
 }
 
 // update question
-func edit(q Question) string {
+func edit(q Question) (string, error) {
 	m := new(dgraph.Mutation)
+	if q.Name == "" || q.Text == "" {
+		return "", fmt.Errorf("Question name/text can't be empty.")
+	}
 	m.Set(`<_uid_:` + q.Uid + `> <name> "` + q.Name + `" .`)
 	m.Set(`<_uid_:` + q.Uid + `> <text> "` + q.Text + `" .`)
+	if q.Positive == 0 || q.Negative == 0 {
+		return "", fmt.Errorf("Positive/Negative score can't be zero.")
+	}
 	m.Set(`<_uid_:` + q.Uid + `> <positive> "` + strconv.FormatFloat(q.Positive, 'g', -1, 64) + `" .`)
 	m.Set(`<_uid_:` + q.Uid + `> <negative> "` + strconv.FormatFloat(q.Negative, 'g', -1, 64) + `" .`)
 
 	correct := 0
+	if len(q.Options) == 0 {
+		return "", fmt.Errorf("Question should have atleast one option")
+	}
 	for _, opt := range q.Options {
+		if opt.Text == "" {
+			return "", fmt.Errorf("Option text can't be empty.")
+		}
 		m.Set(`<_uid_:` + opt.Uid + `> <name> "` + opt.Text + `" .`)
 		m.Set(`<_uid_:` + q.Uid + `> <question.option> <_uid_:` + opt.Uid + `> . `)
 		if opt.IsCorrect {
@@ -308,18 +307,25 @@ func edit(q Question) string {
 			m.Set(`<_uid_:` + t.Uid + `> <tag.question> <_uid_:` + q.Uid + `> . `)
 
 		} else if t.Uid == "" {
+			if t.Name == "" {
+				return "", fmt.Errorf("Tag name can't be empty.")
+			}
 			idx := strconv.Itoa(i)
 			m.Set(`<_new_:tag` + idx + `> <name> "` + t.Name + `" .`)
 			m.Set(`<_uid_:` + q.Uid + `> <question.tag> <_new_:tag` + idx + ` .`)
 			m.Set(`<_new_:tag` + idx + `> <tag.question> <_uid_:` + q.Uid + `> . `)
 		}
 	}
-	if correct > 1 {
+	// TODO - There should be atleast one tag associated with a question.
+
+	if correct == 0 {
+		return "", fmt.Errorf("Atleast one option should be correct.")
+	} else if correct > 1 {
 		m.Set(`<_uid_:` + q.Uid + `> <multiple> "true" . `)
 	} else {
 		m.Set(`<_uid_:` + q.Uid + `> <multiple> "false" . `)
 	}
-	return m.String()
+	return m.String(), nil
 }
 
 func Edit(w http.ResponseWriter, r *http.Request) {
@@ -327,23 +333,37 @@ func Edit(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "OPTIONS" {
 		return
 	}
-	vars := mux.Vars(r)
-	qid := vars["id"]
-	// TODO - Return error.
-	if qid == "" {
-	}
+
+	sr := server.Response{}
+	// vars := mux.Vars(r)
+	// qid := vars["id"]
+	// TODO - Id should be obtained from url not the body.
 	var q Question
-	server.ReadBody(r, &q)
-	q.Uid = qid
-	// TODO - Validate candidate fields shouldn't be empty.
-	x.Debug(q)
-	m := edit(q)
-	x.Debug(m)
-	mr := dgraph.SendMutation(m)
-	res := server.Response{}
-	if mr.Code == "ErrorOk" {
-		res.Success = true
-		res.Message = "Question info updated successfully."
+	err := json.NewDecoder(r.Body).Decode(&q)
+	if err != nil {
+		sr.Error = "Couldn't decode JSON"
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write(server.MarshalResponse(sr))
+		return
 	}
-	server.WriteBody(w, res)
+
+	var m string
+	if m, err = edit(q); err != nil {
+		sr.Error = err.Error()
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write(server.MarshalResponse(sr))
+		return
+	}
+
+	mr := dgraph.SendMutation(m)
+	if mr.Code != "ErrorOk" {
+		sr.Error = mr.Message
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write(server.MarshalResponse(sr))
+		return
+	}
+
+	sr.Success = true
+	sr.Message = "Question updated successfully."
+	w.Write(server.MarshalResponse(sr))
 }
