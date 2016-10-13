@@ -11,7 +11,6 @@ import (
 
 	"github.com/dgraph-io/gru/auth"
 	"github.com/dgraph-io/gru/dgraph"
-	"github.com/dgraph-io/gru/gruadmin/server"
 	"github.com/dgraph-io/gru/x"
 	jwt "github.com/dgrijalva/jwt-go"
 )
@@ -105,11 +104,6 @@ func validate(r *http.Request) (string, error) {
 }
 
 func QuestionHandler(w http.ResponseWriter, r *http.Request) {
-	server.AddCorsHeaders(w)
-	if r.Method == "OPTIONS" {
-		return
-	}
-
 	var userId string
 	var err error
 	if userId, err = validate(r); err != nil {
@@ -274,11 +268,6 @@ func qnMeta(qid string) (questionCorrectMeta, error) {
 }
 
 func AnswerHandler(w http.ResponseWriter, r *http.Request) {
-	server.AddCorsHeaders(w)
-	if r.Method == "OPTIONS" {
-		return
-	}
-
 	var userId string
 	var err error
 	if userId, err = validate(r); err != nil {
@@ -339,8 +328,6 @@ type pingRes struct {
 }
 
 func PingHandler(w http.ResponseWriter, r *http.Request) {
-	server.AddCorsHeaders(w)
-
 	var userId string
 	var err error
 	if userId, err = validate(r); err != nil {

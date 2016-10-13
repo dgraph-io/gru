@@ -45,10 +45,6 @@ var (
 )
 
 func login(w http.ResponseWriter, r *http.Request) {
-	server.AddCorsHeaders(w)
-	if r.Method == "OPTIONS" {
-		return
-	}
 	u, p, ok := r.BasicAuth()
 	if !ok || u != *username || p != *password {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
@@ -70,6 +66,15 @@ func login(w http.ResponseWriter, r *http.Request) {
 
 	res := Res{Token: tokenString}
 	json.NewEncoder(w).Encode(res)
+}
+
+// Middleware for adding CORS headers and handling preflight request.
+func options(rw http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+	server.AddCorsHeaders(rw)
+	if r.Method == "OPTIONS" {
+		return
+	}
+	next(rw, r)
 }
 
 func runHTTPServer(address string) {
@@ -114,6 +119,7 @@ func runHTTPServer(address string) {
 	adminRouter.HandleFunc("/candidate", candidate.Add).Methods("POST", "OPTIONS")
 	adminRouter.HandleFunc("/candidate/{id}", candidate.Edit).Methods("PUT", "OPTIONS")
 	adminRouter.HandleFunc("/candidate/{id}", candidate.Get).Methods("GET", "OPTIONS")
+	adminRouter.HandleFunc("/candidate/report/{id}", candidate.Report).Methods("GET", "OPTIONS")
 	adminRouter.HandleFunc("/candidates", candidate.Index).Methods("GET", "OPTIONS")
 
 	router.PathPrefix("/admin").Handler(negroni.New(
@@ -121,6 +127,7 @@ func runHTTPServer(address string) {
 		negroni.Wrap(adminRouter),
 	))
 	n := negroni.Classic()
+	n.Use(negroni.HandlerFunc(options))
 	n.UseHandler(router)
 	fmt.Println("Server Running on 8082")
 	log.Fatal(http.ListenAndServe(address, n))

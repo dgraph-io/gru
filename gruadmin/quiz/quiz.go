@@ -26,11 +26,6 @@ type Question struct {
 }
 
 func Add(w http.ResponseWriter, r *http.Request) {
-	server.AddCorsHeaders(w)
-	if r.Method == "OPTIONS" {
-		return
-	}
-
 	var q Quiz
 	sr := server.Response{}
 	err := json.NewDecoder(r.Body).Decode(&q)
@@ -74,11 +69,6 @@ func Add(w http.ResponseWriter, r *http.Request) {
 }
 
 func Index(w http.ResponseWriter, r *http.Request) {
-	server.AddCorsHeaders(w)
-	if r.Method == "OPTIONS" {
-		return
-	}
-
 	q := "{debug(_xid_: rootQuiz) { quiz { _uid_ name duration start_date end_date quiz.question { text }  }  }}"
 	res := dgraph.Query(q)
 	// TODO - Remove this, sent byte slice directly.
@@ -103,11 +93,6 @@ func get(quizId string) string {
 }
 
 func Get(w http.ResponseWriter, r *http.Request) {
-	server.AddCorsHeaders(w)
-	if r.Method == "OPTIONS" {
-		return
-	}
-
 	vars := mux.Vars(r)
 	qid := vars["id"]
 	q := get(qid)
@@ -133,11 +118,6 @@ func edit(q Quiz) string {
 }
 
 func Edit(w http.ResponseWriter, r *http.Request) {
-	server.AddCorsHeaders(w)
-	if r.Method == "OPTIONS" {
-		return
-	}
-
 	var q Quiz
 	vars := mux.Vars(r)
 	qid := vars["id"]

@@ -107,11 +107,6 @@ func validateQuestion(q Question) error {
 
 // API for "Adding Question" to Database
 func Add(w http.ResponseWriter, r *http.Request) {
-	server.AddCorsHeaders(w)
-	if r.Method == "OPTIONS" {
-		return
-	}
-
 	sr := server.Response{}
 	var q Question
 	err := json.NewDecoder(r.Body).Decode(&q)
@@ -148,11 +143,6 @@ type qid struct {
 }
 
 func Index(w http.ResponseWriter, r *http.Request) {
-	server.AddCorsHeaders(w)
-	if r.Method == "OPTIONS" {
-		return
-	}
-
 	sr := server.Response{}
 	var q qid
 	err := json.NewDecoder(r.Body).Decode(&q)
@@ -202,10 +192,6 @@ type TagFilter struct {
 // FILTER QUESTION HANDLER: Fileter By Tags
 // TODO - Clean this up.
 func Filter(w http.ResponseWriter, r *http.Request) {
-	server.AddCorsHeaders(w)
-	if r.Method == "OPTIONS" {
-		return
-	}
 	var tag TagFilter
 
 	err := json.NewDecoder(r.Body).Decode(&tag)
@@ -250,11 +236,6 @@ func get(questionId string) string {
 }
 
 func Get(w http.ResponseWriter, r *http.Request) {
-	server.AddCorsHeaders(w)
-	if r.Method == "OPTIONS" {
-		return
-	}
-
 	vars := mux.Vars(r)
 	qid := vars["id"]
 
@@ -329,11 +310,6 @@ func edit(q Question) (string, error) {
 }
 
 func Edit(w http.ResponseWriter, r *http.Request) {
-	server.AddCorsHeaders(w)
-	if r.Method == "OPTIONS" {
-		return
-	}
-
 	sr := server.Response{}
 	// vars := mux.Vars(r)
 	// qid := vars["id"]

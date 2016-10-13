@@ -5,8 +5,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strings"
-
-	"github.com/dgraph-io/gru/gruadmin/server"
 )
 
 type Tag struct {
@@ -18,7 +16,6 @@ type Tag struct {
 // fetch all the tags
 // TODO - Clean this up.
 func Index(w http.ResponseWriter, r *http.Request) {
-	server.AddCorsHeaders(w)
 	tag_mutation := "{debug(_xid_: rootQuestion) { question { question.tag { name _uid_} }}}"
 	tag_response, err := http.Post("http://localhost:8080/query", "application/x-www-form-urlencoded", strings.NewReader(tag_mutation))
 	if err != nil {

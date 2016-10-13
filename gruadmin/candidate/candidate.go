@@ -52,6 +52,7 @@ func index(quizId string) string {
 		  name
           email
           validity
+		  complete
         }
       }
     }
@@ -59,11 +60,6 @@ func index(quizId string) string {
 }
 
 func Index(w http.ResponseWriter, r *http.Request) {
-	server.AddCorsHeaders(w)
-	if r.Method == "OPTIONS" {
-		return
-	}
-
 	quizId := r.URL.Query().Get("quiz_id")
 	if quizId == "" {
 		// TODO - Return error.
@@ -90,11 +86,6 @@ func add(c Candidate) string {
 }
 
 func Add(w http.ResponseWriter, r *http.Request) {
-	server.AddCorsHeaders(w)
-	if r.Method == "OPTIONS" {
-		return
-	}
-
 	sr := server.Response{}
 	var c Candidate
 	err := json.NewDecoder(r.Body).Decode(&c)
@@ -165,11 +156,6 @@ func edit(c Candidate) string {
 
 // TODO - Changing the quiz for a candidate doesn't work right now. Fix it.
 func Edit(w http.ResponseWriter, r *http.Request) {
-	server.AddCorsHeaders(w)
-	if r.Method == "OPTIONS" {
-		return
-	}
-
 	vars := mux.Vars(r)
 	cid := vars["id"]
 	var c Candidate
@@ -217,10 +203,6 @@ func get(candidateId string) string {
 }
 
 func Get(w http.ResponseWriter, r *http.Request) {
-	server.AddCorsHeaders(w)
-	if r.Method == "OPTIONS" {
-		return
-	}
 	vars := mux.Vars(r)
 	cid := vars["id"]
 	// TODO - Return error.
@@ -276,11 +258,6 @@ type Res struct {
 }
 
 func Validate(w http.ResponseWriter, r *http.Request) {
-	server.AddCorsHeaders(w)
-	if r.Method == "OPTIONS" {
-		return
-	}
-
 	vars := mux.Vars(r)
 	id := vars["id"]
 	sr := server.Response{}
