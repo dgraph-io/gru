@@ -344,15 +344,15 @@ func PingHandler(w http.ResponseWriter, r *http.Request) {
 	var userId string
 	var err error
 	if userId, err = validate(r); err != nil {
-		w.Write([]byte("Unauthorized"))
 		w.WriteHeader(http.StatusUnauthorized)
+		w.Write([]byte("Unauthorized"))
 		return
 	}
 
 	c, err := ReadMap(userId)
 	if err != nil {
-		w.Write([]byte("User not found."))
 		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("User not found."))
 		return
 	}
 
@@ -360,7 +360,8 @@ func PingHandler(w http.ResponseWriter, r *http.Request) {
 	UpdateMap(userId, c)
 	pr := &pingRes{TimeLeft: "-1"}
 	if !c.quizStart.IsZero() {
-		pr.TimeLeft = c.quizStart.Add(c.quizDuration).Sub(time.Now().UTC()).String()
+		end := c.quizStart.Add(c.quizDuration).Truncate(time.Second)
+		pr.TimeLeft = end.Sub(time.Now().UTC().Truncate(time.Second)).String()
 	}
 	json.NewEncoder(w).Encode(pr)
 }

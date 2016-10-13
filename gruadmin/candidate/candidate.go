@@ -29,7 +29,10 @@ type Candidate struct {
 	Quiz      []quiz `json:"candidate.quiz"`
 }
 
-const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890"
+const (
+	letterBytes    = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890"
+	validityLayout = "2006-01-02"
+)
 
 // TODO - Optimize later.
 func randStringBytes(n int) string {
@@ -92,69 +95,103 @@ func Add(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	sr := server.Response{}
 	var c Candidate
-	server.ReadBody(r, &c)
+	err := json.NewDecoder(r.Body).Decode(&c)
+	if err != nil {
+		sr.Error = "Couldn't decode JSON"
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write(server.MarshalResponse(sr))
+		return
+	}
+
+	var t time.Time
+	if t, err = time.Parse(validityLayout, c.Validity); err != nil {
+		sr.Message = "Couldn't parse the validity"
+		sr.Error = err.Error()
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write(server.MarshalResponse(sr))
+		return
+	}
+
+	c.Validity = t.String()
 	// TODO - Validate candidate fields shouldn't be empty.
 	c.Token = randStringBytes(33)
 	m := add(c)
-	res := dgraph.SendMutation(m)
-	sr := server.Response{}
-	if res.Code != "ErrorOk" {
+	mr := dgraph.SendMutation(m)
+	if mr.Code != "ErrorOk" {
 		sr.Message = "Mutation couldn't be applied by Dgraph."
-		server.WriteBody(w, sr)
+		sr.Error = mr.Message
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write(server.MarshalResponse(sr))
 		return
 	}
+
 	// mutation applied successfully, lets send a mail to the candidate.
-	uid, ok := res.Uids["c"]
+	uid, ok := mr.Uids["c"]
 	if !ok {
-		log.Fatal("Uid not returned for newly created candidate by Dgraph.")
+		sr.Error = "Uid not returned for newly created candidate by Dgraph."
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write(server.MarshalResponse(sr))
+		return
 	}
+
 	// Token sent in mail is uid + the random string.
-	// TODO - Move this to a background goroutine.
 	go mail.Send(c.Name, c.Email, uid+c.Token)
 	sr.Message = "Candidate added successfully."
 	sr.Success = true
-	server.WriteBody(w, sr)
+	w.Write(server.MarshalResponse(sr))
 }
 
 func edit(c Candidate) string {
-	// TODO - Handler changing quiz_id
-	// var del string
-	// if c.OldQuizId != "" {
-	// 	del = `
-	//     delete {
-	//         <_uid_:` + c.OldQuizId + `> <quiz.candidate> <_uid_:` + c.Id + `> .
-	//         <_uid_:` + c.Id + `> <candidate.quiz> <_uid_:` + c.OldQuizId + `> .
-	//     }`
-	// }
-	m := `
-    mutation {
-      set {
-          <_uid_:` + c.Uid + `> <email> "` + c.Email + `" .
-          <_uid_:` + c.Uid + `> <name> "` + c.Name + `" .
-          <_uid_:` + c.Uid + `> <validity> "` + c.Validity + `" .
-      }
-    }`
-	return m
+	m := new(dgraph.Mutation)
+	m.Set(`<_uid_:` + c.Uid + `> <email> "` + c.Email + `" . `)
+	m.Set(`<_uid_:` + c.Uid + `> <name> "` + c.Name + `" . `)
+	m.Set(`<_uid_:` + c.Uid + `> <validity> "` + c.Validity + `" . `)
+
+	// When the quiz for which candidate is invited is changed, we get both OldQuizId
+	// and new QuizId.
+	if c.QuizId != "" {
+		m.Set(`<_uid_:` + c.QuizId + `> <quiz.candidate> <_uid_:` + c.Uid + `> .`)
+		m.Set(`<_uid_:` + c.Uid + `> <candidate.quiz> <_uid_:` + c.QuizId + `> .`)
+	}
+	if c.OldQuizId != "" {
+		m.Del(`<_uid_:` + c.OldQuizId + `> <quiz.candidate> <_uid_:` + c.Uid + `> .`)
+		m.Del(`<_uid_:` + c.Uid + `> <candidate.quiz> <_uid_:` + c.OldQuizId + `> .`)
+	}
+
+	return m.String()
 }
 
+// TODO - Changing the quiz for a candidate doesn't work right now. Fix it.
 func Edit(w http.ResponseWriter, r *http.Request) {
 	server.AddCorsHeaders(w)
 	if r.Method == "OPTIONS" {
 		return
 	}
+
 	vars := mux.Vars(r)
 	cid := vars["id"]
-	// TODO - Return error.
-	if cid == "" {
-	}
 	var c Candidate
 	server.ReadBody(r, &c)
+
+	sr := server.Response{}
+	var t time.Time
+	var err error
+	if t, err = time.Parse(validityLayout, c.Validity); err != nil {
+		sr.Message = "Couldn't parse the validity"
+		sr.Error = err.Error()
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write(server.MarshalResponse(sr))
+		return
+	}
+
 	c.Uid = cid
+	c.Validity = t.String()
 	// TODO - Validate candidate fields shouldn't be empty.
 	m := edit(c)
 	res := dgraph.SendMutation(m)
-	sr := server.Response{}
+	go mail.Send(c.Name, c.Email, c.Uid+c.Token)
 	if res.Message == "ErrorOk" {
 		sr.Success = true
 		sr.Message = "Candidate info updated successfully."
@@ -234,7 +271,8 @@ type resp struct {
 }
 
 type Res struct {
-	Token string `json:"token"`
+	Token    string `json:"token"`
+	Duration string `json:"duration"`
 }
 
 func Validate(w http.ResponseWriter, r *http.Request) {
@@ -245,11 +283,15 @@ func Validate(w http.ResponseWriter, r *http.Request) {
 
 	vars := mux.Vars(r)
 	id := vars["id"]
+	sr := server.Response{}
 	// This is the length of the random string. The id is uid + random string.
 	if len(id) < 33 {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		w.WriteHeader(http.StatusUnauthorized)
+		sr.Message = "Invalid token."
+		w.Write(server.MarshalResponse(sr))
 		return
 	}
+
 	// TODO - Check if the validity or the duration already elapsed.
 	uid, token := id[:len(id)-33], id[len(id)-33:]
 
@@ -272,26 +314,54 @@ func Validate(w http.ResponseWriter, r *http.Request) {
 	json.Unmarshal(res, &resp)
 	if len(resp.Cand) != 1 || len(resp.Cand[0].Quiz) != 1 {
 		// No candidiate found with given uid
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		w.WriteHeader(http.StatusUnauthorized)
+		sr.Message = "Invalid token."
+		w.Write(server.MarshalResponse(sr))
 		return
 	}
+
 	if resp.Cand[0].Token != token || resp.Cand[0].Quiz[0].Id == "" {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		w.WriteHeader(http.StatusUnauthorized)
+		sr.Message = "Invalid token."
+		w.Write(server.MarshalResponse(sr))
 		return
 	}
-	if resp.Cand[0].Complete {
-		http.Error(w, "Quiz already completed", http.StatusUnauthorized)
+
+	var v time.Time
+	if v, err = time.Parse("2006-01-02 15:04:05 +0000 UTC", resp.Cand[0].Validity); err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		sr.Error = err.Error()
+		w.Write(server.MarshalResponse(sr))
+		return
 	}
+
+	if v.Before(time.Now()) {
+		w.WriteHeader(http.StatusUnauthorized)
+		sr.Message = "Your token has already expired. Please contact contact@dgraph.io."
+		w.Write(server.MarshalResponse(sr))
+		return
+	}
+
+	if resp.Cand[0].Complete {
+		w.WriteHeader(http.StatusUnauthorized)
+		sr.Message = "You have already completed the quiz."
+		w.Write(server.MarshalResponse(sr))
+	}
+
 	quiz := resp.Cand[0].Quiz[0]
 	// Get quiz questions for the quiz id.
 	qns := quizQns(quiz.Id)
+	// TODO - Shuffle the order of questions.
 	// x.Shuffle(ids)
-	// TODO - Although we verify the duration when the quiz is created, still handle
-	// error here.
-	dur, _ := time.ParseDuration(quiz.Duration)
+	dur, err := time.ParseDuration(quiz.Duration)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		sr.Error = err.Error()
+		w.Write(server.MarshalResponse(sr))
+	}
+
 	quizp.New(uid, qns, dur)
 
-	// TODO - Check token validity.
 	claims := x.Claims{
 		UserId: uid,
 	}
@@ -299,11 +369,17 @@ func Validate(w http.ResponseWriter, r *http.Request) {
 
 	tokenString, err := jwtToken.SignedString([]byte(*auth.Secret))
 	if err != nil {
-		log.Fatal(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		sr.Error = err.Error()
+		w.Write(server.MarshalResponse(sr))
+		return
 	}
 
 	// TODO - Incase candidate already has a active session return error after
 	// implementing Ping.
 	// TODO - Also send quiz duration and time left incase candidate restarts.
-	json.NewEncoder(w).Encode(Res{Token: tokenString})
+	json.NewEncoder(w).Encode(Res{
+		Token:    tokenString,
+		Duration: dur.String(),
+	})
 }
