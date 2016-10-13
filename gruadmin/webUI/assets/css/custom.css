@@ -280,6 +280,23 @@ body.home {
   padding-top: 10px;
   padding-left: 3px;
 }
+
+/*QUIZ TAKING */
+
+.mdl-chip__contact {
+  width: inherit;
+  padding: 0 15px;
+  font-size: 15px;
+}
+
+.timer-chip-text {
+    width: 84px;
+}
+
+.mdl-chip--contact .mdl-chip__text {
+  min-width: 40px;
+  font-size: 16px;
+}
     
 /*TABLET + MOBILE SPECIFIC CSS*/
 @media (max-width: 840px) {

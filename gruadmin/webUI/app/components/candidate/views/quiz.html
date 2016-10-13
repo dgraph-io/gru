@@ -1,11 +1,27 @@
 <div class="main-content ng-cloak" ng-controller="candidateQuizController as cqVm">	
 	<div class="" ng-if="!cqVm.quizEnded">
-		<div class="mdl-grid">
-			<div class="mdl-cell mdl-cell--9-col">
+		<div class="mdl-grid b-border mb-30">
+			<div class="mdl-cell mdl-cell--3-col">
 				<h5>Quiz</h5>
 			</div>
-			<div class="mdl-cell mdl-cell--3-col mdl-cell--middle">
-				Time: <span id="time"></span>
+			<div class="mdl-cell mdl-cell--6-col mdl-cell--middle big-font">
+				<span class="mdl-chip mdl-chip--contact">
+			    <span class="mdl-chip__contact mdl-color--teal mdl-color-text--white">Time Left</span>
+			    <span class="mdl-chip__text bold text-center timer-chip-text"><span id="time"></span></span>
+				</span>
+
+				<div class="pull-right">
+					<span class="mdl-chip mdl-chip--contact">
+				    <span class="mdl-chip__contact mdl-color--teal mdl-color-text--white">Time Taking</span>
+				    <span class="mdl-chip__text bold text-center timer-chip-text"><span id="time-taken"></span></span>
+					</span>
+				</div>
+			</div>
+			<div class="mdl-cell mdl-cell--3-col mdl-cell--middle text-right big-font">
+				<span class="mdl-chip mdl-chip--contact">
+			    <span class="mdl-chip__contact mdl-color--teal mdl-color-text--white">Score</span>
+			    <span class="mdl-chip__text bold text-center ">{{cqVm.question.score}}</span>
+				</span>
 			</div>
 		</div>
 
@@ -48,32 +64,21 @@
 					<div class="pl-10">
 						<div class="mdl-grid pad-0">
 							<div class="mdl-cell mdl-cell--6-col mdl-cell--middle">
-								<label class="text-green">POSITIVE </label> 
+								<label>POSITIVE </label> 
 							</div>
 							<div class="mdl-cell mdl-cell--6-col">
-								<button class="mdl-button mdl-js-button mdl-button--fab mdl-button--mini-fab btn-success">
+								<button class="mdl-button mdl-js-button mdl-button--fab mdl-button--mini-fab">
 								  +{{cqVm.question.positive}}
 								</button>
 							</div>
 						</div>
 						<div class="mdl-grid pad-0">
 							<div class="mdl-cell mdl-cell--6-col mdl-cell--middle">
-								<label class="text-orange">NEGATIVE </label>
+								<label>NEGATIVE </label>
 							</div>
 							<div class="mdl-cell mdl-cell--6-col">
-								<button class="mdl-button mdl-js-button mdl-button--fab mdl-button--mini-fab bg-red">
+								<button class="mdl-button mdl-js-button mdl-button--fab mdl-button--mini-fab">
 								  -{{cqVm.question.negative}}
-								</button>
-							</div>
-						</div>
-						<div class="mdl-grid pad-0">
-							<div class="mdl-cell mdl-cell--6-col mdl-cell--middle">
-								<label>SCORE </label>
-							</div>
-							<div class="mdl-cell mdl-cell--6-col">
-								<button class="mdl-button mdl-js-button mdl-button--fab mdl-button--mini-fab btn-black">
-								  <span ng-if="cqVm.question.score">{{cqVm.question.score}}</span>
-								  <span ng-if="!cqVm.question.score">0</span>
 								</button>
 							</div>
 						</div>
@@ -97,6 +102,10 @@
 				Go back to <i class="material-icons vbottom">home</i>
 			</a> -->
 		</div>
+	</div>
+
+	<div ng-if="cqVm.apiError" class="mt-30 text-center text-red">
+		OOPS! Something went wrong
 	</div>
 </div>
 

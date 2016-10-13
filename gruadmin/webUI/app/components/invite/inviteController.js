@@ -9,6 +9,7 @@
 		// FUNCTION DECLARATION
 		inviteVm.inviteCandidate = inviteCandidate;
 		inviteVm.removeSelectedQuiz = removeSelectedQuiz;
+		inviteVm.setMinDate = setMinDate;
 
 		quizService.getAllQuizes().then(function(data){
 			var data = JSON.parse(data);
@@ -18,11 +19,10 @@
 		})
 
 		function setMinDate() {
-			$("#datePicker").attr("min", formatDate(new Date()));
+			setTimeout(function() {
+				$("#datePicker").attr("min", formatDate(new Date()));
+			}, 100);
 		}
-		setTimeout(function() {
-			setMinDate();
-		}, 100);
 
 		// FUNCTION DEFINITION
 
@@ -86,9 +86,7 @@
 		//Function Declation
 		editInviteVm.editInvite = editInvite;
 
-		setTimeout(function() {
-			setMinDate();
-		}, 100);
+		inviteVm.setMinDate();
 
 		if(!candidateUID) {
 			SNACKBAR({
@@ -133,33 +131,36 @@
 	}
 	
 	function candidatesController($rootScope, $stateParams, $state, inviteService) {
-			candidatesVm = this;
+		candidatesVm = this;
 
-			candidatesVm.quizID = $stateParams.quizID;
+		candidatesVm.quizID = $stateParams.quizID;
 
-			if(!candidatesVm.quizID) {
+		if(!candidatesVm.quizID) {
+			SNACKBAR({
+				message: "Not a valid Quiz",
+				messageType: "error",
+			});
+			$state.transitionTo("invite.add");
+		}
+		console.log(candidatesVm.quizID);
+		inviteService.getInvitedCandidates(candidatesVm.quizID).then(function(data){
+			candidatesVm.quizCandidates = data.quiz[0]["quiz.candidate"];
+
+			if(!candidatesVm.quizCandidates) {
 				SNACKBAR({
-					message: "Not a valid Quiz",
+					message: "Invite Candidate first to see all candidate",
 					messageType: "error",
 				});
 				$state.transitionTo("invite.add");
 			}
-			console.log(candidatesVm.quizID);
-			inviteService.getInvitedCandidates(candidatesVm.quizID).then(function(data){
-				candidatesVm.quizCandidates = data.quiz[0]["quiz.candidate"];
+		}, function(err){
+			console.log(err);
+		});
+	}
 
-				if(!candidatesVm.quizCandidates) {
-					SNACKBAR({
-						message: "Invite Candidate first to see all candidate",
-						messageType: "error",
-					});
-					$state.transitionTo("invite.add");
-				}
-			}, function(err){
-				console.log(err);
-			});
-		}
-
+	function addCandidatesController($state) {
+		inviteVm.setMinDate();
+	}
 
 	var candidatesDependency = [
 	    "$rootScope",
@@ -169,6 +170,12 @@
 	    candidatesController
 	];
 	angular.module('GruiApp').controller('candidatesController', candidatesDependency);
+
+	var addCandidatesDependency = [
+	    "$state",
+	    addCandidatesController
+	];
+	angular.module('GruiApp').controller('addCandidatesController', addCandidatesDependency);
 
 	var editInviteDependency = [
 	    "$rootScope",

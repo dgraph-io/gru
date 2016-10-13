@@ -32,13 +32,13 @@
 		cqVm.total_score = 0
 		candidateVm.isValidUser = candidateVm.checkValidity();
 		mainVm.pageName = "candidate-quiz-page";
+		cqVm.timerObj = {};
 
 	// FUNCTION DECLARATION
 		cqVm.getQuestion = getQuestion;
 		cqVm.submitAnswer = submitAnswer;
 		cqVm.getTime = getTime;
 		cqVm.initTimer = initTimer;
-
 
 	// INITIALIZERS
 		cqVm.getQuestion();
@@ -50,24 +50,40 @@
 
 			candidateService.getQuestion()
 			.then(function(data) {
+				if(!cqVm.question) {
+					// Initialize timer if first time api call.
+					cqVm.getTime();
+				}
+				startTimer(0, document.querySelector('#time-taken'), true);
+
 				cqVm.question = data;
 				if(data._uid_ == "END") {
 					cqVm.quizEnded = true;
 					cqVm.total_score = data.score;
+
+					clearAllTimers();
 				}
 
 				if(cqVm.question.multiple == "true") {
 					cqVm.answer = {};
 				}
-				console.log(data);
+
 				$rootScope.updgradeMDL();
 			}, function(err){	
 				console.log(err);
+				clearAllTimers();
+				cqVm.apiError = true;
 				SNACKBAR({
 					message: "Something Went Wrong",
 					messageType: "error",
 				})
 			})
+		}
+
+		function clearAllTimers() {
+			clearInterval(cqVm.timerObj.time_taken);
+			clearInterval(cqVm.timerObj.time_left);
+			clearInterval(cqVm.timerObj.getTime);
 		}
 
 		function submitAnswer(skip){
@@ -110,20 +126,70 @@
 			})
 		}
 
+		function manipulateTime (timer, display) {
+      hours = Math.floor(timer / 3600);
+      minutes = parseInt((timer / 60) % 60, 10);
+      seconds = parseInt(timer % 60, 10);
+
+      console.log(hours, minutes, seconds);
+      hours = hours < 10 ? "0" + hours : hours;
+      minutes = minutes < 10 ? "0" + minutes : minutes;
+      seconds = seconds < 10 ? "0" + seconds : seconds;
+
+      display.textContent = hours + ":"+ minutes + ":" + seconds;
+		}
+
+	  function startTimer(duration, display, isReverse) {
+      var timer = duration, hours, minutes, seconds;
+
+      if(isReverse) {
+      	clearInterval(cqVm.timerObj.time_taken);
+      	cqVm.timerObj.time_taken = setInterval(function () {
+      		manipulateTime(timer, display);
+          timer++;
+      	}, 1000);
+      } else {
+				cqVm.timerObj.time_left = setInterval(function () {
+      		manipulateTime(timer, display);
+        	if (--timer < 0) {
+            stopTimer();
+        	}
+      	}, 1000);
+      }
+
+      if(cqVm.quizEnded) {
+				clearAllTimers();
+			}
+    }
+
+    function stopTimer() {
+      clearInterval(cqVm.timerObj.time_left);
+    }
+
+    function initTimer(totalTime) {
+      var duration = Duration.parse(totalTime)
+      console.log(duration);
+      display = document.querySelector('#time');
+
+      stopTimer(); //Reset Time left interval
+      startTimer(duration.seconds(), display);
+    };
+
+
 		function getTime() {
 			// Hit the PING api
 			candidateService.getTime()
 			.then(function(data){
-				var time_left = data.time_left.split(".")[0]
-				cqVm.initTimer(time_left)
+				cqVm.initTimer(data.time_left)
 			}, function(err){
 				console.log(err);
 			})
 		}
 
-		function initTimer(time_left) {
-			console.log(time_left)
-		}
+		cqVm.timerObj.getTime = setInterval(function(){
+			cqVm.getTime();
+		}, 5000);
+
 	}
 
 

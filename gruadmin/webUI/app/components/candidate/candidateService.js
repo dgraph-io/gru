@@ -31,7 +31,7 @@
     }
 
     services.getTime = function() {
-      return MainService.post('/quiz/ping');
+      return MainService.post('/quiz/ping', "", true);
     }
 
     // private functions
