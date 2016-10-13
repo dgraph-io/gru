@@ -12,7 +12,6 @@ import (
 	"github.com/dgraph-io/gru/dgraph"
 	"github.com/dgraph-io/gru/gruadmin/server"
 	"github.com/dgraph-io/gru/gruadmin/tag"
-	"github.com/dgraph-io/gru/x"
 	"github.com/gorilla/mux"
 )
 
@@ -224,7 +223,6 @@ func Filter(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-	x.Debug(string(filter_body))
 	jsonResp, err := json.Marshal(string(filter_body))
 	if err != nil {
 		panic(err)

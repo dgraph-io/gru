@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	"github.com/dgraph-io/gru/gruadmin/server"
-	"github.com/dgraph-io/gru/x"
 )
 
 type Tag struct {
@@ -17,6 +16,7 @@ type Tag struct {
 }
 
 // fetch all the tags
+// TODO - Clean this up.
 func Index(w http.ResponseWriter, r *http.Request) {
 	server.AddCorsHeaders(w)
 	tag_mutation := "{debug(_xid_: rootQuestion) { question { question.tag { name _uid_} }}}"
@@ -29,12 +29,10 @@ func Index(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-	x.Debug(string(tag_body))
 
 	jsonResp, err := json.Marshal(string(tag_body))
 	if err != nil {
 		panic(err)
 	}
-	w.Header().Set("Content-Type", "application/json")
 	w.Write(jsonResp)
 }
