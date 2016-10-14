@@ -159,7 +159,7 @@ func QuestionHandler(w http.ResponseWriter, r *http.Request) {
 			<_uid_:` + userId + `> <candidate.question> <_new_:qn> .
       <_new_:qn> <question.uid> <_uid_:` + qn.Id + `> .
       <_uid_:` + qn.Id + `> <question.candidate> <_uid_:` + userId + `> .
-      <_new_:qn> <question.asked> "` + time.Now().String() + `" .
+      <_new_:qn> <question.asked> "` + time.Now().Format("2006-01-02T15:04:05Z07:00") + `" .
     }
 }`
 
@@ -312,7 +312,7 @@ func AnswerHandler(w http.ResponseWriter, r *http.Request) {
 		set {
 			<_uid_:` + cuid + `> <candidate.answer> "` + aid + `" .
       <_uid_:` + cuid + `> <candidate.score> "` + strconv.FormatFloat(score, 'g', -1, 64) + `" .
-      <_uid_:` + cuid + `> <question.answered> "` + time.Now().String() + `" .
+      <_uid_:` + cuid + `> <question.answered> "` + time.Now().Format("2006-01-02T15:04:05Z07:00") + `" .
     }
 }`
 	res := dgraph.SendMutation(mutation)
