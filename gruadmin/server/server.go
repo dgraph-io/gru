@@ -50,6 +50,13 @@ func MarshalResponse(r Response) []byte {
 	return b
 }
 
+func (r Response) Write(w http.ResponseWriter, err string, msg string, status int) {
+	r.Error = err
+	r.Message = msg
+	w.WriteHeader(status)
+	w.Write(MarshalResponse(r))
+}
+
 func WriteBody(w http.ResponseWriter, res Response) {
 	if err := json.NewEncoder(w).Encode(res); err != nil {
 		log.Fatal(err)

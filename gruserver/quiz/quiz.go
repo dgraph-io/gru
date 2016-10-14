@@ -130,7 +130,7 @@ func QuestionHandler(w http.ResponseWriter, r *http.Request) {
 	if len(c.qns) == 0 {
 		q := Question{
 			Id:    "END",
-			Score: c.score,
+			Score: float64(int(c.score*100)) / 100,
 		}
 		m := `mutation {
 		  set {
@@ -159,7 +159,7 @@ func QuestionHandler(w http.ResponseWriter, r *http.Request) {
 			<_uid_:` + userId + `> <candidate.question> <_new_:qn> .
       <_new_:qn> <question.uid> <_uid_:` + qn.Id + `> .
       <_uid_:` + qn.Id + `> <question.candidate> <_uid_:` + userId + `> .
-      <_new_:qn> <question.asked> "` + time.Now().UTC().String() + `" .
+      <_new_:qn> <question.asked> "` + time.Now().String() + `" .
     }
 }`
 
@@ -171,7 +171,7 @@ func QuestionHandler(w http.ResponseWriter, r *http.Request) {
 	c.qns = c.qns[1:]
 	c.lastQnId = qn.Id
 	UpdateMap(userId, c)
-	qn.Score = c.score
+	qn.Score = float64(int(c.score*100)) / 100
 	// TODO - Check value of qn in map shouldn't be zero.
 	qn.Cid = res.Uids["qn"]
 	b, err := json.Marshal(qn)
@@ -312,7 +312,7 @@ func AnswerHandler(w http.ResponseWriter, r *http.Request) {
 		set {
 			<_uid_:` + cuid + `> <candidate.answer> "` + aid + `" .
       <_uid_:` + cuid + `> <candidate.score> "` + strconv.FormatFloat(score, 'g', -1, 64) + `" .
-      <_uid_:` + cuid + `> <question.answered> "` + time.Now().UTC().String() + `" .
+      <_uid_:` + cuid + `> <question.answered> "` + time.Now().String() + `" .
     }
 }`
 	res := dgraph.SendMutation(mutation)

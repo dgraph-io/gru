@@ -323,6 +323,7 @@ func Validate(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusUnauthorized)
 		sr.Message = "You have already completed the quiz."
 		w.Write(server.MarshalResponse(sr))
+		return
 	}
 
 	quiz := resp.Cand[0].Quiz[0]
