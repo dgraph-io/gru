@@ -4,17 +4,23 @@
   <label class="mdl-textfield__label" for="search_question">Search question name</label>
 </div>
 <div class="question mt-20" ng-repeat="question in mainVm.allQuestions | filter:searchQ">
-	<div class="mdl-grid no-pad">
-		<div class="mdl-cell mdl-cell--1-col">
-			<label class="mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect" for="question-{{$index}}" ng-class="{'is-checked': mainVm.hasKey(quizVm.newQuiz.questions, 'question-'+$index)}">
-			  <input type="checkbox" id="question-{{$index}}" class="mdl-checkbox__input" ng-model="quizVm.newQuiz.questions['question-'+$index]" ng-true-value="{{question}}">
-			  <span class="mdl-checkbox__label"></span>
+	<div class="mdl-grid no-pad clickable-hover">
+		<div class="mdl-cell mdl-cell--12-col">
+			<label class="mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect height-inherit" for="question-{{$index}}" ng-class="{'is-checked': mainVm.hasKey(quizVm.newQuiz.questions, 'question-'+$index)}">
+			  <input type="checkbox" id="question-{{$index}}" class="mdl-checkbox__input" ng-model="quizVm.newQuiz.questions['question-'+$index]" ng-true-value="{{question}}" ng-change="quizVm.removeCheckedQuestion($index)">
+			  <span class="mdl-checkbox__label">
+			  	{{question.name}}
+			  	<div class="base-font">
+			  		Positve Score: {{question.positive}} &nbsp;&nbsp;
+			  		Negative Score: {{question.negative}}
+			  	</div>
+			  	<span ng-repeat="tags in question['question.tag'] track by $index">
+						<span class="mdl-chip">
+					    <span class="mdl-chip__text">{{tags.name}}</span>
+						</span>
+					</span>
+			  </span>
 			</label>
-		</div>
-		<div class="mdl-cell mdl-cell--8-col">
-			<a href="">
-		    <pre>{{question.name}}</pre>
-			</a>
 		</div>
 	</div>
 </div>

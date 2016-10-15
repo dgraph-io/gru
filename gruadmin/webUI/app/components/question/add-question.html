@@ -31,13 +31,13 @@
 			<div class="mdl-grid no-pad">
 				<div class="mdl-cell mdl-cell--3-col ml-0">
 					<div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label" ng-class="{'is-dirty': addQueVm.newQuestion.positive}">
-				    <input class="mdl-textfield__input" type="number" name="positive" id="positive-mark" ng-model="addQueVm.newQuestion.positive" step="0.1">
+				    <input class="mdl-textfield__input" type="number" name="positive" id="positive-mark" ng-model="addQueVm.newQuestion.positive" step="0.1" min="1">
 				    <label class="mdl-textfield__label" for="positive-mark">Positive Score</label>
 				  </div>
 				</div>
 				<div class="mdl-cell mdl-cell--3-col">
 				  <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label" ng-class="{'is-dirty': addQueVm.newQuestion.negative}">
-				    <input class="mdl-textfield__input" type="number" name="negative" id="negative-mark" ng-model="addQueVm.newQuestion.negative" step="0.1">
+				    <input class="mdl-textfield__input" type="number" name="negative" id="negative-mark" ng-model="addQueVm.newQuestion.negative" step="0.1" min="0">
 				    <label class="mdl-textfield__label" for="negative-mark">Negative Score</label>
 				  </div>
 				</div>

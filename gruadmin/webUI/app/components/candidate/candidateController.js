@@ -39,6 +39,7 @@
 		cqVm.submitAnswer = submitAnswer;
 		cqVm.getTime = getTime;
 		cqVm.initTimer = initTimer;
+		cqVm.calcTimeTaken = calcTimeTaken;
 
 	// INITIALIZERS
 		cqVm.getQuestion();
@@ -62,6 +63,8 @@
 					cqVm.total_score = data.score;
 
 					clearAllTimers();
+
+					cqVm.calcTimeTaken();
 				}
 
 				if(cqVm.question.multiple == "true") {
@@ -126,12 +129,19 @@
 			})
 		}
 
-		function manipulateTime (timer, display) {
+		function manipulateTime (timer, display, isTimeLeft) {
       hours = Math.floor(timer / 3600);
       minutes = parseInt((timer / 60) % 60, 10);
       seconds = parseInt(timer % 60, 10);
 
-      console.log(hours, minutes, seconds);
+      if(isTimeLeft) {
+      	cqVm.finalTimeLeft = {
+	      	hours: hours,
+	      	minutes: minutes,
+	      	seconds: seconds,
+	      }
+      }
+
       hours = hours < 10 ? "0" + hours : hours;
       minutes = minutes < 10 ? "0" + minutes : minutes;
       seconds = seconds < 10 ? "0" + seconds : seconds;
@@ -150,7 +160,7 @@
       	}, 1000);
       } else {
 				cqVm.timerObj.time_left = setInterval(function () {
-      		manipulateTime(timer, display);
+      		manipulateTime(timer, display, true);
         	if (--timer < 0) {
             stopTimer();
         	}
@@ -190,7 +200,85 @@
 			cqVm.getTime();
 		}, 5000);
 
+		function calcTimeTaken(){
+			var quizTime = JSON.parse(localStorage.getItem("quiz_time"));
+
+			var hours = quizTime.hours - cqVm.finalTimeLeft.hours;
+			var minutes = quizTime.minutes - cqVm.finalTimeLeft.minutes;
+			var seconds = quizTime.seconds - cqVm.finalTimeLeft.seconds;
+
+			timeTakenSec = hours * 3600 + minutes * 60 + seconds;
+
+			var timeTaken = {
+        hours:  Math.floor(timeTakenSec / 3600),
+        minutes: parseInt((timeTakenSec / 60) % 60, 10),
+        seconds: parseInt(timeTakenSec % 60, 10),
+      }
+
+      // Adding prefix
+      hours = timeTaken.hours < 10 ? "0" + timeTaken.hours : timeTaken.hours;
+      minutes = timeTaken.minutes < 10 ? "0" + timeTaken.minutes : timeTaken.minutes;
+      seconds = timeTaken.seconds < 10 ? "0" + timeTaken.seconds : timeTaken.seconds;
+
+      var text = hours + ":"+ minutes + ":" + seconds; 
+      $("#time-taken").text(text);
+		}
+
 	}
+
+	function quizLandingController($state, $stateParams, $q, $http) {
+
+	// VARIABLE DECLARATION
+		qlVm = this;
+		qlVm.invalidUser = false;
+		mainVm.pageName = "quiz-landing";
+
+		if(!$stateParams.quiz_token) {
+			console.log("Not a valid CANDIDATE");
+		}
+
+	// FUNCTION DECLARATION
+		qlVm.validateQuiz = validateQuiz;
+
+	// FUNCTION DEFINITION
+		qlVm.validateQuiz();
+
+		// Check if user is authorized
+		function validateQuiz() {
+			var req = {
+				method: 'POST',
+        url: mainVm.candidate_url + "/validate/" + $stateParams.quiz_token,
+			}
+
+			$http(req)
+      .then(function(data) {
+    
+      		var token = data.data.token;
+
+      		if(token) {
+      			localStorage.setItem('candidate_token', token);
+      			$state.transitionTo("candidate.landing");
+
+      			qlVm.time = mainVm.parseGoTime(data.data.duration);
+      		} else {
+      			qlVm.invalidUser = true;
+      		}
+        },
+        function(response, code) {
+      		qlVm.invalidUser = true;
+        }
+      );
+		}
+	}
+
+	var quizLandingDependency = [
+	    "$state",
+	    "$stateParams",
+	    "$q",
+	    "$http",
+	    quizLandingController
+	];
+	angular.module('GruiApp').controller('quizLandingController', quizLandingDependency);
 
 
 	// CANDIDATE QUIZ

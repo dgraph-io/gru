@@ -2,6 +2,9 @@
 .small-font {
   font-size: 12px;
 }
+.base-font {
+  font-size: 14px;
+}
 .text-green {
   color: #4CB973;
 }
@@ -42,7 +45,9 @@
 .pull-right {
   float: right;
 }
-
+.height-inherit {
+  height: inherit;
+}
 .italic {
 	font-style: italic;
 }
@@ -94,6 +99,9 @@
 }
 .mdl-button.btn-black {
     background: black;
+}
+.mdl-button.btn-default {
+    background: grey;
 }
 .mdl-button.btn-succes:hover {
   background-color: #009688;

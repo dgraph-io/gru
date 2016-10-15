@@ -215,11 +215,13 @@ angular.module('GruiApp').provider('RouteHelpers', ['APP_REQUIRES', function (ap
       mainVm.isObject = isObject;
       mainVm.goTo = goTo;
       mainVm.unescapeText = unescapeText;
+      mainVm.objLen = objLen;
 
       mainVm.isLoggedIn = isLoggedIn;
       mainVm.logout = logout;
       mainVm.isValidCandidate = isValidCandidate;
       mainVm.markDownFormat = markDownFormat;
+      mainVm.parseGoTime = parseGoTime;
 
       mainVm.getAllTags = getAllTags;
 
@@ -243,6 +245,11 @@ angular.module('GruiApp').provider('RouteHelpers', ['APP_REQUIRES', function (ap
         };
         return -1;
       }
+
+      function objLen(object) {
+        return Object.keys(object).length;
+      }
+
 
       function unescapeText(question) {
         return unescape(question);
@@ -308,6 +315,17 @@ angular.module('GruiApp').provider('RouteHelpers', ['APP_REQUIRES', function (ap
         );
 
         return deferred.promise;
+      }
+
+      function parseGoTime(time) {
+        var duration = Duration.parse(time);
+        var totalSec = duration.seconds();
+
+        return {
+          hours: Math.floor(totalSec / 3600),
+          minutes: parseInt((totalSec / 60) % 60, 10),
+          seconds: parseInt(totalSec % 60, 10),
+        }
       }
     }
 

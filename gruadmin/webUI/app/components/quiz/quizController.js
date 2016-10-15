@@ -9,9 +9,11 @@
 
 	// FUNCTION DECLARATION
 		quizVm.removeSelectedQuestion = removeSelectedQuestion;
+		quizVm.removeCheckedQuestion = removeCheckedQuestion;
 		quizVm.addQuizForm = addQuizForm;
 		quizVm.validateInput = validateInput;
 		quizVm.getAllQuestions = getAllQuestions;
+		quizVm.getTotalScore = getTotalScore;
 
 	// FUNCTION DEFINITION
 		quizVm.getAllQuestions();
@@ -35,6 +37,13 @@
 			}
 		}
 
+		function removeCheckedQuestion(index) {
+			var questionIndex = 'question-'+index;
+			if(quizVm.newQuiz.questions[questionIndex] === false) {
+				quizVm.removeSelectedQuestion(questionIndex);
+			}
+		}
+
 		function addQuizForm() {
 			var questions = []
 			var requestData = {};
@@ -51,8 +60,13 @@
 			}
 			var qustionsClone = angular.copy(quizVm.newQuiz.questions)
 			angular.forEach(qustionsClone, function(value, key) {
-			  questions.push({_uid_: value._uid_});
+				if(qustionsClone[key]) {
+					questions.push({_uid_: value._uid_});
+				}
 			});
+			
+			console.log(questions)
+			return	
 			requestData.questions = questions;
 
 			requestData.duration = (requestData.hours || 0) + "h" + (requestData.minutes || 0) + "m" + (requestData.seconds || 0) + "s";
@@ -76,22 +90,26 @@
 			if(!inputs.minutes && !inputs.hours) {
 				return "Please enter valid time"
 			}
-			// if(!inputs.duration) {
-			// 	return "Please enter valid Duration"
-			// }
-			// if(!inputs.start_date) {
-			// 	return "Please enter valid Start date"
-			// }
-			// if(!inputs.end_date) {
-			// 	return "Please enter valid End date"
-			// }	
 			if(!inputs.questions) {
 				return "Please add question to the quiz before submitting"
 			}
-
 			return false
 		}
 
+		function getTotalScore(questions) {
+			var totalScore = 0;
+			angular.forEach(questions, function(value, key) {
+				if(!value.is_delete) { //Hadnling edit page condition
+					totalScore += parseInt(value.positive);
+				}
+			});
+			if(quizVm.newQuiz.newQuestions && quizVm.newQuiz.newQuestions.length) {
+				for(var i = 0; i < quizVm.newQuiz.newQuestions.length; i++) {
+					totalScore += parseInt(quizVm.newQuiz.newQuestions[i].positive);
+				}
+			} 
+			return totalScore;
+		}
 	}
 
 	function allQuizController(quizService, questionService) {
@@ -116,6 +134,7 @@
 		editQuizVm.onNewQuestionRemove = onNewQuestionRemove;
 		editQuizVm.addNewQuestion = addNewQuestion;
 		editQuizVm.getTimeObj = getTimeObj;
+		editQuizVm.getQuestionCount = getQuestionCount;
 
 		// INITITALIZER
 		quizVm.getAllQuestions();
@@ -150,6 +169,22 @@
 			}
 
 			var newQues = quizVm.newQuiz.newQuestions;
+
+			var deletedAllExisting = true;
+			for(var j = 0; j < quizVm.newQuiz.questions.length; j++) {
+				if(!quizVm.newQuiz.questions[j].is_delete) {
+					deletedAllExisting = false;
+				}
+			}
+
+			if(deletedAllExisting && !newQues.length) {
+				SNACKBAR({
+					message: "You must add at least one question",
+					messageType: "error",
+				});
+				return;
+			}
+
 			if(newQues) {
 				for(var i =0; i < newQues.length; i++) {
 					quizVm.newQuiz.questions.push({
@@ -219,7 +254,6 @@
 			if(question._uid_) {
 				question.is_delete = true;
 			}
-			console.log(question);
 		}
 
 		function onNewQuestionRemove(question) {
@@ -249,6 +283,20 @@
 				minutes: parseInt(timeArr[1]),
 				seconds: parseInt(timeArr[2]),
 			}
+		}
+
+		function getQuestionCount() {
+			var totatQuestion = 0;
+			var existingQues = quizVm.newQuiz['quiz.question'];
+			var newQuestions = quizVm.newQuiz.newQuestions;
+			for(var i = 0; i < existingQues.length; i++) {
+				if(!existingQues[i].is_delete) {
+					totatQuestion += 1;
+				}
+			}
+			totatQuestion += newQuestions.length;
+
+			return totatQuestion;
 		}
 	}
 

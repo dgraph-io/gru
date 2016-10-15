@@ -119,6 +119,5 @@
       //   window.location.reload();
       // }, 10);
     });
-
   })  
 })();

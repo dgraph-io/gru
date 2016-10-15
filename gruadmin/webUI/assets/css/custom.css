@@ -34,6 +34,9 @@
 .mdl-grid.no-pad {
   padding: 0;
 }
+.mdl-grid.no-margin-lr .mdl-cell {
+  margin: 10px 0;
+}
 .ng-cloak {
   display: none;
 }
@@ -124,6 +127,22 @@ button.btn-lg {
 .slide-link.is-active .mdl-chip {
   background: white;
   color: black;
+}
+.mdl-checkbox {
+  height: inherit;
+}
+
+.mdl-success.is-checked .mdl-checkbox__tick-outline {
+    background: #009688;
+}
+.mdl-success.is-checked .mdl-checkbox__box-outline {
+    border: 2px solid #009688;
+}
+.mdl-success.is-checked .mdl-checkbox__label {
+    color: #009688;
+}
+.mdl-button[disabled][disabled], .mdl-button.mdl-button--disabled.mdl-button--disabled {
+  border: 1px solid #9E9E9E;
 }
 
 /*HOME PAGE*/
@@ -263,6 +282,19 @@ body.home {
     width: 34px;
 }
 
+.quiz-questions.mdl-chip {
+  height: inherit;
+}
+
+.quiz-questions.mdl-chip .mdl-chip__text{
+  white-space: normal;
+}
+
+.clickable-hover:hover {
+  background: rgba(213, 214, 214, 0.42);
+  cursor: pointer;
+}
+
 /* CODEMIRROR*/
 .CodeMirror {
   border-bottom: 1px solid black;
@@ -296,6 +328,19 @@ body.home {
 .mdl-chip--contact .mdl-chip__text {
   min-width: 40px;
   font-size: 16px;
+}
+
+.quiz-ended {
+  position: fixed;
+  width: 66%;
+  top: 50%;
+  transform: translateY(-50%);
+}
+.quiz-ended .pull-right {
+  float: none;
+}
+.quiz-ended .mdl-chip__contact {
+  font-size: 20px;
 }
     
 /*TABLET + MOBILE SPECIFIC CSS*/
