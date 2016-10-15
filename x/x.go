@@ -23,6 +23,15 @@ func Shuffle(ids []string) {
 	}
 }
 
+func StringInSlice(a string, list []string) bool {
+	for _, b := range list {
+		if b == a {
+			return true
+		}
+	}
+	return false
+}
+
 type Claims struct {
 	UserId string `json:"user_id"`
 	jwt.StandardClaims

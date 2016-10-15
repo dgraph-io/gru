@@ -46,6 +46,10 @@ type Candidate struct {
 	quizStart    time.Time
 }
 
+func (c *Candidate) QuizStart() time.Time {
+	return c.quizStart
+}
+
 func (c Candidate) LastExchange() time.Time {
 	return c.lastExchange
 }
@@ -57,6 +61,15 @@ func New(uid string, qns []Question, qd time.Duration) Candidate {
 	copy(c.qns, qns)
 	UpdateMap(uid, c)
 	return c
+}
+
+func Update(uid string, qns []Question) {
+	c, err := ReadMap(uid)
+	if err != nil {
+		return
+	}
+	c.qns = qns
+	UpdateMap(uid, c)
 }
 
 func init() {
@@ -124,6 +137,17 @@ func QuestionHandler(w http.ResponseWriter, r *http.Request) {
 	// the candidate reaches here.
 	if c.quizStart.IsZero() {
 		c.quizStart = time.Now().UTC()
+		m := `mutation {
+		  set {
+			  <_uid_:` + userId + `> <quiz_start> "` + c.quizStart.String() + `" .
+			}
+		}
+		`
+		res := dgraph.SendMutation(m)
+		if res.Code != "ErrorOk" {
+			fmt.Println(res.Message)
+			// TODO - Send error.
+		}
 		// TODO - Write to DB, so that we can recover this after crash.
 	}
 	// TODO - Write to DB here also that quiz ended successfully.
@@ -157,11 +181,11 @@ func QuestionHandler(w http.ResponseWriter, r *http.Request) {
 	m := `mutation {
 		set {
 			<_uid_:` + userId + `> <candidate.question> <_new_:qn> .
-      <_new_:qn> <question.uid> <_uid_:` + qn.Id + `> .
-      <_uid_:` + qn.Id + `> <question.candidate> <_uid_:` + userId + `> .
-      <_new_:qn> <question.asked> "` + time.Now().Format("2006-01-02T15:04:05Z07:00") + `" .
-    }
-}`
+			<_new_:qn> <question.uid> <_uid_:` + qn.Id + `> .
+			<_uid_:` + qn.Id + `> <question.candidate> <_uid_:` + userId + `> .
+			<_new_:qn> <question.asked> "` + time.Now().Format("2006-01-02T15:04:05Z07:00") + `" .
+		}
+	}`
 
 	res := dgraph.SendMutation(m)
 	if res.Code != "ErrorOk" {

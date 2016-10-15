@@ -85,9 +85,7 @@ func get(quizId string) string {
         	_uid_
         	name
         	duration
-        	start_date
-        	end_date
-          quiz.question { _uid_ name text }
+		quiz.question { _uid_ name text }
         }
     }`
 }
