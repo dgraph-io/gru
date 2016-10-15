@@ -17,6 +17,10 @@ import (
 	"github.com/gorilla/mux"
 )
 
+type qids struct {
+	QuestionUid []uid `json:"question.uid"`
+}
+
 type Candidate struct {
 	Uid       string
 	Name      string `json:"name"`
@@ -27,6 +31,7 @@ type Candidate struct {
 	QuizId    string `json:"quiz_id"`
 	OldQuizId string `json:"old_quiz_id"`
 	Quiz      []quiz `json:"candidate.quiz"`
+	Questions []qids `json:"candidate.question"`
 }
 
 const (
@@ -188,16 +193,16 @@ func Edit(w http.ResponseWriter, r *http.Request) {
 func get(candidateId string) string {
 	return `
     {
-        quiz.candidate(_uid_:` + candidateId + `) {
-          name
-          email
-		  token
-          validity
-          complete
-		  candidate.quiz {
-		    _uid_
-		    duration
-		  }
+	quiz.candidate(_uid_:` + candidateId + `) {
+		name
+		email
+		token
+		validity
+		complete
+		candidate.quiz {
+			_uid_
+			duration
+		}
 	  }
     }`
 }
@@ -223,10 +228,10 @@ type qnIdsResp struct {
 	Quizzes []quiz `json:"quiz"`
 }
 
-func quizQns(quizId string) []quizp.Question {
+func quizQns(quizId string, qnsAsked []string) []quizp.Question {
 	q := `{
-			quiz(_uid_: ` + quizId + `) {
-				quiz.question {
+		quiz(_uid_: ` + quizId + `) {
+			quiz.question {
 				_uid_
 				text
 				positive
@@ -245,7 +250,21 @@ func quizQns(quizId string) []quizp.Question {
 	if len(resp.Quizzes) != 1 {
 		log.Fatal("Length of quizzes should just be 1")
 	}
-	return resp.Quizzes[0].Questions
+
+	if len(qnsAsked) == 0 {
+		return resp.Quizzes[0].Questions
+	}
+
+	allQns := resp.Quizzes[0].Questions
+	idx := 0
+	for _, qn := range allQns {
+		if !x.StringInSlice(qn.Id, qnsAsked) {
+			allQns[idx] = qn
+			idx++
+		}
+	}
+	allQns = allQns[:idx]
+	return allQns
 }
 
 type resp struct {
@@ -255,6 +274,45 @@ type resp struct {
 type Res struct {
 	Token    string `json:"token"`
 	Duration string `json:"duration"`
+	Started  bool   `json:"quiz_started"`
+	Name     string
+}
+
+func qnsAsked(qns []qids) []string {
+	var uids []string
+	for _, qn := range qns {
+		uids = append(uids, qn.QuestionUid[0].Id)
+	}
+	return uids
+}
+
+func validate(cid string) string {
+	return `{
+	quiz.candidate(_uid_:` + cid + `) {
+		name
+		email
+		token
+		validity
+		complete
+		candidate.quiz {
+			_uid_
+			duration
+		}
+		candidate.question {
+			question.uid {
+				_uid_
+			}
+		}
+	  }
+    }`
+}
+
+func timeLeft(start time.Time, dur time.Duration) time.Duration {
+	if start.IsZero() {
+		return dur
+	}
+	// If start isn't zero we return the time left.
+	return start.Add(dur).Sub(time.Now())
 }
 
 func Validate(w http.ResponseWriter, r *http.Request) {
@@ -263,13 +321,10 @@ func Validate(w http.ResponseWriter, r *http.Request) {
 	sr := server.Response{}
 	// This is the length of the random string. The id is uid + random string.
 	if len(id) < 33 {
-		w.WriteHeader(http.StatusUnauthorized)
-		sr.Message = "Invalid token."
-		w.Write(server.MarshalResponse(sr))
+		sr.Write(w, "", "Invalid token.", http.StatusUnauthorized)
 		return
 	}
 
-	// TODO - Check if the validity or the duration already elapsed.
 	uid, token := id[:len(id)-33], id[len(id)-33:]
 
 	c, err := quizp.ReadMap(uid)
@@ -285,60 +340,70 @@ func Validate(w http.ResponseWriter, r *http.Request) {
 
 	// Candidate doesn't exist in the map. So we get candidate info from uid and
 	// insert it into map.
-	q := get(uid)
+	q := validate(uid)
 	res := dgraph.Query(q)
 	var resp resp
 	json.Unmarshal(res, &resp)
 	if len(resp.Cand) != 1 || len(resp.Cand[0].Quiz) != 1 {
 		// No candidiate found with given uid
-		w.WriteHeader(http.StatusUnauthorized)
-		sr.Message = "Invalid token."
-		w.Write(server.MarshalResponse(sr))
+		sr.Write(w, "", "Invalid token.", http.StatusUnauthorized)
 		return
 	}
 
 	if resp.Cand[0].Token != token || resp.Cand[0].Quiz[0].Id == "" {
-		w.WriteHeader(http.StatusUnauthorized)
-		sr.Message = "Invalid token."
-		w.Write(server.MarshalResponse(sr))
+		sr.Write(w, "", "Invalid token.", http.StatusUnauthorized)
 		return
 	}
 
 	var v time.Time
 	if v, err = time.Parse("2006-01-02 15:04:05 +0000 UTC", resp.Cand[0].Validity); err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		sr.Error = err.Error()
-		w.Write(server.MarshalResponse(sr))
+		sr.Write(w, err.Error(), "", http.StatusInternalServerError)
 		return
 	}
 
 	if v.Before(time.Now()) {
-		w.WriteHeader(http.StatusUnauthorized)
-		sr.Message = "Your token has already expired. Please contact contact@dgraph.io."
-		w.Write(server.MarshalResponse(sr))
+		sr.Write(w, "", "Your token has already expired. Please contact contact@dgraph.io.",
+			http.StatusUnauthorized)
+		return
+	}
+
+	cand := resp.Cand[0]
+	quiz := cand.Quiz[0]
+	dur, err := time.ParseDuration(quiz.Duration)
+	if err != nil {
+		sr.Write(w, err.Error(), "", http.StatusInternalServerError)
+		return
+	}
+
+	if timeLeft(c.QuizStart(), dur) < 0 {
+		sr.Write(w, "", "Your token is no longer valid.", http.StatusUnauthorized)
 		return
 	}
 
 	if resp.Cand[0].Complete {
-		w.WriteHeader(http.StatusUnauthorized)
-		sr.Message = "You have already completed the quiz."
-		w.Write(server.MarshalResponse(sr))
+		sr.Write(w, "", "You have already completed the quiz.",
+			http.StatusUnauthorized)
+		return
 	}
 
-	quiz := resp.Cand[0].Quiz[0]
+	// He has already been asked some questions.
+	var qa []string
+	if len(cand.Questions) > 0 {
+		qa = qnsAsked(cand.Questions)
+	}
+
 	// Get quiz questions for the quiz id.
-	qns := quizQns(quiz.Id)
+	qns := quizQns(quiz.Id, qa)
 	// TODO - Shuffle the order of questions.
 	// x.Shuffle(ids)
-	dur, err := time.ParseDuration(quiz.Duration)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		sr.Error = err.Error()
-		w.Write(server.MarshalResponse(sr))
+
+	if len(cand.Questions) > 0 {
+		quizp.Update(uid, qns)
+	} else {
+		quizp.New(uid, qns, dur)
 	}
 
-	quizp.New(uid, qns, dur)
-
+	// Add the user id as a claim and return the token.
 	claims := x.Claims{
 		UserId: uid,
 	}
@@ -346,17 +411,20 @@ func Validate(w http.ResponseWriter, r *http.Request) {
 
 	tokenString, err := jwtToken.SignedString([]byte(*auth.Secret))
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		sr.Error = err.Error()
-		w.Write(server.MarshalResponse(sr))
+		sr.Write(w, err.Error(), "", http.StatusInternalServerError)
 		return
 	}
 
 	// TODO - Incase candidate already has a active session return error after
 	// implementing Ping.
-	// TODO - Also send quiz duration and time left incase candidate restarts.
 	json.NewEncoder(w).Encode(Res{
-		Token:    tokenString,
-		Duration: dur.String(),
+		Token: tokenString,
+		// TODO - Handle case when quizStart is nil
+		Duration: timeLeft(c.QuizStart(), dur).String(),
+		// Whether quiz was already started by the candidate.
+		// If this is true the client can just call the questions API and
+		// skip showing the instructions page.
+		Started: len(cand.Questions) > 0,
+		Name:    cand.Name,
 	})
 }

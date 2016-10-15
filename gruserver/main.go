@@ -136,15 +136,6 @@ func sliceDiff(qnList []Question, qnsAsked []string) []Question {
 	return qns
 }
 
-func stringInSlice(a string, list []string) bool {
-	for _, b := range list {
-		if b == a {
-			return true
-		}
-	}
-	return false
-}
-
 func shuffleOptions(opts []*quizmeta.Answer) {
 	for i := range opts {
 		j := rand.Intn(i + 1)

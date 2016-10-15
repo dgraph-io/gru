@@ -46,6 +46,10 @@ type Candidate struct {
 	quizStart    time.Time
 }
 
+func (c *Candidate) QuizStart() time.Time {
+	return c.quizStart
+}
+
 func (c Candidate) LastExchange() time.Time {
 	return c.lastExchange
 }
@@ -57,6 +61,15 @@ func New(uid string, qns []Question, qd time.Duration) Candidate {
 	copy(c.qns, qns)
 	UpdateMap(uid, c)
 	return c
+}
+
+func Update(uid string, qns []Question) {
+	c, err := ReadMap(uid)
+	if err != nil {
+		return
+	}
+	c.qns = qns
+	UpdateMap(uid, c)
 }
 
 func init() {
@@ -124,13 +137,24 @@ func QuestionHandler(w http.ResponseWriter, r *http.Request) {
 	// the candidate reaches here.
 	if c.quizStart.IsZero() {
 		c.quizStart = time.Now().UTC()
+		m := `mutation {
+		  set {
+			  <_uid_:` + userId + `> <quiz_start> "` + c.quizStart.String() + `" .
+			}
+		}
+		`
+		res := dgraph.SendMutation(m)
+		if res.Code != "ErrorOk" {
+			fmt.Println(res.Message)
+			// TODO - Send error.
+		}
 		// TODO - Write to DB, so that we can recover this after crash.
 	}
 	// TODO - Write to DB here also that quiz ended successfully.
 	if len(c.qns) == 0 {
 		q := Question{
 			Id:    "END",
-			Score: c.score,
+			Score: float64(int(c.score*100)) / 100,
 		}
 		m := `mutation {
 		  set {
@@ -157,11 +181,11 @@ func QuestionHandler(w http.ResponseWriter, r *http.Request) {
 	m := `mutation {
 		set {
 			<_uid_:` + userId + `> <candidate.question> <_new_:qn> .
-      <_new_:qn> <question.uid> <_uid_:` + qn.Id + `> .
-      <_uid_:` + qn.Id + `> <question.candidate> <_uid_:` + userId + `> .
-      <_new_:qn> <question.asked> "` + time.Now().UTC().String() + `" .
-    }
-}`
+			<_new_:qn> <question.uid> <_uid_:` + qn.Id + `> .
+			<_uid_:` + qn.Id + `> <question.candidate> <_uid_:` + userId + `> .
+			<_new_:qn> <question.asked> "` + time.Now().Format("2006-01-02T15:04:05Z07:00") + `" .
+		}
+	}`
 
 	res := dgraph.SendMutation(m)
 	if res.Code != "ErrorOk" {
@@ -171,7 +195,7 @@ func QuestionHandler(w http.ResponseWriter, r *http.Request) {
 	c.qns = c.qns[1:]
 	c.lastQnId = qn.Id
 	UpdateMap(userId, c)
-	qn.Score = c.score
+	qn.Score = float64(int(c.score*100)) / 100
 	// TODO - Check value of qn in map shouldn't be zero.
 	qn.Cid = res.Uids["qn"]
 	b, err := json.Marshal(qn)
@@ -312,7 +336,7 @@ func AnswerHandler(w http.ResponseWriter, r *http.Request) {
 		set {
 			<_uid_:` + cuid + `> <candidate.answer> "` + aid + `" .
       <_uid_:` + cuid + `> <candidate.score> "` + strconv.FormatFloat(score, 'g', -1, 64) + `" .
-      <_uid_:` + cuid + `> <question.answered> "` + time.Now().UTC().String() + `" .
+      <_uid_:` + cuid + `> <question.answered> "` + time.Now().Format("2006-01-02T15:04:05Z07:00") + `" .
     }
 }`
 	res := dgraph.SendMutation(mutation)

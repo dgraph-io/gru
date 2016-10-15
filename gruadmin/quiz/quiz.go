@@ -85,8 +85,6 @@ func get(quizId string) string {
         	_uid_
         	name
         	duration
-        	start_date
-        	end_date
           quiz.question { _uid_ name text positive negative question.tag { _uid_ name }}
         }
     }`
