@@ -2,7 +2,7 @@
 	<div class="">
 		<div class="mdl-grid mb-30" ng-class="{'quiz-ended mdl-shadow--2dp pv-20': cqVm.quizEnded, 'b-border': !cqVm.quizEnded }">
 			<div class="mdl-cell mdl-cell--middle" ng-class="{'mdl-cell--4-col': cqVm.quizEnded, 'mdl-cell--3-col': !cqVm.quizEnded }">
-				<h5 ng-if="cqVm.quizEnded" class="bold">Hi, {{candidateVm.info.Name}}, </h5>
+				<h5 ng-if="cqVm.quizEnded" class="bold">Hi, {{candidateVm.info.Name}}. </h5>
 				<h5 class="bold">Your quiz <span ng-if="cqVm.quizEnded">ended</span></h5>
 			</div>
 			<div class="mdl-cell mdl-cell--6-col mdl-cell--middle big-font">
