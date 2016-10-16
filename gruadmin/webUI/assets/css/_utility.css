@@ -11,6 +11,9 @@
 .text-red {
 	color: #EC3D2E;
 }
+.bg-grey {
+  background: rgba(213, 214, 214, 0.3);
+}
 .bg-green, .success {
   background: #4CAF50;
   color: white;
@@ -219,4 +222,41 @@
 
 .mdl-textfield.is-focused .material-icons {
   color: rgb(63,81,181)
+}
+
+/*VERTICAL TABS*/
+
+.vertical-mdl-tabs .mdl-tabs__tab-bar {
+  -webkit-flex-direction: column;
+      -ms-flex-direction: column;
+          flex-direction: column;
+  height: inherit;
+  border-bottom: none;
+  border-right: 1px solid rgba(10, 11, 49, 0.20);
+}
+
+.vertical-mdl-tabs .mdl-tabs__tab {
+  width: 100%;
+  height: inherit;
+  padding-left: 5px;
+  line-height: 35px;
+  box-sizing: border-box;
+}
+
+.vertical-mdl-tabs .mdl-tabs__tab:hover,
+.vertical-mdl-tabs.mdl-tabs.is-upgraded .mdl-tabs__tab.is-active:hover {
+  background-color: #ED462F;
+  color: white;
+}
+
+.vertical-mdl-tabs.mdl-tabs.is-upgraded a.mdl-tabs__tab.is-active {
+  border-right: 2px solid #ED462F;
+  color: #ED462F;
+}
+.vertical-mdl-tabs.mdl-tabs.is-upgraded .mdl-tabs__tab.is-active:after {
+  content: inherit;
+  height: 0;
+}
+.vertical-mdl-tabs.mdl-tabs .mdl-tabs__tab {
+  text-align: left;
 }

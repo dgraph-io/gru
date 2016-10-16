@@ -16,9 +16,10 @@
 
 		// Check if user is authorized
 		function checkValidity() {
-			var ctoken = localStorage.getItem("candidate_token");
+			var ctoken = JSON.parse(localStorage.getItem("candidate_info"));
 
-			if(ctoken) {
+			if(ctoken.token) {
+				candidateVm.info = ctoken;
 				return true
 			} else {
 				return false
@@ -40,9 +41,12 @@
 		cqVm.getTime = getTime;
 		cqVm.initTimer = initTimer;
 		cqVm.calcTimeTaken = calcTimeTaken;
+		cqVm.stopQuiz = stopQuiz;
 
 	// INITIALIZERS
+	if(candidateVm.isValidUser) {
 		cqVm.getQuestion();
+	}
 
 	// FUNCTION DEFINITION
 
@@ -59,12 +63,8 @@
 
 				cqVm.question = data;
 				if(data._uid_ == "END") {
-					cqVm.quizEnded = true;
+					cqVm.stopQuiz();
 					cqVm.total_score = data.score;
-
-					clearAllTimers();
-
-					cqVm.calcTimeTaken();
 				}
 
 				if(cqVm.question.multiple == "true") {
@@ -73,14 +73,19 @@
 
 				$rootScope.updgradeMDL();
 			}, function(err){	
-				console.log(err);
 				clearAllTimers();
-				cqVm.apiError = true;
+				cqVm.apiError = err.data.Message;
 				SNACKBAR({
-					message: "Something Went Wrong",
+					message: err.data.Message,
 					messageType: "error",
 				})
 			})
+		}
+
+		function stopQuiz() {
+			cqVm.quizEnded = true;
+			clearAllTimers();
+			cqVm.calcTimeTaken();
 		}
 
 		function clearAllTimers() {
@@ -123,13 +128,17 @@
 				cqVm.answer = "";
 				if(data.status == 200) {
 					cqVm.getQuestion();
+				} else {
+					clearAllTimers();
 				}
 			}, function(err){
-				console.log(err);
+				if(err.status == 400) {
+
+				}
 			})
 		}
 
-		function manipulateTime (timer, display, isTimeLeft) {
+		function manipulateTime(timer, display, isTimeLeft) {
       hours = Math.floor(timer / 3600);
       minutes = parseInt((timer / 60) % 60, 10);
       seconds = parseInt(timer % 60, 10);
@@ -178,7 +187,6 @@
 
     function initTimer(totalTime) {
       var duration = Duration.parse(totalTime)
-      console.log(duration);
       display = document.querySelector('#time');
 
       stopTimer(); //Reset Time left interval
@@ -190,7 +198,17 @@
 			// Hit the PING api
 			candidateService.getTime()
 			.then(function(data){
-				cqVm.initTimer(data.time_left)
+				isPositve = Duration.parse(data.time_left)._nanoseconds > 0;
+				if(isPositve) {
+					cqVm.initTimer(data.time_left)
+				} else {
+					cqVm.finalTimeLeft = {
+						hours: 0,
+						minutes: 0,
+						seconds: 0,
+					}
+					cqVm.stopQuiz();
+				}
 			}, function(err){
 				console.log(err);
 			})
@@ -201,7 +219,7 @@
 		}, 5000);
 
 		function calcTimeTaken(){
-			var quizTime = JSON.parse(localStorage.getItem("quiz_time"));
+			var quizTime = JSON.parse(localStorage.getItem("candidate_info")).duration;
 
 			var hours = quizTime.hours - cqVm.finalTimeLeft.hours;
 			var minutes = quizTime.minutes - cqVm.finalTimeLeft.minutes;
@@ -222,64 +240,13 @@
 
       var text = hours + ":"+ minutes + ":" + seconds; 
       $("#time-taken").text(text);
+
+      if(cqVm.finalTimeLeft.hours + cqVm.finalTimeLeft.minutes + cqVm.finalTimeLeft.seconds == 0) {
+      	manipulateTime(0, document.querySelector('#time'))
+      }
 		}
 
 	}
-
-	function quizLandingController($state, $stateParams, $q, $http) {
-
-	// VARIABLE DECLARATION
-		qlVm = this;
-		qlVm.invalidUser = false;
-		mainVm.pageName = "quiz-landing";
-
-		if(!$stateParams.quiz_token) {
-			console.log("Not a valid CANDIDATE");
-		}
-
-	// FUNCTION DECLARATION
-		qlVm.validateQuiz = validateQuiz;
-
-	// FUNCTION DEFINITION
-		qlVm.validateQuiz();
-
-		// Check if user is authorized
-		function validateQuiz() {
-			var req = {
-				method: 'POST',
-        url: mainVm.candidate_url + "/validate/" + $stateParams.quiz_token,
-			}
-
-			$http(req)
-      .then(function(data) {
-    
-      		var token = data.data.token;
-
-      		if(token) {
-      			localStorage.setItem('candidate_token', token);
-      			$state.transitionTo("candidate.landing");
-
-      			qlVm.time = mainVm.parseGoTime(data.data.duration);
-      		} else {
-      			qlVm.invalidUser = true;
-      		}
-        },
-        function(response, code) {
-      		qlVm.invalidUser = true;
-        }
-      );
-		}
-	}
-
-	var quizLandingDependency = [
-	    "$state",
-	    "$stateParams",
-	    "$q",
-	    "$http",
-	    quizLandingController
-	];
-	angular.module('GruiApp').controller('quizLandingController', quizLandingDependency);
-
 
 	// CANDIDATE QUIZ
 	var candidateQuizDependency = [

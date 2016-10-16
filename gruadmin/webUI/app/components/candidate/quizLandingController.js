@@ -9,6 +9,9 @@
 
 		if(!$stateParams.quiz_token) {
 			console.log("Not a valid CANDIDATE");
+			qlVm.invalidUser = true
+		} else {
+			localStorage.setItem("quiz_token", $stateParams.quiz_token);
 		}
 
 	// FUNCTION DECLARATION
@@ -27,18 +30,20 @@
 
 			$http(req)
       .then(function(data) {
-    
       		var token = data.data.token;
-
-      		if(token) {
-      			localStorage.setItem('candidate_token', token);
-      			// $state.transitionTo("candidate.landing");
-      			qlVm.validated = true;
-      			$scope.time = mainVm.parseGoTime(data.data.duration);
-      			localStorage.setItem('quiz_time', JSON.stringify($scope.time));
-      			initInstructions();
+      		if(data.data.quiz_started) {
+      			$state.transitionTo("candidate.quiz");
       		} else {
-      			qlVm.invalidUser = true;
+      			if(token) {
+	      			// $state.transitionTo("candidate.landing");
+	      			qlVm.validated = true;
+	      			$scope.time = mainVm.parseGoTime(data.data.duration);
+							data.data.duration = $scope.time;
+	      			localStorage.setItem('candidate_info', JSON.stringify(data.data));
+	      			initInstructions();
+	      		} else {
+	      			qlVm.invalidUser = true;
+	      		}
       		}
         },
         function(response, code) {
@@ -52,9 +57,9 @@
 				General: [
 					"By taking this quiz, you agree not to discuss/post the questions shown here.",
 					$interpolate("The duration of the quiz is <span class='bold text-red'> \
-						<span ng-if='time.hours'>{{time.hours}} hours, </span> \
-						<span ng-if='time.minutes'>{{time.minutes}} minutes, </span> \
-							<span ng-if='time.seconds'>{{time.seconds}} seconds </span> \
+						<span ng-if='time.hours > 0'>{{time.hours}} hours, </span> \
+						<span ng-if='time.minutes > 0'>{{time.minutes}} minutes, </span> \
+							<span ng-if='time.seconds > 0'>{{time.seconds}} seconds</span> \
 						</span>. Timing would be clearly shown.")($scope),
 					"Once you start the quiz, the timer would not stop, irrespective of any client side issues",
 					"Questions can have single or multiple correct answers. They will be shown accordingly.",

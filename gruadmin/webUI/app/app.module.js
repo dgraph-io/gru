@@ -34,7 +34,6 @@ angular.module('GruiApp').run(function($rootScope, $location, $timeout, $state) 
     });
 
     var stateChangeStartHandler = function(e, toState, toParams, fromState, fromParams) {
-      console.log(toState);
       if(toState.authenticate || toState.name == "login") {
         mainVm.base_url = "http://localhost:8082/admin";
       } else {
@@ -268,10 +267,18 @@ angular.module('GruiApp').provider('RouteHelpers', ['APP_REQUIRES', function (ap
       }
 
       function isValidCandidate() {
-        if(localStorage.getItem('ctoken')) {
-          return true;
-        }
-        return false
+        var quizToken = localStorage.getItem("quiz_token");
+        MainService.post("/validate/" + quizToken)
+        .then(function(data){
+          return data;
+        }, function(err){
+          if(err.status == 401) {
+            SNACKBAR({
+              message: err.data.Message,
+              messageType: "error",
+            })
+          }
+        })
       }
 
       function hasKey(obj, key){
@@ -350,7 +357,7 @@ angular.module('GruiApp').provider('RouteHelpers', ['APP_REQUIRES', function (ap
           delete req.data;
         } else {
           // req.url = mainVm.candidate_url + url;
-          candidateToken = localStorage.getItem('candidate_token');
+          candidateToken = JSON.parse(localStorage.getItem('candidate_info')).token;
 
           if(candidateToken) {
             setAuth('Bearer ' + candidateToken);
