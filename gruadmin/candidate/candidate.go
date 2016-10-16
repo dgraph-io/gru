@@ -24,6 +24,10 @@ func init() {
 	go rateLimit()
 }
 
+type uid struct {
+	Id string `json:"_uid_"`
+}
+
 type qids struct {
 	QuestionUid []uid `json:"question.uid"`
 }

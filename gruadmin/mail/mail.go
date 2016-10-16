@@ -52,3 +52,27 @@ visiting <a href="` + url + `" target="_blank">` + url + `</a>.
 	x.Debug(response.Body)
 	x.Debug(response.Headers)
 }
+
+func SendReport(name string, score, maxScore float64, body string) {
+	if *SENDGRID_API_KEY == "" {
+		return
+	}
+
+	from := mail.NewEmail("Dgraph", "join@dgraph.io")
+	subject := fmt.Sprintf("Candidate %v scored %.1f/%.0f in the Screening", name,
+		score, maxScore)
+	to := mail.NewEmail("Dgraph", "pawan@dgraph.io")
+	content := mail.NewContent("text/html", body)
+	m := mail.NewV3MailInit(from, subject, to, content)
+	request := sendgrid.GetRequest(*SENDGRID_API_KEY, "/v3/mail/send", "https://api.sendgrid.com")
+	request.Method = "POST"
+	request.Body = mail.GetRequestBody(m)
+	response, err := sendgrid.API(request)
+	if err != nil {
+		fmt.Println(err)
+	}
+	x.Debug("Mail sent")
+	x.Debug(response.StatusCode)
+	x.Debug(response.Body)
+	x.Debug(response.Headers)
+}
