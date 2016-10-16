@@ -58,7 +58,7 @@
 					$interpolate("The duration of the quiz is <span class='bold text-red'> \
 						<span ng-if='time.hours > 0'>{{time.hours}} hours, </span> \
 						<span ng-if='time.minutes > 0'>{{time.minutes}} minutes, </span> \
-							<span ng-if='time.seconds > 0'>{{time.seconds}} </span> \
+							<span ng-if='time.seconds > 0'>{{time.seconds}} seconds</span> \
 						</span>. Timing would be clearly shown.")($scope),
 					"Once you start the quiz, the timer would not stop, irrespective of any client side issues",
 					"Questions can have single or multiple correct answers. They will be shown accordingly.",

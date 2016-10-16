@@ -41,6 +41,7 @@
 		cqVm.getTime = getTime;
 		cqVm.initTimer = initTimer;
 		cqVm.calcTimeTaken = calcTimeTaken;
+		cqVm.stopQuiz = stopQuiz;
 
 	// INITIALIZERS
 	if(candidateVm.isValidUser) {
@@ -62,12 +63,8 @@
 
 				cqVm.question = data;
 				if(data._uid_ == "END") {
-					cqVm.quizEnded = true;
+					cqVm.stopQuiz();
 					cqVm.total_score = data.score;
-
-					clearAllTimers();
-
-					cqVm.calcTimeTaken();
 				}
 
 				if(cqVm.question.multiple == "true") {
@@ -83,6 +80,12 @@
 					messageType: "error",
 				})
 			})
+		}
+
+		function stopQuiz() {
+			cqVm.quizEnded = true;
+			clearAllTimers();
+			cqVm.calcTimeTaken();
 		}
 
 		function clearAllTimers() {
@@ -195,17 +198,16 @@
 			// Hit the PING api
 			candidateService.getTime()
 			.then(function(data){
-				if(data.time_left != "0") {
+				isPositve = Duration.parse(data.time_left)._nanoseconds > 0;
+				if(isPositve) {
 					cqVm.initTimer(data.time_left)
 				} else {
-					cqVm.quizEnded = true;
-					clearAllTimers();
 					cqVm.finalTimeLeft = {
 						hours: 0,
 						minutes: 0,
 						seconds: 0,
 					}
-					cqVm.calcTimeTaken();
+					cqVm.stopQuiz();
 				}
 			}, function(err){
 				console.log(err);
