@@ -52,9 +52,7 @@
 			var dateTime = formatDate(inviteVm.newInvite.dates);
 			inviteVm.newInvite.quiz_id = inviteVm.newInvite.quiz._uid_;
 			inviteVm.newInvite.validity = dateTime;
-			console.log(inviteVm.newInvite);
 			inviteService.inviteCandidate(inviteVm.newInvite).then(function(data){
-				console.log(data);
 				SNACKBAR({
 					message: data.Message,
 					messageType: "success",
@@ -114,7 +112,6 @@
 
 			requestData = angular.copy(editInviteVm.candidate);
 
-			console.log(requestData);
 			inviteService.editInvite(editInviteVm.candidate)
 			.then(function(data){
 				SNACKBAR({
@@ -142,7 +139,6 @@
 			});
 			$state.transitionTo("invite.add");
 		}
-		console.log(candidatesVm.quizID);
 		inviteService.getInvitedCandidates(candidatesVm.quizID).then(function(data){
 			candidatesVm.quizCandidates = data.quiz[0]["quiz.candidate"];
 

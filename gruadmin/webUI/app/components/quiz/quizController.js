@@ -65,8 +65,6 @@
 				}
 			});
 			
-			console.log(questions)
-			return	
 			requestData.questions = questions;
 
 			requestData.duration = (requestData.hours || 0) + "h" + (requestData.minutes || 0) + "m" + (requestData.seconds || 0) + "s";

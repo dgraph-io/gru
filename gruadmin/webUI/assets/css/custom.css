@@ -250,6 +250,10 @@ body.home {
   width: 100% !important;
   position: absolute;
 }
+.question-action {
+  min-width: 100px;
+  line-height: 48px;
+}
 
 /*QUIZ PAGE CSS*/
 .duration-inputs .mdl-textfield {
@@ -260,21 +264,21 @@ body.home {
   background-size: 100% 100%;
 }
 .alert {
-    padding: 10px 10px;
-    margin-bottom: 10px;
-    color: white;
+  padding: 10px 10px;
+  margin-bottom: 10px;
+  color: white;
 }
 .alert-info {
-    background: #019CFC;
+  background: #019CFC;
 }
 
 .alert-success {
-    background: #009688;
+  background: #009688;
 }
 
 .mdl-button--fab {
-    font-size: 14px;
-    color: white;
+  font-size: 14px;
+  color: white;
 }
 .mdl-button--fab.mdl-button--small-fab {
     height: 34px;

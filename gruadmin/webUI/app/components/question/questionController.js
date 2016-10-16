@@ -236,6 +236,7 @@
 
 		// FUNCTION DECLARATION
 		allQVm.getAllQuestions = getAllQuestions;
+		allQVm.setQuestion = setQuestion;
 
 		// INITITIALIZERS
 		allQVm.getAllQuestions();
@@ -263,13 +264,14 @@
 
 				var dataArray = data.debug[0].question;
 				if(data.debug && dataArray) {
-					if(mainVm.allQuestions) {
+					if(mainVm.allQuestions && mainVm.allQuestions.length) {
 						dataArrayLength = dataArray.length;
 						for(var i = 0; i < dataArrayLength; i++) {
                mainVm.allQuestions.push(dataArray[i]);
             }
 					} else {
 						mainVm.allQuestions = data.debug[0].question;
+						allQVm.setQuestion(mainVm.allQuestions[0], 0);
 					}
 
 					mainVm.allQuestionsBak = angular.copy(mainVm.allQuestions);
@@ -301,6 +303,11 @@
 			}, 100);
 
 		});
+
+		function setQuestion(question, index) {
+			allQVm.question = question;
+			allQVm.questionIndex = index;
+		}
 
 	} // AllQuestionController
 
