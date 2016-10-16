@@ -6,7 +6,7 @@
 				<h5 class="bold">Your quiz <span ng-if="cqVm.quizEnded">ended</span></h5>
 			</div>
 			<div class="mdl-cell mdl-cell--6-col mdl-cell--middle big-font">
-				<span class="mdl-chip mdl-chip--contact">
+				<span class="mdl-chip mdl-chip--contact" ng-if="!cqVm.quizEnded">
 			    <span class="mdl-chip__contact mdl-color--teal mdl-color-text--white">Time Left</span>
 			    <span class="mdl-chip__text bold text-center timer-chip-text"><span id="time"></span></span>
 				</span>
