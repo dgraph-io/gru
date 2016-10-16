@@ -24,7 +24,7 @@
 				<div class="mt-5">
 					<span class="mdl-chip mdl-chip--deletable">
 				    <span class="mdl-chip__text">{{editInviteVm.candidate.quiz.name}}</span>
-				    <button type="button" class="mdl-chip__action" ng-click="editInviteVm.removeSelectedQuiz(key)">
+				    <button type="button" class="mdl-chip__action" ng-click="editInviteVm.removeSelectedQuiz()">
 				    	<i class="material-icons">cancel</i>
 				    </button>
 					</span>
@@ -43,6 +43,20 @@
 	</div>
 
 	<div class="mdl-cell mdl-cell--6-col  mdl-cell--1-offset">
-		<div ng-include="'app/components/invite/views/quiz-selection.html'"></div>
+		<h4>List of Quizes</h4>
+		<div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+		  <input class="mdl-textfield__input" type="text" id="search_quiz" ng-model="searchQ">
+		  <label class="mdl-textfield__label" for="search_quiz">Search Quiz name</label>
+		</div>
+		<div class="quiz mt-20" ng-repeat="quiz in editInviteVm.allQuizes | filter:searchQ">
+			<div class="mdl-grid no-pad">
+				<div class="mdl-cell mdl-cell--12-col">
+					<label class="mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect" for="quiz-{{$index}}" ng-class="{'is-checked': editInviteVm.selectedQuiz(quiz)}">
+					  <input type="checkbox" id="quiz-{{$index}}" class="mdl-checkbox__input" ng-model="editInviteVm.candidate.quiz" ng-true-value="{{quiz}}" ng-false-value="false" ng-change="editInviteVm.onQuizSelect(quiz)">
+					  <span class="mdl-checkbox__label">{{quiz.name}}</span>
+					</label>
+				</div>
+			</div>
+		</div>
 	</div>
 </div>

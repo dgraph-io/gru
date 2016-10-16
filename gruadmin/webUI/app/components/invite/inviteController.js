@@ -83,6 +83,10 @@
 
 		//Function Declation
 		editInviteVm.editInvite = editInvite;
+		editInviteVm.initAllQuiz = initAllQuiz;
+		editInviteVm.selectedQuiz = selectedQuiz;
+		editInviteVm.removeSelectedQuiz = removeSelectedQuiz;
+		editInviteVm.onQuizSelect = onQuizSelect;
 
 		inviteVm.setMinDate();
 
@@ -100,15 +104,22 @@
 			editInviteVm.candidate = angular.copy(editInviteVm.candidateBak);
 
 			editInviteVm.candidate.dates = new Date(getDate(editInviteVm.candidate.validity));
+
+			editInviteVm.initAllQuiz();
 		}, function(err) {
 			console.log(err)
 		});
 
 		function editInvite() {
 			editInviteVm.candidate.id = candidateUID;
-			editInviteVm.candidate.quiz_id = quizID;
-			editInviteVm.candidate.old_quiz_id = quizID;
+			editInviteVm.candidate.quiz_id = "";
+			editInviteVm.candidate.old_quiz_id = "";
 			editInviteVm.candidate.validity = formatDate(editInviteVm.candidate.dates);
+
+			if(editInviteVm.candidate['candidate.quiz'][0].is_delete) {
+				editInviteVm.candidate.quiz_id = editInviteVm.candidate.quiz._uid_;
+				editInviteVm.candidate.old_quiz_id = quizID;
+			}
 
 			requestData = angular.copy(editInviteVm.candidate);
 
@@ -119,11 +130,59 @@
 					messageType: "success",
 				})
 				$state.transitionTo("invite.dashboard", {
-					quizID:  requestData.quiz_id,
+					quizID:  quizID,
 				})
 			}, function(err){
 				console.log(err)
 			})
+		}
+
+		function initAllQuiz() {
+			setTimeout(function() {
+				editInviteVm.allQuizes = angular.copy(inviteVm.allQuizes);
+				$rootScope.updgradeMDL();
+			}, 100);
+		}
+
+		function selectedQuiz(quiz) {
+			var oldQuiz = editInviteVm.candidate['candidate.quiz'][0];
+			isSelected = oldQuiz._uid_ == quiz._uid_;
+			if(isSelected) {
+				if(!oldQuiz.is_delete) {
+					editInviteVm.candidate.quiz = quiz;
+					return true;
+				} else {
+					return false;
+				}
+			} else {
+				var currentQuiz = editInviteVm.candidate.quiz;
+				if(currentQuiz && quiz._uid_ == currentQuiz._uid_) {
+					return true;
+				}
+			}
+		}
+
+		function removeSelectedQuiz() {
+			var oldQuiz = editInviteVm.candidate['candidate.quiz'][0];
+			var isOld = oldQuiz._uid_ == editInviteVm.candidate.quiz._uid_;
+			if(isOld){
+				oldQuiz.is_delete = true;
+				delete editInviteVm.candidate.quiz
+			}
+		}
+
+		function onQuizSelect() {
+			var quiz = editInviteVm.candidate.quiz;
+			var oldQuiz = editInviteVm.candidate['candidate.quiz'][0];
+			if(!quiz) {
+				oldQuiz.is_delete = true;
+			} else {
+				if(oldQuiz._uid_ == quiz._uid_) {
+					oldQuiz.is_delete = false;
+				} else {
+					oldQuiz.is_delete = true;
+				}
+			}
 		}
 	}
 	
