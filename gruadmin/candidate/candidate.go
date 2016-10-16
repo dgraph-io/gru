@@ -17,6 +17,13 @@ import (
 	"github.com/gorilla/mux"
 )
 
+var throttle chan time.Time
+
+func init() {
+	throttle = make(chan time.Time, 3)
+	go rateLimit()
+}
+
 type qids struct {
 	QuestionUid []uid `json:"question.uid"`
 }
@@ -37,6 +44,7 @@ type Candidate struct {
 const (
 	letterBytes    = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890"
 	validityLayout = "2006-01-02"
+	rate           = time.Second
 )
 
 // TODO - Optimize later.
@@ -315,10 +323,31 @@ func timeLeft(start time.Time, dur time.Duration) time.Duration {
 	return start.Add(dur).Sub(time.Now())
 }
 
+func rateLimit() {
+	rateTicker := time.NewTicker(rate)
+	defer rateTicker.Stop()
+
+	for t := range rateTicker.C {
+		select {
+		case throttle <- t:
+		default:
+		}
+	}
+}
+
 func Validate(w http.ResponseWriter, r *http.Request) {
+	sr := server.Response{}
+	select {
+	case <-throttle:
+		break
+	case <-time.After(rate):
+		sr.Write(w, "", "Too many requests. Please try after again.",
+			http.StatusUnauthorized)
+		return
+	}
+
 	vars := mux.Vars(r)
 	id := vars["id"]
-	sr := server.Response{}
 	// This is the length of the random string. The id is uid + random string.
 	if len(id) < 33 {
 		sr.Write(w, "", "Invalid token.", http.StatusUnauthorized)
