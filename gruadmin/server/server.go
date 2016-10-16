@@ -2,7 +2,6 @@ package server
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 )
 
@@ -24,13 +23,6 @@ func AddCorsHeaders(w http.ResponseWriter) {
 	w.Header().Set("Connection", "close")
 
 	w.Header().Set("Content-Type", "application/json")
-}
-
-func ReadBody(r *http.Request, s interface{}) {
-	err := json.NewDecoder(r.Body).Decode(s)
-	if err != nil {
-		log.Fatal(err)
-	}
 }
 
 func MarshalResponse(r Response) []byte {
@@ -55,15 +47,4 @@ func (r Response) Write(w http.ResponseWriter, err string, msg string, status in
 	r.Message = msg
 	w.WriteHeader(status)
 	w.Write(MarshalResponse(r))
-}
-
-func WriteBody(w http.ResponseWriter, res Response) {
-	if err := json.NewEncoder(w).Encode(res); err != nil {
-		log.Fatal(err)
-	}
-	// r, err := json.Marshal(res)
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-	// w.Write(r)
 }

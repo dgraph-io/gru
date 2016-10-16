@@ -11,6 +11,7 @@ import (
 
 	"github.com/dgraph-io/gru/auth"
 	"github.com/dgraph-io/gru/dgraph"
+	"github.com/dgraph-io/gru/gruadmin/server"
 	"github.com/dgraph-io/gru/x"
 	jwt "github.com/dgrijalva/jwt-go"
 )
@@ -119,16 +120,21 @@ func validate(r *http.Request) (string, error) {
 func QuestionHandler(w http.ResponseWriter, r *http.Request) {
 	var userId string
 	var err error
+	sr := server.Response{}
 	if userId, err = validate(r); err != nil {
-		w.WriteHeader(http.StatusUnauthorized)
-		w.Write([]byte("Unauthorized"))
+		sr.Write(w, err.Error(), "Unauthorized", http.StatusUnauthorized)
 		return
 	}
 
 	c, err := ReadMap(userId)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("User not found."))
+		sr.Write(w, err.Error(), "User not found.", http.StatusBadRequest)
+		return
+	}
+
+	if !c.quizStart.IsZero() && time.Now().After(c.quizStart.Add(c.quizDuration)) {
+		sr.Write(w, "", "Your quiz has already finished.",
+			http.StatusBadRequest)
 		return
 	}
 
@@ -145,12 +151,11 @@ func QuestionHandler(w http.ResponseWriter, r *http.Request) {
 		`
 		res := dgraph.SendMutation(m)
 		if res.Code != "ErrorOk" {
-			fmt.Println(res.Message)
-			// TODO - Send error.
+			sr.Write(w, res.Message, "", http.StatusInternalServerError)
+			return
 		}
-		// TODO - Write to DB, so that we can recover this after crash.
 	}
-	// TODO - Write to DB here also that quiz ended successfully.
+
 	if len(c.qns) == 0 {
 		q := Question{
 			Id:    "END",
@@ -164,13 +169,13 @@ func QuestionHandler(w http.ResponseWriter, r *http.Request) {
 		`
 		res := dgraph.SendMutation(m)
 		if res.Code != "ErrorOk" {
-			fmt.Println(res.Message)
-			// TODO - Send error.
+			sr.Write(w, res.Message, "", http.StatusInternalServerError)
+			return
 		}
+
 		b, err := json.Marshal(q)
 		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte("Unauthorized"))
+			sr.Write(w, err.Error(), "", http.StatusInternalServerError)
 			return
 		}
 		w.Write(b)
@@ -188,20 +193,20 @@ func QuestionHandler(w http.ResponseWriter, r *http.Request) {
 	}`
 
 	res := dgraph.SendMutation(m)
-	if res.Code != "ErrorOk" {
-		fmt.Println(res.Message)
-		// TODO - Send error.
+	if res.Code != "ErrorOk" || res.Uids["qn"] == "" {
+		sr.Write(w, res.Message, "", http.StatusInternalServerError)
+		return
 	}
+
 	c.qns = c.qns[1:]
 	c.lastQnId = qn.Id
 	UpdateMap(userId, c)
+	// Truncate score to two decimal places.
 	qn.Score = float64(int(c.score*100)) / 100
-	// TODO - Check value of qn in map shouldn't be zero.
 	qn.Cid = res.Uids["qn"]
 	b, err := json.Marshal(qn)
 	if err != nil {
-		w.WriteHeader(http.StatusUnauthorized)
-		w.Write([]byte("Unauthorized"))
+		sr.Write(w, err.Error(), "", http.StatusInternalServerError)
 		return
 	}
 	w.Write(b)
@@ -294,40 +299,43 @@ func qnMeta(qid string) (questionCorrectMeta, error) {
 func AnswerHandler(w http.ResponseWriter, r *http.Request) {
 	var userId string
 	var err error
+	sr := server.Response{}
 	if userId, err = validate(r); err != nil {
-		w.WriteHeader(http.StatusUnauthorized)
-		w.Write([]byte("Unauthorized"))
+		sr.Write(w, err.Error(), "Unauthorized", http.StatusUnauthorized)
 		return
 	}
 
 	c, err := ReadMap(userId)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("User not found."))
+		sr.Write(w, err.Error(), "Unauthorized", http.StatusBadRequest)
+		return
+	}
+
+	if !c.quizStart.IsZero() && time.Now().After(c.quizStart.Add(c.quizDuration)) {
+		sr.Write(w, "", "Your quiz has already finished.",
+			http.StatusBadRequest)
 		return
 	}
 
 	qid := r.PostFormValue("qid")
 	aid := r.PostFormValue("aid")
 	cuid := r.PostFormValue("cuid")
-	if qid != c.lastQnId || cuid == "" {
-		// TODO - Return error
-		w.WriteHeader(http.StatusBadRequest)
+	if qid != c.lastQnId {
+		sr.Write(w, "Questions can only be answered in sequential order",
+			"", http.StatusBadRequest)
 		return
 	}
 
 	answerIds := strings.Split(aid, ",")
-	if len(answerIds) == 0 {
-		// TODO - Return error
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("Answer ids can't be empty"))
+	if cuid == "" || len(answerIds) == 0 {
+		sr.Write(w, "Answer ids/cuid can't be empty",
+			"", http.StatusBadRequest)
 		return
 	}
 
 	m, err := qnMeta(qid)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte(err.Error()))
+		sr.Write(w, err.Error(), "", http.StatusInternalServerError)
 	}
 	score := isCorrectAnswer(answerIds, m.correct, m.positive, m.negative)
 	c.score = c.score + score
@@ -335,35 +343,33 @@ func AnswerHandler(w http.ResponseWriter, r *http.Request) {
 	mutation := `mutation {
 		set {
 			<_uid_:` + cuid + `> <candidate.answer> "` + aid + `" .
-      <_uid_:` + cuid + `> <candidate.score> "` + strconv.FormatFloat(score, 'g', -1, 64) + `" .
-      <_uid_:` + cuid + `> <question.answered> "` + time.Now().Format("2006-01-02T15:04:05Z07:00") + `" .
-    }
-}`
+			<_uid_:` + cuid + `> <candidate.score> "` + strconv.FormatFloat(score, 'g', -1, 64) + `" .
+			<_uid_:` + cuid + `> <question.answered> "` + time.Now().Format("2006-01-02T15:04:05Z07:00") + `" .
+		}
+	}`
 	res := dgraph.SendMutation(mutation)
 	if res.Code != "ErrorOk" {
-		fmt.Println(res.Message)
-		// TODO - Send error.
+		sr.Write(w, res.Message, "", http.StatusInternalServerError)
+		return
 	}
 }
 
 type pingRes struct {
 	TimeLeft string `json:"time_left"`
-	// Status   string `json:"status"`
 }
 
 func PingHandler(w http.ResponseWriter, r *http.Request) {
 	var userId string
 	var err error
+	sr := server.Response{}
 	if userId, err = validate(r); err != nil {
-		w.WriteHeader(http.StatusUnauthorized)
-		w.Write([]byte("Unauthorized"))
+		sr.Write(w, err.Error(), "", http.StatusUnauthorized)
 		return
 	}
 
 	c, err := ReadMap(userId)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("User not found."))
+		sr.Write(w, err.Error(), "User not found", http.StatusBadRequest)
 		return
 	}
 

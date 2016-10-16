@@ -2,7 +2,7 @@ package candidate
 
 import (
 	"encoding/json"
-	"log"
+	"fmt"
 	"math/rand"
 	"net/http"
 	"time"
@@ -58,24 +58,26 @@ func randStringBytes(n int) string {
 
 func index(quizId string) string {
 	return `
-    {
-      quiz(_uid_: ` + quizId + `) {
-        quiz.candidate {
-		  _uid_
-		  name
-          email
-          validity
-		  complete
-        }
-      }
-    }
+	{
+	quiz(_uid_: ` + quizId + `) {
+		quiz.candidate {
+			_uid_
+			name
+			email
+			validity
+			complete
+		}
+	}
+}
 `
 }
 
 func Index(w http.ResponseWriter, r *http.Request) {
 	quizId := r.URL.Query().Get("quiz_id")
 	if quizId == "" {
-		// TODO - Return error.
+		sr := server.Response{}
+		sr.Write(w, "", "Quiz id can't be empty.", http.StatusBadRequest)
+		return
 	}
 	q := index(quizId)
 	res := dgraph.Query(q)
@@ -83,19 +85,18 @@ func Index(w http.ResponseWriter, r *http.Request) {
 }
 
 func add(c Candidate) string {
-	// TODO - Add helper functions for sending mutations.
 	return `
-    mutation {
-      set {
-          <_uid_:` + c.QuizId + `> <quiz.candidate> <_new_:c> .
-          <_new_:c> <candidate.quiz> <_uid_:` + c.QuizId + `> .
-          <_new_:c> <email> "` + c.Email + `" .
-          <_new_:c> <name> "` + c.Name + `" .
-          <_new_:c> <token> "` + c.Token + `" .
-          <_new_:c> <validity> "` + c.Validity + `" .
-          <_new_:c> <complete> "false" .
-	  }
-    }`
+	mutation {
+		set {
+		<_uid_:` + c.QuizId + `> <quiz.candidate> <_new_:c> .
+		<_new_:c> <candidate.quiz> <_uid_:` + c.QuizId + `> .
+		<_new_:c> <email> "` + c.Email + `" .
+		<_new_:c> <name> "` + c.Name + `" .
+		<_new_:c> <token> "` + c.Token + `" .
+		<_new_:c> <validity> "` + c.Validity + `" .
+		<_new_:c> <complete> "false" .
+		}
+	}`
 }
 
 func Add(w http.ResponseWriter, r *http.Request) {
@@ -103,9 +104,7 @@ func Add(w http.ResponseWriter, r *http.Request) {
 	var c Candidate
 	err := json.NewDecoder(r.Body).Decode(&c)
 	if err != nil {
-		sr.Error = "Couldn't decode JSON"
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write(server.MarshalResponse(sr))
+		sr.Write(w, err.Error(), "Couldn't decode JSON", http.StatusBadRequest)
 		return
 	}
 
@@ -124,19 +123,16 @@ func Add(w http.ResponseWriter, r *http.Request) {
 	m := add(c)
 	mr := dgraph.SendMutation(m)
 	if mr.Code != "ErrorOk" {
-		sr.Message = "Mutation couldn't be applied by Dgraph."
-		sr.Error = mr.Message
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write(server.MarshalResponse(sr))
+		sr.Write(w, mr.Message, "Mutation couldn't be applied by Dgraph.",
+			http.StatusInternalServerError)
 		return
 	}
 
 	// mutation applied successfully, lets send a mail to the candidate.
 	uid, ok := mr.Uids["c"]
 	if !ok {
-		sr.Error = "Uid not returned for newly created candidate by Dgraph."
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write(server.MarshalResponse(sr))
+		sr.Write(w, "Uid not returned for newly created candidate by Dgraph.",
+			"", http.StatusInternalServerError)
 		return
 	}
 
@@ -172,11 +168,14 @@ func Edit(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	cid := vars["id"]
 	var c Candidate
-	server.ReadBody(r, &c)
-
 	sr := server.Response{}
+	err := json.NewDecoder(r.Body).Decode(&c)
+	if err != nil {
+		sr.Write(w, err.Error(), "Couldn't decode JSON", http.StatusBadRequest)
+		return
+	}
+
 	var t time.Time
-	var err error
 	if t, err = time.Parse(validityLayout, c.Validity); err != nil {
 		sr.Message = "Couldn't parse the validity"
 		sr.Error = err.Error()
@@ -190,12 +189,15 @@ func Edit(w http.ResponseWriter, r *http.Request) {
 	// TODO - Validate candidate fields shouldn't be empty.
 	m := edit(c)
 	res := dgraph.SendMutation(m)
-	go mail.Send(c.Name, c.Email, c.Uid+c.Token)
-	if res.Message == "ErrorOk" {
-		sr.Success = true
-		sr.Message = "Candidate info updated successfully."
+	if res.Code != "ErrorOk" {
+		sr.Write(w, res.Message, "Mutation couldn't be applied by Dgraph.",
+			http.StatusInternalServerError)
+		return
 	}
-	server.WriteBody(w, sr)
+	go mail.Send(c.Name, c.Email, c.Uid+c.Token)
+	sr.Success = true
+	sr.Message = "Candidate info updated successfully."
+	w.Write(server.MarshalResponse(sr))
 }
 
 func get(candidateId string) string {
@@ -218,9 +220,6 @@ func get(candidateId string) string {
 func Get(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	cid := vars["id"]
-	// TODO - Return error.
-	if cid == "" {
-	}
 	q := get(cid)
 	res := dgraph.Query(q)
 	w.Write(res)
@@ -236,7 +235,7 @@ type qnIdsResp struct {
 	Quizzes []quiz `json:"quiz"`
 }
 
-func quizQns(quizId string, qnsAsked []string) []quizp.Question {
+func quizQns(quizId string, qnsAsked []string) ([]quizp.Question, error) {
 	q := `{
 		quiz(_uid_: ` + quizId + `) {
 			quiz.question {
@@ -256,11 +255,12 @@ func quizQns(quizId string, qnsAsked []string) []quizp.Question {
 	var resp qnIdsResp
 	json.Unmarshal(res, &resp)
 	if len(resp.Quizzes) != 1 {
-		log.Fatal("Length of quizzes should just be 1")
+		return []quizp.Question{}, fmt.Errorf("Expected length of quizzes: %v. Got %v",
+			1, len(resp.Quizzes))
 	}
 
 	if len(qnsAsked) == 0 {
-		return resp.Quizzes[0].Questions
+		return resp.Quizzes[0].Questions, nil
 	}
 
 	allQns := resp.Quizzes[0].Questions
@@ -272,7 +272,7 @@ func quizQns(quizId string, qnsAsked []string) []quizp.Question {
 		}
 	}
 	allQns = allQns[:idx]
-	return allQns
+	return allQns, nil
 }
 
 type resp struct {
@@ -362,7 +362,8 @@ func Validate(w http.ResponseWriter, r *http.Request) {
 		timeSinceLastExchange := time.Now().Sub(c.LastExchange())
 		// To avoid duplicate sessions.
 		if timeSinceLastExchange < 10*time.Second {
-			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			sr.Write(w, "", "You have another active session. Please try after some time.",
+				http.StatusUnauthorized)
 			return
 		}
 	}
@@ -422,7 +423,10 @@ func Validate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get quiz questions for the quiz id.
-	qns := quizQns(quiz.Id, qa)
+	qns, err := quizQns(quiz.Id, qa)
+	if err != nil {
+		sr.Write(w, err.Error(), "", http.StatusInternalServerError)
+	}
 	// TODO - Shuffle the order of questions.
 	// x.Shuffle(ids)
 
@@ -447,8 +451,7 @@ func Validate(w http.ResponseWriter, r *http.Request) {
 	// TODO - Incase candidate already has a active session return error after
 	// implementing Ping.
 	json.NewEncoder(w).Encode(Res{
-		Token: tokenString,
-		// TODO - Handle case when quizStart is nil
+		Token:    tokenString,
 		Duration: timeLeft(c.QuizStart(), dur).String(),
 		// Whether quiz was already started by the candidate.
 		// If this is true the client can just call the questions API and

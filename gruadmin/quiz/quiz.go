@@ -30,19 +30,14 @@ func Add(w http.ResponseWriter, r *http.Request) {
 	sr := server.Response{}
 	err := json.NewDecoder(r.Body).Decode(&q)
 	if err != nil {
-		sr.Error = "Couldn't decode JSON"
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write(server.MarshalResponse(sr))
+		sr.Write(w, "Couldn't decode JSON", "", http.StatusBadRequest)
 		return
 	}
 
 	// We should be able to parse the duration.
 	_, err = time.ParseDuration(q.Duration)
 	if err != nil {
-		sr.Message = "Couldn't parse duration."
-		sr.Error = err.Error()
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write(server.MarshalResponse(sr))
+		sr.Write(w, err.Error(), "Couldn't parse duration.", http.StatusBadRequest)
 		return
 	}
 
@@ -57,9 +52,7 @@ func Add(w http.ResponseWriter, r *http.Request) {
 
 	mr := dgraph.SendMutation(m.String())
 	if mr.Code != "ErrorOk" {
-		sr.Error = mr.Message
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write(server.MarshalResponse(sr))
+		sr.Write(w, mr.Message, "", http.StatusInternalServerError)
 		return
 	}
 
@@ -81,12 +74,12 @@ func Index(w http.ResponseWriter, r *http.Request) {
 func get(quizId string) string {
 	return `
     {
-        root(_uid_:` + quizId + `) {
-        	_uid_
-        	name
-        	duration
-          quiz.question { _uid_ name text positive negative question.tag { _uid_ name }}
-        }
+	root(_uid_:` + quizId + `) {
+		_uid_
+		name
+		duration
+		quiz.question { _uid_ name text positive negative question.tag { _uid_ name }}
+	}
     }`
 }
 
@@ -119,25 +112,25 @@ func Edit(w http.ResponseWriter, r *http.Request) {
 	var q Quiz
 	vars := mux.Vars(r)
 	qid := vars["id"]
-	server.ReadBody(r, &q)
+	sr := server.Response{}
+	err := json.NewDecoder(r.Body).Decode(&q)
+	if err != nil {
+		sr.Write(w, "Couldn't decode JSON", "", http.StatusBadRequest)
+		return
+	}
 	q.Uid = qid
 
-	sr := server.Response{}
-	_, err := time.ParseDuration(q.Duration)
+	_, err = time.ParseDuration(q.Duration)
 	if err != nil {
-		sr.Message = "Couldn't parse duration"
-		sr.Error = err.Error()
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write(server.MarshalResponse(sr))
+		sr.Write(w, err.Error(), "Couldn't parse duration", http.StatusBadRequest)
+		return
 	}
 
 	// TODO - Validate candidate fields shouldn't be empty.
 	m := edit(q)
 	mr := dgraph.SendMutation(m)
 	if mr.Code != "ErrorOk" {
-		sr.Error = mr.Message
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write(server.MarshalResponse(sr))
+		sr.Write(w, mr.Message, "", http.StatusInternalServerError)
 		return
 	}
 

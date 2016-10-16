@@ -31,7 +31,6 @@ import (
 	"github.com/dgraph-io/gru/gruadmin/server"
 	"github.com/dgraph-io/gru/gruadmin/tag"
 	quizp "github.com/dgraph-io/gru/gruserver/quiz"
-	"github.com/dgraph-io/gru/x"
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/mux"
 	"github.com/urfave/negroni"
@@ -45,9 +44,10 @@ var (
 )
 
 func login(w http.ResponseWriter, r *http.Request) {
+	sr := server.Response{}
 	u, p, ok := r.BasicAuth()
 	if !ok || u != *username || p != *password {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		sr.Write(w, "", "You are unuathorized", http.StatusUnauthorized)
 		return
 	}
 	// TODO - Add relevant claims like expiry.
@@ -55,10 +55,8 @@ func login(w http.ResponseWriter, r *http.Request) {
 
 	tokenString, err := token.SignedString([]byte(*auth.Secret))
 	if err != nil {
-		log.Fatal(err)
+		sr.Write(w, err.Error(), "", http.StatusInternalServerError)
 	}
-	x.Debug(tokenString)
-	w.Header().Set("Content-Type", "application/json")
 
 	type Res struct {
 		Token string `json:"token"`
