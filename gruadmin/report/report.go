@@ -1,4 +1,4 @@
-package candidate
+package report
 
 import (
 	"encoding/json"
@@ -112,6 +112,7 @@ type question struct {
 	Options   []option `json:"options"`
 	Correct   []string `json:"correct"`
 	Answers   []string `json:"answers"`
+	Answered  bool
 	Tags      []string `json:"tags"`
 }
 
@@ -120,6 +121,7 @@ type Summary struct {
 	Email      string     `json:"email"`
 	TimeTaken  string     `json:"time_taken"`
 	TotalScore float64    `json:"total_score"`
+	MaxScore   float64    `json:"max_score"`
 	Questions  []question `json:"questions"`
 }
 
@@ -139,35 +141,37 @@ func names(opts []option) []string {
 	return n
 }
 
-func Report(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	cid := vars["id"]
+type ReportError struct {
+	Err  string
+	Msg  string
+	code int
+}
+
+func ReportSummary(cid string) (Summary, ReportError) {
+	s := Summary{}
+
 	q := reportQuery(cid)
 	b := dgraph.Query(q)
 
 	var rep report
-	sr := server.Response{}
 	err := json.Unmarshal(b, &rep)
 	if err != nil {
-		sr.Write(w, err.Error(), "", http.StatusInternalServerError)
-		return
+		return s, ReportError{err.Error(), "", http.StatusInternalServerError}
 	}
+
 	if rep.Candidates[0].Id == "" {
-		sr.Write(w, "", "Candidate not found.", http.StatusBadRequest)
-		return
+		return s, ReportError{"", "Candidate not found.", http.StatusBadRequest}
 	}
+
 	if !rep.Candidates[0].Complete {
-		sr.Write(w, "", "Candidate hasn't completed the test.", http.StatusBadRequest)
-		return
+		return s, ReportError{"", "Candidate hasn't completed the test.", http.StatusBadRequest}
 	}
 
 	c := rep.Candidates[0]
+	s.Name = c.Name
+	s.Email = c.Email
 	// TODO - Check how to obtain sorted results from Dgraph.
 	sort.Sort(questions(c.CandidateQn))
-	s := Summary{
-		Name:  c.Name,
-		Email: c.Email,
-	}
 	if !c.CandidateQn[len(c.CandidateQn)-1].Answered.IsZero() {
 		s.TimeTaken = c.CandidateQn[len(c.CandidateQn)-1].Answered.Sub(
 			c.CandidateQn[0].Asked).String()
@@ -181,6 +185,8 @@ func Report(w http.ResponseWriter, r *http.Request) {
 	for _, qn := range c.CandidateQn {
 		s.TotalScore += qn.Score
 		q := qn.Question[0]
+		s.MaxScore += float64(len(q.Correct)) * q.Positive
+		answers := strings.Split(qn.Answer, ",")
 		sq := question{
 			Name:     q.Name,
 			Text:     q.Text,
@@ -189,7 +195,8 @@ func Report(w http.ResponseWriter, r *http.Request) {
 			Multiple: q.Multiple,
 			Correct:  uids(q.Correct),
 			Tags:     names(q.Tags),
-			Answers:  strings.Split(qn.Answer, ","),
+			Answers:  answers,
+			Answered: len(answers) > 0 && answers[0] != "skip",
 		}
 		if qn.Answered.IsZero() {
 			sq.TimeTaken = "-1"
@@ -198,8 +205,20 @@ func Report(w http.ResponseWriter, r *http.Request) {
 		}
 		s.Questions = append(s.Questions, sq)
 	}
+	return s, ReportError{}
+}
 
-	b, err = json.Marshal(s)
+func Report(w http.ResponseWriter, r *http.Request) {
+	sr := server.Response{}
+	vars := mux.Vars(r)
+	cid := vars["id"]
+	s, re := ReportSummary(cid)
+	if re.Msg != "" || re.Err != "" {
+		sr.Write(w, re.Err, re.Msg, re.code)
+		return
+	}
+
+	b, err := json.Marshal(s)
 	if err != nil {
 		sr.Write(w, err.Error(), "", http.StatusInternalServerError)
 		return

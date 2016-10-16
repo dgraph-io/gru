@@ -1,8 +1,10 @@
 package quiz
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"html/template"
 	"net/http"
 	"strconv"
 	"strings"
@@ -11,6 +13,8 @@ import (
 
 	"github.com/dgraph-io/gru/auth"
 	"github.com/dgraph-io/gru/dgraph"
+	"github.com/dgraph-io/gru/gruadmin/mail"
+	"github.com/dgraph-io/gru/gruadmin/report"
 	"github.com/dgraph-io/gru/gruadmin/server"
 	"github.com/dgraph-io/gru/x"
 	jwt "github.com/dgrijalva/jwt-go"
@@ -117,6 +121,23 @@ func validate(r *http.Request) (string, error) {
 	return "", fmt.Errorf("Cannot parse claims.")
 }
 
+func sendReport(cid string) {
+	t, err := template.ParseFiles("../gruserver/quiz/report.html")
+	if err != nil {
+		fmt.Println(err)
+	}
+	buf := new(bytes.Buffer)
+	s, re := report.ReportSummary(cid)
+	if re.Err != "" || re.Msg != "" {
+		return
+	}
+	if err = t.Execute(buf, s); err != nil {
+		fmt.Println(err)
+	}
+	body := buf.String()
+	mail.SendReport(s.Name, s.TotalScore, s.MaxScore, body)
+}
+
 func QuestionHandler(w http.ResponseWriter, r *http.Request) {
 	var userId string
 	var err error
@@ -178,6 +199,7 @@ func QuestionHandler(w http.ResponseWriter, r *http.Request) {
 			sr.Write(w, err.Error(), "", http.StatusInternalServerError)
 			return
 		}
+		go sendReport(userId)
 		w.Write(b)
 		return
 	}

@@ -28,6 +28,7 @@ import (
 	"github.com/dgraph-io/gru/gruadmin/candidate"
 	"github.com/dgraph-io/gru/gruadmin/question"
 	"github.com/dgraph-io/gru/gruadmin/quiz"
+	"github.com/dgraph-io/gru/gruadmin/report"
 	"github.com/dgraph-io/gru/gruadmin/server"
 	"github.com/dgraph-io/gru/gruadmin/tag"
 	quizp "github.com/dgraph-io/gru/gruserver/quiz"
@@ -117,7 +118,7 @@ func runHTTPServer(address string) {
 	adminRouter.HandleFunc("/candidate", candidate.Add).Methods("POST", "OPTIONS")
 	adminRouter.HandleFunc("/candidate/{id}", candidate.Edit).Methods("PUT", "OPTIONS")
 	adminRouter.HandleFunc("/candidate/{id}", candidate.Get).Methods("GET", "OPTIONS")
-	adminRouter.HandleFunc("/candidate/report/{id}", candidate.Report).Methods("GET", "OPTIONS")
+	adminRouter.HandleFunc("/candidate/report/{id}", report.Report).Methods("GET", "OPTIONS")
 	adminRouter.HandleFunc("/candidates", candidate.Index).Methods("GET", "OPTIONS")
 
 	router.PathPrefix("/admin").Handler(negroni.New(
