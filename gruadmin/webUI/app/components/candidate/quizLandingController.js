@@ -30,19 +30,20 @@
 
 			$http(req)
       .then(function(data) {
-    
       		var token = data.data.token;
-
-      		if(token) {
-      			// $state.transitionTo("candidate.landing");
-      			qlVm.validated = true;
-      			$scope.time = mainVm.parseGoTime(data.data.duration);
-						data.data.duration = $scope.time;
-						console.log($scope.time)
-      			localStorage.setItem('candidate_info', JSON.stringify(data.data));
-      			initInstructions();
+      		if(data.data.quiz_started) {
+      			$state.transitionTo("candidate.quiz");
       		} else {
-      			qlVm.invalidUser = true;
+      			if(token) {
+	      			// $state.transitionTo("candidate.landing");
+	      			qlVm.validated = true;
+	      			$scope.time = mainVm.parseGoTime(data.data.duration);
+							data.data.duration = $scope.time;
+	      			localStorage.setItem('candidate_info', JSON.stringify(data.data));
+	      			initInstructions();
+	      		} else {
+	      			qlVm.invalidUser = true;
+	      		}
       		}
         },
         function(response, code) {
