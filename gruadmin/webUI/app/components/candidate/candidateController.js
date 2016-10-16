@@ -73,12 +73,14 @@
 
 				$rootScope.updgradeMDL();
 			}, function(err){	
+				if(err.status != 0) {
+					cqVm.apiError = err.data.Message;
+					SNACKBAR({
+						message: err.data.Message,
+						messageType: "error",
+					})
+				}
 				clearAllTimers();
-				cqVm.apiError = err.data.Message;
-				SNACKBAR({
-					message: err.data.Message,
-					messageType: "error",
-				})
 			})
 		}
 
@@ -210,7 +212,9 @@
 					cqVm.stopQuiz();
 				}
 			}, function(err){
-				console.log(err);
+				if(err.status == 0) {
+					mainVm.timeoutModal();
+				}
 			})
 		}
 

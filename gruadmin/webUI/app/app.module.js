@@ -205,6 +205,7 @@ angular.module('GruiApp').provider('RouteHelpers', ['APP_REQUIRES', function (ap
       mainVm.timerObj;
       mainVm.admin_url = "http://localhost:8082/admin";
       mainVm.candidate_url = "http://localhost:8082";
+      mainVm.showModal = false;
 
       //General Methods
 
@@ -221,6 +222,9 @@ angular.module('GruiApp').provider('RouteHelpers', ['APP_REQUIRES', function (ap
       mainVm.isValidCandidate = isValidCandidate;
       mainVm.markDownFormat = markDownFormat;
       mainVm.parseGoTime = parseGoTime;
+      mainVm.openModal = openModal;
+      mainVm.hideModal = hideModal;
+      mainVm.timeoutModal = timeoutModal;
 
       mainVm.getAllTags = getAllTags;
 
@@ -264,6 +268,27 @@ angular.module('GruiApp').provider('RouteHelpers', ['APP_REQUIRES', function (ap
       function logout(){
         localStorage.removeItem('token');
         $state.transitionTo("login");
+      }
+
+      function openModal(setting) {
+        if(!setting.template) {
+          return
+        }
+        mainVm.modal = {
+          template : setting.template
+        }
+        mainVm.showModal = true;
+      }
+
+      function hideModal() {
+        mainVm.modal = {};
+        mainVm.showModal =  false;
+      }
+
+      function timeoutModal() {
+        mainVm.openModal({
+          template: "./app/shared/_server_crash.html",
+        })
       }
 
       function isValidCandidate() {
@@ -334,6 +359,7 @@ angular.module('GruiApp').provider('RouteHelpers', ['APP_REQUIRES', function (ap
           seconds: parseInt(totalSec % 60, 10),
         }
       }
+
     }
 
     // MAIN Service
@@ -350,6 +376,7 @@ angular.module('GruiApp').provider('RouteHelpers', ['APP_REQUIRES', function (ap
           method: 'POST',
           url: mainVm.base_url + url,
           data: data,
+          timeout: 30000,
         }
 
         if(url == "/login") {

@@ -260,3 +260,32 @@
 .vertical-mdl-tabs.mdl-tabs .mdl-tabs__tab {
   text-align: left;
 }
+
+/*MODAL WINDOW*/
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background-color: rgba(0, 0, 0, 0.8);
+  z-index: 100;
+  overflow: auto;
+}
+
+.modal-wrapper {
+  position: absolute;
+  padding: 15px;
+  top: 50%;
+  left: 50%;
+  background: white;
+  -webkit-transform: translatex(-50%) translatey(-50%);
+  -moz-transform: translatex(-50%) translatey(-50%);
+  -ms-transform: translatex(-50%) translatey(-50%);
+  -o-transform: translatex(-50%) translatey(-50%);
+  transform: translate(-50%, -50%);
+  z-index: 101;
+}
+.modal-actions .mdl-button{
+  min-width: 120px;
+}
