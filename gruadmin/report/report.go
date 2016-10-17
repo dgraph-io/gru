@@ -55,12 +55,17 @@ type cq struct {
 	Question []que     `json:"question.uid"`
 }
 
+type quiz struct {
+	Duration string `json:"duration"`
+}
+
 type candidates struct {
 	Id          string `json:"_uid_"`
 	Name        string
 	Email       string
-	CandidateQn []cq `json:"candidate.question"`
-	Complete    bool `json:"complete,string"`
+	CandidateQn []cq   `json:"candidate.question"`
+	Complete    bool   `json:"complete,string"`
+	Quiz        []quiz `json:"candidate.quiz"`
 }
 
 type report struct {
@@ -74,6 +79,9 @@ func reportQuery(id string) string {
                         name
                         email
                         complete
+                        candidate.quiz {
+                                duration
+                        }
                         candidate.question {
                                 question.uid {
                                         _uid_
@@ -177,9 +185,16 @@ func ReportSummary(cid string) (Summary, ReportError) {
 			c.CandidateQn[0].Asked).String()
 	} else {
 		// Incase we didn't record the answered for the last qn, say his
-		// browser crashed.
-		s.TimeTaken = c.CandidateQn[len(c.CandidateQn)-1].Asked.Sub(
-			c.CandidateQn[0].Asked).String()
+		// browser crashed or he didn't finish answering it.
+		dur := c.Quiz[0].Duration
+		// TODO - This is a hack because duration is stored as 0h50m0s,
+		// Ideally it should be 50m0s.
+		d, err := time.ParseDuration(dur)
+		if err != nil {
+			return s, ReportError{"", "Can't parse quiz duration.",
+				http.StatusInternalServerError}
+		}
+		s.TimeTaken = d.String()
 	}
 
 	for _, qn := range c.CandidateQn {
