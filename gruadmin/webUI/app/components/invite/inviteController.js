@@ -253,8 +253,13 @@
 			var circlePercentage = (circleWidth * percentage) / 100;
 
 			var circleProgressWidth = circleWidth - circlePercentage;
+
+			$progressBar = $(".prograss-circle");
+			if(cReportVm.info.total_score != 0) {
+				$progressBar.css({'display': 'block'});
+			}
 			setTimeout(function() {
-				$(".prograss-circle").css({'stroke-dashoffset': circleProgressWidth});
+				$progressBar.css({'stroke-dashoffset': circleProgressWidth});
 			}, 100);
 		}
 	}
