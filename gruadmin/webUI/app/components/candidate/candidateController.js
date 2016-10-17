@@ -80,6 +80,10 @@
 						messageType: "error",
 					})
 				}
+				if(err.status == 0) {
+					mainVm.timeoutModal();
+					cqVm.stopQuiz();
+				}
 				clearAllTimers();
 			})
 		}
@@ -212,8 +216,10 @@
 					cqVm.stopQuiz();
 				}
 			}, function(err){
+				console.log(err);
 				if(err.status == 0) {
 					mainVm.timeoutModal();
+					cqVm.stopQuiz();
 				}
 			})
 		}
@@ -223,6 +229,9 @@
 		}, 5000);
 
 		function calcTimeTaken(){
+			if(!cqVm.finalTimeLeft) {
+				return
+			}
 			var quizTime = JSON.parse(localStorage.getItem("candidate_info")).duration;
 
 			var hours = quizTime.hours - cqVm.finalTimeLeft.hours;

@@ -1,5 +1,5 @@
 <div class="main-content ng-cloak" ng-controller="candidateQuizController as cqVm">	
-	<div class="">
+	<div class="" ng-if="!cqVm.apiError">
 		<div class="mdl-grid mb-30" ng-class="{'quiz-ended mdl-shadow--2dp pv-20': cqVm.quizEnded, 'b-border': !cqVm.quizEnded }">
 			<div class="mdl-cell mdl-cell--middle" ng-class="{'mdl-cell--4-col': cqVm.quizEnded, 'mdl-cell--3-col': !cqVm.quizEnded }">
 				<h5 ng-if="cqVm.quizEnded" class="bold">Hi, {{candidateVm.info.Name}}. </h5>
@@ -111,20 +111,8 @@
 			</div>
 		</div>
 	</div>
-<!-- 
-	<div class="text-center" ng-if="cqVm.quizEnded">
-		
-		<div class="text-green mt-30">
-			<i class="material-icons mdi-lg">check_circle</i>
-		</div>
-
-		<h5> Hi {{quizVm.userId}}, your demo test for GRU ends here! <br><br>
-			<span>Your Final Score is: {{cqVm.total_score}}</span>
-		</h5>
-	</div> -->
-
 	<div ng-if="cqVm.apiError" class="mt-30 text-center text-red">
-		{{cqVm.apiError}}
+		<h4>{{cqVm.apiError}}</h4>
 	</div>
 </div>
 

@@ -144,6 +144,12 @@ button.btn-lg {
 .mdl-button[disabled][disabled], .mdl-button.mdl-button--disabled.mdl-button--disabled {
   border: 1px solid #9E9E9E;
 }
+.mdl-layout__drawer-button i {
+  display: none;
+}
+.admin-panel .mdl-layout__drawer-button i {
+  display: inline-block;
+}
 
 /*HOME PAGE*/
 

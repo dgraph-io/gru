@@ -48,6 +48,11 @@
         },
         function(response, code) {
       		qlVm.invalidUser = true;
+      		if(response.data) {
+      			mainVm.errorMessage = response.data.Message;
+      		} else {
+      			mainVm.errorMessage = "Something went wrong, mail us on contact@dgraph.io"
+      		}
         }
       );
 		}
