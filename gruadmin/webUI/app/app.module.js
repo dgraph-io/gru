@@ -384,10 +384,10 @@ angular.module('GruiApp').provider('RouteHelpers', ['APP_REQUIRES', function (ap
           delete req.data;
         } else {
           // req.url = mainVm.candidate_url + url;
-          candidateToken = JSON.parse(localStorage.getItem('candidate_info')).token;
+          candidateToken = JSON.parse(localStorage.getItem('candidate_info'));
 
-          if(candidateToken) {
-            setAuth('Bearer ' + candidateToken);
+          if(candidateToken && candidateToken.token) {
+            setAuth('Bearer ' + candidateToken.token);
           } else {
             // req.url = mainVm.admin_url + url;
             setAuth('Bearer ' + localStorage.getItem('token'));
