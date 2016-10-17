@@ -217,6 +217,57 @@
 		inviteVm.setMinDate();
 	}
 
+	function candidateReportController($rootScope, $stateParams, $state, inviteService) {
+		cReportVm = this;
+		cReportVm.candidateID = $stateParams.candidateID;
+
+		// Function
+		cReportVm.initScoreCircle = initScoreCircle;
+
+		if(!cReportVm.candidateID) {
+			cReportVm.inValidID = true;
+			return
+		}
+
+		inviteService.getReport(cReportVm.candidateID)
+		.then(function(data){
+			console.log(data);
+			for(var i = 0; i < data.questions.length; i++) {
+				if(data.questions[i].time_taken != "-1"){
+					data.questions[i].parsedTime = mainVm.parseGoTime(data.questions[i].time_taken)
+				}
+			}
+			cReportVm.info = data;
+			cReportVm.timeTaken = mainVm.parseGoTime(cReportVm.info.time_taken);
+
+			cReportVm.initScoreCircle();
+		}, function(error){
+			console.log(error);
+		})
+
+		function initScoreCircle() {
+			var circleWidth = 2 * Math.PI * 30;
+			
+			var percentage = (cReportVm.info.total_score * 100) / cReportVm.info.max_score;
+
+			var circlePercentage = (circleWidth * percentage) / 100;
+
+			var circleProgressWidth = circleWidth - circlePercentage;
+			setTimeout(function() {
+				$(".prograss-circle").css({'stroke-dashoffset': circleProgressWidth});
+			}, 100);
+		}
+	}
+
+	var candidateReportDependency = [
+	    "$rootScope",
+	    "$stateParams",
+	    "$state",
+	    "inviteService",
+	    candidateReportController
+	];
+	angular.module('GruiApp').controller('candidateReportController', candidateReportDependency);
+
 	var candidatesDependency = [
 	    "$rootScope",
 	    "$stateParams",

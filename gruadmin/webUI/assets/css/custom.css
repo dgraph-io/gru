@@ -150,7 +150,10 @@ button.btn-lg {
 .admin-panel .mdl-layout__drawer-button i {
   display: inline-block;
 }
-
+.mdl-cell.no-margin-lr {
+  margin-left: 0;
+  margin-right: 0;
+}
 /*HOME PAGE*/
 
 body.home {
@@ -351,6 +354,41 @@ body.home {
 }
 .quiz-ended .mdl-chip__contact {
   font-size: 20px;
+}
+
+/*CANDIDATE REPORT*/
+.report-header {
+  background: #e0e0e0;
+}
+
+.mdl-chip-info .mdl-chip__text {
+  width: 140px;
+}
+
+.cmdl-chip-value {
+  min-width: 240px;
+  height: 32px;
+  line-height: 32px;
+  vertical-align: middle;
+  padding: 0 20px;
+  border: 1px solid #DEDEDE;
+  border-radius: 16px;
+  margin-left: -38px;
+  background: white;
+  margin-top: 8px;
+}
+
+.path {
+  stroke-dasharray: 188;
+  stroke-dashoffset: 0;
+  stroke: rgba(128, 128, 128, 0.56);
+  transform-origin: center;
+}
+
+circle.path.prograss-circle {
+  stroke: #009688;
+  stroke-dashoffset: 184;
+  transition: 2s;
 }
     
 /*TABLET + MOBILE SPECIFIC CSS*/

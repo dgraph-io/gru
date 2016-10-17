@@ -19,6 +19,10 @@
     services.editInvite = function(data){
       return MainService.put('/candidate/' + data.id, data);
     }
+
+    services.getReport = function(candidateID){
+      return MainService.get('/candidate/report/' + candidateID);
+    }
     
     return services;
 

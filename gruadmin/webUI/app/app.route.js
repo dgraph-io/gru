@@ -21,9 +21,10 @@
     var  allQuizTemplate = 'app/components/quiz/all-quiz.html';
 
     var  inviteTemplate = 'app/components/invite/index.html';
-    var  inviteDashboardTemplate = 'app/components/invite/views/invite-dashboard.html';
+    var  inviteDashboardTemplate = 'app/components/invite/views/invite-dashboard.html?v=20161018-1';
     var  inviteUserTemplate = 'app/components/invite/views/invite-user.html';
     var  editInviteTemplate = 'app/components/invite/views/edit-invite.html';
+    var  candidateReportTemplate = 'app/components/invite/views/candidate-report.html';
 
     var  candidateIndexTemplate = 'app/components/candidate/index.html';
     var  candidateLandingTemplate = 'app/components/candidate/views/landing.html';
@@ -136,6 +137,11 @@
             parent: 'invite',
             templateUrl: editInviteTemplate,
             authenticate: true,
+          })
+          .state('invite.report', {
+            url: '/candidate-report/:candidateID',
+            parent: 'invite',
+            templateUrl: candidateReportTemplate,
           })
         .state('quiz-landing', {
           url: '/quiz/:quiz_token',
