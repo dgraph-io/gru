@@ -288,6 +288,10 @@
 
 		$(document).ready(function(){
 
+			$(document).on("click", ".mdl-tabs__tab", function(e) {
+				e.preventDefault();
+			});
+
 			$(window).unbind('scroll');
 			setTimeout(function() {
 				window.addEventListener('scroll', function(){
