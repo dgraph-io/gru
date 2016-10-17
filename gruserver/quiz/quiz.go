@@ -400,7 +400,22 @@ func PingHandler(w http.ResponseWriter, r *http.Request) {
 	pr := &pingRes{TimeLeft: "-1"}
 	if !c.quizStart.IsZero() {
 		end := c.quizStart.Add(c.quizDuration).Truncate(time.Second)
-		pr.TimeLeft = end.Sub(time.Now().UTC().Truncate(time.Second)).String()
+		timeLeft := end.Sub(time.Now().UTC().Truncate(time.Second))
+		if timeLeft <= 0 {
+			m := `mutation {
+			set {
+				<_uid_:` + userId + `> <complete> "true" .
+			}
+			}
+			`
+			res := dgraph.SendMutation(m)
+			if res.Code != "ErrorOk" {
+				sr.Write(w, res.Message, "", http.StatusInternalServerError)
+				return
+			}
+			go sendReport(userId)
+		}
+		pr.TimeLeft = timeLeft.String()
 	}
 	json.NewEncoder(w).Encode(pr)
 }
