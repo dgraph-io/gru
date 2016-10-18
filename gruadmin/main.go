@@ -89,7 +89,7 @@ func runHTTPServer(address string) {
 	router.HandleFunc("/admin/login", login).Methods("POST", "OPTIONS")
 	router.HandleFunc("/validate/{id}", candidate.Validate).Methods("POST", "OPTIONS")
 
-	quizRouter := mux.NewRouter().PathPrefix("/quiz").Subrouter().StrictSlash(true)
+	quizRouter := router.PathPrefix("/quiz").Subrouter().StrictSlash(true)
 	quizRouter.HandleFunc("/question", quizp.QuestionHandler).Methods("POST", "OPTIONS")
 	quizRouter.HandleFunc("/answer", quizp.AnswerHandler).Methods("POST", "OPTIONS")
 	quizRouter.HandleFunc("/ping", quizp.PingHandler).Methods("POST", "OPTIONS")
@@ -97,7 +97,7 @@ func runHTTPServer(address string) {
 		negroni.Wrap(quizRouter),
 	))
 
-	adminRouter := mux.NewRouter().PathPrefix("/admin").Subrouter().StrictSlash(true)
+	adminRouter := router.PathPrefix("/admin").Subrouter().StrictSlash(true)
 
 	// TODO - Change the API's to RESTful API's
 	adminRouter.HandleFunc("/add-question", question.Add).Methods("POST", "OPTIONS")
