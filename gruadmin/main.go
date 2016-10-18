@@ -39,7 +39,7 @@ import (
 
 var (
 	// TODO - Later just have one IP address with port info.
-	port     = flag.String("port", ":8082", "Port on which server listens")
+	port     = flag.String("port", ":8000", "Port on which server listens")
 	username = flag.String("user", "", "Username to login to admin panel")
 	password = flag.String("pass", "", "Username to login to admin panel")
 )
@@ -70,6 +70,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 // Middleware for adding CORS headers and handling preflight request.
 func options(rw http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 	server.AddCorsHeaders(rw)
+
 	if r.Method == "OPTIONS" {
 		return
 	}
@@ -84,8 +85,7 @@ func runHTTPServer(address string) {
 		SigningMethod: jwt.SigningMethodHS256,
 	})
 
-	router := mux.NewRouter()
-
+	router := mux.NewRouter().PathPrefix("/api").Subrouter().StrictSlash(true)
 	router.HandleFunc("/admin/login", login).Methods("POST", "OPTIONS")
 	router.HandleFunc("/validate/{id}", candidate.Validate).Methods("POST", "OPTIONS")
 
@@ -125,10 +125,11 @@ func runHTTPServer(address string) {
 		negroni.HandlerFunc(jwtMiddleware.HandlerWithNext),
 		negroni.Wrap(adminRouter),
 	))
+
 	n := negroni.Classic()
 	n.Use(negroni.HandlerFunc(options))
 	n.UseHandler(router)
-	fmt.Println("Server Running on 8082")
+	fmt.Println("Server Running on 8000")
 	log.Fatal(http.ListenAndServe(address, n))
 }
 
