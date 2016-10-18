@@ -85,20 +85,22 @@ func runHTTPServer(address string) {
 		SigningMethod: jwt.SigningMethodHS256,
 	})
 
-	router := mux.NewRouter().PathPrefix("/api").Subrouter().StrictSlash(true)
-	router.HandleFunc("/admin/login", login).Methods("POST", "OPTIONS")
-	router.HandleFunc("/validate/{id}", candidate.Validate).Methods("POST", "OPTIONS")
+	router := mux.NewRouter()
+	router.HandleFunc("/api/admin/login", login).Methods("POST", "OPTIONS")
+	router.HandleFunc("/api/validate/{id}", candidate.Validate).Methods("POST", "OPTIONS")
 
-	quizRouter := router.PathPrefix("/quiz").Subrouter().StrictSlash(true)
+	quizRouter := router.PathPrefix("/api/quiz").Subrouter()
 	quizRouter.HandleFunc("/question", quizp.QuestionHandler).Methods("POST", "OPTIONS")
 	quizRouter.HandleFunc("/answer", quizp.AnswerHandler).Methods("POST", "OPTIONS")
 	quizRouter.HandleFunc("/ping", quizp.PingHandler).Methods("POST", "OPTIONS")
-	router.PathPrefix("/quiz").Handler(negroni.New(
-		negroni.Wrap(quizRouter),
+
+	admin := mux.NewRouter()
+	router.PathPrefix("/api/admin").Handler(negroni.New(
+		negroni.HandlerFunc(jwtMiddleware.HandlerWithNext),
+		negroni.Wrap(admin),
 	))
 
-	adminRouter := router.PathPrefix("/admin").Subrouter().StrictSlash(true)
-
+	adminRouter := admin.PathPrefix("/api/admin").Subrouter()
 	// TODO - Change the API's to RESTful API's
 	adminRouter.HandleFunc("/add-question", question.Add).Methods("POST", "OPTIONS")
 	// TODO - Change to PUT.
@@ -120,11 +122,6 @@ func runHTTPServer(address string) {
 	adminRouter.HandleFunc("/candidate/{id}", candidate.Get).Methods("GET", "OPTIONS")
 	adminRouter.HandleFunc("/candidate/report/{id}", report.Report).Methods("GET", "OPTIONS")
 	adminRouter.HandleFunc("/candidates", candidate.Index).Methods("GET", "OPTIONS")
-
-	router.PathPrefix("/admin").Handler(negroni.New(
-		negroni.HandlerFunc(jwtMiddleware.HandlerWithNext),
-		negroni.Wrap(adminRouter),
-	))
 
 	n := negroni.Classic()
 	n.Use(negroni.HandlerFunc(options))
