@@ -239,6 +239,13 @@ type qnIdsResp struct {
 	Quizzes []quiz `json:"quiz"`
 }
 
+func shuffleQuestions(qns []quizp.Question) {
+	for i := range qns {
+		j := rand.Intn(i + 1)
+		qns[i], qns[j] = qns[j], qns[i]
+	}
+}
+
 func quizQns(quizId string, qnsAsked []string) ([]quizp.Question, error) {
 	q := `{
 		quiz(_uid_: ` + quizId + `) {
@@ -431,8 +438,7 @@ func Validate(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		sr.Write(w, err.Error(), "", http.StatusInternalServerError)
 	}
-	// TODO - Shuffle the order of questions.
-	// x.Shuffle(ids)
+	shuffleQuestions(qns)
 
 	if len(cand.Questions) > 0 {
 		quizp.Update(uid, qns)

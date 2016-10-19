@@ -21,7 +21,9 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"math/rand"
 	"net/http"
+	"time"
 
 	jwtmiddleware "github.com/auth0/go-jwt-middleware"
 	"github.com/dgraph-io/gru/auth"
@@ -131,6 +133,7 @@ func runHTTPServer(address string) {
 }
 
 func main() {
+	rand.Seed(time.Now().UnixNano())
 	flag.Parse()
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 	runHTTPServer(*port)
