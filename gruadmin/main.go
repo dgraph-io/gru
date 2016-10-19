@@ -81,27 +81,28 @@ func options(rw http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 }
 
 type healthCheck struct {
-	Server bool `json:"server"`
-	Dgraph bool `json:"dgraph"`
+	Services string `json:"services"`
 }
 
 func health(w http.ResponseWriter, r *http.Request) {
-	hc := healthCheck{Server: true}
+	hc := healthCheck{}
 	// Check Dgraph, send a mutation, do a query.
 	m := new(dgraph.Mutation)
 	m.Set(`<alice> <name> "Alice" .`)
 	_, err := dgraph.SendMutation(m.String())
 	if err != nil {
+		hc.Services = "server"
 		json.NewEncoder(w).Encode(hc)
 		return
 	}
 
 	res, err := dgraph.Query("{ \n me(_xid_:alice) { \n name \n } \n }")
 	if err != nil || string(res) != `{"me":[{"name":"Alice"}]}` {
+		hc.Services = "server"
 		json.NewEncoder(w).Encode(hc)
 		return
 	}
-	hc.Dgraph = true
+	hc.Services = "server,dgraph"
 	json.NewEncoder(w).Encode(hc)
 }
 
