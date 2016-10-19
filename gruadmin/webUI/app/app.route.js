@@ -142,6 +142,7 @@
             url: '/candidate-report/:candidateID',
             parent: 'invite',
             templateUrl: candidateReportTemplate,
+            authenticate: true,
           })
         .state('quiz-landing', {
           url: '/quiz/:quiz_token',

@@ -173,6 +173,7 @@
 
 		//FUnction Declaration
 		addQueVm.addQuestionForm = addQuestionForm;
+		addQueVm.resetForm = resetForm;
 
 		// Check if user is authorized
 		function addQuestionForm() {
@@ -224,6 +225,12 @@
 		});
 
 		questionVm.initCodeMirror();
+
+		function resetForm() {
+			addQueVm.cmModel = "";
+			addQueVm.newQuestion = {};
+			addQueVm.newQuestion.tags = [];
+		}
 	}
 
 	function allQuestionController($scope, $rootScope, $http, $q, $state, $stateParams, questionService) {

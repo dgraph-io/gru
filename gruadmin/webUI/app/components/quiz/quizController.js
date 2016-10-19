@@ -14,6 +14,7 @@
 		quizVm.validateInput = validateInput;
 		quizVm.getAllQuestions = getAllQuestions;
 		quizVm.getTotalScore = getTotalScore;
+		quizVm.resetForm = resetForm;
 
 	// FUNCTION DEFINITION
 		quizVm.getAllQuestions();
@@ -107,6 +108,9 @@
 				}
 			} 
 			return totalScore;
+		}
+		function resetForm() {
+			quizVm.newQuiz = {};
 		}
 	}
 

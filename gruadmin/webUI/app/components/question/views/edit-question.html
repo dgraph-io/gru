@@ -31,13 +31,13 @@
 			<div class="mdl-grid no-pad">
 				<div class="mdl-cell mdl-cell--3-col ml-0">
 					<div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label" ng-class="{'is-dirty': editQuesVm.newQuestion.positive}">
-				    <input class="mdl-textfield__input" type="number" name="positive" id="positive-mark" ng-model="editQuesVm.newQuestion.positive" step="0.1">
+				    <input class="mdl-textfield__input" type="number" name="positive" id="positive-mark" ng-model="editQuesVm.newQuestion.positive" step="0.1" min="1">
 				    <label class="mdl-textfield__label" for="positive-mark">Positive Score</label>
 				  </div>
 				</div>
 				<div class="mdl-cell mdl-cell--3-col">
 				  <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label" ng-class="{'is-dirty': editQuesVm.newQuestion.negative}">
-				    <input class="mdl-textfield__input" type="number" name="negative" id="negative-mark" ng-model="editQuesVm.newQuestion.negative" step="0.1">
+				    <input class="mdl-textfield__input" type="number" name="negative" id="negative-mark" ng-model="editQuesVm.newQuestion.negative" step="0.1" min="0">
 				    <label class="mdl-textfield__label" for="negative-mark">Negative Score</label>
 				  </div>
 				</div>
@@ -52,7 +52,7 @@
 				<div class="mdl-cell mdl-cell--2-col pt-20">
 				  <label class="mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect" for="correct-{{$index + 1}}">
 					  <input type="checkbox" id="correct-{{$index + 1}}" class="mdl-checkbox__input" ng-model="option.is_correct">
-					  <span class="mdl-checkbox__label">Is correct<span ng-if="!option.is_correct">?</span></span>
+					  <span class="mdl-checkbox__label">Is correct</span>
 					</label>
 				</div>
 			</div>
@@ -69,8 +69,11 @@
 				</div>
 			</div>
 
-			<button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--accent mt-20">
+			<button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mt-20">
 			  Update Question
+			</button>
+			<button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mt-20 ml-20" ng-click="mainVm.goTo('question.all')">
+			  Cancel
 			</button>
 		</form>
 	</div>

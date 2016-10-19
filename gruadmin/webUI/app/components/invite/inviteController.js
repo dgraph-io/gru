@@ -10,6 +10,7 @@
 		inviteVm.inviteCandidate = inviteCandidate;
 		inviteVm.removeSelectedQuiz = removeSelectedQuiz;
 		inviteVm.setMinDate = setMinDate;
+		inviteVm.resetForm = resetForm;
 
 		quizService.getAllQuizes().then(function(data){
 			var data = JSON.parse(data);
@@ -74,12 +75,16 @@
 		$(document).ready(function(){
 			$('#datePicker').val(new Date().toDateInputValue());
 		})
+
+		function resetForm() {
+			inviteVm.removeSelectedQuiz();
+		}
 	}
 
 	function editInviteController($rootScope, $stateParams, $state, quizService, inviteService) {
 		editInviteVm = this;
 		var candidateUID = $stateParams.candidateID;
-		var quizID = $stateParams.quizID;
+		editInviteVm.quizID = $stateParams.quizID;
 
 		//Function Declation
 		editInviteVm.editInvite = editInvite;
@@ -87,6 +92,7 @@
 		editInviteVm.selectedQuiz = selectedQuiz;
 		editInviteVm.removeSelectedQuiz = removeSelectedQuiz;
 		editInviteVm.onQuizSelect = onQuizSelect;
+		editInviteVm.goToDashboard = goToDashboard;
 
 		inviteVm.setMinDate();
 
@@ -118,7 +124,7 @@
 
 			if(editInviteVm.candidate['candidate.quiz'][0].is_delete) {
 				editInviteVm.candidate.quiz_id = editInviteVm.candidate.quiz._uid_;
-				editInviteVm.candidate.old_quiz_id = quizID;
+				editInviteVm.candidate.old_quiz_id = editInviteVm.quizID;
 			}
 
 			requestData = angular.copy(editInviteVm.candidate);
@@ -130,7 +136,7 @@
 					messageType: "success",
 				})
 				$state.transitionTo("invite.dashboard", {
-					quizID:  quizID,
+					quizID:  editInviteVm.quizID,
 				})
 			}, function(err){
 				console.log(err)
@@ -183,6 +189,12 @@
 					oldQuiz.is_delete = true;
 				}
 			}
+		}
+
+		function goToDashboard() {
+			$state.transitionTo("invite.dashboard", {
+				quizID:  editInviteVm.quizID,
+			});
 		}
 	}
 	

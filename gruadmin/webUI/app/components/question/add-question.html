@@ -52,7 +52,7 @@
 				<div class="mdl-cell mdl-cell--2-col pt-20">
 				  <label class="mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect" for="correct-{{$index + 1}}" ng-class="{'is-checked': addQueVm.newQuestion.optionsBak['option' + $index].is_correct == true}">
 					  <input type="checkbox" id="correct-{{$index + 1}}" class="mdl-checkbox__input" ng-model="addQueVm.newQuestion.optionsBak['option' + $index].is_correct">
-					  <span class="mdl-checkbox__label">Is correct<span ng-if="!addQueVm.newQuestion.optionsBak['option' + $index].is_correct">?</span></span>
+					  <span class="mdl-checkbox__label">Is correct
 					</label>
 				</div>
 			</div>
@@ -69,8 +69,12 @@
 				</div>
 			</div>
 
-			<button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--accent mt-20">
+			<button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mt-20">
 			  Save Question
+			</button>
+
+			<button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mt-20 ml-20" type="reset" ng-click="addQueVm.resetForm()">
+				  Reset
 			</button>
 		</form>
 	</div>

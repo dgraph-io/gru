@@ -1,6 +1,10 @@
 (function(){
 
 	function loginController($scope, $rootScope, $stateParams, $state, MainService) {
+		if(mainVm.isLoggedIn()) {
+      $state.transitionTo("root");
+    }
+
 		loginVm = this;
 		loginVm.authData = {};
 		mainVm.pageName = "login-page"

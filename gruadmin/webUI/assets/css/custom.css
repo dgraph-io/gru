@@ -55,7 +55,6 @@ button.btn-lg {
 .mdl-button.action-btn {
   min-width: 100px;
   margin-right: 15px;
-  background-color: #E91E63;
   color: white;
 }
 .mdl-button:focus:not(:active) {
