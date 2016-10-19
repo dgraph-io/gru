@@ -90,6 +90,9 @@ button.btn-lg {
 .mdl-textfield {
   width: 100%;
 }
+.mdl-textfield__input:focus {
+  outline: 0;
+}
 .mdl-tabs__tab-bar {
   justify-content: flex-start;
 }
@@ -132,13 +135,13 @@ button.btn-lg {
 }
 
 .mdl-success.is-checked .mdl-checkbox__tick-outline {
-    background: #009688;
+    background: green;
 }
 .mdl-success.is-checked .mdl-checkbox__box-outline {
-    border: 2px solid #009688;
+    border: 2px solid green;
 }
 .mdl-success.is-checked .mdl-checkbox__label {
-    color: #009688;
+    color: green;
 }
 .mdl-button[disabled][disabled], .mdl-button.mdl-button--disabled.mdl-button--disabled {
   border: 1px solid #9E9E9E;

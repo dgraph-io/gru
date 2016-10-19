@@ -74,6 +74,9 @@
 .b-border {
   border-bottom: 1px solid rgba(0,0,0,.12);
 }
+.t-border {
+  border-top: 1px solid rgba(0,0,0,.12);
+}
 .l-border {
   border-left: 1px solid rgba(0,0,0,.12);
 }
@@ -289,4 +292,11 @@
 }
 .modal-actions .mdl-button{
   min-width: 120px;
+}
+
+/*SCROLL FIX*/
+.scroll-fix {
+  position: fixed;
+  padding: 20px;
+  min-width: 320px;
 }

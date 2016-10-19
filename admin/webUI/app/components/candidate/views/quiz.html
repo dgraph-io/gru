@@ -35,6 +35,23 @@
 			    <span class="mdl-chip__text bold text-center ">{{cqVm.question.score}}</span>
 				</span>
 			</div>
+			<div ng-if="cqVm.quizEnded" class="pl-10 t-border">
+				<div ng-if="!cqVm.feedbackSubmitted">
+					<form ng-submit="cqVm.submitFeedback()">
+						<div class="mdl-textfield mdl-js-textfield">
+					    <textarea class="mdl-textfield__input" type="text" rows= "5" cols="70" id="feedback" ng-model="cqVm.feedback"></textarea>
+					    <label class="mdl-textfield__label" for="feedback">Give your valuable feedback</label>
+					  </div>
+
+					  <button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect btn-lg">
+					  	SUBMIT
+					  </button>
+					</form>
+				</div>
+				<div ng-if="cqVm.feedbackSubmitted" class="text-green pt-10">
+					<i class="material-icons">feedback</i> Thank you for your feedback!
+				</div>
+			</div>
 		</div>
 	
 		<div ng-if="!cqVm.quizEnded">

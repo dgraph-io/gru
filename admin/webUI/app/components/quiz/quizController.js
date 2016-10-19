@@ -17,7 +17,6 @@
 		quizVm.resetForm = resetForm;
 
 	// FUNCTION DEFINITION
-		quizVm.getAllQuestions();
 		
 		// Function for fetching next question
 
@@ -130,16 +129,13 @@
 		quizVm.newQuiz = {};
 		editQuizVm.selectedQuestion;
 
+		mainVm.allQuestions = [];
+
 		// Function Declaration
 		editQuizVm.editQuiz = editQuiz;
-		editQuizVm.onQuestionRemove = onQuestionRemove;
-		editQuizVm.onNewQuestionRemove = onNewQuestionRemove;
 		editQuizVm.addNewQuestion = addNewQuestion;
-		editQuizVm.getTimeObj = getTimeObj;
 		editQuizVm.getQuestionCount = getQuestionCount;
-
-		// INITITALIZER
-		quizVm.getAllQuestions();
+		editQuizVm.isExisting = isExisting;
 
 		quizService.getQuiz($stateParams.quizID)
 		.then(function(data){
@@ -148,13 +144,13 @@
 			editQuizVm.selectedQuestion = data.root[0]['quiz.question'];
 			quizVm.newQuiz.newQuestions = [];
 
-			var timeObj = editQuizVm.getTimeObj(quizVm.newQuiz.duration);
-
 			var duration =  Duration.parse(quizVm.newQuiz.duration)
 			var seconds = duration.seconds();
 			quizVm.newQuiz.hours = parseInt( seconds / 3600 ) % 24;
 			quizVm.newQuiz.minutes = parseInt( seconds / 60 ) % 60;
 			quizVm.newQuiz.seconds = parseInt(seconds) % 60;
+
+			quizVm.getAllQuestions();
 		}, function(err){
 			console.log(err);
 		});
@@ -252,41 +248,6 @@
 			}
 		}
 
-		function onQuestionRemove(question) {
-			if(question._uid_) {
-				question.is_delete = true;
-			}
-		}
-
-		function onNewQuestionRemove(question) {
-			mainVm.allQuestions[question.index].is_checked = false;
-
-			var idx = mainVm.indexOfObject(quizVm.newQuiz.newQuestions, question);
-
-			if (idx >= 0) {
-				quizVm.newQuiz.newQuestions.splice(idx, 1)
-			}
-		}
-
-		editQuizVm.isSelected = function(question_id) {
-			for(var i = 0; i<editQuizVm.selectedQuestion.length; i++) {
-				if(editQuizVm.selectedQuestion[i]._uid_ == question_id) {
-					return true;
-				}
-			}
-			return false;
-		}
-
-		function getTimeObj(duration){
-			console.log(duration);
-			var timeArr = duration.split("-") 
-			return {
-				hours: parseInt(timeArr[0]),
-				minutes: parseInt(timeArr[1]),
-				seconds: parseInt(timeArr[2]),
-			}
-		}
-
 		function getQuestionCount() {
 			var totatQuestion = 0;
 			var existingQues = quizVm.newQuiz['quiz.question'];
@@ -299,6 +260,18 @@
 			totatQuestion += newQuestions.length;
 
 			return totatQuestion;
+		}
+
+		function isExisting(question) {
+			var existingQues =  editQuizVm.selectedQuestion;
+			var existingQuesLen =  existingQues.length;
+			for(var i = 0; i < existingQuesLen; i++) {
+				if(!existingQues[i].is_delete &&existingQues[i]._uid_ == question._uid_) {
+					question.is_checked = true;
+					return;
+				}
+			}
+			return false;
 		}
 	}
 

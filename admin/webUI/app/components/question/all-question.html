@@ -12,7 +12,7 @@
 		</div>
 		<div class="mdl-tabs vertical-mdl-tabs mdl-js-tabs mdl-js-ripple-effect mt-30">
 	    <div class="mdl-grid mdl-grid--no-spacing">
-	      <div class="mdl-cell mdl-cell--4-col">
+	      <div class="mdl-cell mdl-cell--2-col">
 	        <div class="mdl-tabs__tab-bar">
 	          <a href="#tab{{$index}}-panel" class="mdl-tabs__tab pv-5" ng-repeat="question in mainVm.allQuestions" ng-class="{'is-active': $index == 0}" ng-click="allQVm.setQuestion(question, $index)">
 							{{question.name}}
@@ -22,47 +22,60 @@
 				 		</div>
 	        </div>
 	      </div>
-	      <div class="mdl-cell mdl-cell--8-col pl-30">
+	      <div class="mdl-cell mdl-cell--10-col pl-30">
          	<div class="mdl-tabs__panel is-active" id="tab{{allQVm.questionIndex}}-panel">
-         		<div class="bg-grey pl-10 pt-5">
-							Q. {{allQVm.question.name}}
-							<pre ng-bind-html="questionVm.markDownFormat(mainVm.unescapeText(allQVm.question.text))"></pre>
-						</div>
-						<div class="pt-20">
-							<span class="mdl-chip mdl-chip--contact">
-						    <span class="mdl-chip__contact mdl-color--teal mdl-color-text--white">
-						    	Positive Score
-						    </span>
-						    <span class="mdl-chip__text bold text-center"> {{allQVm.question.positive}}</span>
-							</span>
-							<span class="mdl-chip mdl-chip--contact">
-						    <span class="mdl-chip__contact mdl-color--teal mdl-color-text--white">
-						    	Negative Score
-						    </span>
-						    <span class="mdl-chip__text bold text-center"> {{allQVm.question.negative}}</span>
-							</span>
-						</div>
-
-						<div class="mdl-grid no-pad mt-20">
-							<div class="mdl-cell mdl-cell--3-col">
-								<span ng-show="!editQuestion" class="bold">OPTIONS</span>
+         		<div class="mdl-grid no-pad">
+							<div class="mdl-cell mdl-cell--2-col mdl-cell--middle">
+								<span class="bold">NAME</span>
 							</div>
-							<div class="mdl-cell mdl-cell--9-col">
-								<div class="mb-10" ng-repeat="option in allQVm.question['question.option'] track by $index">
-									{{option.name}} &nbsp <span class="text-green" ng-show="questionVm.isCorrect(option, allQVm.question['question.correct'])"> - <i class="material-icons text-green mdi-sm">check_circle</i> Correct</span>
-								</div>
+							<div class="mdl-cell mdl-cell--10-col">
+								{{allQVm.question.name}}
+							</div>
+						</div>
+         		<div class="mdl-grid no-pad">
+							<div class="mdl-cell mdl-cell--2-col mdl-cell--middle">
+								<span class="bold">SCORING</span>
+							</div>
+							<div class="mdl-cell mdl-cell--10-col">
+								<span class="mdl-chip mdl-chip--contact">
+							    <span class="mdl-chip__contact mdl-color--teal mdl-color-text--white">
+							    	Positive Score
+							    </span>
+							    <span class="mdl-chip__text bold text-center"> {{allQVm.question.positive}}</span>
+								</span>
+								<span class="mdl-chip mdl-chip--contact">
+							    <span class="mdl-chip__contact mdl-color--teal mdl-color-text--white">
+							    	Negative Score
+							    </span>
+							    <span class="mdl-chip__text bold text-center"> {{allQVm.question.negative}}</span>
+								</span>
 							</div>
 						</div>
 						<div class="mdl-grid no-pad" ng-show="allQVm.question['question.tag']">
-							<div class="mdl-cell mdl-cell--3-col">
+							<div class="mdl-cell mdl-cell--2-col mdl-cell--middle">
 								<span ng-show="!editQuestion" class="bold">TAGS</span>
 							</div>
-							<div class="mdl-cell mdl-cell--9-col">
+							<div class="mdl-cell mdl-cell--10-col">
 								<span ng-repeat="tags in allQVm.question['question.tag'] track by $index">
 									<span class="mdl-chip">
 								    <span class="mdl-chip__text">{{tags.name}}</span>
 									</span>
 								</span>
+							</div>
+						</div>
+						<div class="mt-20 pl-10">
+							<strong>QUESTION CONTENT</strong>
+							<pre class="pl-20 pt-5 bg-grey" ng-bind-html="questionVm.markDownFormat(mainVm.unescapeText(allQVm.question.text))"></pre>
+						</div>
+
+						<div class="mdl-grid no-pad mt-20">
+							<div class="mdl-cell mdl-cell--2-col">
+								<span ng-show="!editQuestion" class="bold">OPTIONS</span>
+							</div>
+							<div class="mdl-cell mdl-cell--10-col">
+								<div class="mb-10" ng-repeat="option in allQVm.question['question.option'] track by $index">
+									{{option.name}} &nbsp <span class="text-green" ng-show="questionVm.isCorrect(option, allQVm.question['question.correct'])"> - <i class="material-icons text-green mdi-sm">check_circle</i> Correct</span>
+								</div>
 							</div>
 						</div>
 						<div class="mdl-grid no-pad" ng-show="allQVm.question['question.tag']">

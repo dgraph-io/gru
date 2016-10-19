@@ -21,7 +21,13 @@
 
 		function setMinDate() {
 			setTimeout(function() {
-				$("#datePicker").attr("min", formatDate(new Date()));
+				$datePicker = $("#datePicker")
+				var today = new Date();
+				$datePicker.attr("min", formatDate(new Date()));
+
+
+				inviteVm.newInvite.dates = new Date(today.setDate(today.getDate()+7));
+				// $datePicker.val(formatDate(inviteVm.newInvite.dates));
 			}, 100);
 		}
 

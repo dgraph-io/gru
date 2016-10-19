@@ -42,6 +42,7 @@
 		cqVm.initTimer = initTimer;
 		cqVm.calcTimeTaken = calcTimeTaken;
 		cqVm.stopQuiz = stopQuiz;
+		cqVm.submitFeedback = submitFeedback;
 
 	// INITIALIZERS
 	if(candidateVm.isValidUser) {
@@ -257,6 +258,17 @@
       if(cqVm.finalTimeLeft.hours + cqVm.finalTimeLeft.minutes + cqVm.finalTimeLeft.seconds == 0) {
       	manipulateTime(0, document.querySelector('#time'))
       }
+		}
+
+		function submitFeedback() {
+			if(!cqVm.feedback) {
+				SNACKBAR({
+					message: "Please write your feedback",
+					messageType: "error",
+				})
+				return
+			}
+			cqVm.feedbackSubmitted = true;
 		}
 
 	}

@@ -230,6 +230,7 @@
 			addQueVm.cmModel = "";
 			addQueVm.newQuestion = {};
 			addQueVm.newQuestion.tags = [];
+			$(".mdl-textfield.is-dirty").removeClass("is-dirty");
 		}
 	}
 
