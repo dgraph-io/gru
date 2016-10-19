@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"html/template"
+	"math/rand"
 	"net/http"
 	"strconv"
 	"strings"
@@ -138,6 +139,13 @@ func sendReport(cid string) {
 	mail.SendReport(s.Name, s.TotalScore, s.MaxScore, body)
 }
 
+func shuffleOptions(opts []Answer) {
+	for i := range opts {
+		j := rand.Intn(i + 1)
+		opts[i], opts[j] = opts[j], opts[i]
+	}
+}
+
 func QuestionHandler(w http.ResponseWriter, r *http.Request) {
 	var userId string
 	var err error
@@ -205,6 +213,7 @@ func QuestionHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	qn := c.qns[0]
+	shuffleOptions(qn.Options)
 	m := `mutation {
 		set {
 			<_uid_:` + userId + `> <candidate.question> <_new_:qn> .

@@ -21,7 +21,9 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"math/rand"
 	"net/http"
+	"time"
 
 	jwtmiddleware "github.com/auth0/go-jwt-middleware"
 	"github.com/dgraph-io/gru/auth"
@@ -39,7 +41,7 @@ import (
 
 var (
 	// TODO - Later just have one IP address with port info.
-	port     = flag.String("port", ":8082", "Port on which server listens")
+	port     = flag.String("port", ":8000", "Port on which server listens")
 	username = flag.String("user", "", "Username to login to admin panel")
 	password = flag.String("pass", "", "Username to login to admin panel")
 )
@@ -70,6 +72,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 // Middleware for adding CORS headers and handling preflight request.
 func options(rw http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 	server.AddCorsHeaders(rw)
+
 	if r.Method == "OPTIONS" {
 		return
 	}
@@ -85,20 +88,21 @@ func runHTTPServer(address string) {
 	})
 
 	router := mux.NewRouter()
+	router.HandleFunc("/api/admin/login", login).Methods("POST", "OPTIONS")
+	router.HandleFunc("/api/validate/{id}", candidate.Validate).Methods("POST", "OPTIONS")
 
-	router.HandleFunc("/admin/login", login).Methods("POST", "OPTIONS")
-	router.HandleFunc("/validate/{id}", candidate.Validate).Methods("POST", "OPTIONS")
-
-	quizRouter := mux.NewRouter().PathPrefix("/quiz").Subrouter().StrictSlash(true)
+	quizRouter := router.PathPrefix("/api/quiz").Subrouter()
 	quizRouter.HandleFunc("/question", quizp.QuestionHandler).Methods("POST", "OPTIONS")
 	quizRouter.HandleFunc("/answer", quizp.AnswerHandler).Methods("POST", "OPTIONS")
 	quizRouter.HandleFunc("/ping", quizp.PingHandler).Methods("POST", "OPTIONS")
-	router.PathPrefix("/quiz").Handler(negroni.New(
-		negroni.Wrap(quizRouter),
+
+	admin := mux.NewRouter()
+	router.PathPrefix("/api/admin").Handler(negroni.New(
+		negroni.HandlerFunc(jwtMiddleware.HandlerWithNext),
+		negroni.Wrap(admin),
 	))
 
-	adminRouter := mux.NewRouter().PathPrefix("/admin").Subrouter().StrictSlash(true)
-
+	adminRouter := admin.PathPrefix("/api/admin").Subrouter()
 	// TODO - Change the API's to RESTful API's
 	adminRouter.HandleFunc("/add-question", question.Add).Methods("POST", "OPTIONS")
 	// TODO - Change to PUT.
@@ -121,18 +125,15 @@ func runHTTPServer(address string) {
 	adminRouter.HandleFunc("/candidate/report/{id}", report.Report).Methods("GET", "OPTIONS")
 	adminRouter.HandleFunc("/candidates", candidate.Index).Methods("GET", "OPTIONS")
 
-	router.PathPrefix("/admin").Handler(negroni.New(
-		negroni.HandlerFunc(jwtMiddleware.HandlerWithNext),
-		negroni.Wrap(adminRouter),
-	))
 	n := negroni.Classic()
 	n.Use(negroni.HandlerFunc(options))
 	n.UseHandler(router)
-	fmt.Println("Server Running on 8082")
+	fmt.Println("Server Running on 8000")
 	log.Fatal(http.ListenAndServe(address, n))
 }
 
 func main() {
+	rand.Seed(time.Now().UnixNano())
 	flag.Parse()
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 	runHTTPServer(*port)

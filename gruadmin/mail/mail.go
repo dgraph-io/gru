@@ -59,9 +59,9 @@ func SendReport(name string, score, maxScore float64, body string) {
 	}
 
 	from := mail.NewEmail("Dgraph", "join@dgraph.io")
-	subject := fmt.Sprintf("Candidate %v scored %.1f/%.1f in the Screening", name,
+	subject := fmt.Sprintf("Gru: Candidate %v scored %.1f/%.1f in the demo test", name,
 		score, maxScore)
-	to := mail.NewEmail("Dgraph", "pawan@dgraph.io")
+	to := mail.NewEmail("Dgraph", "join@dgraph.io")
 	content := mail.NewContent("text/html", body)
 	m := mail.NewV3MailInit(from, subject, to, content)
 	request := sendgrid.GetRequest(*SENDGRID_API_KEY, "/v3/mail/send", "https://api.sendgrid.com")

@@ -11,6 +11,8 @@ angular.module('GruiApp').config(function(uiSelectConfig) {
   uiSelectConfig.theme = 'select2';
 });
 
+var hostname = "http://localhost:2020"
+
 //Run After view has been loaded 
 angular.module('GruiApp').run(function($rootScope, $location, $timeout, $state) {
     //Run After view has been loaded 
@@ -35,9 +37,9 @@ angular.module('GruiApp').run(function($rootScope, $location, $timeout, $state) 
 
     var stateChangeStartHandler = function(e, toState, toParams, fromState, fromParams) {
       if(toState.authenticate || toState.name == "login") {
-        mainVm.base_url = "http://localhost:8082/admin";
+        mainVm.base_url = hostname + "/api/admin";
       } else {
-        mainVm.base_url = "http://localhost:8082";
+        mainVm.base_url = hostname + "/api";
       }
       if(toState.authenticate && !mainVm.isLoggedIn()) {
         $state.transitionTo("login");
@@ -203,8 +205,8 @@ angular.module('GruiApp').provider('RouteHelpers', ['APP_REQUIRES', function (ap
       //Must be use with ControllerAs syntax in view
       mainVm = this; // $Scope aliase
       mainVm.timerObj;
-      mainVm.admin_url = "http://localhost:8082/admin";
-      mainVm.candidate_url = "http://localhost:8082";
+      mainVm.admin_url = hostname + "/api/admin";
+      mainVm.candidate_url = hostname + "/api";
       mainVm.showModal = false;
 
       //General Methods
