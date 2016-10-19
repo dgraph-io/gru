@@ -34,6 +34,12 @@
 			"revisionTime": "2016-09-20T23:08:13Z"
 		},
 		{
+			"checksumSHA1": "Hky3u+8Rqum+wB5BHMj0A8ZmT4g=",
+			"path": "github.com/pkg/errors",
+			"revision": "17b591df37844cde689f4d5813e5cea0927d8dd2",
+			"revisionTime": "2016-08-22T09:00:10Z"
+		},
+		{
 			"checksumSHA1": "zKKp5SZ3d3ycKe4EKMNT0BqAWBw=",
 			"origin": "github.com/stretchr/testify/vendor/github.com/pmezard/go-difflib/difflib",
 			"path": "github.com/pmezard/go-difflib/difflib",
@@ -75,18 +81,6 @@
 			"path": "github.com/urfave/negroni",
 			"revision": "3f7ce7b928e14ff890b067e5bbbc80af73690a9c",
 			"revisionTime": "2016-09-09T03:51:52Z"
-		},
-		{
-			"checksumSHA1": "9jjO5GjLa0XF/nfWihF02RoH4qc=",
-			"path": "golang.org/x/net/context",
-			"revision": "bc3663df0ac92f928d419e31e0d2af22e683a5a2",
-			"revisionTime": "2016-06-21T20:48:10Z"
-		},
-		{
-			"checksumSHA1": "+OgOXBoiQ+X+C2dsAeiOHwBIEH0=",
-			"path": "gopkg.in/yaml.v2",
-			"revision": "a83829b6f1293c91addabc89d0571c246397bbf4",
-			"revisionTime": "2016-03-01T20:40:22Z"
 		}
 	],
 	"rootPath": "github.com/dgraph-io/gru"
