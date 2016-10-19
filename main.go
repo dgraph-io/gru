@@ -26,15 +26,15 @@ import (
 	"time"
 
 	jwtmiddleware "github.com/auth0/go-jwt-middleware"
+	"github.com/dgraph-io/gru/admin/candidate"
+	"github.com/dgraph-io/gru/admin/question"
+	quiza "github.com/dgraph-io/gru/admin/quiz"
+	"github.com/dgraph-io/gru/admin/report"
+	"github.com/dgraph-io/gru/admin/server"
+	"github.com/dgraph-io/gru/admin/tag"
 	"github.com/dgraph-io/gru/auth"
 	"github.com/dgraph-io/gru/dgraph"
-	"github.com/dgraph-io/gru/gruadmin/candidate"
-	"github.com/dgraph-io/gru/gruadmin/question"
-	"github.com/dgraph-io/gru/gruadmin/quiz"
-	"github.com/dgraph-io/gru/gruadmin/report"
-	"github.com/dgraph-io/gru/gruadmin/server"
-	"github.com/dgraph-io/gru/gruadmin/tag"
-	quizp "github.com/dgraph-io/gru/gruserver/quiz"
+	"github.com/dgraph-io/gru/quiz"
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/mux"
 	"github.com/urfave/negroni"
@@ -117,12 +117,12 @@ func runHTTPServer(address string) {
 	router := mux.NewRouter()
 	router.HandleFunc("/api/admin/login", login).Methods("POST", "OPTIONS")
 	router.HandleFunc("/api/healthcheck", health).Methods("GET")
-	router.HandleFunc("/api/validate/{id}", candidate.Validate).Methods("POST", "OPTIONS")
+	router.HandleFunc("/api/validate/{id}", quiz.Validate).Methods("POST", "OPTIONS")
 
 	quizRouter := router.PathPrefix("/api/quiz").Subrouter()
-	quizRouter.HandleFunc("/question", quizp.QuestionHandler).Methods("POST", "OPTIONS")
-	quizRouter.HandleFunc("/answer", quizp.AnswerHandler).Methods("POST", "OPTIONS")
-	quizRouter.HandleFunc("/ping", quizp.PingHandler).Methods("POST", "OPTIONS")
+	quizRouter.HandleFunc("/question", quiz.QuestionHandler).Methods("POST", "OPTIONS")
+	quizRouter.HandleFunc("/answer", quiz.AnswerHandler).Methods("POST", "OPTIONS")
+	quizRouter.HandleFunc("/ping", quiz.PingHandler).Methods("POST", "OPTIONS")
 
 	admin := mux.NewRouter()
 	router.PathPrefix("/api/admin").Handler(negroni.New(
@@ -139,11 +139,11 @@ func runHTTPServer(address string) {
 	adminRouter.HandleFunc("/question/{id}", question.Get).Methods("GET", "OPTIONS")
 	adminRouter.HandleFunc("/question/{id}", question.Edit).Methods("PUT", "OPTIONS")
 
-	adminRouter.HandleFunc("/add-quiz", quiz.Add).Methods("POST", "OPTIONS")
+	adminRouter.HandleFunc("/add-quiz", quiza.Add).Methods("POST", "OPTIONS")
 	// TODO - Change to PUT.
-	adminRouter.HandleFunc("/get-all-quizes", quiz.Index).Methods("GET", "OPTIONS")
-	adminRouter.HandleFunc("/quiz/{id}", quiz.Get).Methods("GET", "OPTIONS")
-	adminRouter.HandleFunc("/quiz/{id}", quiz.Edit).Methods("PUT", "OPTIONS")
+	adminRouter.HandleFunc("/get-all-quizes", quiza.Index).Methods("GET", "OPTIONS")
+	adminRouter.HandleFunc("/quiz/{id}", quiza.Get).Methods("GET", "OPTIONS")
+	adminRouter.HandleFunc("/quiz/{id}", quiza.Edit).Methods("PUT", "OPTIONS")
 
 	adminRouter.HandleFunc("/get-all-tags", tag.Index).Methods("GET", "OPTIONS")
 

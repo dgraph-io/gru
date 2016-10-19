@@ -9,9 +9,9 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/dgraph-io/gru/admin/server"
+	"github.com/dgraph-io/gru/admin/tag"
 	"github.com/dgraph-io/gru/dgraph"
-	"github.com/dgraph-io/gru/gruadmin/server"
-	"github.com/dgraph-io/gru/gruadmin/tag"
 	"github.com/gorilla/mux"
 )
 

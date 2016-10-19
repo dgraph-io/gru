@@ -7,8 +7,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/dgraph-io/gru/admin/server"
 	"github.com/dgraph-io/gru/dgraph"
-	"github.com/dgraph-io/gru/gruadmin/server"
 	"github.com/gorilla/mux"
 )
 
