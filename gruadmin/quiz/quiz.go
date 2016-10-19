@@ -50,7 +50,11 @@ func Add(w http.ResponseWriter, r *http.Request) {
 		m.Set(`<_new_:quiz> <quiz.question> <_uid_:` + q.Uid + `> .`)
 	}
 
-	mr := dgraph.SendMutation(m.String())
+	mr, err := dgraph.SendMutation(m.String())
+	if err != nil {
+		sr.Write(w, "", err.Error(), http.StatusInternalServerError)
+		return
+	}
 	if mr.Code != "ErrorOk" {
 		sr.Write(w, mr.Message, "", http.StatusInternalServerError)
 		return
@@ -63,7 +67,12 @@ func Add(w http.ResponseWriter, r *http.Request) {
 
 func Index(w http.ResponseWriter, r *http.Request) {
 	q := "{debug(_xid_: rootQuiz) { quiz { _uid_ name duration start_date end_date quiz.question { text }  }  }}"
-	res := dgraph.Query(q)
+	res, err := dgraph.Query(q)
+	if err != nil {
+		sr := server.Response{}
+		sr.Write(w, "", err.Error(), http.StatusInternalServerError)
+		return
+	}
 	// TODO - Remove this, sent byte slice directly.
 	jsonResp, _ := json.Marshal(string(res))
 	w.Write(jsonResp)
@@ -87,7 +96,12 @@ func Get(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	qid := vars["id"]
 	q := get(qid)
-	res := dgraph.Query(q)
+	res, err := dgraph.Query(q)
+	if err != nil {
+		sr := server.Response{}
+		sr.Write(w, "", err.Error(), http.StatusInternalServerError)
+		return
+	}
 	w.Write(res)
 }
 
@@ -128,7 +142,11 @@ func Edit(w http.ResponseWriter, r *http.Request) {
 
 	// TODO - Validate candidate fields shouldn't be empty.
 	m := edit(q)
-	mr := dgraph.SendMutation(m)
+	mr, err := dgraph.SendMutation(m)
+	if err != nil {
+		sr.Write(w, "", err.Error(), http.StatusInternalServerError)
+		return
+	}
 	if mr.Code != "ErrorOk" {
 		sr.Write(w, mr.Message, "", http.StatusInternalServerError)
 		return

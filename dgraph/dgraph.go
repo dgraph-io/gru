@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"flag"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"strings"
 
@@ -49,28 +48,28 @@ func (m *Mutation) String() string {
 	return mutation
 }
 
-func SendMutation(m string) MutationRes {
+func SendMutation(m string) (MutationRes, error) {
 	res, err := http.Post(endpoint, "application/x-www-form-urlencoded", strings.NewReader(m))
 	if err != nil {
-		log.Fatal(errors.Wrap(err, "Couldn't send mutation"))
+		return MutationRes{}, errors.Wrap(err, "Couldn't send mutation")
 	}
 	defer res.Body.Close()
 
 	var mr MutationRes
 	json.NewDecoder(res.Body).Decode(&mr)
-	return mr
+	return mr, nil
 }
 
-func Query(q string) []byte {
+func Query(q string) ([]byte, error) {
 	res, err := http.Post(endpoint, "application/x-www-form-urlencoded", strings.NewReader(q))
 	if err != nil {
-		log.Fatal(errors.Wrap(err, "Couldn't get response from Dgraph"))
+		return []byte{}, errors.Wrap(err, "Couldn't get response from Dgraph")
 	}
 	defer res.Body.Close()
 
 	b, err := ioutil.ReadAll(res.Body)
 	if err != nil {
-		log.Fatal(errors.Wrap(err, "Couldn't read response body"))
+		return []byte{}, errors.Wrap(err, "Couldn't read response body")
 	}
-	return b
+	return b, nil
 }

@@ -178,7 +178,11 @@ func QuestionHandler(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 		`
-		res := dgraph.SendMutation(m)
+		res, err := dgraph.SendMutation(m)
+		if err != nil {
+			sr.Write(w, "", err.Error(), http.StatusInternalServerError)
+			return
+		}
 		if res.Code != "ErrorOk" {
 			sr.Write(w, res.Message, "", http.StatusInternalServerError)
 			return
@@ -196,7 +200,11 @@ func QuestionHandler(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 		`
-		res := dgraph.SendMutation(m)
+		res, err := dgraph.SendMutation(m)
+		if err != nil {
+			sr.Write(w, "", err.Error(), http.StatusInternalServerError)
+			return
+		}
 		if res.Code != "ErrorOk" {
 			sr.Write(w, res.Message, "", http.StatusInternalServerError)
 			return
@@ -223,7 +231,11 @@ func QuestionHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}`
 
-	res := dgraph.SendMutation(m)
+	res, err := dgraph.SendMutation(m)
+	if err != nil {
+		sr.Write(w, "", err.Error(), http.StatusInternalServerError)
+		return
+	}
 	if res.Code != "ErrorOk" || res.Uids["qn"] == "" {
 		sr.Write(w, res.Message, "", http.StatusInternalServerError)
 		return
@@ -305,7 +317,10 @@ func qnMeta(qid string) (questionCorrectMeta, error) {
         negative
         }
 }`
-	res := dgraph.Query(q)
+	res, err := dgraph.Query(q)
+	if err != nil {
+		return questionCorrectMeta{}, err
+	}
 	var resp qmRes
 	json.Unmarshal(res, &resp)
 
@@ -378,7 +393,11 @@ func AnswerHandler(w http.ResponseWriter, r *http.Request) {
 			<_uid_:` + cuid + `> <question.answered> "` + time.Now().Format("2006-01-02T15:04:05Z07:00") + `" .
 		}
 	}`
-	res := dgraph.SendMutation(mutation)
+	res, err := dgraph.SendMutation(mutation)
+	if err != nil {
+		sr.Write(w, "", err.Error(), http.StatusInternalServerError)
+		return
+	}
 	if res.Code != "ErrorOk" {
 		sr.Write(w, res.Message, "", http.StatusInternalServerError)
 		return
@@ -417,7 +436,11 @@ func PingHandler(w http.ResponseWriter, r *http.Request) {
 			}
 			}
 			`
-			res := dgraph.SendMutation(m)
+			res, err := dgraph.SendMutation(m)
+			if err != nil {
+				sr.Write(w, "", err.Error(), http.StatusInternalServerError)
+				return
+			}
 			if res.Code != "ErrorOk" {
 				sr.Write(w, res.Message, "", http.StatusInternalServerError)
 				return

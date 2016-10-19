@@ -159,10 +159,13 @@ func ReportSummary(cid string) (Summary, ReportError) {
 	s := Summary{}
 
 	q := reportQuery(cid)
-	b := dgraph.Query(q)
+	b, err := dgraph.Query(q)
+	if err != nil {
+		return s, ReportError{err.Error(), "", http.StatusInternalServerError}
+	}
 
 	var rep report
-	err := json.Unmarshal(b, &rep)
+	err = json.Unmarshal(b, &rep)
 	if err != nil {
 		return s, ReportError{err.Error(), "", http.StatusInternalServerError}
 	}

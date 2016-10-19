@@ -125,11 +125,13 @@ func Add(w http.ResponseWriter, r *http.Request) {
 	}
 
 	m := add(q)
-	res := dgraph.SendMutation(m)
+	res, err := dgraph.SendMutation(m)
+	if err != nil {
+		sr.Write(w, "", err.Error(), http.StatusInternalServerError)
+		return
+	}
 	if res.Code != "ErrorOk" {
-		sr.Error = res.Message
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write(server.MarshalResponse(sr))
+		sr.Write(w, res.Message, "", http.StatusInternalServerError)
 		return
 	}
 
@@ -147,9 +149,7 @@ func Index(w http.ResponseWriter, r *http.Request) {
 	var q qid
 	err := json.NewDecoder(r.Body).Decode(&q)
 	if err != nil {
-		sr.Error = "Couldn't decode JSON"
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write(server.MarshalResponse(sr))
+		sr.Write(w, "", "Couldn't decode JSON", http.StatusBadRequest)
 		return
 	}
 
@@ -161,7 +161,11 @@ func Index(w http.ResponseWriter, r *http.Request) {
 		query = "{debug(_xid_: rootQuestion) { question (first:20) { _uid_ name text negative positive question.tag { name } question.option { name } question.correct { name } }  } }"
 	}
 
-	b := dgraph.Query(query)
+	b, err := dgraph.Query(query)
+	if err != nil {
+		sr.Write(w, "", err.Error(), http.StatusInternalServerError)
+		return
+	}
 	// TODO - Remove this stuff.
 	jsonResp, _ := json.Marshal(string(b))
 	w.Write(jsonResp)
@@ -240,8 +244,12 @@ func Get(w http.ResponseWriter, r *http.Request) {
 	qid := vars["id"]
 
 	q := get(qid)
-	res := dgraph.Query(q)
-	// TODO - Check if Dgraph returns record not found and wrap it with an error.
+	res, err := dgraph.Query(q)
+	if err != nil {
+		sr := server.Response{}
+		sr.Write(w, "", err.Error(), http.StatusInternalServerError)
+		return
+	} // TODO - Check if Dgraph returns record not found and wrap it with an error.
 	w.Write(res)
 }
 
@@ -317,25 +325,23 @@ func Edit(w http.ResponseWriter, r *http.Request) {
 	var q Question
 	err := json.NewDecoder(r.Body).Decode(&q)
 	if err != nil {
-		sr.Error = "Couldn't decode JSON"
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write(server.MarshalResponse(sr))
+		sr.Write(w, "", "Couldn't decode JSON", http.StatusBadRequest)
 		return
 	}
 
 	var m string
 	if m, err = edit(q); err != nil {
-		sr.Error = err.Error()
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write(server.MarshalResponse(sr))
+		sr.Write(w, "", err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	mr := dgraph.SendMutation(m)
+	mr, err := dgraph.SendMutation(m)
+	if err != nil {
+		sr.Write(w, "", err.Error(), http.StatusInternalServerError)
+		return
+	}
 	if mr.Code != "ErrorOk" {
-		sr.Error = mr.Message
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write(server.MarshalResponse(sr))
+		sr.Write(w, mr.Message, "", http.StatusInternalServerError)
 		return
 	}
 

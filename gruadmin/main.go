@@ -27,6 +27,7 @@ import (
 
 	jwtmiddleware "github.com/auth0/go-jwt-middleware"
 	"github.com/dgraph-io/gru/auth"
+	"github.com/dgraph-io/gru/dgraph"
 	"github.com/dgraph-io/gru/gruadmin/candidate"
 	"github.com/dgraph-io/gru/gruadmin/question"
 	"github.com/dgraph-io/gru/gruadmin/quiz"
@@ -79,6 +80,31 @@ func options(rw http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 	next(rw, r)
 }
 
+type healthCheck struct {
+	Server bool `json:"server"`
+	Dgraph bool `json:"dgraph"`
+}
+
+func health(w http.ResponseWriter, r *http.Request) {
+	hc := healthCheck{Server: true}
+	// Check Dgraph, send a mutation, do a query.
+	m := new(dgraph.Mutation)
+	m.Set(`<alice> <name> "Alice" .`)
+	_, err := dgraph.SendMutation(m.String())
+	if err != nil {
+		json.NewEncoder(w).Encode(hc)
+		return
+	}
+
+	res, err := dgraph.Query("{ \n me(_xid_:alice) { \n name \n } \n }")
+	if err != nil || string(res) != `{"me":[{"name":"Alice"}]}` {
+		json.NewEncoder(w).Encode(hc)
+		return
+	}
+	hc.Dgraph = true
+	json.NewEncoder(w).Encode(hc)
+}
+
 func runHTTPServer(address string) {
 	jwtMiddleware := jwtmiddleware.New(jwtmiddleware.Options{
 		ValidationKeyGetter: func(token *jwt.Token) (interface{}, error) {
@@ -89,6 +115,7 @@ func runHTTPServer(address string) {
 
 	router := mux.NewRouter()
 	router.HandleFunc("/api/admin/login", login).Methods("POST", "OPTIONS")
+	router.HandleFunc("/api/healthcheck", health).Methods("GET")
 	router.HandleFunc("/api/validate/{id}", candidate.Validate).Methods("POST", "OPTIONS")
 
 	quizRouter := router.PathPrefix("/api/quiz").Subrouter()

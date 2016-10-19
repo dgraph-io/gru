@@ -78,13 +78,17 @@ func index(quizId string) string {
 
 func Index(w http.ResponseWriter, r *http.Request) {
 	quizId := r.URL.Query().Get("quiz_id")
+	sr := server.Response{}
 	if quizId == "" {
-		sr := server.Response{}
 		sr.Write(w, "", "Quiz id can't be empty.", http.StatusBadRequest)
 		return
 	}
 	q := index(quizId)
-	res := dgraph.Query(q)
+	res, err := dgraph.Query(q)
+	if err != nil {
+		sr.Write(w, "", err.Error(), http.StatusInternalServerError)
+		return
+	}
 	w.Write(res)
 }
 
@@ -125,7 +129,11 @@ func Add(w http.ResponseWriter, r *http.Request) {
 	// TODO - Validate candidate fields shouldn't be empty.
 	c.Token = randStringBytes(33)
 	m := add(c)
-	mr := dgraph.SendMutation(m)
+	mr, err := dgraph.SendMutation(m)
+	if err != nil {
+		sr.Write(w, "", err.Error(), http.StatusInternalServerError)
+		return
+	}
 	if mr.Code != "ErrorOk" {
 		sr.Write(w, mr.Message, "Mutation couldn't be applied by Dgraph.",
 			http.StatusInternalServerError)
@@ -192,7 +200,11 @@ func Edit(w http.ResponseWriter, r *http.Request) {
 	c.Validity = t.String()
 	// TODO - Validate candidate fields shouldn't be empty.
 	m := edit(c)
-	res := dgraph.SendMutation(m)
+	res, err := dgraph.SendMutation(m)
+	if err != nil {
+		sr.Write(w, "", err.Error(), http.StatusInternalServerError)
+		return
+	}
 	if res.Code != "ErrorOk" {
 		sr.Write(w, res.Message, "Mutation couldn't be applied by Dgraph.",
 			http.StatusInternalServerError)
@@ -225,7 +237,12 @@ func Get(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	cid := vars["id"]
 	q := get(cid)
-	res := dgraph.Query(q)
+	res, err := dgraph.Query(q)
+	if err != nil {
+		sr := server.Response{}
+		sr.Write(w, "", err.Error(), http.StatusInternalServerError)
+		return
+	}
 	w.Write(res)
 }
 
@@ -262,7 +279,10 @@ func quizQns(quizId string, qnsAsked []string) ([]quizp.Question, error) {
 			}
 		}
 	}`
-	res := dgraph.Query(q)
+	res, err := dgraph.Query(q)
+	if err != nil {
+		return []quizp.Question{}, err
+	}
 	var resp qnIdsResp
 	json.Unmarshal(res, &resp)
 	if len(resp.Quizzes) != 1 {
@@ -382,7 +402,11 @@ func Validate(w http.ResponseWriter, r *http.Request) {
 	// Candidate doesn't exist in the map. So we get candidate info from uid and
 	// insert it into map.
 	q := validate(uid)
-	res := dgraph.Query(q)
+	res, err := dgraph.Query(q)
+	if err != nil {
+		sr.Write(w, "", err.Error(), http.StatusInternalServerError)
+		return
+	}
 	var resp resp
 	json.Unmarshal(res, &resp)
 	if len(resp.Cand) != 1 || len(resp.Cand[0].Quiz) != 1 {
