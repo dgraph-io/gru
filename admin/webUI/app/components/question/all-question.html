@@ -12,13 +12,13 @@
 		</div>
 		<div class="mdl-tabs vertical-mdl-tabs mdl-js-tabs mdl-js-ripple-effect mt-30">
 	    <div class="mdl-grid mdl-grid--no-spacing">
-	      <div class="mdl-cell mdl-cell--2-col">
+	      <div class="mdl-cell mdl-cell--2-col r-border">
 	        <div class="mdl-tabs__tab-bar">
 	          <a href="#tab{{$index}}-panel" class="mdl-tabs__tab pv-5" ng-repeat="question in mainVm.allQuestions" ng-class="{'is-active': $index == 0}" ng-click="allQVm.setQuestion(question, $index)">
 							{{question.name}}
 	          </a>
 	          <div class="pt-20 text-center text-red" ng-show="allQVm.noItemFound">
-							<h5>No more questions available</h5>
+							<div>No more questions available</div>
 				 		</div>
 	        </div>
 	      </div>
@@ -30,6 +30,14 @@
 							</div>
 							<div class="mdl-cell mdl-cell--10-col">
 								{{allQVm.question.name}}
+							</div>
+						</div>
+						<div class="mdl-grid no-pad" ng-if="allQVm.question.notes">
+							<div class="mdl-cell mdl-cell--2-col mdl-cell--middle">
+								<span class="bold">NOTE</span>
+							</div>
+							<div class="mdl-cell mdl-cell--10-col">
+								{{allQVm.question.notes}}
 							</div>
 						</div>
          		<div class="mdl-grid no-pad">
@@ -73,8 +81,9 @@
 								<span ng-show="!editQuestion" class="bold">OPTIONS</span>
 							</div>
 							<div class="mdl-cell mdl-cell--10-col">
-								<div class="mb-10" ng-repeat="option in allQVm.question['question.option'] track by $index">
-									{{option.name}} &nbsp <span class="text-green" ng-show="questionVm.isCorrect(option, allQVm.question['question.correct'])"> - <i class="material-icons text-green mdi-sm">check_circle</i> Correct</span>
+								<div class="pl-10 mb-10 bg-grey position-relative" ng-repeat="option in allQVm.question['question.option'] track by $index">
+									<pre ng-bind-html="questionVm.markDownFormat(mainVm.unescapeText(option.name))"></pre>
+									<div class="text-green tr-corner" ng-show="questionVm.isCorrect(option, allQVm.question['question.correct'])"> <i class="material-icons text-green mdi-sm">check_circle</i> Correct</div>
 								</div>
 							</div>
 						</div>

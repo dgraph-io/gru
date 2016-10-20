@@ -26,6 +26,14 @@
 .text-darkBlue {
   color: #2F3757;
 }
+.position-relative { 
+  position: relative;
+}
+.tr-corner {
+  position: absolute;
+  top: 0;
+  right: 10px;
+}
 
 .text-white {
   color: white;
@@ -79,6 +87,9 @@
 }
 .l-border {
   border-left: 1px solid rgba(0,0,0,.12);
+}
+.r-border {
+  border-right: 1px solid rgba(10, 11, 49, 0.20);
 }
 .lc-border {
   border-left: 1px solid #FF5722;
@@ -235,7 +246,7 @@
           flex-direction: column;
   height: inherit;
   border-bottom: none;
-  border-right: 1px solid rgba(10, 11, 49, 0.20);
+  /*border-right: 1px solid rgba(10, 11, 49, 0.20);*/
 }
 
 .vertical-mdl-tabs .mdl-tabs__tab {

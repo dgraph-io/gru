@@ -162,9 +162,9 @@ func Index(w http.ResponseWriter, r *http.Request) {
 	var query string
 	// TODO - Maybe dont call with debug, and request appropriate fields.
 	if q.Id != "" {
-		query = "{debug(_xid_: root) { question (after: " + q.Id + ", first: 20) { _uid_ name text negative positive question.tag { name } question.option { name } question.correct { name } }  } }"
+		query = "{debug(_xid_: root) { question (after: " + q.Id + ", first: 20) { _uid_ name text negative positive notes question.tag { name } question.option { name } question.correct { name } }  } }"
 	} else {
-		query = "{debug(_xid_: root) { question (first:20) { _uid_ name text negative positive question.tag { name } question.option { name } question.correct { name } }  } }"
+		query = "{debug(_xid_: root) { question (first:20) { _uid_ name text negative positive notes question.tag { name } question.option { name } question.correct { name } }  } }"
 	}
 
 	b, err := dgraph.Query(query)

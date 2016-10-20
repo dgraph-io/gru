@@ -11,6 +11,7 @@
 		inviteVm.removeSelectedQuiz = removeSelectedQuiz;
 		inviteVm.setMinDate = setMinDate;
 		inviteVm.resetForm = resetForm;
+		inviteVm.invalidateInput = invalidateInput;
 
 		quizService.getAllQuizes().then(function(data){
 			var data = JSON.parse(data);
@@ -34,23 +35,11 @@
 		// FUNCTION DEFINITION
 
 		function inviteCandidate() {
-			if(!inviteVm.newInvite.name) {
+			var invalidateInput = inviteVm.invalidateInput(inviteVm.newInvite);
+
+			if(invalidateInput) {
 				SNACKBAR({
-					message: "Please Enter Valid Name",
-					messageType: "error",
-				})
-				return
-			}
-			if(!isValidEmail(inviteVm.newInvite.email)) {
-				SNACKBAR({
-					message: "Please Enter Valid Email",
-					messageType: "error",
-				})
-				return
-			}
-			if(!inviteVm.newInvite.dates) {
-				SNACKBAR({
-					message: "Please Enter Valid Date",
+					message: invalidateInput,
 					messageType: "error",
 				})
 				return
@@ -59,6 +48,7 @@
 			var dateTime = formatDate(inviteVm.newInvite.dates);
 			inviteVm.newInvite.quiz_id = inviteVm.newInvite.quiz._uid_;
 			inviteVm.newInvite.validity = dateTime;
+
 			inviteService.inviteCandidate(inviteVm.newInvite).then(function(data){
 				SNACKBAR({
 					message: data.Message,
@@ -73,6 +63,19 @@
 			}, function(err){
 				console.log(err)
 			});
+		}
+
+		function invalidateInput(inputs) {
+			if(!inputs.name) {
+				return "Please Enter Valid Name";
+			}
+			if(!isValidEmail(inputs.email)) {
+				return "Please Enter Valid Email"; 
+			}
+			if(!inputs.dates) {
+				return "Please Enter Valid Date";
+			}
+			return false
 		}
 
 		function removeSelectedQuiz(){
@@ -128,13 +131,22 @@
 			editInviteVm.candidate.old_quiz_id = "";
 			editInviteVm.candidate.validity = formatDate(editInviteVm.candidate.dates);
 
+			var invalidateInput = inviteVm.invalidateInput(editInviteVm.candidate);
+			if(invalidateInput) {
+				SNACKBAR({
+					message: invalidateInput,
+					messageType: "error",
+				})
+				return
+			}
+
 			if(editInviteVm.candidate['candidate.quiz'][0].is_delete) {
 				editInviteVm.candidate.quiz_id = editInviteVm.candidate.quiz._uid_;
 				editInviteVm.candidate.old_quiz_id = editInviteVm.quizID;
 			}
 
 			requestData = angular.copy(editInviteVm.candidate);
-
+			return
 			inviteService.editInvite(editInviteVm.candidate)
 			.then(function(data){
 				SNACKBAR({

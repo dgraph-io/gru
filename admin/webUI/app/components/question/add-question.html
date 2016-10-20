@@ -37,17 +37,18 @@
 				</div>
 				<div class="mdl-cell mdl-cell--3-col">
 				  <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label" ng-class="{'is-dirty': addQueVm.newQuestion.negative}">
-				    <input class="mdl-textfield__input" type="number" name="negative" id="negative-mark" ng-model="addQueVm.newQuestion.negative" step="0.1" min="0">
+				    <input class="mdl-textfield__input" type="number" name="negative" id="negative-mark" ng-model="addQueVm.newQuestion.negative" step="0.1" min="1">
 				    <label class="mdl-textfield__label" for="negative-mark">Negative Score</label>
 				  </div>
 				</div>
 			</div>
-			<div class="mdl-grid no-pad" ng-repeat="idx in mainVm.getNumber(questionVm.optionsCount) track by $index">
+			<div class="mdl-grid no-pad options-panel" ng-repeat="idx in mainVm.getNumber(questionVm.optionsCount) track by $index">
 				<div class="mdl-cell mdl-cell--6-col ml-0">
-					<div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+					<textarea ui-codemirror="option{{$index}}" ng-model="addQueVm.newQuestion.optionsBak['option'+$index].name" class="hide"></textarea>
+					<!-- <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
 				    <input class="mdl-textfield__input" type="text" name="option-{{$index + 1}}" id="option-{{$index + 1}}" ng-model="addQueVm.newQuestion.optionsBak['option' + $index].name">
 				    <label class="mdl-textfield__label" for="option-{{$index + 1}}">Option {{$index + 1}}</label>
-				  </div>
+				  </div> -->
 				</div>
 				<div class="mdl-cell mdl-cell--2-col pt-20">
 				  <label class="mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect" for="correct-{{$index + 1}}" ng-class="{'is-checked': addQueVm.newQuestion.optionsBak['option' + $index].is_correct == true}">
@@ -66,6 +67,14 @@
 				        <span ng-bind="tag.name"></span>
 				    </ui-select-choices>
 					</ui-select>
+				</div>
+			</div>
+			<div class="mdl-grid no-pad">
+				<div class="mdl-cell mdl-cell--6-col ml-0">
+				  <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label" ng-class="{'is-dirty': addQueVm.newQuestion.notes}">
+				    <input class="mdl-textfield__input" type="text" name="name" id="question-name" ng-model="addQueVm.newQuestion.notes">
+				    <label class="mdl-textfield__label" for="question-name">Question Note</label>
+				  </div>
 				</div>
 			</div>
 

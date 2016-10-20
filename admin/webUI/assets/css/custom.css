@@ -311,9 +311,14 @@ body.home {
 }
 
 /* CODEMIRROR*/
-.CodeMirror {
+#question-panel .CodeMirror {
   border-bottom: 1px solid black;
   min-height: 380px;
+}
+
+.options-panel .CodeMirror {
+  height: 120px;
+  border: 1px solid gray;
 }
 
 #preview-panel {

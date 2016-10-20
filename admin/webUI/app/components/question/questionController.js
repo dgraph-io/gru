@@ -48,9 +48,17 @@
 				$scope.cmOption = {
 			    lineNumbers: true,
 			    indentWithTabs: true,
-			    // mode: 'javascript',
 			  }
-			}, 200);
+			  for(var i = 0; i < questionVm.optionsCount; i++) {
+					$scope["option-"+i] = {};
+					$scope["option-"+i] = {
+				    lineNumbers: true,
+				    indentWithTabs: true,
+				  }
+				}
+				console.log($scope);
+			}, 500);
+
 		}
 
 		function markDownFormat(content) {
@@ -90,11 +98,6 @@
 					}
 				}
 			}
-			// var allUniqueTags = {};
-			// var tagsLength = allTags.length;
-			// for(var i = 0; i < tagsLength; i ++ ) { 
-			// 	allUniqueTags[allTags[i]._uid_] = allTags[i];
-			// }
 			return allUniqueTags;
 		}
 
@@ -106,28 +109,39 @@
 			if(!inputs.text) {
 				return "Please enter valid question text"
 			}
-			if(!inputs.positive) {
+			if(inputs.positive == null || isNaN(inputs.positive)) {
 				return "Please enter valid positve marks"
 			}
-			if(!inputs.negative) {
+			if(inputs.negative == null || isNaN(inputs.negative)) {
 				return "Please enter valid negative marks"
 			}
 			if(Object.keys(inputs.options).length != questionVm.optionsCount) {
 				return "Please enter all the options"
 			}
 
-			hasCorrectAnswer = false
+			hasCorrectAnswer = false,
+			hasEmptyName = false;
 			angular.forEach(inputs.options, function(value, key) {
 				if(value.is_correct) {
 					hasCorrectAnswer = true;
 				}
+				if(!value.name) {
+					hasEmptyName = true;
+				}
 			});
+			if(hasEmptyName) {
+				return "Please enter option name correctly"
+			}
 			if(!hasCorrectAnswer) {
 				return "Please mark atleast one correct answer"
 			}
 
 			if(!inputs.tags.length) {
-				return "Please minimum one tag is required"
+				return "Minimum one tag is required"
+			}
+
+			if(!inputs.notes) {
+				return "Question note is required"
 			}
 
 			return false;
@@ -149,13 +163,20 @@
 			return false
 		}
 
-		function onTagSelect(item, model) {
+		function onTagSelect(item, model, isEdit) {
 			for(var i = 0; i < questionVm.allTags.length; i++) { 
 				if(item.name == questionVm.allTags[i].name && !item._uid_){ 
 					delete model.id;
 					delete model.isTag;
 					model._uid_ = questionVm.allTags[i]._uid_;
 				} 
+			}
+
+			if(isEdit) {
+				$rootScope.$broadcast("onSelect", { 
+					item: item,
+					model: model
+				});
 			}
 		}
 	}
@@ -183,11 +204,12 @@
 				if(!value.is_correct) {
 					value.is_correct = false;
 				}
+				value.name = escape(value.name);
 			  options.push(value);
 			});
 			addQueVm.newQuestion.options = options;
 			addQueVm.newQuestion.text = escape(addQueVm.cmModel);
-			areInValidateInput = questionVm.validateInput(addQueVm.newQuestion);
+			var areInValidateInput = questionVm.validateInput(addQueVm.newQuestion);
 			if(areInValidateInput) {
 				SNACKBAR({
 					message: areInValidateInput,
@@ -195,7 +217,6 @@
 				})
 				return
 			}
-
 			// Hit the API
 			questionService.saveQuestion(JSON.stringify(addQueVm.newQuestion))
 			.then(function(data){
@@ -211,7 +232,6 @@
 				if(data.Success) {
 					SNACKBAR({
 						message: data.Message,
-						// messageType: "error",
 					})
 				}
 				$state.transitionTo("question.all")
@@ -322,7 +342,7 @@
 
 	} // AllQuestionController
 
-	function editQuestionController($scope, $state, $stateParams, questionService) {
+	function editQuestionController($scope, $rootScope, $state, $stateParams, questionService) {
 		editQuesVm = this;
 		editQuesVm.newQuestion = {};
 
@@ -340,6 +360,9 @@
 			editQuesVm.newQuestion = data.root[0];
 			editQuesVm.cmModel = unescape(editQuesVm.newQuestion.text);
 			editQuesVm.newQuestion.optionsBak = angular.copy(data.root[0]['question.option']);
+			for(var i = 0; i < editQuesVm.newQuestion.optionsBak.length; i++) {
+				editQuesVm.newQuestion.optionsBak[i].name = unescape(editQuesVm.newQuestion.optionsBak[i].name)
+			}
 			editQuesVm.newQuestion.positive = parseFloat(data.root[0].positive);
 			editQuesVm.newQuestion.negative = parseFloat(data.root[0].negative);
 
@@ -350,6 +373,16 @@
 			console.log(err);
 		})
 
+		$rootScope.$on("onSelect", function(e, data) {
+			if(data.model.is_delete) {
+				var idx = mainVm.indexOfObject(editQuesVm.newQuestion.deletedTag, data.model);
+				if (idx >= 0) {
+					editQuesVm.newQuestion.deletedTag.splice(idx, 1)
+				}
+				data.model.is_delete =  false
+			}
+		})
+
 		function updateQuestionForm() {
 
 			if(editQuesVm.newQuestion.deletedTag) {
@@ -358,9 +391,38 @@
 				editQuesVm.newQuestion.tags = editQuesVm.newQuestion["question.tag"];
 			}
 
-			editQuesVm.newQuestion.options = editQuesVm.newQuestion.optionsBak;
+			editQuesVm.newQuestion.options = angular.copy(editQuesVm.newQuestion.optionsBak);
 			editQuesVm.newQuestion.text = escape(editQuesVm.cmModel);
-			console.log(editQuesVm.newQuestion);
+
+			angular.forEach(editQuesVm.newQuestion.options, function(value, key) {
+				editQuesVm.newQuestion.options[key].name = escape(value.name);
+			});
+			var areInValidateInput = questionVm.validateInput(editQuesVm.newQuestion);
+			if(areInValidateInput) {
+				SNACKBAR({
+					message: areInValidateInput,
+					messageType: "error",
+				})
+				return
+			}
+
+			var deletedAllTags = true;
+			var allTags = editQuesVm.newQuestion.tags;
+			var tagsLength = allTags.length;
+			for(var i = 0; i < tagsLength; i++) {
+				if(!allTags[i].is_delete) {
+					deletedAllTags =  false;
+				}
+			}
+
+			if(deletedAllTags) {
+				SNACKBAR({
+					message: "Please enter at least one tag",
+					messageType: "error",
+				})
+				return
+			}
+
 			questionService.editQuestion(editQuesVm.newQuestion).then(function(data){
 				SNACKBAR({
 					message: data.Message,
@@ -394,6 +456,7 @@
 
 	var editQuestionDependency = [
 			"$scope",
+			"$rootScope",
 	    "$state",
 	    "$stateParams",
 	    "questionService",

@@ -122,6 +122,12 @@
 		}, function(err){
 			console.log(err);
 		})
+
+		quizVm.getAllQuestions();
+	}
+
+	function addQuizController() {
+		quizVm.getAllQuestions();
 	}
 
 	function editQuizController($rootScope, $stateParams, $state, quizService) {
@@ -274,6 +280,11 @@
 			return false;
 		}
 	}
+
+	var addQuizDependency = [
+	    addQuizController
+	];
+	angular.module('GruiApp').controller('addQuizController', addQuizDependency);
 
 	var editQuizDependency = [
 	    "$rootScope",
