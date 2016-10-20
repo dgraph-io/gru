@@ -46,6 +46,7 @@ func index(quizId string) string {
 			email
 			validity
 			complete
+			invite_sent
 		}
 	}
 }
@@ -78,6 +79,7 @@ func add(c Candidate) string {
 		<_new_:c> <name> "` + c.Name + `" .
 		<_new_:c> <token> "` + c.Token + `" .
 		<_new_:c> <validity> "` + c.Validity + `" .
+		<_new_:c> <invite_sent> "` + time.Now().UTC().String() + `" .
 		<_new_:c> <complete> "false" .
 		}
 	}`
@@ -125,7 +127,8 @@ func Add(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Token sent in mail is uid + the random string.
-	go mail.Send(c.Name, c.Email, uid+c.Token)
+	go mail.Send(c.Name, c.Email, t.Format("Mon Jan 2 15:04:05 MST 2006"),
+		uid+c.Token)
 	sr.Message = "Candidate added successfully."
 	sr.Success = true
 	w.Write(server.MarshalResponse(sr))
@@ -186,7 +189,8 @@ func Edit(w http.ResponseWriter, r *http.Request) {
 			http.StatusInternalServerError)
 		return
 	}
-	go mail.Send(c.Name, c.Email, c.Uid+c.Token)
+	go mail.Send(c.Name, c.Email, t.Format("Mon Jan 2 15:04:05 MST 2006"),
+		c.Uid+c.Token)
 	sr.Success = true
 	sr.Message = "Candidate info updated successfully."
 	w.Write(server.MarshalResponse(sr))

@@ -42,7 +42,7 @@ func Add(w http.ResponseWriter, r *http.Request) {
 	}
 
 	m := new(dgraph.Mutation)
-	m.Set(`<rootQuiz> <quiz> <_new_:quiz> .`)
+	m.Set(`<root> <quiz> <_new_:quiz> .`)
 	// TODO - Error if Name is empty.
 	m.Set(`<_new_:quiz> <name> "` + q.Name + `" .`)
 	m.Set(`<_new_:quiz> <duration> "` + q.Duration + `" . `)
@@ -66,7 +66,7 @@ func Add(w http.ResponseWriter, r *http.Request) {
 }
 
 func Index(w http.ResponseWriter, r *http.Request) {
-	q := "{debug(_xid_: rootQuiz) { quiz { _uid_ name duration start_date end_date quiz.question { text }  }  }}"
+	q := "{debug(_xid_: root) { quiz { _uid_ name duration quiz.question { text }  }  }}"
 	res, err := dgraph.Query(q)
 	if err != nil {
 		sr := server.Response{}

@@ -21,6 +21,7 @@ type Question struct {
 	Text     string
 	Positive float64
 	Negative float64
+	Notes    string
 	Tags     []tag.Tag
 	Options  []Option
 }
@@ -35,11 +36,12 @@ type Option struct {
 func add(q Question) string {
 	m := `mutation {
 		set {
-		  <rootQuestion> <question> <_new_:qn> .
+		  <root> <question> <_new_:qn> .
 		  <_new_:qn> <name> "` + q.Name + `" .
 		  <_new_:qn> <text> "` + q.Text + `" .
 		  <_new_:qn> <positive> "` + strconv.FormatFloat(q.Positive, 'g', -1, 64) + `" .
-		  <_new_:qn> <negative> "` + strconv.FormatFloat(q.Negative, 'g', -1, 64) + `" .`
+		  <_new_:qn> <negative> "` + strconv.FormatFloat(q.Negative, 'g', -1, 64) + `" .
+		  <_new_:qn> <notes> "` + q.Notes + `" .`
 
 	correct := 0
 	for i, opt := range q.Options {
@@ -156,9 +158,9 @@ func Index(w http.ResponseWriter, r *http.Request) {
 	var query string
 	// TODO - Maybe dont call with debug, and request appropriate fields.
 	if q.Id != "" {
-		query = "{debug(_xid_: rootQuestion) { question (after: " + q.Id + ", first: 20) { _uid_ name text negative positive question.tag { name } question.option { name } question.correct { name } }  } }"
+		query = "{debug(_xid_: root) { question (after: " + q.Id + ", first: 20) { _uid_ name text negative positive question.tag { name } question.option { name } question.correct { name } }  } }"
 	} else {
-		query = "{debug(_xid_: rootQuestion) { question (first:20) { _uid_ name text negative positive question.tag { name } question.option { name } question.correct { name } }  } }"
+		query = "{debug(_xid_: root) { question (first:20) { _uid_ name text negative positive question.tag { name } question.option { name } question.correct { name } }  } }"
 	}
 
 	b, err := dgraph.Query(query)
@@ -166,9 +168,7 @@ func Index(w http.ResponseWriter, r *http.Request) {
 		sr.Write(w, "", err.Error(), http.StatusInternalServerError)
 		return
 	}
-	// TODO - Remove this stuff.
-	jsonResp, _ := json.Marshal(string(b))
-	w.Write(jsonResp)
+	w.Write(b)
 }
 
 type QuestionAPIResponse struct {
@@ -225,18 +225,28 @@ func Filter(w http.ResponseWriter, r *http.Request) {
 
 func get(questionId string) string {
 	return `
-    {
-        root(_uid_:` + questionId + `) {
-		  _uid_
-	  		name
-          text
-          positive
-          negative
-          question.option { _uid_ name }
-          question.correct { _uid_ name }
-          question.tag { _uid_ name }
-        }
-    }`
+	{
+		root(_uid_:` + questionId + `) {
+			_uid_
+			name
+			text
+			positive
+			negative
+			notes
+			question.option	{
+				_uid_
+				name
+			}
+			question.correct {
+				_uid_
+				name
+			}
+			question.tag {
+				_uid_
+				name
+			}
+		}
+	}`
 }
 
 func Get(w http.ResponseWriter, r *http.Request) {
@@ -261,6 +271,8 @@ func edit(q Question) (string, error) {
 	}
 	m.Set(`<_uid_:` + q.Uid + `> <name> "` + q.Name + `" .`)
 	m.Set(`<_uid_:` + q.Uid + `> <text> "` + q.Text + `" .`)
+	m.Set(`<_uid_:` + q.Uid + `> <notes> "` + q.Notes + `" .`)
+
 	if q.Positive == 0 || q.Negative == 0 {
 		return "", fmt.Errorf("Positive/Negative score can't be zero.")
 	}

@@ -9,6 +9,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/dgraph-io/gru/admin/mail"
+	"github.com/dgraph-io/gru/admin/report"
 	"github.com/dgraph-io/gru/admin/server"
 	"github.com/dgraph-io/gru/auth"
 	"github.com/dgraph-io/gru/dgraph"
@@ -354,9 +356,13 @@ func validateToken(r *http.Request) (string, error) {
 	return "", fmt.Errorf("Cannot parse claims.")
 }
 
-// TODO - Remove this and just send the link to the report.
 func sendReport(cid string) {
-	// mail.SendReport(s.Name, s.TotalScore, s.MaxScore, body)
+	s, rerr := report.ReportSummary(cid)
+	if rerr.Err != "" && rerr.Msg != "" {
+		fmt.Printf("Error: %v with msg: %v while generating report.",
+			rerr.Err, rerr.Msg)
+	}
+	mail.SendReport(s.Name, cid, s.TotalScore, s.MaxScore)
 }
 
 func QuestionHandler(w http.ResponseWriter, r *http.Request) {
@@ -641,6 +647,34 @@ func PingHandler(w http.ResponseWriter, r *http.Request) {
 		pr.TimeLeft = timeLeft.String()
 	}
 	json.NewEncoder(w).Encode(pr)
+}
+
+func Feedback(w http.ResponseWriter, r *http.Request) {
+	var userId string
+	var err error
+	sr := server.Response{}
+	if userId, err = validateToken(r); err != nil {
+		sr.Write(w, err.Error(), "", http.StatusUnauthorized)
+		return
+	}
+
+	feedback := r.PostFormValue("feedback")
+	m := `	mutation {
+			set {
+				<_uid_:` + userId + `> <feedback> "` + feedback + `" .
+			}
+		}
+			`
+	res, err := dgraph.SendMutation(m)
+	if err != nil {
+		sr.Write(w, "", err.Error(), http.StatusInternalServerError)
+		return
+	}
+	if res.Code != "ErrorOk" {
+		sr.Write(w, res.Message, "", http.StatusInternalServerError)
+		return
+	}
+	return
 }
 
 func load(cid string) string {

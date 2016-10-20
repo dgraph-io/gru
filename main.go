@@ -123,6 +123,7 @@ func runHTTPServer(address string) {
 	quizRouter.HandleFunc("/question", quiz.QuestionHandler).Methods("POST", "OPTIONS")
 	quizRouter.HandleFunc("/answer", quiz.AnswerHandler).Methods("POST", "OPTIONS")
 	quizRouter.HandleFunc("/ping", quiz.PingHandler).Methods("POST", "OPTIONS")
+	quizRouter.HandleFunc("/feedback", quiz.Feedback).Methods("POST", "OPTIONS")
 
 	admin := mux.NewRouter()
 	router.PathPrefix("/api/admin").Handler(negroni.New(
