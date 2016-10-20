@@ -34,6 +34,10 @@ type Option struct {
 }
 
 func add(q Question) string {
+	// TODO - Remove later.
+	if q.Notes == "" {
+		q.Notes = "Dummy notes"
+	}
 	m := `mutation {
 		set {
 		  <root> <question> <_new_:qn> .
@@ -268,6 +272,10 @@ func edit(q Question) (string, error) {
 	m := new(dgraph.Mutation)
 	if q.Name == "" || q.Text == "" {
 		return "", fmt.Errorf("Question name/text can't be empty.")
+	}
+	// TODO - Remove later.
+	if q.Notes == "" {
+		q.Notes = "Dummy notes"
 	}
 	m.Set(`<_uid_:` + q.Uid + `> <name> "` + q.Name + `" .`)
 	m.Set(`<_uid_:` + q.Uid + `> <text> "` + q.Text + `" .`)
