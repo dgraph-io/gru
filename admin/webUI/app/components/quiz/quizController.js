@@ -23,7 +23,6 @@
 		function getAllQuestions() {
 			quesRequest = {id: ""};
 			questionService.getAllQuestions(quesRequest).then(function(data){
-				var data = JSON.parse(data);
 				mainVm.allQuestions = data.debug[0].question;			
 			}, function(err){
 				console.log(err)

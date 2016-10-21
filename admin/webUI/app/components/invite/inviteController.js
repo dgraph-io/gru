@@ -287,6 +287,9 @@
 			$progressBar = $(".prograss-circle");
 			if(cReportVm.info.total_score != 0) {
 				$progressBar.css({'display': 'block'});
+				if(cReportVm.info.total_score < 0 ) {
+					$progressBar.css({'stroke': 'red'});
+				}
 			}
 			setTimeout(function() {
 				$progressBar.css({'stroke-dashoffset': circleProgressWidth});

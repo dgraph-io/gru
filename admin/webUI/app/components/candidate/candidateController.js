@@ -268,7 +268,17 @@
 				})
 				return
 			}
-			cqVm.feedbackSubmitted = true;
+
+			var requestData = {
+				feedback: cqVm.feedback,
+			};
+			candidateService.sendFeedback(requestData)
+			.then(function(data){
+				console.log(data);
+				cqVm.feedbackSubmitted = true;
+			}, function(err){
+				console.log(err);
+			});
 		}
 
 	}
