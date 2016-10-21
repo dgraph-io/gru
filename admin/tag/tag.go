@@ -1,10 +1,10 @@
 package tag
 
 import (
-	"encoding/json"
-	"io/ioutil"
 	"net/http"
-	"strings"
+
+	"github.com/dgraph-io/gru/admin/server"
+	"github.com/dgraph-io/gru/dgraph"
 )
 
 type Tag struct {
@@ -16,20 +16,12 @@ type Tag struct {
 // fetch all the tags
 // TODO - Clean this up.
 func Index(w http.ResponseWriter, r *http.Request) {
-	tag_mutation := "{debug(_xid_: rootQuestion) { question { question.tag { name _uid_} }}}"
-	tag_response, err := http.Post("http://localhost:8080/query", "application/x-www-form-urlencoded", strings.NewReader(tag_mutation))
+	q := "{debug(_xid_: root) { question { question.tag { name _uid_} }}}"
+	res, err := dgraph.Query(q)
 	if err != nil {
-		panic(err)
+		sr := server.Response{}
+		sr.Write(w, "", err.Error(), http.StatusInternalServerError)
+		return
 	}
-	defer tag_response.Body.Close()
-	tag_body, err := ioutil.ReadAll(tag_response.Body)
-	if err != nil {
-		panic(err)
-	}
-
-	jsonResp, err := json.Marshal(string(tag_body))
-	if err != nil {
-		panic(err)
-	}
-	w.Write(jsonResp)
+	w.Write(res)
 }
