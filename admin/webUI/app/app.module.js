@@ -25,14 +25,14 @@ angular.module('GruiApp').run(function($rootScope, $location, $timeout, $state) 
     });
 
     $rootScope.$on("$locationChangeStart", function(e, currentLocation, previousLocation){
-      window.currentLocation = currentLocation;
-      window.previousLocation = previousLocation;
-      $rootScope.is_direct_url = (currentLocation == previousLocation);
-      isAuthenticated = window.localStorage.getItem("username");
+      // window.currentLocation = currentLocation;
+      // window.previousLocation = previousLocation;
+      // $rootScope.is_direct_url = (currentLocation == previousLocation);
+      // isAuthenticated = window.localStorage.getItem("username");
 
-      if($rootScope.is_direct_url) {
-          // console.log("Hola!");
-      }
+      // if($rootScope.is_direct_url) {
+      //     // console.log("Hola!");
+      // }
     });
 
     var stateChangeStartHandler = function(e, toState, toParams, fromState, fromParams) {
@@ -43,6 +43,10 @@ angular.module('GruiApp').run(function($rootScope, $location, $timeout, $state) 
       }
       if(toState.authenticate && !mainVm.isLoggedIn()) {
         $state.transitionTo("login");
+        e.preventDefault();
+      }
+      if(toState.name == "login" && mainVm.isLoggedIn()) {
+        $state.transitionTo("root");
         e.preventDefault();
       }
       (function(){
