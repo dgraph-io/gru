@@ -44,14 +44,15 @@
 			</div>
 			<div class="mdl-grid no-pad options-panel" ng-repeat="idx in mainVm.getNumber(questionVm.optionsCount) track by $index">
 				<div class="mdl-cell mdl-cell--6-col ml-0">
-					<textarea ui-codemirror="option{{$index}}" ng-model="addQueVm.newQuestion.optionsBak['option'+$index].name" class="hide"></textarea>
+					Option {{$index + 1}}
+					<textarea ui-codemirror="option{{$index}}" ng-model="addQueVm.newQuestion.optionsBak['option'+$index].name" class="hide" placeholder="text"></textarea>
 					<!-- <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
 				    <input class="mdl-textfield__input" type="text" name="option-{{$index + 1}}" id="option-{{$index + 1}}" ng-model="addQueVm.newQuestion.optionsBak['option' + $index].name">
 				    <label class="mdl-textfield__label" for="option-{{$index + 1}}">Option {{$index + 1}}</label>
 				  </div> -->
 				</div>
 				<div class="mdl-cell mdl-cell--2-col pt-20">
-				  <label class="mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect" for="correct-{{$index + 1}}" ng-class="{'is-checked': addQueVm.newQuestion.optionsBak['option' + $index].is_correct == true}">
+				  <label class="mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect mdl-success" for="correct-{{$index + 1}}" ng-class="{'is-checked': addQueVm.newQuestion.optionsBak['option' + $index].is_correct == true}">
 					  <input type="checkbox" id="correct-{{$index + 1}}" class="mdl-checkbox__input" ng-model="addQueVm.newQuestion.optionsBak['option' + $index].is_correct">
 					  <span class="mdl-checkbox__label">Is correct
 					</label>

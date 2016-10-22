@@ -90,6 +90,12 @@
 		}
 	}
 
+	function addCandidatesController($state, $stateParams) {
+		acVm = this;
+		inviteVm.setMinDate();
+	}
+
+
 	function editInviteController($rootScope, $stateParams, $state, quizService, inviteService) {
 		editInviteVm = this;
 		var candidateUID = $stateParams.candidateID;
@@ -146,8 +152,8 @@
 			}
 
 			requestData = angular.copy(editInviteVm.candidate);
-			return
-			inviteService.editInvite(editInviteVm.candidate)
+
+			inviteService.editInvite(requestData)
 			.then(function(data){
 				SNACKBAR({
 					message: data.Message,
@@ -241,10 +247,6 @@
 		}, function(err){
 			console.log(err);
 		});
-	}
-
-	function addCandidatesController($state) {
-		inviteVm.setMinDate();
 	}
 
 	function candidateReportController($rootScope, $stateParams, $state, inviteService) {
