@@ -45,9 +45,15 @@
 		cqVm.submitFeedback = submitFeedback;
 
 	// INITIALIZERS
-	if(candidateVm.isValidUser) {
-		cqVm.getQuestion();
-	}
+		if(candidateVm.isValidUser) {
+			cqVm.getQuestion();
+		}
+
+		$rootScope.$on("endQuiz", function(e, data){
+			cqVm.stopQuiz();
+			cqVm.apiError = data.message;
+			mainVm.hideNotification(true);
+		})
 
 	// FUNCTION DEFINITION
 
@@ -72,20 +78,19 @@
 					cqVm.answer = {};
 				}
 
-				$rootScope.updgradeMDL();
+				setTimeout(function() {
+					componentHandler.upgradeAllRegistered();
+				}, 10);
 			}, function(err){	
 				if(err.status != 0) {
-					cqVm.apiError = err.data.Message;
-					SNACKBAR({
-						message: err.data.Message,
-						messageType: "error",
-					})
+					if(err.data.Message) {
+						cqVm.apiError = err.data.Message;
+						SNACKBAR({
+							message: err.data.Message,
+							messageType: "error",
+						})
+					}
 				}
-				if(err.status == 0) {
-					mainVm.timeoutModal();
-					cqVm.stopQuiz();
-				}
-				clearAllTimers();
 			})
 		}
 
@@ -205,6 +210,9 @@
 			// Hit the PING api
 			candidateService.getTime()
 			.then(function(data){
+				if(mainVm.showNotification) {
+					mainVm.hideNotification();
+				}	
 				isPositve = Duration.parse(data.time_left)._nanoseconds > 0;
 				if(isPositve) {
 					cqVm.initTimer(data.time_left)
@@ -218,16 +226,17 @@
 				}
 			}, function(err){
 				console.log(err);
-				if(err.status == 0) {
-					mainVm.timeoutModal();
-					cqVm.stopQuiz();
-				}
+				mainVm.initNotification();
+				// if(err.status == 0) {
+				// 	mainVm.timeoutModal();
+				// 	cqVm.stopQuiz();
+				// }
 			})
 		}
 
 		cqVm.timerObj.getTime = setInterval(function(){
 			cqVm.getTime();
-		}, 5000);
+		}, 3000);
 
 		function calcTimeTaken(){
 			if(!cqVm.finalTimeLeft) {
@@ -268,7 +277,17 @@
 				})
 				return
 			}
-			cqVm.feedbackSubmitted = true;
+
+			var requestData = {
+				feedback: cqVm.feedback,
+			};
+			candidateService.sendFeedback(requestData)
+			.then(function(data){
+				console.log(data);
+				cqVm.feedbackSubmitted = true;
+			}, function(err){
+				console.log(err);
+			});
 		}
 
 	}

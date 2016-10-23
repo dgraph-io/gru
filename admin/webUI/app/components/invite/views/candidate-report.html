@@ -70,8 +70,17 @@
 				</svg> 
 			</div>
 		</div>
+		
+		<div class="mdl-grid no-pad mt-10" ng-if="cReportVm.info.feedback">
+			<div class="mdl-cell mdl-cell--3-col">
+				<i class="material-icons">feedback</i> FEEDBACK
+			</div>
+			<div class="mdl-cell mdl-cell--9-col no-margin-lr">
+				{{cReportVm.info.feedback}}
+			</div>
+		</div>
 
-		<div class="mdl-grid no-pad mt-30">
+		<div class="mdl-grid no-pad">
 			<div class="mdl-cell mdl-cell--12-col no-margin-lr">
 				<h5> Question Details </h5>
 				<table class="mdl-data-table mdl-shadow--2dp">

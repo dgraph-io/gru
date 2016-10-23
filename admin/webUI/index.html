@@ -21,7 +21,7 @@
 </head>
 <body ng-controller="MainController as mainVm" class="position-relative {{mainVm.pageName}}" autoscroll="" ng-class="{'admin-panel': mainVm.isLoggedIn()}">
     <div class="web-layout-transparent mdl-layout mdl-js-layout mdl-layout--fixed-header" >
-      <header class="mdl-layout__header mdl-shadow--2dp" ng-class="{ 'red-header' : mainVm.pageName != 'home'}">
+      <header class="mdl-layout__header mdl-shadow--2dp {{mainVm.notification.class}}" ng-class="{'notification-header' : mainVm.showNotification}">
         <div class="mdl-layout__header-row">
           <!-- Title -->
           <a ui-sref="root">
@@ -77,22 +77,15 @@
             </div>
           </nav>
         </div>
+
+        <div class="notification-wrapper ng-cloak" ng-show="mainVm.showNotification">
+          <div class="notification-message">
+            {{mainVm.notification.message}}
+          </div>
+          <div class="mdl-spinner mdl-spinner--single-color mdl-js-spinner is-active" ng-show="mainVm.notification.class == 'notification-error'">
+          </div>
+        </div>
       </header>        
-      <div class="mdl-layout__drawer">
-        <a ui-sref="root">
-          <span class="mdl-layout-title mt-10 ml-10" ui-sref="root">
-            GRU-Admin
-          </span>
-        </a>
-        <nav class="mdl-navigation" ng-show="mainVm.isLoggedIn()">
-          <a class="dropdown-item" ui-sref="question.all">
-            QUESTIONS
-          </a>
-          <a class="dropdown-item" ui-sref="quiz.all">
-            QUIZ
-          </a>
-        </nav>
-      </div>
 
       <main data-ui-view="" class="mdl-layout__content">
       </main>
@@ -111,9 +104,11 @@
 
     <div class="modal-overlay ng-cloak" ng-show="mainVm.showModal"></div>
     <div class="modal-wrapper ng-cloak" ng-show="mainVm.modal.template">
-      <div data-ng-include="mainVm.modal.template">
+      <!-- <div data-ng-include="mainVm.modal.template">
+      </div> -->
+      <div ng-bind-html="mainVm.modal.template">
       </div>
-      <div class="modal-actions text-right" ng-hide="mainVm.modal.hideClose" ng-click="mainVm.hideModal()">
+      <div class="modal-actions text-right pt-20" ng-hide="mainVm.modal.hideClose" ng-click="mainVm.hideModal()">
         <button class="mdl-button">Close</button>
       </div>
     </div>

@@ -7,6 +7,28 @@
     services.getQuestion = function(){
       return MainService.post('/quiz/question');
     }
+    
+    services.sendFeedback = function(data){
+      var deferred = $q.defer();
+
+      mainVm.showAjaxLoader = true;
+      $http({
+        method: 'POST',
+        url: mainVm.candidate_url + '/quiz/feedback',
+        data: $.param(data),
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'}
+      })
+      .then(function(data) { 
+          mainVm.showAjaxLoader = false;
+          deferred.resolve(data);
+        },
+        function(response, code) {
+          mainVm.showAjaxLoader = false;
+          deferred.reject(response);
+        }
+      );
+      return deferred.promise;
+    }
 
     services.submitAnswer = function(requestData) {
     	var deferred = $q.defer();

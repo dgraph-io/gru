@@ -21,6 +21,7 @@
 }
 .mdl-layout__container .mdl-layout__header {
   background: white;
+  position: relative;
 }
 .mdl-layout__header .mdl-layout__drawer-button {
   color: black;
@@ -145,12 +146,6 @@ button.btn-lg {
 }
 .mdl-button[disabled][disabled], .mdl-button.mdl-button--disabled.mdl-button--disabled {
   border: 1px solid #9E9E9E;
-}
-.mdl-layout__drawer-button i {
-  display: none;
-}
-.admin-panel .mdl-layout__drawer-button i {
-  display: inline-block;
 }
 .mdl-cell.no-margin-lr {
   margin-left: 0;
@@ -361,6 +356,11 @@ body.home {
 }
 .quiz-ended .mdl-chip__contact {
   font-size: 20px;
+}
+
+.candidate .options pre {
+  display: inline-flex;
+  padding-left: 10px;
 }
 
 /*CANDIDATE REPORT*/

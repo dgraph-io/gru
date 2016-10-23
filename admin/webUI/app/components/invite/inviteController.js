@@ -90,6 +90,12 @@
 		}
 	}
 
+	function addCandidatesController($state, $stateParams) {
+		acVm = this;
+		inviteVm.setMinDate();
+	}
+
+
 	function editInviteController($rootScope, $stateParams, $state, quizService, inviteService) {
 		editInviteVm = this;
 		var candidateUID = $stateParams.candidateID;
@@ -146,8 +152,8 @@
 			}
 
 			requestData = angular.copy(editInviteVm.candidate);
-			return
-			inviteService.editInvite(editInviteVm.candidate)
+
+			inviteService.editInvite(requestData)
 			.then(function(data){
 				SNACKBAR({
 					message: data.Message,
@@ -243,10 +249,6 @@
 		});
 	}
 
-	function addCandidatesController($state) {
-		inviteVm.setMinDate();
-	}
-
 	function candidateReportController($rootScope, $stateParams, $state, inviteService) {
 		cReportVm = this;
 		cReportVm.candidateID = $stateParams.candidateID;
@@ -287,6 +289,9 @@
 			$progressBar = $(".prograss-circle");
 			if(cReportVm.info.total_score != 0) {
 				$progressBar.css({'display': 'block'});
+				if(cReportVm.info.total_score < 0 ) {
+					$progressBar.css({'stroke': 'red'});
+				}
 			}
 			setTimeout(function() {
 				$progressBar.css({'stroke-dashoffset': circleProgressWidth});

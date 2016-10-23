@@ -56,7 +56,6 @@
 				    indentWithTabs: true,
 				  }
 				}
-				console.log($scope);
 			}, 500);
 
 		}
@@ -102,7 +101,6 @@
 		}
 
 		function validateInput(inputs) {
-			console.log(inputs)
 			if(!inputs.name) {
 				return "Please enter valid question name"
 			}
@@ -138,10 +136,6 @@
 
 			if(!inputs.tags.length) {
 				return "Minimum one tag is required"
-			}
-
-			if(!inputs.notes) {
-				return "Question note is required"
 			}
 
 			return false;
@@ -217,8 +211,12 @@
 				})
 				return
 			}
+
+			var requestData = angular.copy(addQueVm.newQuestion);
+			requestData.notes = requestData.notes || "none";
+
 			// Hit the API
-			questionService.saveQuestion(JSON.stringify(addQueVm.newQuestion))
+			questionService.saveQuestion(JSON.stringify(requestData))
 			.then(function(data){
 				addQueVm.newQuestion = {};
 				addQueVm.cmModel = "";
@@ -423,7 +421,9 @@
 				return
 			}
 
-			questionService.editQuestion(editQuesVm.newQuestion).then(function(data){
+			var requestData = angular.copy(editQuesVm.newQuestion);
+			requestData.notes = requestData.notes || "none";
+			questionService.editQuestion(requestData).then(function(data){
 				SNACKBAR({
 					message: data.Message,
 				});

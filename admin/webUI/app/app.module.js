@@ -25,14 +25,14 @@ angular.module('GruiApp').run(function($rootScope, $location, $timeout, $state) 
     });
 
     $rootScope.$on("$locationChangeStart", function(e, currentLocation, previousLocation){
-      window.currentLocation = currentLocation;
-      window.previousLocation = previousLocation;
-      $rootScope.is_direct_url = (currentLocation == previousLocation);
-      isAuthenticated = window.localStorage.getItem("username");
+      // window.currentLocation = currentLocation;
+      // window.previousLocation = previousLocation;
+      // $rootScope.is_direct_url = (currentLocation == previousLocation);
+      // isAuthenticated = window.localStorage.getItem("username");
 
-      if($rootScope.is_direct_url) {
-          // console.log("Hola!");
-      }
+      // if($rootScope.is_direct_url) {
+      //     // console.log("Hola!");
+      // }
     });
 
     var stateChangeStartHandler = function(e, toState, toParams, fromState, fromParams) {
@@ -43,6 +43,10 @@ angular.module('GruiApp').run(function($rootScope, $location, $timeout, $state) 
       }
       if(toState.authenticate && !mainVm.isLoggedIn()) {
         $state.transitionTo("login");
+        e.preventDefault();
+      }
+      if(toState.name == "login" && mainVm.isLoggedIn()) {
+        $state.transitionTo("root");
         e.preventDefault();
       }
       (function(){
@@ -179,13 +183,14 @@ angular.module('GruiApp').provider('RouteHelpers', ['APP_REQUIRES', function (ap
     
     // MAIN CONTROLLER declaration
     var MainDependency = [
-        "$rootScope",
-        "$state",
-        "$stateParams",
-        "$http",
-        "$q",
-        "MainService",
-        MainController,
+      "$scope",
+      "$rootScope",
+      "$state",
+      "$stateParams",
+      "$http",
+      "$q",
+      "MainService",
+      MainController,
     ];
     angular.module('GruiApp').controller("MainController", MainDependency);
 
@@ -200,7 +205,7 @@ angular.module('GruiApp').provider('RouteHelpers', ['APP_REQUIRES', function (ap
 // CONTROLLERS, SERVICES FUNCTION DEFINITION
 
     // MAIN CONTROLLER
-    function MainController($rootScope, $state,$stateParams, $http, $q, MainService){
+    function MainController($scope,$rootScope,$state,$stateParams, $http, $q, MainService){
       //ViewModal binding using this, instead of $scope
       //Must be use with ControllerAs syntax in view
       mainVm = this; // $Scope aliase
@@ -227,6 +232,8 @@ angular.module('GruiApp').provider('RouteHelpers', ['APP_REQUIRES', function (ap
       mainVm.openModal = openModal;
       mainVm.hideModal = hideModal;
       mainVm.timeoutModal = timeoutModal;
+      mainVm.initNotification = initNotification;
+      mainVm.hideNotification = hideNotification;
 
       mainVm.getAllTags = getAllTags;
 
@@ -288,9 +295,15 @@ angular.module('GruiApp').provider('RouteHelpers', ['APP_REQUIRES', function (ap
       }
 
       function timeoutModal() {
+        var modalContent = "Sorry to inform you but we are facing some severe problems.";
+        modalContent += "<div>Please send us a email on - contact@dgraph.io</div>";
         mainVm.openModal({
-          template: "./app/shared/_server_crash.html",
-        })
+          // template: "./app/shared/_server_crash.html",
+          template: modalContent,
+        });
+        $rootScope.$broadcast("endQuiz", {
+          message: modalContent,
+        });
       }
 
       function isValidCandidate() {
@@ -324,31 +337,7 @@ angular.module('GruiApp').provider('RouteHelpers', ['APP_REQUIRES', function (ap
       }
 
       function getAllTags(){
-        // MainService("/get-all-tags")
-        var deferred = $q.defer();
-
-        $http.defaults.headers.common['Authorization'] = 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.e30.eb0qBs-z-zbhRorx4PZxakiDfSC_HyY741ZES0hOVdU';
-
-        var req = {
-          method: 'GET',
-          url: mainVm.admin_url + '/get-all-tags',
-        }
-
-        $http(req)
-        .then(function(data) { 
-            deferred.resolve(data.data);
-          },
-          function(response, code) {
-            mainVm.showAjaxLoader = false;
-            deferred.reject(response);
-            SNACKBAR({
-              message: "Something went wrong",
-              messageType: "error"
-            })
-          }
-        );
-
-        return deferred.promise;
+        return MainService.get("/get-all-tags")
       }
 
       function parseGoTime(time) {
@@ -360,6 +349,36 @@ angular.module('GruiApp').provider('RouteHelpers', ['APP_REQUIRES', function (ap
           minutes: parseInt((totalSec / 60) % 60, 10),
           seconds: parseInt(totalSec % 60, 10),
         }
+      }
+
+      function initNotification() {
+        mainVm.consecutiveError = mainVm.consecutiveError || 0;
+        mainVm.consecutiveError += 1;
+
+        if(mainVm.consecutiveError < 2) {
+          return
+        }
+        if(mainVm.consecutiveError > 7) {
+          mainVm.timeoutModal();
+        }
+        mainVm.notification = {};
+        mainVm.showNotification = true;
+
+        mainVm.notification.class = "notification-error";
+        mainVm.notification.message = "Can't connect to the server. We will be back up in a bit...";
+      }
+
+      function hideNotification(rejected) {
+        if(!rejected) {
+          mainVm.notification.class = "notification-success";
+          mainVm.notification.message = "Connected to Server";
+        }
+        mainVm.consecutiveError = 0;
+        setTimeout(function() {
+          mainVm.showNotification = false;
+          mainVm.notification.class = "";
+          $scope.$apply();
+        }, 2000);
       }
 
     }
