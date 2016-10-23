@@ -62,11 +62,15 @@
 
 			candidateService.getQuestion()
 			.then(function(data) {
+				$timeTakenElem = document.querySelector('#time-taken');
 				if(!cqVm.question) {
 					// Initialize timer if first time api call.
 					cqVm.getTime();
+					startTimer(0, $timeTakenElem, true);
+				} else {
+					$timeTakenElem.textContent = "00:00:00";
+					startTimer(1, $timeTakenElem, true);
 				}
-				startTimer(0, document.querySelector('#time-taken'), true);
 
 				cqVm.question = data;
 				if(data._uid_ == "END") {
