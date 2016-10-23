@@ -105,8 +105,7 @@
 		editInviteVm.editInvite = editInvite;
 		editInviteVm.initAllQuiz = initAllQuiz;
 		editInviteVm.selectedQuiz = selectedQuiz;
-		editInviteVm.removeSelectedQuiz = removeSelectedQuiz;
-		editInviteVm.onQuizSelect = onQuizSelect;
+		editInviteVm.onQuizChange = onQuizChange;
 		editInviteVm.goToDashboard = goToDashboard;
 
 		inviteVm.setMinDate();
@@ -151,7 +150,7 @@
 				editInviteVm.candidate.old_quiz_id = editInviteVm.quizID;
 			}
 
-			requestData = angular.copy(editInviteVm.candidate);
+			var requestData = angular.copy(editInviteVm.candidate);
 
 			inviteService.editInvite(requestData)
 			.then(function(data){
@@ -171,48 +170,27 @@
 			setTimeout(function() {
 				editInviteVm.allQuizes = angular.copy(inviteVm.allQuizes);
 				$rootScope.updgradeMDL();
+				editInviteVm.selectedQuiz()
 			}, 100);
 		}
 
-		function selectedQuiz(quiz) {
-			var oldQuiz = editInviteVm.candidate['candidate.quiz'][0];
-			isSelected = oldQuiz._uid_ == quiz._uid_;
-			if(isSelected) {
-				if(!oldQuiz.is_delete) {
-					editInviteVm.candidate.quiz = quiz;
-					return true;
-				} else {
-					return false;
-				}
-			} else {
-				var currentQuiz = editInviteVm.candidate.quiz;
-				if(currentQuiz && quiz._uid_ == currentQuiz._uid_) {
-					return true;
-				}
-			}
-		}
-
-		function removeSelectedQuiz() {
-			var oldQuiz = editInviteVm.candidate['candidate.quiz'][0];
-			var isOld = oldQuiz._uid_ == editInviteVm.candidate.quiz._uid_;
-			if(isOld){
-				oldQuiz.is_delete = true;
-				delete editInviteVm.candidate.quiz
-			}
-		}
-
-		function onQuizSelect() {
-			var quiz = editInviteVm.candidate.quiz;
-			var oldQuiz = editInviteVm.candidate['candidate.quiz'][0];
-			if(!quiz) {
-				oldQuiz.is_delete = true;
-			} else {
+		function selectedQuiz() {
+			var oldQuiz = editInviteVm.candidate['candidate.quiz'][0]
+			var quizLen = editInviteVm.allQuizes.length;
+			for(var i = 0; i < quizLen; i++) {
+				var quiz = editInviteVm.allQuizes[i];
 				if(oldQuiz._uid_ == quiz._uid_) {
-					oldQuiz.is_delete = false;
-				} else {
-					oldQuiz.is_delete = true;
+					editInviteVm.candidate.quiz = quiz;
+					break;
 				}
 			}
+		}
+
+		function onQuizChange(item, model) {
+			var oldQuiz = editInviteVm.candidate['candidate.quiz'][0];
+			var isOld = oldQuiz._uid_ == model._uid_;
+
+			oldQuiz.is_delete = isOld ? false : true;
 		}
 
 		function goToDashboard() {

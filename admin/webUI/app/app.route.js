@@ -129,12 +129,14 @@
           .state('invite.add', {
             url: '/invite-user',
             parent: 'invite',
+            css: [angularSelectCSS],
             templateUrl: inviteUserTemplate,
             authenticate: true,
           })
           .state('invite.edit', {
             url: '/edit-invite/:quizID/:candidateID',
             parent: 'invite',
+            css: [angularSelectCSS],
             templateUrl: editInviteTemplate,
             authenticate: true,
           })

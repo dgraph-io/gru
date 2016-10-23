@@ -218,30 +218,30 @@ body.home {
   width: 100% !Important;
 }
 
-.mdl-select.select2-container-multi {
+.mdl-select.select2-container {
   padding-top: 20px;
 }
 
-.mdl-select.select2-container-multi .select2-choices {
+.mdl-select.select2-container .select2-choices {
   border: none;
   border-bottom: 1px solid rgba(0,0,0,.12);
   background-image: none;
 }
 
-.mdl-select.select2-container-multi .select2-choices .select2-search-field input{
+.mdl-select.select2-container .select2-choices .select2-search-field input{
   font-size: 16px;
   font-family: 'Montserrat', sans-serif;
   color: rgba(0,0,0,.26);
 }
-.mdl-select.select2-container-multi .select2-choices .select2-search-choice{
+.mdl-select.select2-container .select2-choices .select2-search-choice{
   line-height: 20px;
 }
-.mdl-select.select2-container-multi .select2-search-choice-close {
+.mdl-select.select2-container .select2-search-choice-close {
   left: 3px;
   top: 53%;
   transform: translateY(-50%);
 }
-.mdl-select.select2-container-multi.select2-container-active .select2-choices,
+.mdl-select.select2-container.select2-container-active .select2-choices,
 .mdl-select .select2-drop-active {
   border: 1px solid #EC3D2E;
 }
@@ -361,6 +361,27 @@ body.home {
 .candidate .options pre {
   display: inline-flex;
   padding-left: 10px;
+}
+
+/*INVITE PAGE*/
+
+.select2-container .select2-choice {
+  padding: 8px;
+  background-image: none;
+}
+.select2-dropdown-open .select2-choice {
+  background: white;
+}
+
+.select2-container .select2-choice .select2-arrow{
+  background: white;
+  background-image: none;
+}
+.select2-container .select2-choice .select2-arrow b {
+  background-position: 0 10px;
+}
+.select2-dropdown-open .select2-choice .select2-arrow b {
+  background-position: -18px 10px;
 }
 
 /*CANDIDATE REPORT*/
