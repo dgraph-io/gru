@@ -51,7 +51,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 	sr := server.Response{}
 	u, p, ok := r.BasicAuth()
 	if !ok || u != *username || p != *password {
-		sr.Write(w, "", "You are unuathorized", http.StatusUnauthorized)
+		sr.Write(w, "", "Incorrect username/password.", http.StatusUnauthorized)
 		return
 	}
 	// TODO - Add relevant claims like expiry.
