@@ -97,13 +97,17 @@
 		function getTotalScore(questions) {
 			var totalScore = 0;
 			angular.forEach(questions, function(value, key) {
+				var commulativeScore = value['question.correct'].length * value.positive;
 				if(!value.is_delete) { //Hadnling edit page condition
-					totalScore += parseInt(value.positive);
+					totalScore += commulativeScore;
 				}
 			});
 			if(quizVm.newQuiz.newQuestions && quizVm.newQuiz.newQuestions.length) {
 				for(var i = 0; i < quizVm.newQuiz.newQuestions.length; i++) {
-					totalScore += parseInt(quizVm.newQuiz.newQuestions[i].positive);
+					var commulativeScore = 0;
+					var thisQues = quizVm.newQuiz.newQuestions[i];
+					commulativeScore = thisQues['question.correct'].length * thisQues.positive;
+					totalScore += commulativeScore;
 				}
 			} 
 			return totalScore;

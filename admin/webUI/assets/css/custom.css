@@ -305,6 +305,10 @@ body.home {
   cursor: pointer;
 }
 
+.option-icon i {
+  margin-top: -5px;
+}
+
 /* CODEMIRROR*/
 #question-panel .CodeMirror {
   border-bottom: 1px solid black;

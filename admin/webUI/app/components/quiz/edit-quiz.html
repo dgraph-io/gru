@@ -84,8 +84,17 @@
 					  <span class="mdl-checkbox__label">
 					  	{{question.name}}
 					  	<div class="base-font">
-					  		Positive Score: {{question.positive}} &nbsp;&nbsp;
-					  		Negative Score: {{question.negative}}
+					  		Positive Score: {{question.positive}}, &nbsp;&nbsp;
+					  		Negative Score: {{question.negative}}, &nbsp;&nbsp;
+					  		Answer 
+					  		<span class="text-green option-icon">
+						  		<span ng-if="question['question.correct'].length == 1">
+						  			<i class="material-icons">done</i>
+						  		</span>
+						  		<span ng-if="question['question.correct'].length > 1">
+						  			<i class="material-icons">done_all</i>
+						  		</span>
+						  	</span>
 					  	</div>
 					  	<span ng-repeat="tags in question['question.tag'] track by $index">
 								<span class="mdl-chip">
