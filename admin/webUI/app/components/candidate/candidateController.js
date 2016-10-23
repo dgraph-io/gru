@@ -27,7 +27,7 @@
 		}
 	}
 
-	function candidateQuizController($rootScope, $state, candidateService) {
+	function candidateQuizController($scope, $rootScope, $state, candidateService) {
 		// VARIABLE DECLARATION
 		cqVm = this;
 		cqVm.total_score = 0
@@ -107,6 +107,7 @@
 		}
 
 		function submitAnswer(skip){
+			cqVm.retry = true;
 			if(!skip && (!cqVm.answer || angular.equals({}, cqVm.answer) || cqVm.answer == "") ) {
 				SNACKBAR({
 					message: "Please select answer or Skip the question",
@@ -137,6 +138,7 @@
 			}
 			candidateService.submitAnswer(requestData)
 			.then(function(data){
+				cqVm.retry = false;
 				cqVm.answer = "";
 				if(data.status == 200) {
 					cqVm.getQuestion();
@@ -144,6 +146,15 @@
 					clearAllTimers();
 				}
 			}, function(err){
+				mainVm.showAjaxLoader = true;
+				cqVm.clearUnwatch = $scope.$watch(angular.bind(mainVm, function () {
+			    return mainVm.showNotification;
+			  }), function (newValue, oldValue) {
+			  	//If showNotification is false, it means server connecte, and RETRY	is true
+			  	if(newValue == false && cqVm.retry) { 
+			  		cqVm.submitAnswer(skip);
+			  	}
+				});
 				if(err.status == 400) {
 
 				}
@@ -202,7 +213,9 @@
       display = document.querySelector('#time');
 
       stopTimer(); //Reset Time left interval
-      startTimer(duration.seconds(), display);
+      if(display) {
+      	startTimer(duration.seconds(), display);
+      }
     };
 
 
@@ -210,22 +223,24 @@
 			// Hit the PING api
 			candidateService.getTime()
 			.then(function(data){
-				if(mainVm.showNotification) {
-					mainVm.hideNotification();
-				}	
-				isPositve = Duration.parse(data.time_left)._nanoseconds > 0;
-				if(isPositve) {
-					cqVm.initTimer(data.time_left)
-				} else {
-					cqVm.finalTimeLeft = {
-						hours: 0,
-						minutes: 0,
-						seconds: 0,
+				mainVm.consecutiveError = 0
+				if(data.time_left != "-1"){
+					if(mainVm.showNotification) {
+						mainVm.hideNotification();
+					}	
+					isPositve = Duration.parse(data.time_left)._nanoseconds > 0;
+					if(isPositve) {
+						cqVm.initTimer(data.time_left)
+					} else {
+						cqVm.finalTimeLeft = {
+							hours: 0,
+							minutes: 0,
+							seconds: 0,
+						}
+						cqVm.stopQuiz();
 					}
-					cqVm.stopQuiz();
 				}
 			}, function(err){
-				console.log(err);
 				mainVm.initNotification();
 				// if(err.status == 0) {
 				// 	mainVm.timeoutModal();
@@ -265,7 +280,10 @@
       $("#time-taken").text(text);
 
       if(cqVm.finalTimeLeft.hours + cqVm.finalTimeLeft.minutes + cqVm.finalTimeLeft.seconds == 0) {
-      	manipulateTime(0, document.querySelector('#time'))
+      	var elem =  document.querySelector('#time');
+      	if(elem) {
+      		manipulateTime(0, elem)
+      	}
       }
 		}
 
@@ -294,6 +312,7 @@
 
 	// CANDIDATE QUIZ
 	var candidateQuizDependency = [
+			"$scope",
 			"$rootScope",
 	    "$state",
 	    "candidateService",

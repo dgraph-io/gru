@@ -358,7 +358,7 @@ angular.module('GruiApp').provider('RouteHelpers', ['APP_REQUIRES', function (ap
         if(mainVm.consecutiveError < 2) {
           return
         }
-        if(mainVm.consecutiveError > 7) {
+        if(mainVm.consecutiveError >= 20) {
           mainVm.timeoutModal();
         }
         mainVm.notification = {};
@@ -424,7 +424,9 @@ angular.module('GruiApp').provider('RouteHelpers', ['APP_REQUIRES', function (ap
             deferred.resolve(data.data);
           },
           function(response, code) {
-            mainVm.showAjaxLoader = false;
+            if(!hideLoader) {
+              mainVm.showAjaxLoader = false;
+            }
             deferred.reject(response);
           }
         );

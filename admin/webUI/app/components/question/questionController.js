@@ -67,7 +67,9 @@
 		// Get all Tags
 		function getAllTags() {
 			mainVm.getAllTags().then(function(data){
-				var data = data;
+				if(typeof data === "string") {
+					var data = JSON.parse(data);
+				}
 				questionVm.allTags = getUniqueTags(data.debug[0].question);
 			}, function(err){
 				console.log(err);

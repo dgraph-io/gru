@@ -209,7 +209,7 @@
   position: absolute;
   top: 0;
   left: 0;
-  z-index: 6;
+  z-index: 2;
 }
 .loader .mdl-spinner {
   position: fixed;

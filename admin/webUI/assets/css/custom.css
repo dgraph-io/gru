@@ -359,8 +359,12 @@ body.home {
 }
 
 .candidate .options pre {
-  display: inline-flex;
-  padding-left: 10px;
+  display: block;
+  padding-left: 10px !important;
+}
+
+.candidate .options label {
+  width: 100%;
 }
 
 /*INVITE PAGE*/
