@@ -69,7 +69,6 @@
 					"Once you start the quiz, the timer would not stop, irrespective of any client side issues",
 					"Questions can have single or multiple correct answers. They will be shown accordingly.",
 					"Your total score and the time left at any point in the quiz would be displayed on the top.",
-					"The scoring for each attempt of a question, would be visible to you in a separate section.",
 				],
 				Score: [
 					"There is NEGATIVE scoring for wrong answers. So, please DO NOT GUESS.",
