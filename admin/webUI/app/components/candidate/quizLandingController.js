@@ -74,6 +74,7 @@
 				Score: [
 					"There is NEGATIVE scoring for wrong answers. So, please DO NOT GUESS.",
 					"If you skip a question, the score awarded is always ZERO.",
+					"If you skip a question, you can't go back and answer it again.",
 					"Scoring would be clearly marked in the question on the right hand side box.",
 				],
 				Contact: [

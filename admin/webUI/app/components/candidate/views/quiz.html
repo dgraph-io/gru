@@ -3,18 +3,18 @@
 		<div class="mdl-grid mb-30" ng-class="{'quiz-ended mdl-shadow--2dp pv-20': cqVm.quizEnded, 'b-border': !cqVm.quizEnded }">
 			<div class="mdl-cell mdl-cell--middle" ng-class="{'mdl-cell--4-col': cqVm.quizEnded, 'mdl-cell--3-col': !cqVm.quizEnded }">
 				<h5 ng-if="cqVm.quizEnded" class="bold">Hi, {{candidateVm.info.Name}}. </h5>
-				<h5 class="bold">Your quiz <span ng-if="cqVm.quizEnded">ended</span></h5>
+				<h5 class="bold">Dgraph quiz <span ng-if="cqVm.quizEnded">ended</span></h5>
 			</div>
 			<div class="mdl-cell mdl-cell--6-col mdl-cell--middle big-font">
 				<span class="mdl-chip mdl-chip--contact" ng-if="!cqVm.quizEnded">
-			    <span class="mdl-chip__contact mdl-color--teal mdl-color-text--white">Time Left</span>
+			    <span class="mdl-chip__contact mdl-color--teal mdl-color-text--white">Time left</span>
 			    <span class="mdl-chip__text bold text-center timer-chip-text"><span id="time"></span></span>
 				</span>
 
 				<div class="pull-right">
 					<span class="mdl-chip mdl-chip--contact">
 				    <span class="mdl-chip__contact mdl-color--teal mdl-color-text--white">
-				    	Time Taken
+				    	Time spent
 				    </span>
 				    <span class="mdl-chip__text bold text-center timer-chip-text"><span id="time-taken"></span></span>
 					</span>
@@ -40,7 +40,8 @@
 					<form ng-submit="cqVm.submitFeedback()">
 						<div class="mdl-textfield mdl-js-textfield">
 					    <textarea class="mdl-textfield__input" type="text" rows= "5" cols="70" id="feedback" ng-model="cqVm.feedback"></textarea>
-					    <label class="mdl-textfield__label" for="feedback">Give your valuable feedback</label>
+					    <label class="mdl-textfield__label" for="feedback">Thanks for taking the quiz. We'll get back to you regarding next steps.</br>
+					    If you have any feedback for us, please let us know by writing it here.</label>
 					  </div>
 
 					  <button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect btn-lg">
