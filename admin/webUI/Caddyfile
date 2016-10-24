@@ -1,7 +1,6 @@
 localhost:2020
 gzip
 log
-minify
 
 proxy /api http://localhost:8000
 
