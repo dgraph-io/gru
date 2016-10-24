@@ -14,7 +14,6 @@
 		inviteVm.invalidateInput = invalidateInput;
 
 		quizService.getAllQuizes().then(function(data){
-			var data = JSON.parse(data);
 			inviteVm.allQuizes = data.debug[0].quiz;
 		}, function(err){
 			console.log(err);

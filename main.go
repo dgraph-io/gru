@@ -55,7 +55,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// TODO - Add relevant claims like expiry.
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{})
+	token := jwt.NewWithClaims(jwt.SigningMethodHS512, jwt.MapClaims{})
 
 	tokenString, err := token.SignedString([]byte(*auth.Secret))
 	if err != nil {
@@ -111,7 +111,7 @@ func runHTTPServer(address string) {
 		ValidationKeyGetter: func(token *jwt.Token) (interface{}, error) {
 			return []byte(*auth.Secret), nil
 		},
-		SigningMethod: jwt.SigningMethodHS256,
+		SigningMethod: jwt.SigningMethodHS512,
 	})
 
 	router := mux.NewRouter()
@@ -136,7 +136,6 @@ func runHTTPServer(address string) {
 	adminRouter.HandleFunc("/add-question", question.Add).Methods("POST", "OPTIONS")
 	// TODO - Change to PUT.
 	adminRouter.HandleFunc("/get-all-questions", question.Index).Methods("POST", "OPTIONS")
-	adminRouter.HandleFunc("/filter-questions", question.Filter).Methods("POST", "OPTIONS")
 	adminRouter.HandleFunc("/question/{id}", question.Get).Methods("GET", "OPTIONS")
 	adminRouter.HandleFunc("/question/{id}", question.Edit).Methods("PUT", "OPTIONS")
 

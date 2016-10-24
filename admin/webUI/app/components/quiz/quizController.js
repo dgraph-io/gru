@@ -121,7 +121,7 @@
 		quizVm.newQuiz = {};
 		
 		quizService.getAllQuizes().then(function(data){
-			var data = JSON.parse(data);
+			var data = data;
 			quizVm.allQuizes = data.debug[0].quiz;
 		}, function(err){
 			console.log(err);

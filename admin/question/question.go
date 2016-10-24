@@ -3,11 +3,8 @@ package question
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
-	"log"
 	"net/http"
 	"strconv"
-	"strings"
 
 	"github.com/dgraph-io/gru/admin/server"
 	"github.com/dgraph-io/gru/admin/tag"
@@ -34,10 +31,6 @@ type Option struct {
 }
 
 func add(q Question) string {
-	// TODO - Remove later.
-	if q.Notes == "" {
-		q.Notes = "Dummy notes"
-	}
 	m := `mutation {
 		set {
 		  <root> <question> <_new_:qn> .
@@ -175,58 +168,7 @@ func Index(w http.ResponseWriter, r *http.Request) {
 	w.Write(b)
 }
 
-type QuestionAPIResponse struct {
-	Code    string `json:"code"`
-	Message string `json:"message"`
-	UIDS    struct {
-		Question uint64 `json:question`
-	}
-}
-
-// method to parse question response
-func parseQuestionResponse(question_body []byte) (*QuestionAPIResponse, error) {
-	var question_response = new(QuestionAPIResponse)
-	err := json.Unmarshal(question_body, &question_response)
-	if err != nil {
-		log.Fatal(err)
-	}
-	return question_response, err
-}
-
-type TagFilter struct {
-	UID string
-}
-
-// FILTER QUESTION HANDLER: Fileter By Tags
-// TODO - Clean this up.
-func Filter(w http.ResponseWriter, r *http.Request) {
-	var tag TagFilter
-
-	err := json.NewDecoder(r.Body).Decode(&tag)
-	if err != nil {
-		panic(err)
-	}
-
-	filter_query := "{root(_uid_: " + tag.UID + ") { tag.question { text }}"
-	filter_response, err := http.Post("http://localhost:8080/query", "application/x-www-form-urlencoded", strings.NewReader(filter_query))
-	if err != nil {
-		panic(err)
-	}
-	defer filter_response.Body.Close()
-	filter_body, err := ioutil.ReadAll(filter_response.Body)
-	if err != nil {
-		panic(err)
-	}
-	jsonResp, err := json.Marshal(string(filter_body))
-	if err != nil {
-		panic(err)
-	}
-
-	w.Write(jsonResp)
-}
-
 // get question information
-
 func get(questionId string) string {
 	return `
 	{
@@ -272,10 +214,6 @@ func edit(q Question) (string, error) {
 	m := new(dgraph.Mutation)
 	if q.Name == "" || q.Text == "" {
 		return "", fmt.Errorf("Question name/text can't be empty.")
-	}
-	// TODO - Remove later.
-	if q.Notes == "" {
-		q.Notes = "Dummy notes"
 	}
 	m.Set(`<_uid_:` + q.Uid + `> <name> "` + q.Name + `" .`)
 	m.Set(`<_uid_:` + q.Uid + `> <text> "` + q.Text + `" .`)

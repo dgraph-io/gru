@@ -318,7 +318,7 @@ func Validate(w http.ResponseWriter, r *http.Request) {
 	claims := x.Claims{
 		UserId: uid,
 	}
-	jwtToken := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	jwtToken := jwt.NewWithClaims(jwt.SigningMethodHS512, claims)
 
 	tokenString, err := jwtToken.SignedString([]byte(*auth.Secret))
 	if err != nil {

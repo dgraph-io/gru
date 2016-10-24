@@ -11,12 +11,10 @@ import (
 )
 
 type Quiz struct {
-	Uid        string
-	Name       string
-	Duration   string
-	Start_Date string
-	End_Date   string
-	Questions  []Question `json:"questions`
+	Uid       string
+	Name      string
+	Duration  string
+	Questions []Question `json:"questions`
 }
 
 type Question struct {
@@ -73,9 +71,7 @@ func Index(w http.ResponseWriter, r *http.Request) {
 		sr.Write(w, "", err.Error(), http.StatusInternalServerError)
 		return
 	}
-	// TODO - Remove this, sent byte slice directly.
-	jsonResp, _ := json.Marshal(string(res))
-	w.Write(jsonResp)
+	w.Write(res)
 }
 
 // get quiz information
