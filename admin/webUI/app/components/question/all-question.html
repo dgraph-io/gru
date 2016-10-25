@@ -73,17 +73,19 @@
 						</div>
 						<div class="mt-20 pl-10">
 							<strong>QUESTION CONTENT</strong>
-							<pre class="pl-20 pt-5 bg-grey" ng-bind-html="questionVm.markDownFormat(mainVm.unescapeText(allQVm.question.text))"></pre>
+							<pre class="ph-20 pv-10 full-border code-block" ng-bind-html="questionVm.markDownFormat(mainVm.unescapeText(allQVm.question.text))"></pre>
 						</div>
 
-						<div class="mdl-grid no-pad mt-20">
-							<div class="mdl-cell mdl-cell--2-col">
-								<span ng-show="!editQuestion" class="bold">OPTIONS</span>
+						<div class="mdl-grid no-pad mt-20" ng-repeat="option in allQVm.question['question.option'] track by $index">
+							<div class="mdl-cell mdl-cell--2-col mdl-cell--middle">
+								<span class="bold" ng-class="{'text-green': questionVm.isCorrect(option, allQVm.question['question.correct'])}">
+									OPTIONS {{$index + 1}}
+									<i class="material-icons mdi-sm" ng-show="questionVm.isCorrect(option, allQVm.question['question.correct'])">check_circle</i>
+								</span>
 							</div>
-							<div class="mdl-cell mdl-cell--10-col">
-								<div class="pl-10 mb-10 bg-grey position-relative" ng-repeat="option in allQVm.question['question.option'] track by $index">
-									<pre ng-bind-html="questionVm.markDownFormat(mainVm.unescapeText(option.name))"></pre>
-									<div class="text-green tr-corner" ng-show="questionVm.isCorrect(option, allQVm.question['question.correct'])"> <i class="material-icons text-green mdi-sm">check_circle</i> Correct</div>
+							<div class="mdl-cell mdl-cell--10-col full-border">
+								<div class="ph-10 pt-10 position-relative">
+									<pre ng-bind-html="questionVm.markDownFormat(mainVm.unescapeText(option.name))" class="code-block"></pre>
 								</div>
 							</div>
 						</div>

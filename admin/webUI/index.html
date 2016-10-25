@@ -15,20 +15,23 @@
     <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Tangerine">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/3.4.5/select2.css">
 
-    <link rel="stylesheet" href="assets/css/main.css?v=20161018-1">
+    <link rel="stylesheet" href="assets/css/main.css?v=20161025-1">
     <!-- Google analytics tracking code -->
 
 </head>
-<body ng-controller="MainController as mainVm" class="position-relative {{mainVm.pageName}}" autoscroll="" ng-class="{'admin-panel': mainVm.isLoggedIn()}">
-    <div class="web-layout-transparent mdl-layout mdl-js-layout mdl-layout--fixed-header" >
+<body ng-controller="MainController as mainVm" class="position-relative {{mainVm.pageName}} ng-clo" autoscroll="" ng-class="{'admin-panel': mainVm.isLoggedIn()}">
+    <div class="web-layout-transparent mdl-layout mdl-js-layout mdl-layout--fixed-header  ng-cloak" >
       <header class="mdl-layout__header mdl-shadow--2dp {{mainVm.notification.class}}" ng-class="{'notification-header' : mainVm.showNotification}">
         <div class="mdl-layout__header-row">
           <!-- Title -->
-          <a ui-sref="root">
-           <span class="mdl-layout-title font-tangerine" >
-                GRU<span ng-if="mainVm.isLoggedIn()" class="ng-cloak">-Admin</span>
+          <a ui-sref="root"  ng-if="mainVm.isLoggedIn()" class="ng-cloak">
+           <span class="mdl-layout-title font-tangerine">
+                GRU-Admin
             </span>
           </a>
+          <span class="mdl-layout-title font-tangerine ng-cloak" ng-if="!mainVm.isLoggedIn()">
+              GRU
+          </span>
           <!-- Add spacer, to align navigation to the right -->
           <div class="mdl-layout-spacer"></div>
           
@@ -124,8 +127,8 @@
         'assets/lib/js/material.min.js',
         'assets/lib/js/ocLazyLoad.min.js',
         'assets/lib/js/duration.js',
-        'app/app.module.js?v=20160415-1',
-        'app/app.route.js?v=20160405-1',
+        'app/app.module.js?v=20161025-1',
+        'app/app.route.js?v=20161025-1',
         'assets/js/gru.js?v=20160405-1'
       ].forEach(function(src) {
         var script = document.createElement('script');

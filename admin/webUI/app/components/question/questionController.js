@@ -448,7 +448,9 @@
 
 		function initMarkeDownPreview() {
 			$scope.$watch('editQuesVm.cmModel', function(current, original) {
-	        editQuesVm.outputMarked = marked(current);
+	       editQuesVm.outputMarked = marked(current, {
+	       	gfm: true
+	       });
 	    });
 		}
 	}

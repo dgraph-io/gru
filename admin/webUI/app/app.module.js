@@ -103,20 +103,19 @@ angular.module('GruiApp').constant('APP_REQUIRES', {
       'homeController': ['app/components/home/homeController.js'],
       'loginController': ['app/components/login/loginController.js'],
       'loginService': ['app/components/login/loginService.js'],
-      'questionController': ['app/components/question/questionController.js'],
+      'questionController': ['app/components/question/questionController.js?v=20161025-1'],
       'questionServices': ['app/components/question/questionServices.js'],
       'quizController': ['app/components/quiz/quizController.js'],
       'quizServices': ['app/components/quiz/quizServices.js'],
       'inviteController': ['app/components/invite/inviteController.js?v=20161018-1'],
       'inviteService': ['app/components/invite/inviteService.js?v=20161018-1'],
       'quizLandingController': ['app/components/candidate/quizLandingController.js'],
-      'candidateController': ['app/components/candidate/candidateController.js'],
+      'candidateController': ['app/components/candidate/candidateController.js?v=20161025-1'],
       'candidateService': ['app/components/candidate/candidateService.js'],
       'angular-select': ['assets/lib/js/angular-select.min.js'],
       'codeMirror': ['assets/lib/js/codemirror.js'],
       'javascript': ['assets/lib/js/javascript.js'],
       'marked': ['https://cdnjs.cloudflare.com/ajax/libs/marked/0.3.2/marked.min.js'],
-      // 'highlight': ['https://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.4/highlight.min.js'],
       'highlight': ['assets/lib/js/highlight.pack.js'],
     },
 });
@@ -239,7 +238,12 @@ angular.module('GruiApp').provider('RouteHelpers', ['APP_REQUIRES', function (ap
 
       // General Functions
       function markDownFormat(content) {
-        return marked(content);
+        if(!content) {
+          return
+        }
+        return marked(content, {
+          gfm: true,
+        });
       }
 
       function getNumber(num) {
@@ -407,7 +411,7 @@ angular.module('GruiApp').provider('RouteHelpers', ['APP_REQUIRES', function (ap
           // req.url = mainVm.candidate_url + url;
           candidateToken = JSON.parse(localStorage.getItem('candidate_info'));
 
-          if(candidateToken && candidateToken.token) {
+          if(window.location.hash.indexOf("admin") == -1 && candidateToken && candidateToken.token) {
             setAuth('Bearer ' + candidateToken.token);
           } else {
             // req.url = mainVm.admin_url + url;
@@ -436,11 +440,20 @@ angular.module('GruiApp').provider('RouteHelpers', ['APP_REQUIRES', function (ap
 
       function get(url) {
         var deferred = $q.defer();
-        setAuth('Bearer ' + localStorage.getItem('token'));
         var req = {
           method: 'GET',
           url: mainVm.admin_url + url,
         }
+
+        candidateToken = JSON.parse(localStorage.getItem('candidate_info'));
+
+        if(window.location.hash.indexOf("admin") == -1 && candidateToken && candidateToken.token) {
+          setAuth('Bearer ' + candidateToken.token);
+        } else {
+          // req.url = mainVm.admin_url + url;
+          setAuth('Bearer ' + localStorage.getItem('token'));
+        }
+
         mainVm.showAjaxLoader = true;
         $http(req)
         .then(function(data) { 

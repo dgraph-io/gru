@@ -60,16 +60,17 @@
 				<div class="mdl-cell mdl-cell--9-col">
 					<div class="question">
 						<span ng-if="cqVm.question.multiple == 'true'">(Multiple Choice)</span>
-						<pre ng-bind-html="mainVm.markDownFormat(mainVm.unescapeText(cqVm.question.text))"></pre>
+						<pre ng-bind-html="mainVm.markDownFormat(mainVm.unescapeText(cqVm.question.text))" class="code-block"></pre>
 					</div>
 
-					<div class="options">
+					<div class="options pt-20">
+						<label class="pb-10">OPTIONS</label>
 						<div ng-if="cqVm.question.multiple == 'false'">
 							<div ng-repeat="option in cqVm.question['question.option']">
 								<label class="mdl-radio mdl-js-radio mdl-js-ripple-effect mt-10" for="option{{$index}}">
 								  <input type="radio" id="option{{$index}}" class="mdl-radio__button" name="answer" value="{{option._uid_}}" ng-model="cqVm.answer">
 								  <span class="mdl-radio__label">
-								  	<pre ng-bind-html="mainVm.markDownFormat(mainVm.unescapeText(option.name))" class="pl-20 pr-20 bg-grey"></pre>
+								  	<pre ng-bind-html="mainVm.markDownFormat(mainVm.unescapeText(option.name))" class="pl-20 pr-20 pt-10 code-block full-border-grey"></pre>
 								  </span>
 								</label>
 							</div>
@@ -79,7 +80,7 @@
 								<label class="mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect mt-10" for="option{{$index}}">
 								  <input type="checkbox" name="answer" id="option{{$index}}" class="mdl-checkbox__input" ng-model="cqVm.answer[option._uid_]">
 								  <span class="mdl-checkbox__label">
-								  	<pre ng-bind-html="mainVm.markDownFormat(mainVm.unescapeText(option.name))" class="pl-20 pr-20 bg-grey"></pre>
+								  	<pre ng-bind-html="mainVm.markDownFormat(mainVm.unescapeText(option.name))" class="pl-20 pr-20 pt-10 code-block full-border-grey"></pre>
 								  </span>
 								</label>
 							</div>

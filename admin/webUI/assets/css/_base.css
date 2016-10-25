@@ -37,3 +37,7 @@ pre h5 {
 pre h1 {
 	line-height: 45px;
 }
+
+code {
+	white-space: pre-wrap;
+}

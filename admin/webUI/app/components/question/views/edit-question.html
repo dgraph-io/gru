@@ -23,7 +23,7 @@
 					    <textarea ui-codemirror="cmOption" ng-model="editQuesVm.cmModel" class="hide"></textarea>
 					  </div>
 					  <div class="mdl-tabs__panel" id="preview-panel">
-					    <pre ng-bind-html="editQuesVm.outputMarked"></pre>
+					    <div ng-bind-html="editQuesVm.outputMarked" class="code-block"></div>
 					  </div>
 					</div>
 				</div>

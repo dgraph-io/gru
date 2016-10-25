@@ -323,13 +323,8 @@ body.home {
 #preview-panel {
   min-height: 380px;
   border-left: 30px solid #DDDDDD;
-  background: #F7F7F7;
-}
-
-#preview-panel pre {
-  margin-top: 0;
+  padding-left: 10px;
   padding-top: 10px;
-  padding-left: 3px;
 }
 
 /*QUIZ TAKING */

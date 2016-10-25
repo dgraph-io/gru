@@ -11,9 +11,9 @@
     var  loginTemplate = 'app/components/login/index.html';
 
     var  questionTemplate = 'app/components/question/index.html';
-    var  allQuestionTemplate = 'app/components/question/all-question.html';
-    var  addQuestionTemplate = 'app/components/question/add-question.html';
-    var  editQuestionTemplate = 'app/components/question/views/edit-question.html';
+    var  allQuestionTemplate = 'app/components/question/all-question.html?v=20161025-1';
+    var  addQuestionTemplate = 'app/components/question/add-question.html?v=20161025-1';
+    var  editQuestionTemplate = 'app/components/question/views/edit-question.html?v=20161025-1';
 
     var  quizTemplate = 'app/components/quiz/index.html';
     var  addQuizTemplate = 'app/components/quiz/add-quiz.html';
@@ -28,7 +28,7 @@
 
     var  candidateIndexTemplate = 'app/components/candidate/index.html';
     var  candidateLandingTemplate = 'app/components/candidate/views/landing.html';
-    var  candidateQuizTemplate = 'app/components/candidate/views/quiz.html';
+    var  candidateQuizTemplate = 'app/components/candidate/views/quiz.html?v=20161025-1';
 
     var  quizLandingTemplate = 'app/components/candidate/views/quiz-landing.html';
 
@@ -73,7 +73,7 @@
             url: '/all-questions',
             parent: 'question',
             templateUrl: allQuestionTemplate,
-            css: [angularSelectCSS],
+            css: [angularSelectCSS, githubCSS],
             authenticate: true,
           })
           .state('question.add', {
@@ -87,7 +87,7 @@
             url: '/edit-question/:quesID',
             parent: 'question',
             templateUrl: editQuestionTemplate,
-            css: [angularSelectCSS, codeMirrorCSS],
+            css: [angularSelectCSS, codeMirrorCSS, githubCSS],
             authenticate: true,
           })
         .state('quiz', {
@@ -165,6 +165,7 @@
           .state('candidate.quiz', {
             url: '/quiz/:quiz_token',
             parent: 'candidate',
+            css: [githubCSS],
             templateUrl: candidateQuizTemplate,
           })
 
