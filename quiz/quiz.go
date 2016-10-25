@@ -350,10 +350,10 @@ func validateToken(r *http.Request) (string, error) {
 		return "", err
 	}
 
-	if claims, ok := token.Claims.(*x.Claims); ok {
+	if claims, ok := token.Claims.(*x.Claims); ok && claims.UserId != "" {
 		return claims.UserId, nil
 	}
-	return "", fmt.Errorf("Cannot parse claims.")
+	return "", fmt.Errorf("Invalid JWT token")
 }
 
 func sendReport(cid string) {

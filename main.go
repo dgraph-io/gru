@@ -23,6 +23,7 @@ import (
 	"log"
 	"math/rand"
 	"net/http"
+	"strings"
 	"time"
 
 	jwtmiddleware "github.com/auth0/go-jwt-middleware"
@@ -47,6 +48,11 @@ var (
 	password = flag.String("pass", "", "Username to login to admin panel")
 )
 
+type AdminClaims struct {
+	Admin bool `json:"admin"`
+	jwt.StandardClaims
+}
+
 func login(w http.ResponseWriter, r *http.Request) {
 	sr := server.Response{}
 	u, p, ok := r.BasicAuth()
@@ -54,8 +60,13 @@ func login(w http.ResponseWriter, r *http.Request) {
 		sr.Write(w, "", "Incorrect username/password.", http.StatusUnauthorized)
 		return
 	}
-	// TODO - Add relevant claims like expiry.
-	token := jwt.NewWithClaims(jwt.SigningMethodHS512, jwt.MapClaims{})
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS512, AdminClaims{
+		true,
+		jwt.StandardClaims{
+			Issuer: "gru",
+		},
+	})
 
 	tokenString, err := token.SignedString([]byte(*auth.Secret))
 	if err != nil {
@@ -106,6 +117,25 @@ func health(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(hc)
 }
 
+func checkAdmin(rw http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+	tokenString := strings.SplitN(r.Header.Get("Authorization"), " ", 2)[1]
+	token, err := jwt.ParseWithClaims(tokenString, &AdminClaims{},
+		func(token *jwt.Token) (interface{}, error) {
+			return []byte(*auth.Secret), nil
+		})
+	sr := server.Response{}
+	if err != nil {
+		sr.Write(rw, err.Error(), "Unauthorized", http.StatusUnauthorized)
+	}
+
+	if claims, ok := token.Claims.(*AdminClaims); ok && token.Valid && claims.Admin &&
+		claims.Issuer == "gru" {
+		next(rw, r)
+	} else {
+		sr.Write(rw, "Invalid JWT token", "Unauthorized", http.StatusUnauthorized)
+	}
+}
+
 func runHTTPServer(address string) {
 	jwtMiddleware := jwtmiddleware.New(jwtmiddleware.Options{
 		ValidationKeyGetter: func(token *jwt.Token) (interface{}, error) {
@@ -128,6 +158,7 @@ func runHTTPServer(address string) {
 	admin := mux.NewRouter()
 	router.PathPrefix("/api/admin").Handler(negroni.New(
 		negroni.HandlerFunc(jwtMiddleware.HandlerWithNext),
+		negroni.HandlerFunc(checkAdmin),
 		negroni.Wrap(admin),
 	))
 
