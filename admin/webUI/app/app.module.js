@@ -5,8 +5,8 @@ angular.module('GruiApp', ['ngRoute', 'ui.router', "oc.lazyLoad", "door3.css", '
     .run(["$rootScope", "$state", "$stateParams", '$window', '$templateCache',
         function ($rootScope, $state, $stateParams, $window, $templateCache) {
             // Set reference to access them from any scope
-
-            $rootScope.SEO.title = "Gru"
+            $rootScope.SEO = {};
+            $rootScope.SEO.title = "Gru";
 
         }]);
 angular.module('GruiApp').config(function(uiSelectConfig) {
