@@ -66,7 +66,8 @@
 						<span ng-if='time.minutes > 0'>{{time.minutes}} minutes, </span> \
 							<span ng-if='time.seconds > 0'>{{time.seconds}} seconds</span> \
 						</span>. Timing would be clearly shown.")($scope),
-					"Once you start the quiz, the timer would not stop, irrespective of any client side issues",
+					"Once you start the quiz, the timer would not stop, irrespective of any client side issues.",
+					"Once you start the quiz, do not refresh the page or else the current question would be skipped.",
 					"Questions can have single or multiple correct answers. They will be shown accordingly.",
 					"Your total score and the time left at any point in the quiz would be displayed on the top.",
 				],
@@ -74,7 +75,7 @@
 					"There is NEGATIVE scoring for wrong answers. So, please DO NOT GUESS.",
 					"If you skip a question, the score awarded is always ZERO.",
 					"If you skip a question, you can't go back and answer it again.",
-					"Scoring would be clearly marked in the question on the right hand side box.",
+					"Scoring for a question would be clearly marked on the right hand side box.",
 				],
 				Contact: [
 					"If there are any problems or something is unclear, please DO NOT start the quiz.",

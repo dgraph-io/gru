@@ -34,17 +34,18 @@ border: 1px solid black;
   <table>
     <tr>
       <th>Question</th>
-      <th>Attempted</th>
       <th>Time Taken</th>
       <th>Score</th>
     </tr>
   {{range .Questions}}
     <tr>
       <td>{{.Name}}</td>
-      <td>{{.Answered}}</td>
       <td>{{.TimeTaken}}</td>
       <td>{{.Score}}</td>
     </tr>
   {{end}}
   </table>
+  <br>
+  <br>
+  You can view the full report at {{.Ip}}/#/admin/invite/candidate-report/{{.Id}}
 </body>

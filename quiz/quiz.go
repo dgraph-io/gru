@@ -1,9 +1,13 @@
 package quiz
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"html/template"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"sync"
@@ -357,12 +361,22 @@ func validateToken(r *http.Request) (string, error) {
 }
 
 func sendReport(cid string) {
-	s, rerr := report.ReportSummary(cid)
-	if rerr.Err != "" && rerr.Msg != "" {
-		fmt.Printf("Error: %v with msg: %v while generating report.",
-			rerr.Err, rerr.Msg)
+	dir, _ := os.Getwd()
+	t, err := template.ParseFiles(filepath.Join(dir, "quiz/report.html"))
+	if err != nil {
+		fmt.Println(err)
 	}
-	mail.SendReport(s.Name, cid, s.TotalScore, s.MaxScore)
+	buf := new(bytes.Buffer)
+	s, re := report.ReportSummary(cid)
+	if re.Err != "" || re.Msg != "" {
+		fmt.Printf("Error: %v with msg: %v while generating report.",
+			re.Err, re.Msg)
+		return
+	}
+	if err = t.Execute(buf, s); err != nil {
+		fmt.Println(err)
+	}
+	mail.SendReport(s.Name, s.TotalScore, s.MaxScore, buf.String())
 }
 
 func QuestionHandler(w http.ResponseWriter, r *http.Request) {
@@ -531,6 +545,39 @@ func qnMeta(qid string) (questionCorrectMeta, error) {
 	}, nil
 }
 
+type qa struct {
+	Answered string `json:"question.answered"`
+}
+
+type checkAnswer struct {
+	Question []qa `json:"candidate.question"`
+}
+
+// Queries Dgraph and checks if the candidate has already answered the question.
+func checkAnswered(cuid string) (int, error) {
+	q := `{
+		candidate.question(_uid_:` + cuid + `) {
+			question.answered
+		}
+	}`
+	b, err := dgraph.Query(q)
+	if err != nil {
+		return http.StatusInternalServerError, err
+	}
+
+	var ca checkAnswer
+	err = json.Unmarshal(b, &ca)
+	if err != nil {
+		return http.StatusInternalServerError, err
+	}
+
+	if len(ca.Question) != 1 || ca.Question[0].Answered != "" {
+		return http.StatusBadRequest, fmt.Errorf("You have already answered this question.")
+
+	}
+	return http.StatusOK, nil
+}
+
 func AnswerHandler(w http.ResponseWriter, r *http.Request) {
 	var userId string
 	var err error
@@ -557,8 +604,12 @@ func AnswerHandler(w http.ResponseWriter, r *http.Request) {
 	cuid := r.PostFormValue("cuid")
 	answerIds := strings.Split(aid, ",")
 	if cuid == "" || len(answerIds) == 0 {
-		sr.Write(w, "Answer ids/cuid can't be empty",
-			"", http.StatusBadRequest)
+		sr.Write(w, "Answer ids/cuid can't be empty", "", http.StatusBadRequest)
+		return
+	}
+
+	if status, err := checkAnswered(cuid); err != nil {
+		sr.Write(w, err.Error(), "", status)
 		return
 	}
 
@@ -690,12 +741,15 @@ func load(cid string) string {
 			question.uid {
 				_uid_
 			}
-		    candidate.score
+			candidate.score
 		}
 	  }
     }`
 }
 
+// TODO - Make code dry abstract out logic here and in validate.
+// That will also fix bug where validate doesn't update quizStart from DB
+// after server restarts.
 func Load(uid string) (Candidate, error) {
 	c := Candidate{}
 	q := load(uid)

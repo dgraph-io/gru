@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/dgraph-io/gru/admin/mail"
 	"github.com/dgraph-io/gru/admin/server"
 	"github.com/dgraph-io/gru/dgraph"
 	"github.com/gorilla/mux"
@@ -77,7 +78,7 @@ func reportQuery(id string) string {
 	return `query {
                 candidate(_uid_:` + id + `) {
                         _uid_
-                        name
+					    name
                         email
                         feedback
                         complete
@@ -127,6 +128,7 @@ type question struct {
 }
 
 type Summary struct {
+	Id         string
 	Name       string     `json:"name"`
 	Email      string     `json:"email"`
 	Feedback   string     `json:"feedback"`
@@ -134,6 +136,7 @@ type Summary struct {
 	TotalScore float64    `json:"total_score"`
 	MaxScore   float64    `json:"max_score"`
 	Questions  []question `json:"questions"`
+	Ip         string
 }
 
 func uids(opts []option) []string {
@@ -160,7 +163,7 @@ type ReportError struct {
 
 func ReportSummary(cid string) (Summary, ReportError) {
 	s := Summary{}
-
+	s.Ip = *mail.Ip
 	q := reportQuery(cid)
 	b, err := dgraph.Query(q)
 	if err != nil {
@@ -176,6 +179,7 @@ func ReportSummary(cid string) (Summary, ReportError) {
 	if rep.Candidates[0].Id == "" {
 		return s, ReportError{"", "Candidate not found.", http.StatusBadRequest}
 	}
+	s.Id = rep.Candidates[0].Id
 
 	if !rep.Candidates[0].Complete {
 		return s, ReportError{"", "Candidate hasn't completed the test.", http.StatusBadRequest}
