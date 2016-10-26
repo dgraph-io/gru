@@ -66,6 +66,7 @@
 						<span ng-if='time.minutes > 0'>{{time.minutes}} minutes, </span> \
 							<span ng-if='time.seconds > 0'>{{time.seconds}} seconds</span> \
 						</span>. Timing would be clearly shown.")($scope),
+					"We recommend using a pen and paper to help visualize some of the questions.",
 					"Once you start the quiz, the timer would not stop, irrespective of any client side issues.",
 					"Once you start the quiz, do not refresh the page or else the current question would be skipped.",
 					"Questions can have single or multiple correct answers. They will be shown accordingly.",
@@ -76,6 +77,8 @@
 					"If you skip a question, the score awarded is always ZERO.",
 					"If you skip a question, you can't go back and answer it again.",
 					"Scoring for a question would be clearly marked on the right hand side box.",
+					"Questions with multiple correct answers have partial scoring",
+					"For questions with multiple correct answers, positive and negative score would indicate the score for each correct and wrong answer respectively.",
 				],
 				Contact: [
 					"If there are any problems or something is unclear, please DO NOT start the quiz.",

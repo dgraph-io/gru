@@ -157,7 +157,7 @@ func Index(w http.ResponseWriter, r *http.Request) {
 	if q.Id != "" {
 		query = "{debug(_xid_: root) { question (after: " + q.Id + ", first: 20) { _uid_ name text negative positive notes question.tag { name } question.option { name } question.correct { name } }  } }"
 	} else {
-		query = "{debug(_xid_: root) { question (first:20) { _uid_ name text negative positive notes question.tag { name } question.option { name } question.correct { name } }  } }"
+		query = "{debug(_xid_: root) { question { _uid_ name text negative positive notes question.tag { name } question.option { name } question.correct { name } }  } }"
 	}
 
 	b, err := dgraph.Query(query)
