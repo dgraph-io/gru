@@ -316,7 +316,8 @@ body.home {
 }
 
 .options-panel .CodeMirror {
-  height: 120px;
+  min-height: 57px;
+  height: auto;
   border: 1px solid gray;
 }
 
