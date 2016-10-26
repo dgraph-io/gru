@@ -23,7 +23,7 @@
 					    <textarea ui-codemirror="cmOption" ng-model="addQueVm.cmModel" class="hide"></textarea>
 					  </div>
 					  <div class="mdl-tabs__panel" id="preview-panel">
-					    <pre ng-bind-html="mainVm.markDownFormat(addQueVm.outputMarked)"></pre>
+					    <pre ng-bind-html="mainVm.markDownFormat(addQueVm.outputMarked)" class="code-block"></pre>
 					  </div>					
 					</div>
 				</div>
@@ -45,7 +45,7 @@
 			<div class="mdl-grid no-pad options-panel" ng-repeat="idx in mainVm.getNumber(questionVm.optionsCount) track by $index">
 				<div class="mdl-cell mdl-cell--6-col ml-0">
 					Option {{$index + 1}}
-					<textarea ui-codemirror="option{{$index}}" ng-model="addQueVm.newQuestion.optionsBak['option'+$index].name" class="hide" placeholder="text"></textarea>
+					<textarea ui-codemirror="addQueVm.editor.option{{$index}}" ng-model="addQueVm.newQuestion.optionsBak['option'+$index].name" class="hide" placeholder="text"></textarea>
 					<!-- <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
 				    <input class="mdl-textfield__input" type="text" name="option-{{$index + 1}}" id="option-{{$index + 1}}" ng-model="addQueVm.newQuestion.optionsBak['option' + $index].name">
 				    <label class="mdl-textfield__label" for="option-{{$index + 1}}">Option {{$index + 1}}</label>

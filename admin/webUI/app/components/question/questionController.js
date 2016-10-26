@@ -25,14 +25,18 @@
 	      }
     	}
 	  });
-		
-		// See if update
-		var qid = $stateParams.qid;
 
+	  questionVm.editorSetting = {
+			lineNumbers: true,
+		  lineWrapping: true,
+		  indentWithTabs: true,
+		};
+		
 	// FUNCTION DECLARATION
 		questionVm.addNewTag = addNewTag;
 		questionVm.validateInput = validateInput;
 		questionVm.initCodeMirror = initCodeMirror;
+		questionVm.initOptionEditor = initOptionEditor;
 		questionVm.isCorrect = isCorrect;
 		questionVm.getAllTags = getAllTags;
 		questionVm.getUniqueTags = getUniqueTags;
@@ -44,19 +48,22 @@
 
 		function initCodeMirror(){
 			$scope.cmOption = {}
-			var setting = {
-				lineNumbers: true,
-			  lineWrapping: true,
-			  indentWithTabs: true,
-			}
 			setTimeout(function() {
-				$scope.cmOption = setting;
-				for(var i = 0; i < questionVm.optionsCount; i++) {
-					$scope["option"+i] = setting;
-				}
+				$scope.cmOption = questionVm.editorSetting;
 			}, 500);
-
 		}
+
+		function initOptionEditor() {
+			var setting = {};
+			for(var i = 0; i < questionVm.optionsCount; i++) {
+				setting["option"+i] = questionVm.editorSetting;
+			}
+			return setting;
+		}
+
+		$rootScope.$on('$viewContentLoaded', function() {
+      // questionVm.initCodeMirror();
+    });
 
 		function markDownFormat(content) {
 			return marked(content);
@@ -179,8 +186,12 @@
 		addQueVm.newQuestion.tags = [];
 		addQueVm.cmModel = "";
 
+		setTimeout(function() {
+			addQueVm.editor = questionVm.initOptionEditor();
+		}, 500);
+
 		$scope.$watch('addQueVm.cmModel', function(current, original) {
-        addQueVm.outputMarked = marked(current);
+      addQueVm.outputMarked = marked(current);
     });
 
 		//FUnction Declaration
@@ -344,6 +355,10 @@
 		
 		// INITIALIZERS
 		questionVm.initCodeMirror();
+		setTimeout(function() {
+			editQuesVm.editor = questionVm.initOptionEditor();
+		}, 500);
+		
 		questionVm.getAllTags();
 
 		questionService.getQuestion($stateParams.quesID)

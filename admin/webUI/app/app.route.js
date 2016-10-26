@@ -12,8 +12,8 @@
 
     var  questionTemplate = 'app/components/question/index.html';
     var  allQuestionTemplate = 'app/components/question/all-question.html?v=20161025-1';
-    var  addQuestionTemplate = 'app/components/question/add-question.html?v=20161025-1';
-    var  editQuestionTemplate = 'app/components/question/views/edit-question.html?v=20161025-1';
+    var  addQuestionTemplate = 'app/components/question/add-question.html?v=20161027-1';
+    var  editQuestionTemplate = 'app/components/question/views/edit-question.html?v=20161027-1';
 
     var  quizTemplate = 'app/components/quiz/index.html';
     var  addQuizTemplate = 'app/components/quiz/add-quiz.html';
@@ -28,7 +28,7 @@
 
     var  candidateIndexTemplate = 'app/components/candidate/index.html';
     var  candidateLandingTemplate = 'app/components/candidate/views/landing.html';
-    var  candidateQuizTemplate = 'app/components/candidate/views/quiz.html?v=20161025-1';
+    var  candidateQuizTemplate = 'app/components/candidate/views/quiz.html?v=20161027-1';
 
     var  quizLandingTemplate = 'app/components/candidate/views/quiz-landing.html';
 
@@ -80,7 +80,7 @@
             url: '/add-question',
             parent: 'question',
             templateUrl: addQuestionTemplate,
-            css: [angularSelectCSS, codeMirrorCSS],
+            css: [angularSelectCSS, codeMirrorCSS, githubCSS],
             authenticate: true,
           })
           .state('question.edit', {

@@ -53,6 +53,9 @@ button.btn-lg {
   background-color: #EC3D2E;
   color: white;
 }
+.mdl-button.btn-red {
+  background: red;
+}
 .mdl-button.action-btn {
   min-width: 100px;
   margin-right: 15px;

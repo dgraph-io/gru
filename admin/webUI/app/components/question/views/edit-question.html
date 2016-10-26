@@ -23,7 +23,7 @@
 					    <textarea ui-codemirror="cmOption" ng-model="editQuesVm.cmModel" class="hide"></textarea>
 					  </div>
 					  <div class="mdl-tabs__panel" id="preview-panel">
-					    <div ng-bind-html="editQuesVm.outputMarked" class="code-block"></div>
+					    <pre ng-bind-html="editQuesVm.outputMarked" class="code-block"></pre>
 					  </div>
 					</div>
 				</div>
@@ -44,12 +44,7 @@
 			</div>
 			<div class="mdl-grid no-pad options-panel" ng-repeat="option in editQuesVm.newQuestion.optionsBak track by $index" ng-init="option.is_correct=questionVm.isCorrect(option, editQuesVm.newQuestion['question.correct'])">
 				<div class="mdl-cell mdl-cell--6-col ml-0">
-					<textarea ui-codemirror="option{{$index}}" ng-model="option.name" class="hide"></textarea>
-
-					<!-- <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label" ng-class="{'is-dirty': option.name}">
-				    <input class="mdl-textfield__input" type="text" name="option-{{$index + 1}}" id="option-{{$index + 1}}" ng-model="option.name">
-				    <label class="mdl-textfield__label" for="option-{{$index + 1}}">Option {{$index + 1}}</label>
-				  </div> -->
+					<textarea ui-codemirror="editQuesVm.editor.option{{$index}}" ng-model="option.name" class="hide"></textarea>
 				</div>
 				<div class="mdl-cell mdl-cell--2-col pt-20">
 				  <label class="mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect" for="correct-{{$index + 1}}">
