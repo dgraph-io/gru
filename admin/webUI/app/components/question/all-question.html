@@ -14,9 +14,12 @@
 	    <div class="mdl-grid mdl-grid--no-spacing">
 	      <div class="mdl-cell mdl-cell--2-col r-border">
 	        <div class="mdl-tabs__tab-bar">
-	          <a href="#tab{{$index}}-panel" class="mdl-tabs__tab pv-5" ng-repeat="question in mainVm.allQuestions" ng-class="{'is-active': $index == 0}" ng-click="allQVm.setQuestion(question, $index)">
+	          <!-- <a href="#" class=" pv-5" ng-repeat="question in mainVm.allQuestions" ng-class="{'is-active': $index == 0}" ng-click="allQVm.setQuestion(question, $index)">
 							{{question.name}}
-	          </a>
+	          </a> -->
+	          <div class="side-tabs pv-5" ng-repeat="question in mainVm.allQuestions" ng-class="{'is-active': allQVm.question == question}" ng-click="allQVm.question = question">
+							{{question.name}}
+	          </div>
 	          <div class="pt-20 text-center text-red" ng-show="allQVm.noItemFound">
 							<div>No more questions available</div>
 				 		</div>
