@@ -44,17 +44,15 @@
 
 		function initCodeMirror(){
 			$scope.cmOption = {}
+			var setting = {
+				lineNumbers: true,
+			  lineWrapping: true,
+			  indentWithTabs: true,
+			}
 			setTimeout(function() {
-				$scope.cmOption = {
-			    lineNumbers: true,
-			    indentWithTabs: true,
-			  }
-			  for(var i = 0; i < questionVm.optionsCount; i++) {
-					$scope["option-"+i] = {};
-					$scope["option-"+i] = {
-				    lineNumbers: true,
-				    indentWithTabs: true,
-				  }
+				$scope.cmOption = setting;
+				for(var i = 0; i < questionVm.optionsCount; i++) {
+					$scope["option"+i] = setting;
 				}
 			}, 500);
 
