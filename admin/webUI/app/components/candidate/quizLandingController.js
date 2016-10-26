@@ -76,6 +76,8 @@
 					"If you skip a question, the score awarded is always ZERO.",
 					"If you skip a question, you can't go back and answer it again.",
 					"Scoring for a question would be clearly marked on the right hand side box.",
+					"Questions with multiple correct answers have partial scoring",
+					"For questions with multiple correct answers, positive and negative score would indicate the score for each correct and wrong answer respectively.",
 				],
 				Contact: [
 					"If there are any problems or something is unclear, please DO NOT start the quiz.",
