@@ -35,10 +35,9 @@
       			$state.transitionTo("candidate.quiz");
       		} else {
       			if(token) {
-	      			// $state.transitionTo("candidate.landing");
-	      			qlVm.validated = true;
-	      			$scope.time = mainVm.parseGoTime(data.data.duration);
-							data.data.duration = $scope.time;
+				// $state.transitionTo("candidate.landing");
+				qlVm.validated = true;
+				$scope.time = data.data.duration;
 	      			localStorage.setItem('candidate_info', JSON.stringify(data.data));
 	      			initInstructions();
 	      		} else {
@@ -62,10 +61,7 @@
 				General: [
 					"By taking this quiz, you agree not to discuss/post the questions shown here.",
 					$interpolate("The duration of the quiz is <span class='bold text-red'> \
-						<span ng-if='time.hours > 0'>{{time.hours}} hours, </span> \
-						<span ng-if='time.minutes > 0'>{{time.minutes}} minutes, </span> \
-							<span ng-if='time.seconds > 0'>{{time.seconds}} seconds</span> \
-						</span>. Timing would be clearly shown.")($scope),
+						{{time}} minutes</span>. Timing would be clearly shown.")($scope),
 					"We recommend using a pen and paper to help visualize some of the questions.",
 					"Once you start the quiz, the timer would not stop, irrespective of any client side issues.",
 					"Once you start the quiz, do not refresh the page or else the current question would be skipped.",

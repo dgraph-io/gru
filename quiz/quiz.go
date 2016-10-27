@@ -207,9 +207,9 @@ func rateLimit() {
 }
 
 type validateRes struct {
-	Token    string `json:"token"`
-	Duration string `json:"duration"`
-	Started  bool   `json:"quiz_started"`
+	Token    string  `json:"token"`
+	Duration float64 `json:"duration"`
+	Started  bool    `json:"quiz_started"`
 	Name     string
 }
 
@@ -332,7 +332,7 @@ func Validate(w http.ResponseWriter, r *http.Request) {
 
 	json.NewEncoder(w).Encode(validateRes{
 		Token:    tokenString,
-		Duration: timeLeft(c.quizStart, dur).String(),
+		Duration: timeLeft(c.quizStart, dur).Minutes(),
 		// Whether quiz was already started by the candidate.
 		// If this is true the client can just call the questions API and
 		// skip showing the instructions page.
