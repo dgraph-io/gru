@@ -1,17 +1,17 @@
 <div class="main-content ng-cloak" ng-controller="candidateQuizController as cqVm">	
 	<div class="" ng-if="!cqVm.apiError">
-		<div class="mdl-grid mb-30" ng-class="{'quiz-ended mdl-shadow--2dp pv-20': cqVm.quizEnded, 'b-border': !cqVm.quizEnded }">
-			<div class="mdl-cell mdl-cell--middle" ng-class="{'mdl-cell--4-col': cqVm.quizEnded, 'mdl-cell--3-col': !cqVm.quizEnded }">
+		<div class="mdl-grid mb-20" ng-class="{'quiz-ended mdl-shadow--2dp pv-20': cqVm.quizEnded, 'b-border': !cqVm.quizEnded }">
+			<div class="mdl-cell mdl-cell--8-col-tablet mdl-cell--middle resp-center" ng-class="{'mdl-cell--4-col': cqVm.quizEnded, 'mdl-cell--3-col': !cqVm.quizEnded }">
 				<h5 ng-if="cqVm.quizEnded" class="bold">Hi, {{candidateVm.info.Name}}. </h5>
-				<h5 class="bold">Dgraph quiz <span ng-if="cqVm.quizEnded">ended</span></h5>
+				<h5 class="bold mt-5 mb-5">Dgraph quiz <span ng-if="cqVm.quizEnded">ended</span></h5>
 			</div>
-			<div class="mdl-cell mdl-cell--6-col mdl-cell--middle big-font">
+			<div class="mdl-cell mdl-cell--7-col mdl-cell--6-col-tablet mdl-cell--middle big-font">
 				<span class="mdl-chip mdl-chip--contact" ng-if="!cqVm.quizEnded">
 			    <span class="mdl-chip__contact mdl-color--teal mdl-color-text--white">Time left</span>
 			    <span class="mdl-chip__text bold text-center timer-chip-text"><span id="time"></span></span>
 				</span>
 
-				<div class="pull-right">
+				<div class="inline-block ml-20">
 					<span class="mdl-chip mdl-chip--contact">
 				    <span class="mdl-chip__contact mdl-color--teal mdl-color-text--white">
 				    	Time spent
@@ -27,7 +27,7 @@
 			    <span class="mdl-chip__text bold text-center ">{{cqVm.question.score}}</span>
 				</span>
 			</div>
-			<div class="mdl-cell mdl-cell--3-col mdl-cell--middle text-right big-font" ng-if="!cqVm.quizEnded">
+			<div class="mdl-cell mdl-cell--2-col mdl-cell--middle text-right big-font" ng-if="!cqVm.quizEnded">
 				<span class="mdl-chip mdl-chip--contact">
 			    <span class="mdl-chip__contact mdl-color--teal mdl-color-text--white">
 			    	<span ng-if="cqVm.quizEnded">Final</span> Score

@@ -370,6 +370,14 @@ body.home {
   width: 100%;
 }
 
+.candidate-quiz-page .mdl-layout__header,
+.candidate-quiz-page .mdl-layout__header-row,
+.candidate-quiz-page .notification-message {
+  height: 50px;
+  min-height: 50px;
+  line-height: 50px;
+}
+
 /*INVITE PAGE*/
 
 .select2-container .select2-choice {
@@ -429,7 +437,9 @@ circle.path.prograss-circle {
     
 /*TABLET + MOBILE SPECIFIC CSS*/
 @media (max-width: 840px) {
-
+  .resp-center {
+    text-align: center;
+  }
 }
 
 /*MOBILE SPECIFIC CSS*/
