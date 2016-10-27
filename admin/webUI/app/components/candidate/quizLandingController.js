@@ -35,9 +35,10 @@
       			$state.transitionTo("candidate.quiz");
       		} else {
       			if(token) {
-				// $state.transitionTo("candidate.landing");
-				qlVm.validated = true;
-				$scope.time = data.data.duration;
+							// $state.transitionTo("candidate.landing");
+							data.data.duration = mainVm.parseGoTime(data.data.duration);
+							qlVm.validated = true;
+							$scope.time = data.data.duration.minutes;
 	      			localStorage.setItem('candidate_info', JSON.stringify(data.data));
 	      			initInstructions();
 	      		} else {

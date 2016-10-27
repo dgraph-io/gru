@@ -180,7 +180,7 @@ body.home {
 /*CANDIDATE*/
 .candidate .question {
   background: rgba(212, 213, 213, 0.26);
-  padding: 22px 10px;
+  padding: 22px 10px 1px;
   border-radius: 5px;
 }
 

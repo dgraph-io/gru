@@ -111,7 +111,7 @@ angular.module('GruiApp').constant('APP_REQUIRES', {
       'quizServices': ['app/components/quiz/quizServices.js'],
       'inviteController': ['app/components/invite/inviteController.js?v=20161018-1'],
       'inviteService': ['app/components/invite/inviteService.js?v=20161018-1'],
-      'quizLandingController': ['app/components/candidate/quizLandingController.js'],
+      'quizLandingController': ['app/components/candidate/quizLandingController.js?v=20161027-1'],
       'candidateController': ['app/components/candidate/candidateController.js?v=20161025-1'],
       'candidateService': ['app/components/candidate/candidateService.js'],
       'angular-select': ['assets/lib/js/angular-select.min.js'],
