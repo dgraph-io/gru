@@ -273,6 +273,7 @@
 		allQVm.setQuestion = setQuestion;
 
 		// INITITIALIZERS
+		console.log($stateParams);
 		allQVm.getAllQuestions();
 		questionVm.getAllTags();
 
@@ -304,7 +305,23 @@
             }
 					} else {
 						mainVm.allQuestions = data.debug[0].question;
-						allQVm.setQuestion(mainVm.allQuestions[0], 0);
+						
+						if($stateParams.quesID) {
+							var length = mainVm.allQuestions.length;
+							var gotQuestion = false;
+							for(var i = 0; i < length; i++) {
+								if(mainVm.allQuestions[i]._uid_ == $stateParams.quesID){
+									var gotQuestion = true;
+									allQVm.question = mainVm.allQuestions[i];
+									break;
+								}
+							}
+							if(!gotQuestion) {
+								allQVm.setQuestion(mainVm.allQuestions[0], 0);
+							}
+						} else {
+							allQVm.setQuestion(mainVm.allQuestions[0], 0);
+						}
 					}
 
 					mainVm.allQuestionsBak = angular.copy(mainVm.allQuestions);
@@ -358,7 +375,7 @@
 		setTimeout(function() {
 			editQuesVm.editor = questionVm.initOptionEditor();
 		}, 500);
-		
+
 		questionVm.getAllTags();
 
 		questionService.getQuestion($stateParams.quesID)
@@ -435,7 +452,9 @@
 				SNACKBAR({
 					message: data.Message,
 				});
-				$state.transitionTo("question.all")
+				$state.transitionTo("question.all", {
+					quesID: $stateParams.quesID,
+				})
 			}, function(err){
 				console.log(err);
 			})

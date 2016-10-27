@@ -33,7 +33,6 @@
     var  quizLandingTemplate = 'app/components/candidate/views/quiz-landing.html';
 
     // CSS for View/Directives
-    var select2CSS = "assets/lib/css/select2.min.css";
     var angularSelectCSS = "assets/lib/css/angular-select.min.css";
     var codeMirrorCSS = "assets/lib/css/codemirror.css";
     var githubCSS = "assets/lib/css/github.css";
@@ -74,6 +73,7 @@
             parent: 'question',
             templateUrl: allQuestionTemplate,
             css: [angularSelectCSS, githubCSS],
+            params: { quesID: null},
             authenticate: true,
           })
           .state('question.add', {
