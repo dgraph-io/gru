@@ -18,7 +18,15 @@
 							{{question.name}}
 	          </a> -->
 	          <div class="side-tabs pv-5" ng-repeat="question in mainVm.allQuestions" ng-class="{'is-active': allQVm.question == question}" ng-click="allQVm.question = question">
-							{{question.name}}
+							<span class="text-green option-icon">
+						  		<span ng-if="question['question.correct'].length == 1">
+						  			<i class="material-icons">done</i>
+						  		</span>
+						  		<span ng-if="question['question.correct'].length > 1">
+						  			<i class="material-icons">done_all</i>
+						  		</span>
+						  	</span>
+						  	{{question.name}}
 	          </div>
 	          <div class="pt-20 text-center text-red" ng-show="allQVm.noItemFound">
 							<div>No more questions available</div>
@@ -33,14 +41,6 @@
 							</div>
 							<div class="mdl-cell mdl-cell--10-col">
 								{{allQVm.question.name}}
-							</div>
-						</div>
-						<div class="mdl-grid no-pad" ng-if="allQVm.question.notes">
-							<div class="mdl-cell mdl-cell--2-col mdl-cell--middle">
-								<span class="bold">NOTE</span>
-							</div>
-							<div class="mdl-cell mdl-cell--10-col">
-								{{allQVm.question.notes}}
 							</div>
 						</div>
          		<div class="mdl-grid no-pad">
@@ -92,6 +92,16 @@
 								</div>
 							</div>
 						</div>
+
+						<div class="mdl-grid no-pad" ng-if="allQVm.question.notes">
+							<div class="mdl-cell mdl-cell--2-col mdl-cell--middle">
+								<span class="bold">NOTE</span>
+							</div>
+							<div class="mdl-cell mdl-cell--10-col">
+								{{allQVm.question.notes}}
+							</div>
+						</div>
+
 						<div class="mdl-grid no-pad" ng-show="allQVm.question['question.tag']">
 							<div class="mdl-cell mdl-cell--12-col">
 								<a ui-sref="question.edit({quesID: allQVm.question._uid_})" class="mdl-button question-action mr-10">

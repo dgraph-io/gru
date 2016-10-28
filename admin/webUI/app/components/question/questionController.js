@@ -123,9 +123,11 @@
 
 			hasCorrectAnswer = false,
 			hasEmptyName = false;
+			correct = 0
 			angular.forEach(inputs.options, function(value, key) {
 				if(value.is_correct) {
 					hasCorrectAnswer = true;
+					correct++
 				}
 				if(!value.name) {
 					hasEmptyName = true;
@@ -140,6 +142,9 @@
 
 			if(!inputs.tags.length) {
 				return "Minimum one tag is required"
+			}
+			if(correct > 1 && inputs.negative < inputs.positive){
+				return "For questions with multiple correct answers, negative score should be more than positive."
 			}
 
 			return false;

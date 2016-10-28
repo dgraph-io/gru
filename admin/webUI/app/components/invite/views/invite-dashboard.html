@@ -25,10 +25,15 @@
 			      <td class="mdl-data-table__cell--non-numeric">{{candidate.validity}}</td>
 			      <td class="mdl-data-table__cell--non-numeric">
 			      	<a ui-sref="invite.edit({quizID: candidateVm.quizID, candidateID: candidate._uid_})">EDIT</a> 
-			      	<span ng-if="candidate.complete == 'true'"">
+<!-- 			      	<span ng-if="candidate.complete == 'true'"">
 			      		&nbsp;|&nbsp;
               	<a ui-sref="invite.report({candidateID: candidate._uid_})" ng-if="candidate.complete == 'true'">VIEW REPORT</a>
-              </span>
+              </span> 
+		// Right now lets just show the report for everyone. When we are no longer getting any crashes,we'd show only for candidates
+		who completed the quiz.
+              -->
+              &nbsp;|&nbsp;
+              <a ui-sref="invite.report({candidateID: candidate._uid_})">VIEW REPORT</a>
 			     	</td>
 			    </tr>
 			  </tbody>

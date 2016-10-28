@@ -10,6 +10,7 @@ import (
 	"github.com/dgraph-io/gru/admin/mail"
 	"github.com/dgraph-io/gru/admin/server"
 	"github.com/dgraph-io/gru/dgraph"
+	"github.com/dgraph-io/gru/x"
 	"github.com/gorilla/mux"
 )
 
@@ -181,10 +182,6 @@ func ReportSummary(cid string) (Summary, ReportError) {
 	}
 	s.Id = rep.Candidates[0].Id
 
-	if !rep.Candidates[0].Complete {
-		return s, ReportError{"", "Candidate hasn't completed the test.", http.StatusBadRequest}
-	}
-
 	c := rep.Candidates[0]
 	s.Name = c.Name
 	s.Email = c.Email
@@ -231,6 +228,8 @@ func ReportSummary(cid string) (Summary, ReportError) {
 		}
 		s.Questions = append(s.Questions, sq)
 	}
+	s.TotalScore = x.Truncate(s.TotalScore)
+	s.MaxScore = x.Truncate(s.MaxScore)
 	return s, ReportError{}
 }
 

@@ -24,6 +24,11 @@ func StringInSlice(a string, list []string) bool {
 	return false
 }
 
+func Truncate(f float64) float64 {
+	fmt.Println(f * 100)
+	return float64(int(f*100)) / 100
+}
+
 type Claims struct {
 	UserId string `json:"user_id"`
 	jwt.StandardClaims

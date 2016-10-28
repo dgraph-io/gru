@@ -99,7 +99,7 @@ func validateQuestion(q Question) error {
 		}
 	}
 	if correct == 0 {
-		fmt.Errorf("Atleast one option should be correct")
+		return fmt.Errorf("Atleast one option should be correct")
 	}
 	return nil
 }

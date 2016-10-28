@@ -477,7 +477,7 @@ func QuestionHandler(w http.ResponseWriter, r *http.Request) {
 	c.qns = c.qns[1:]
 	updateMap(userId, c)
 	// Truncate score to two decimal places.
-	qn.Score = float64(int(c.score*100)) / 100
+	qn.Score = x.Truncate(c.score)
 	qn.Cid = res.Uids["qn"]
 	b, err := json.Marshal(qn)
 	if err != nil {
