@@ -187,6 +187,10 @@ func ReportSummary(cid string) (Summary, ReportError) {
 	s.Email = c.Email
 	s.Feedback = c.Feedback
 	// TODO - Check how to obtain sorted results from Dgraph.
+	if len(c.CandidateQn) == 0 {
+		return s, ReportError{"", "Candidate hasn't started the test", http.StatusBadRequest}
+	}
+
 	sort.Sort(questions(c.CandidateQn))
 	if !c.CandidateQn[len(c.CandidateQn)-1].Answered.IsZero() {
 		s.TimeTaken = c.CandidateQn[len(c.CandidateQn)-1].Answered.Sub(

@@ -25,7 +25,6 @@ func StringInSlice(a string, list []string) bool {
 }
 
 func Truncate(f float64) float64 {
-	fmt.Println(f * 100)
 	return float64(int(f*100)) / 100
 }
 

@@ -18,14 +18,6 @@
 							{{question.name}}
 	          </a> -->
 	          <div class="side-tabs pv-5" ng-repeat="question in mainVm.allQuestions" ng-class="{'is-active': allQVm.question == question}" ng-click="allQVm.question = question">
-							<span class="text-green option-icon">
-						  		<span ng-if="question['question.correct'].length == 1">
-						  			<i class="material-icons">done</i>
-						  		</span>
-						  		<span ng-if="question['question.correct'].length > 1">
-						  			<i class="material-icons">done_all</i>
-						  		</span>
-						  	</span>
 						  	{{question.name}}
 	          </div>
 	          <div class="pt-20 text-center text-red" ng-show="allQVm.noItemFound">

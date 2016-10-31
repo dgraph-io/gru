@@ -248,6 +248,7 @@
 			}
 			cReportVm.info = data;
 			cReportVm.timeTaken = mainVm.parseGoTime(cReportVm.info.time_taken);
+			cReportVm.info.feedback = unescape(cReportVm.info.feedback)
 
 			cReportVm.initScoreCircle();
 		}, function(error){

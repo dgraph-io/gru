@@ -710,6 +710,10 @@ func Feedback(w http.ResponseWriter, r *http.Request) {
 	}
 
 	feedback := r.PostFormValue("feedback")
+	if feedback == "" {
+		sr.Write(w, "", "Feedback can't be empty", http.StatusBadRequest)
+		return
+	}
 	m := `	mutation {
 			set {
 				<_uid_:` + userId + `> <feedback> "` + feedback + `" .

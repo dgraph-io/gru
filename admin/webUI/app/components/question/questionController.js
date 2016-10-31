@@ -42,6 +42,7 @@
 		questionVm.getUniqueTags = getUniqueTags;
 		questionVm.onTagSelect = onTagSelect;
 		questionVm.markDownFormat = markDownFormat;
+		questionVm.transitionToQuestion = transitionToQuestion;
 		questionVm.getAllTags();
 
 	// FUNCTION DEFINITION
@@ -181,6 +182,13 @@
 					model: model
 				});
 			}
+		}
+
+
+		function transitionToQuestion(questionId) {
+			$state.transitionTo("question.all", {
+				quesID: questionId,
+			})
 		}
 	}
 

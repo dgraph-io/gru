@@ -320,7 +320,7 @@
 			}
 
 			var requestData = {
-				feedback: cqVm.feedback,
+				feedback: escape(cqVm.feedback),
 			};
 			candidateService.sendFeedback(requestData)
 			.then(function(data){
