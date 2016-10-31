@@ -16,41 +16,14 @@ func shuffleOptions(opts []Answer) {
 	}
 }
 
-func qnsAsked(qns []qids) []string {
+func qnsAnswered(qns []qids) []string {
 	var uids []string
 	for _, qn := range qns {
-		uids = append(uids, qn.QuestionUid[0].Id)
+		if qn.Answered != "" {
+			uids = append(uids, qn.QuestionUid[0].Id)
+		}
 	}
 	return uids
-}
-
-func isCorrectAnswer(selected []string, actual []string, pos, neg float64) float64 {
-	if selected[0] == "skip" {
-		return 0
-	}
-	// For multiple choice qnstions, we have partial scoring.
-	if len(actual) == 1 {
-		if selected[0] == actual[0] {
-			return pos
-		}
-		return -neg
-	}
-	var score float64
-	for _, aid := range selected {
-		correct := false
-		for _, caid := range actual {
-			if caid == aid {
-				correct = true
-				break
-			}
-		}
-		if correct {
-			score += pos
-		} else {
-			score -= neg
-		}
-	}
-	return score
 }
 
 func calcScore(qns []qids) float64 {

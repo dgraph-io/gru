@@ -15,13 +15,13 @@ func Debug(log interface{}) {
 	}
 }
 
-func StringInSlice(a string, list []string) bool {
-	for _, b := range list {
+func StringInSlice(a string, list []string) int {
+	for idx, b := range list {
 		if b == a {
-			return true
+			return idx
 		}
 	}
-	return false
+	return -1
 }
 
 func Truncate(f float64) float64 {

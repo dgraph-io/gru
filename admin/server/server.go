@@ -48,3 +48,13 @@ func (r Response) Write(w http.ResponseWriter, err string, msg string, status in
 	w.WriteHeader(status)
 	w.Write(MarshalResponse(r))
 }
+
+func MarshalAndWrite(w http.ResponseWriter, i interface{}) {
+	b, err := json.Marshal(i)
+	if err != nil {
+		r := Response{}
+		r.Write(w, err.Error(), "", http.StatusInternalServerError)
+		return
+	}
+	w.Write(b)
+}

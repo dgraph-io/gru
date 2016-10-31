@@ -79,7 +79,7 @@ func reportQuery(id string) string {
 	return `query {
                 candidate(_uid_:` + id + `) {
                         _uid_
-					    name
+			name
                         email
                         feedback
                         complete
@@ -104,15 +104,15 @@ func reportQuery(id string) string {
                                         question.correct {
                                                 _uid_
                                         }
-                                multiple
+                                        multiple
+                                }
+                                question.asked
+                                question.answered
+                                candidate.answer
+                                candidate.score
                         }
-                        question.asked
-                        question.answered
-                        candidate.answer
-                        candidate.score
                 }
-        }
-}`
+        }`
 }
 
 type question struct {
@@ -166,18 +166,12 @@ func ReportSummary(cid string) (Summary, ReportError) {
 	s := Summary{}
 	s.Ip = *mail.Ip
 	q := reportQuery(cid)
-	b, err := dgraph.Query(q)
-	if err != nil {
-		return s, ReportError{err.Error(), "", http.StatusInternalServerError}
-	}
-
 	var rep report
-	err = json.Unmarshal(b, &rep)
-	if err != nil {
+	if err := dgraph.QueryAndUnmarshal(q, &rep); err != nil {
 		return s, ReportError{err.Error(), "", http.StatusInternalServerError}
 	}
 
-	if rep.Candidates[0].Id == "" {
+	if len(rep.Candidates) != 1 || rep.Candidates[0].Id == "" || len(rep.Candidates[0].Quiz) != 1 {
 		return s, ReportError{"", "Candidate not found.", http.StatusBadRequest}
 	}
 	s.Id = rep.Candidates[0].Id

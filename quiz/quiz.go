@@ -2,25 +2,21 @@ package quiz
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"html/template"
 	"net/http"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/dgraph-io/gru/admin/mail"
 	"github.com/dgraph-io/gru/admin/report"
-	"github.com/dgraph-io/gru/admin/server"
 	"github.com/dgraph-io/gru/auth"
 	"github.com/dgraph-io/gru/dgraph"
 	"github.com/dgraph-io/gru/x"
 	jwt "github.com/dgrijalva/jwt-go"
-	"github.com/gorilla/mux"
 )
 
 var (
@@ -65,11 +61,19 @@ type Question struct {
 
 // Candidate is used to keep track of the state of the quiz for a candidate.
 type Candidate struct {
+	name         string
+	token        string
 	score        float64
 	qns          []Question
 	lastExchange time.Time
 	quizDuration time.Duration
 	quizStart    time.Time
+	validity     time.Time
+
+	// We use these so that we can show candidate the same question if he
+	// refreshes the page/recovers from a crash.
+	lastQnUid  string
+	lastQnCuid string
 }
 
 func updateMap(uid string, c Candidate) {
@@ -94,7 +98,7 @@ type quiz struct {
 	Questions []Question `json:"quiz.question"`
 }
 
-type qnIdsResp struct {
+type quizInfo struct {
 	Quizzes []quiz `json:"quiz"`
 }
 
@@ -114,12 +118,11 @@ func quizQns(quizId string, qnsAsked []string) ([]Question, error) {
 			}
 		}
 	}`
-	res, err := dgraph.Query(q)
-	if err != nil {
+
+	var resp quizInfo
+	if err := dgraph.QueryAndUnmarshal(q, &resp); err != nil {
 		return []Question{}, err
 	}
-	var resp qnIdsResp
-	json.Unmarshal(res, &resp)
 	if len(resp.Quizzes) != 1 {
 		return []Question{}, fmt.Errorf("Expected length of quizzes: %v. Got %v",
 			1, len(resp.Quizzes))
@@ -132,7 +135,7 @@ func quizQns(quizId string, qnsAsked []string) ([]Question, error) {
 	allQns := resp.Quizzes[0].Questions
 	idx := 0
 	for _, qn := range allQns {
-		if !x.StringInSlice(qn.Id, qnsAsked) {
+		if x.StringInSlice(qn.Id, qnsAsked) == -1 {
 			allQns[idx] = qn
 			idx++
 		}
@@ -143,13 +146,15 @@ func quizQns(quizId string, qnsAsked []string) ([]Question, error) {
 
 // Used to fetch data about a candidate from Dgraph and populate Candidate struct.
 type cand struct {
-	Name      string
-	Token     string    `json:"token"`
-	Validity  string    `json:"validity"`
-	Complete  bool      `json:"complete,string"`
-	Quiz      []quiz    `json:"candidate.quiz"`
-	Questions []qids    `json:"candidate.question"`
-	QuizStart time.Time `json:"quiz_start"`
+	Name       string
+	Token      string    `json:"token"`
+	Validity   string    `json:"validity"`
+	Complete   bool      `json:"complete,string"`
+	Quiz       []quiz    `json:"candidate.quiz"`
+	Questions  []qids    `json:"candidate.question"`
+	QuizStart  time.Time `json:"quiz_start"`
+	LastQnUid  string    `json:"candidate.lastqnuid"`
+	LastQnCuid string    `json:"candidate.lastqncuid"`
 }
 
 type resp struct {
@@ -163,27 +168,7 @@ type uid struct {
 type qids struct {
 	QuestionUid []uid   `json:"question.uid"`
 	Score       float64 `json:"candidate.score,string"`
-}
-
-func validate(cid string) string {
-	return `{
-	quiz.candidate(_uid_:` + cid + `) {
-		name
-		email
-		token
-		validity
-		complete
-		candidate.quiz {
-			_uid_
-			duration
-		}
-		candidate.question {
-			question.uid {
-				_uid_
-			}
-		}
-	  }
-    }`
+	Answered    string  `json:"question.answered"`
 }
 
 func timeLeft(start time.Time, dur time.Duration) time.Duration {
@@ -192,153 +177,6 @@ func timeLeft(start time.Time, dur time.Duration) time.Duration {
 	}
 	// If start isn't zero we return the time left.
 	return start.Add(dur).Sub(time.Now())
-}
-
-func rateLimit() {
-	rateTicker := time.NewTicker(rate)
-	defer rateTicker.Stop()
-
-	for t := range rateTicker.C {
-		select {
-		case throttle <- t:
-		default:
-		}
-	}
-}
-
-type validateRes struct {
-	Token    string `json:"token"`
-	Duration string `json:"duration"`
-	Started  bool   `json:"quiz_started"`
-	Name     string
-}
-
-func Validate(w http.ResponseWriter, r *http.Request) {
-	sr := server.Response{}
-	select {
-	case <-throttle:
-		break
-	case <-time.After(rate):
-		sr.Write(w, "", "Too many requests. Please try after again.",
-			http.StatusUnauthorized)
-		return
-	}
-
-	vars := mux.Vars(r)
-	id := vars["id"]
-	// This is the length of the random string. The id is uid + random string.
-	if len(id) < 33 {
-		sr.Write(w, "", "Invalid token.", http.StatusUnauthorized)
-		return
-	}
-
-	uid, token := id[:len(id)-33], id[len(id)-33:]
-
-	c, err := readMap(uid)
-	// Check for duplicate session.
-	if err == nil && !c.lastExchange.IsZero() {
-		timeSinceLastExchange := time.Now().Sub(c.lastExchange)
-		// To avoid duplicate sessions.
-		if timeSinceLastExchange < 10*time.Second {
-			sr.Write(w, "", "You have another active session. Please try after some time.",
-				http.StatusUnauthorized)
-			return
-		}
-	}
-
-	// Candidate doesn't exist in the map. So we get candidate info from uid and
-	// insert it into map.
-	q := validate(uid)
-	res, err := dgraph.Query(q)
-	if err != nil {
-		sr.Write(w, "", err.Error(), http.StatusInternalServerError)
-		return
-	}
-	var resp resp
-	json.Unmarshal(res, &resp)
-	if len(resp.Cand) != 1 || len(resp.Cand[0].Quiz) != 1 {
-		// No candidiate found with given uid
-		sr.Write(w, "", "Candidate not found", http.StatusUnauthorized)
-		return
-	}
-	if resp.Cand[0].Complete {
-		sr.Write(w, "", "You have already completed the quiz.", http.StatusUnauthorized)
-		return
-	}
-	if resp.Cand[0].Token != token || resp.Cand[0].Quiz[0].Id == "" {
-		sr.Write(w, "", "Invalid token.", http.StatusUnauthorized)
-		return
-	}
-
-	var v time.Time
-	if v, err = time.Parse("2006-01-02 15:04:05 +0000 UTC", resp.Cand[0].Validity); err != nil {
-		sr.Write(w, err.Error(), "", http.StatusInternalServerError)
-		return
-	}
-
-	if v.Before(time.Now()) {
-		sr.Write(w, "", "Your token has already expired. Please contact contact@dgraph.io.",
-			http.StatusUnauthorized)
-		return
-	}
-
-	cand := resp.Cand[0]
-	quiz := cand.Quiz[0]
-	dur, err := time.ParseDuration(quiz.Duration)
-	if err != nil {
-		sr.Write(w, err.Error(), "", http.StatusInternalServerError)
-		return
-	}
-
-	if timeLeft(c.quizStart, dur) < 0 {
-		sr.Write(w, "", "Your token is no longer valid.", http.StatusUnauthorized)
-		return
-	}
-	// He has already been asked some questions.
-	var qa []string
-	if len(cand.Questions) > 0 {
-		qa = qnsAsked(cand.Questions)
-	}
-
-	// Get quiz questions for the quiz id.
-	qns, err := quizQns(quiz.Id, qa)
-	if err != nil {
-		sr.Write(w, err.Error(), "", http.StatusInternalServerError)
-	}
-	shuffleQuestions(qns)
-
-	if len(cand.Questions) > 0 {
-		c.qns = qns
-		updateMap(uid, c)
-	} else {
-		c := Candidate{
-			qns:          qns,
-			quizDuration: dur,
-		}
-		updateMap(uid, c)
-	}
-
-	// Add the user id as a claim and return the token.
-	claims := x.Claims{
-		UserId: uid,
-	}
-	jwtToken := jwt.NewWithClaims(jwt.SigningMethodHS512, claims)
-
-	tokenString, err := jwtToken.SignedString([]byte(*auth.Secret))
-	if err != nil {
-		sr.Write(w, err.Error(), "", http.StatusInternalServerError)
-		return
-	}
-
-	json.NewEncoder(w).Encode(validateRes{
-		Token:    tokenString,
-		Duration: timeLeft(c.quizStart, dur).String(),
-		// Whether quiz was already started by the candidate.
-		// If this is true the client can just call the questions API and
-		// skip showing the instructions page.
-		Started: len(cand.Questions) > 0,
-		Name:    cand.Name,
-	})
 }
 
 // Checks the JWT Token and gets the user id from the claims.
@@ -379,426 +217,115 @@ func sendReport(cid string) {
 	mail.SendReport(s.Name, s.TotalScore, s.MaxScore, buf.String())
 }
 
-func QuestionHandler(w http.ResponseWriter, r *http.Request) {
-	var userId string
-	var err error
-	sr := server.Response{}
-	if userId, err = validateToken(r); err != nil {
-		sr.Write(w, err.Error(), "Unauthorized", http.StatusUnauthorized)
-		return
-	}
-
-	var c Candidate
-	if c, err = checkCand(userId); err != nil {
-		sr.Write(w, err.Error(), "", http.StatusBadRequest)
-		return
-	}
-
-	if !c.quizStart.IsZero() && time.Now().After(c.quizStart.Add(c.quizDuration)) {
-		sr.Write(w, "", "Your quiz has already finished.",
-			http.StatusBadRequest)
-		return
-	}
-
-	// This means its the first question he is being asked.
-	// If this is because the server crashed then we should have recovered before
-	// the candidate reaches here.
-	if c.quizStart.IsZero() {
-		c.quizStart = time.Now().UTC()
-		m := `mutation {
-		  set {
-			  <_uid_:` + userId + `> <quiz_start> "` + c.quizStart.Format(timeLayout) + `" .
-			}
-		}
-		`
-		res, err := dgraph.SendMutation(m)
-		if err != nil {
-			sr.Write(w, "", err.Error(), http.StatusInternalServerError)
-			return
-		}
-		if res.Code != "ErrorOk" {
-			sr.Write(w, res.Message, "", http.StatusInternalServerError)
-			return
-		}
-	}
-
-	if len(c.qns) == 0 {
-		q := Question{
-			Id:    "END",
-			Score: float64(int(c.score*100)) / 100,
-		}
-		m := `mutation {
-		  set {
-			  <_uid_:` + userId + `> <complete> "true" .
-			}
-		}
-		`
-		res, err := dgraph.SendMutation(m)
-		if err != nil {
-			sr.Write(w, "", err.Error(), http.StatusInternalServerError)
-			return
-		}
-		if res.Code != "ErrorOk" {
-			sr.Write(w, res.Message, "", http.StatusInternalServerError)
-			return
-		}
-
-		b, err := json.Marshal(q)
-		if err != nil {
-			sr.Write(w, err.Error(), "", http.StatusInternalServerError)
-			return
-		}
-		go sendReport(userId)
-		w.Write(b)
-		return
-	}
-
-	qn := c.qns[0]
-	shuffleOptions(qn.Options)
-	m := `mutation {
-		set {
-			<_uid_:` + userId + `> <candidate.question> <_new_:qn> .
-			<_new_:qn> <question.uid> <_uid_:` + qn.Id + `> .
-			<_uid_:` + qn.Id + `> <question.candidate> <_uid_:` + userId + `> .
-			<_new_:qn> <question.asked> "` + time.Now().Format("2006-01-02T15:04:05Z07:00") + `" .
-		}
-	}`
-
-	res, err := dgraph.SendMutation(m)
-	if err != nil {
-		sr.Write(w, "", err.Error(), http.StatusInternalServerError)
-		return
-	}
-	if res.Code != "ErrorOk" || res.Uids["qn"] == "" {
-		sr.Write(w, res.Message, "", http.StatusInternalServerError)
-		return
-	}
-
-	c.qns = c.qns[1:]
-	updateMap(userId, c)
-	// Truncate score to two decimal places.
-	qn.Score = x.Truncate(c.score)
-	qn.Cid = res.Uids["qn"]
-	b, err := json.Marshal(qn)
-	if err != nil {
-		sr.Write(w, err.Error(), "", http.StatusInternalServerError)
-		return
-	}
-	w.Write(b)
-}
-
-type correct struct {
-	Uid string `json:"_uid_"`
-}
-
-// Used to marshal response from Dgraph.
-type questionMeta struct {
-	Negative float64 `json:"negative,string"`
-	Positive float64 `json:"positive,string"`
-	// TODO - Maybe store correct later as a comma separated string uids so that
-	// processing isn't required.
-	Correct []correct `json:"question.correct"`
-}
-
-type qmRes struct {
-	QuestionMeta []questionMeta `json:"question"`
-}
-
-type questionCorrectMeta struct {
-	negative float64
-	positive float64
-	correct  []string
-}
-
-func qnMeta(qid string) (questionCorrectMeta, error) {
-	q := `{
-        question(_uid_: ` + qid + `) {
-                question.correct {
-                _uid_
-        }
-        positive
-        negative
-        }
-}`
-	res, err := dgraph.Query(q)
-	if err != nil {
-		return questionCorrectMeta{}, err
-	}
-	var resp qmRes
-	json.Unmarshal(res, &resp)
-
-	if len(resp.QuestionMeta) != 1 {
-		return questionCorrectMeta{},
-			fmt.Errorf("There should be just one question returned")
-	}
-	question := resp.QuestionMeta[0]
-	// TODO - Maybe cache this stuff later.
-	correctAnswers := []string{}
-	for _, answer := range question.Correct {
-		correctAnswers = append(correctAnswers, answer.Uid)
-	}
-
-	return questionCorrectMeta{
-		negative: question.Negative,
-		positive: question.Positive,
-		correct:  correctAnswers,
-	}, nil
-}
-
-type qa struct {
-	Answered string `json:"question.answered"`
-}
-
-type checkAnswer struct {
-	Question []qa `json:"candidate.question"`
-}
-
-// Queries Dgraph and checks if the candidate has already answered the question.
-func checkAnswered(cuid string) (int, error) {
-	q := `{
-		candidate.question(_uid_:` + cuid + `) {
-			question.answered
-		}
-	}`
-	b, err := dgraph.Query(q)
-	if err != nil {
-		return http.StatusInternalServerError, err
-	}
-
-	var ca checkAnswer
-	err = json.Unmarshal(b, &ca)
-	if err != nil {
-		return http.StatusInternalServerError, err
-	}
-
-	if len(ca.Question) != 1 || ca.Question[0].Answered != "" {
-		return http.StatusBadRequest, fmt.Errorf("You have already answered this question.")
-
-	}
-	return http.StatusOK, nil
-}
-
-func AnswerHandler(w http.ResponseWriter, r *http.Request) {
-	var userId string
-	var err error
-	sr := server.Response{}
-	if userId, err = validateToken(r); err != nil {
-		sr.Write(w, err.Error(), "Unauthorized", http.StatusUnauthorized)
-		return
-	}
-
-	var c Candidate
-	if c, err = checkCand(userId); err != nil {
-		sr.Write(w, err.Error(), "", http.StatusBadRequest)
-		return
-	}
-
-	if !c.quizStart.IsZero() && time.Now().After(c.quizStart.Add(c.quizDuration)) {
-		sr.Write(w, "", "Your quiz has already finished.",
-			http.StatusBadRequest)
-		return
-	}
-
-	qid := r.PostFormValue("qid")
-	aid := r.PostFormValue("aid")
-	cuid := r.PostFormValue("cuid")
-	answerIds := strings.Split(aid, ",")
-	if cuid == "" || len(answerIds) == 0 {
-		sr.Write(w, "Answer ids/cuid can't be empty", "", http.StatusBadRequest)
-		return
-	}
-
-	if status, err := checkAnswered(cuid); err != nil {
-		sr.Write(w, err.Error(), "", status)
-		return
-	}
-
-	m, err := qnMeta(qid)
-	if err != nil {
-		sr.Write(w, err.Error(), "", http.StatusInternalServerError)
-	}
-	score := isCorrectAnswer(answerIds, m.correct, m.positive, m.negative)
-	c.score = c.score + score
-	updateMap(userId, c)
-	mutation := `mutation {
-		set {
-			<_uid_:` + cuid + `> <candidate.answer> "` + aid + `" .
-			<_uid_:` + cuid + `> <candidate.score> "` + strconv.FormatFloat(score, 'g', -1, 64) + `" .
-			<_uid_:` + cuid + `> <question.answered> "` + time.Now().Format("2006-01-02T15:04:05Z07:00") + `" .
-		}
-	}`
-	res, err := dgraph.SendMutation(mutation)
-	if err != nil {
-		sr.Write(w, "", err.Error(), http.StatusInternalServerError)
-		return
-	}
-	if res.Code != "ErrorOk" {
-		sr.Write(w, res.Message, "", http.StatusInternalServerError)
-		return
-	}
-}
-
-type pingRes struct {
-	TimeLeft string `json:"time_left"`
-}
-
-// checks for candidate in the map, if not present it checks the
-// database and loads his info. This would help recover from server
-// crashes.
-func checkCand(uid string) (Candidate, error) {
-	c, err := readMap(uid)
-	if err == nil {
-		return c, nil
-	}
-	c, err = Load(uid)
-	if err != nil {
-		return c, err
-	}
-	return c, nil
-}
-
-func PingHandler(w http.ResponseWriter, r *http.Request) {
-	var userId string
-	var err error
-	sr := server.Response{}
-	if userId, err = validateToken(r); err != nil {
-		sr.Write(w, err.Error(), "", http.StatusUnauthorized)
-		return
-	}
-
-	var c Candidate
-	if c, err = checkCand(userId); err != nil {
-		sr.Write(w, err.Error(), "", http.StatusBadRequest)
-		return
-	}
-	c.lastExchange = time.Now()
-	updateMap(userId, c)
-	pr := &pingRes{TimeLeft: "-1"}
-	if !c.quizStart.IsZero() {
-		end := c.quizStart.Add(c.quizDuration).Truncate(time.Second)
-		timeLeft := end.Sub(time.Now().UTC().Truncate(time.Second))
-		if timeLeft <= 0 {
-			m := `mutation {
-			set {
-				<_uid_:` + userId + `> <complete> "true" .
-			}
-			}
-			`
-			res, err := dgraph.SendMutation(m)
-			if err != nil {
-				sr.Write(w, "", err.Error(), http.StatusInternalServerError)
-				return
-			}
-			if res.Code != "ErrorOk" {
-				sr.Write(w, res.Message, "", http.StatusInternalServerError)
-				return
-			}
-			go sendReport(userId)
-		}
-		pr.TimeLeft = timeLeft.String()
-	}
-	json.NewEncoder(w).Encode(pr)
-}
-
-func Feedback(w http.ResponseWriter, r *http.Request) {
-	var userId string
-	var err error
-	sr := server.Response{}
-	if userId, err = validateToken(r); err != nil {
-		sr.Write(w, err.Error(), "", http.StatusUnauthorized)
-		return
-	}
-
-	feedback := r.PostFormValue("feedback")
-	if feedback == "" {
-		sr.Write(w, "", "Feedback can't be empty", http.StatusBadRequest)
-		return
-	}
-	m := `	mutation {
-			set {
-				<_uid_:` + userId + `> <feedback> "` + feedback + `" .
-			}
-		}
-			`
-	res, err := dgraph.SendMutation(m)
-	if err != nil {
-		sr.Write(w, "", err.Error(), http.StatusInternalServerError)
-		return
-	}
-	if res.Code != "ErrorOk" {
-		sr.Write(w, res.Message, "", http.StatusInternalServerError)
-		return
-	}
-	return
-}
-
-func load(cid string) string {
+func candQuery(cid string) string {
 	return `{
-	quiz.candidate(_uid_:` + cid + `) {
-		complete
-		quiz_start
-		candidate.quiz {
-			_uid_
-			duration
-		}
-		candidate.question {
-			question.uid {
-				_uid_
-			}
-			candidate.score
-		}
-	  }
+        quiz.candidate(_uid_:` + cid + `) {
+                name
+                email
+                token
+                validity
+                complete
+                quiz_start
+                candidate.quiz {
+                        _uid_
+                        duration
+                }
+                candidate.question {
+                        question.uid {
+                                _uid_
+                        }
+                        question.answered
+                        candidate.score
+                }
+                candidate.lastqnuid
+                candidate.lastqncuid
+          }
     }`
 }
 
-// TODO - Make code dry abstract out logic here and in validate.
-// That will also fix bug where validate doesn't update quizStart from DB
-// after server restarts.
-func Load(uid string) (Candidate, error) {
-	c := Candidate{}
-	q := load(uid)
-	res, err := dgraph.Query(q)
-	if err != nil {
-		return c, err
+// Checks for candidate in cache, if we find it then we return. Else we load up
+// information from the Database into the cache.
+func checkAndUpdate(uid string) (int, error) {
+	if _, err := readMap(uid); err == nil {
+		// Got candidate information in Cache, return.
+		return http.StatusOK, nil
 	}
 
+	// Candidate doesn't exist in the map. So we get candidate info from database
+	// and insert it into map.
+	q := candQuery(uid)
 	var resp resp
-	err = json.Unmarshal(res, &resp)
-	if err != nil {
-		return c, err
+	if err := dgraph.QueryAndUnmarshal(q, &resp); err != nil {
+		return http.StatusInternalServerError, err
 	}
 
 	if len(resp.Cand) != 1 || len(resp.Cand[0].Quiz) != 1 {
 		// No candidiate found with given uid
-		return c, fmt.Errorf("Candidate not found.")
+		return http.StatusUnauthorized, fmt.Errorf("Candidate not found")
 	}
-	if resp.Cand[0].Complete {
-		return c, fmt.Errorf("Already completed the quiz.")
-	}
-	// Means we found a candidate who has not completed the quiz.
+
 	cand := resp.Cand[0]
-	quiz := resp.Cand[0].Quiz[0]
-	c.quizDuration, err = time.ParseDuration(quiz.Duration)
-	if err != nil {
-		return c, err
+	quiz := cand.Quiz[0]
+	if cand.Complete {
+		return http.StatusUnauthorized, fmt.Errorf("You have already completed the quiz.")
+
 	}
-	c.quizStart = cand.QuizStart
+	if quiz.Id == "" {
+		return http.StatusUnauthorized, fmt.Errorf("Invalid token.")
+
+	}
+
+	c := Candidate{
+		quizStart:  cand.QuizStart,
+		lastQnUid:  cand.LastQnUid,
+		lastQnCuid: cand.LastQnCuid,
+		name:       cand.Name,
+		token:      cand.Token,
+	}
+	// TODO - Check how can we store this in appropriate format so that explicit parsing isn't
+	// required.
+	var err error
+	if c.validity, err = time.Parse("2006-01-02 15:04:05 +0000 UTC", cand.Validity); err != nil {
+		return http.StatusInternalServerError, err
+	}
+	if c.validity.Before(time.Now()) {
+		return http.StatusUnauthorized,
+			fmt.Errorf("Your token has already expired. Please mail us at contact@dgraph.io.")
+	}
+
+	// We check that quiz duration hasn't elapsed in case the candidate tries
+	// to validate again say after a browser crash.
+	if c.quizDuration, err = time.ParseDuration(quiz.Duration); err != nil {
+		return http.StatusInternalServerError, err
+	}
+
+	if timeLeft(c.quizStart, c.quizDuration) < 0 {
+		return http.StatusUnauthorized, fmt.Errorf("Your token is no longer valid.")
+	}
 
 	var qa []string
 	if len(cand.Questions) > 0 {
-		qa = qnsAsked(cand.Questions)
-		fmt.Println("len qnsAsked", len(qa))
+		// He has already been asked some questions. Lets figure out the
+		// ones he has answered.
+		qa = qnsAnswered(cand.Questions)
 	}
 
 	// Get quiz questions for the quiz id.
-	qns, err := quizQns(quiz.Id, qa)
+	qnsUnanswered, err := quizQns(quiz.Id, qa)
 	if err != nil {
-		return c, err
+		return http.StatusInternalServerError, err
 	}
 
-	shuffleQuestions(qns)
-	c.qns = qns
+	shuffleQuestions(qnsUnanswered)
+	// Lets bring the last question asked to the first place.
+	for idx, qn := range qnsUnanswered {
+		if qn.Id == cand.LastQnUid {
+			qnsUnanswered[0], qnsUnanswered[idx] = qnsUnanswered[idx], qnsUnanswered[0]
+			break
+		}
+	}
+	c.qns = qnsUnanswered
 	c.score = calcScore(cand.Questions)
 	updateMap(uid, c)
-	return c, nil
+	return http.StatusOK, nil
 }
