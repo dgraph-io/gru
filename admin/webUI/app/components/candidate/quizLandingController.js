@@ -67,7 +67,6 @@
 						{{time_minutes}} minutes</span>. Timing would be clearly shown.")($scope),
 					"We recommend using a pen and paper to help visualize some of the questions.",
 					"Once you start the quiz, the timer would not stop, irrespective of any client side issues.",
-					"Once you start the quiz, do not refresh the page or else the current question would be skipped.",
 					"Questions can have single or multiple correct answers. They will be shown accordingly.",
 					"Your total score and the time left at any point in the quiz would be displayed on the top.",
 				],
