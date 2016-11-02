@@ -18,6 +18,7 @@ func Feedback(w http.ResponseWriter, r *http.Request) {
 	f := r.PostFormValue("feedback")
 	if f == "" {
 		sr.Write(w, "", "Feedback can't be empty.", http.StatusBadRequest)
+		return
 	}
 
 	m := new(dgraph.Mutation)
