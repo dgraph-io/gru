@@ -264,6 +264,24 @@ body.home {
   line-height: 48px;
 }
 
+/*So that the question name column and the question description doesn't scroll together*/
+
+.mdl-cell.mdl-cell--2-col.r-border {
+  height: 100vh;
+  overflow-y: scroll;
+}
+
+.mdl-cell.mdl-cell--2-col.r-border .pt-20 {
+  padding-bottom: 200px;
+}
+
+.mdl-cell.mdl-cell--10-col.pl-30 {
+    height: 100vh;
+    overflow-y: auto;
+    padding-right: 30px;
+    padding-bottom: 200px;
+}
+
 /*QUIZ PAGE CSS*/
 .duration-inputs .mdl-textfield {
   width: 32%;

@@ -91,6 +91,17 @@
             }
         });
     });
+
+    // So that clicking on the question name in the side nav should bring the
+    // question description for this question to the top.
+    $(document).on("click",".side-tabs",function() {
+      $container = $("#question-listing div.mdl-cell.mdl-cell--10-col.pl-30")
+      $qnDesc = $("#tab0-panel")
+      $container.scrollTop(
+        $qnDesc.offset().top - $container.offset().top + $container.scrollTop()
+      );
+    })
+
     
     var snackbarContainer = document.querySelector('#snackbar-container');
     window.SNACKBAR = function(setting) {

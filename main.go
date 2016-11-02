@@ -45,7 +45,7 @@ var (
 	// TODO - Later just have one IP address with port info.
 	port     = flag.String("port", ":8000", "Port on which server listens")
 	username = flag.String("user", "", "Username to login to admin panel")
-	password = flag.String("pass", "", "Username to login to admin panel")
+	password = flag.String("pass", "", "Password to login to admin panel")
 )
 
 type AdminClaims struct {
