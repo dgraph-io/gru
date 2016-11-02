@@ -200,6 +200,8 @@
 	}
 	
 	function candidatesController($rootScope, $stateParams, $state, inviteService) {
+		$rootScope.sortType = 'score';
+		$rootScope.sortReverse = true;
 		candidatesVm = this;
 
 		candidatesVm.quizID = $stateParams.quizID;
@@ -213,6 +215,21 @@
 		}
 		inviteService.getInvitedCandidates(candidatesVm.quizID).then(function(data){
 			candidatesVm.quizCandidates = data.quiz[0]["quiz.candidate"];
+
+			for (var i = 0; i < candidatesVm.quizCandidates.length; i ++) {
+				cand = candidatesVm.quizCandidates[i]
+				// TODO - Maybe store invite in a format that frontend directly
+				// understands.
+				if (cand.complete == "false") {
+					continue;
+				}
+				cand.quiz_start = new Date(Date.parse(cand.quiz_start)) || ''
+				score = 0.0
+				for (var j = 0 ; j < cand["candidate.question"].length; j++) {
+					score += parseFloat(cand["candidate.question"][j]["candidate.score"]) || 0
+				}
+				cand.score = score
+			}
 
 			if(!candidatesVm.quizCandidates) {
 				SNACKBAR({

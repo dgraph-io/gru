@@ -46,7 +46,10 @@ func index(quizId string) string {
 			email
 			validity
 			complete
-			invite_sent
+			quiz_start
+			candidate.question {
+				candidate.score
+			}
 		}
 	}
 }

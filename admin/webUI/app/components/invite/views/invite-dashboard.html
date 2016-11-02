@@ -7,37 +7,91 @@
 			<button class="mdl-button btn btn-succes bg-green" ng-click="mainVm.goTo('invite.add')">Invite</button>
 		</div>
 	</div>
+
+<div class="mdl-tabs mdl-js-tabs mdl-js-ripple-effect">
+  <div class="mdl-tabs__tab-bar">
+      <a href="#completed" class="mdl-tabs__tab is-active">Completed</a>
+      <a href="#not-taken" class="mdl-tabs__tab">Not Completed</a>
+  </div>
+
+  <div class="mdl-tabs__panel is-active" id="completed">
 	<div class="mdl-grid">
 		<div class="mdl-cell mdl-cell--12-col">
+			<form action="#">
+			  <div class="mdl-textfield mdl-js-textfield">
+			    <input class="mdl-textfield__input" type="text" ng-model="searchCand">
+			    <label class="mdl-textfield__label" for="sample1">Search candidate by Name/Email</label>
+			  </div>
+			</form>
 			<table class="mdl-data-table mdl-shadow--2dp">
-			  <thead>
-			    <tr>
-			      <th class="mdl-data-table__cell--non-numeric">Name</th>
-			      <th class="mdl-data-table__cell--non-numeric">Email</th>
-			      <th class="mdl-data-table__cell--non-numeric">Validity</th>
-			      <th class="mdl-data-table__cell--non-numeric">Actions</th>
-			    </tr>
-			  </thead>
-			  <tbody ng-repeat="candidate in candidateVm.quizCandidates">
-			    <tr >
-			      <td class="mdl-data-table__cell--non-numeric">{{candidate.name}}</td>
-			      <td class="mdl-data-table__cell--non-numeric">{{candidate.email}}</td>
-			      <td class="mdl-data-table__cell--non-numeric">{{candidate.validity}}</td>
-			      <td class="mdl-data-table__cell--non-numeric">
-			      	<a ui-sref="invite.edit({quizID: candidateVm.quizID, candidateID: candidate._uid_})">EDIT</a> 
-<!-- 			      	<span ng-if="candidate.complete == 'true'"">
-			      		&nbsp;|&nbsp;
-              	<a ui-sref="invite.report({candidateID: candidate._uid_})" ng-if="candidate.complete == 'true'">VIEW REPORT</a>
-              </span> 
-		// Right now lets just show the report for everyone. When we are no longer getting any crashes,we'd show only for candidates
-		who completed the quiz.
-              -->
-              &nbsp;|&nbsp;
-              <a ui-sref="invite.report({candidateID: candidate._uid_})">VIEW REPORT</a>
-			     	</td>
-			    </tr>
-			  </tbody>
+				<thead>
+					<tr>
+						<th class="mdl-data-table__cell--non-numeric">Name</th>
+						<th class="mdl-data-table__cell--non-numeric">Email</th>
+						<th class="mdl-data-table__cell--non-numeric">
+							<a href="" ng-click="sortType = 'score'; sortReverse = !sortReverse">
+							Score
+							<span ng-show="sortType == 'score' && !sortReverse" class="fa fa-caret-down"></span>
+							<span ng-show="sortType == 'score' && sortReverse" class="fa fa-caret-up"></span>
+							</a>
+						</th>
+						<th class="mdl-data-table__cell--non-numeric">
+							<a href="" ng-click="sortType = 'quiz_start'; sortReverse = !sortReverse">
+							Quiz Start
+							<span ng-show="sortType == 'quiz_start' && !sortReverse" class="fa fa-caret-down"></span>
+							<span ng-show="sortType == 'quiz_start' && sortReverse" class="fa fa-caret-up"></span>
+							</a>
+						</th>
+						<th class="mdl-data-table__cell--non-numeric">Actions</th>
+					</tr>
+				</thead>
+				<tbody ng-repeat="candidate in candidateVm.quizCandidates | orderBy:sortType:sortReverse | filter:searchCand">
+					<tr ng-if="candidate.complete == 'true'">
+						<td class="mdl-data-table__cell--non-numeric">{{candidate.name}}</td>
+						<td class="mdl-data-table__cell--non-numeric">{{candidate.email}}</td>
+						<td class="mdl-data-table__cell--non-numeric">{{candidate.score | number: 2}}</td>
+						<td class="mdl-data-table__cell--non-numeric">{{candidate.quiz_start | date : 'dd/MM/yy h:mm a'}}</td>
+						<td class="mdl-data-table__cell--non-numeric">
+							<a ui-sref="invite.report({candidateID: candidate._uid_})">VIEW REPORT</a>
+						</span>
+						</td>
+					</tr>
+				</tbody>
 			</table>
 		</div>
 	</div>
+  </div>
+  <div class="mdl-tabs__panel" id="not-taken">
+	<div class="mdl-grid">
+		<div class="mdl-cell mdl-cell--12-col">
+			<form action="#">
+			  <div class="mdl-textfield mdl-js-textfield">
+			    <input class="mdl-textfield__input" type="text" id="sample1" ng-model="searchCand">
+			    <label class="mdl-textfield__label" for="sample1">Search candidate by Name/Email</label>
+			  </div>
+			</form>
+			<table class="mdl-data-table mdl-shadow--2dp">
+				<thead>
+					<tr>
+						<th class="mdl-data-table__cell--non-numeric">Name</th>
+						<th class="mdl-data-table__cell--non-numeric">Email</th>
+						<th class="mdl-data-table__cell--non-numeric">Validity</th>
+						<th class="mdl-data-table__cell--non-numeric">Actions</th>
+					</tr>
+				</thead>
+				<tbody ng-repeat="candidate in candidateVm.quizCandidates | filter:searchCand">
+					<tr ng-if="candidate.complete != 'true'">
+						<td class="mdl-data-table__cell--non-numeric">{{candidate.name}}</td>
+						<td class="mdl-data-table__cell--non-numeric">{{candidate.email}}</td>
+						<td class="mdl-data-table__cell--non-numeric">{{candidate.validity}}</td>
+						<td class="mdl-data-table__cell--non-numeric">
+							<a ui-sref="invite.edit({quizID: candidateVm.quizID, candidateID: candidate._uid_})">EDIT</a> 
+						</span>
+						</td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+	</div>
+  </div>
 </div>
