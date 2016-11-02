@@ -6,6 +6,7 @@
 
     window.formatDate = formatDate;
     window.getDocHeight = getDocHeight;
+    window.scrollTo = scrollTo;
 
 
     function getDocHeight(pageID) {
@@ -100,7 +101,15 @@
       $container.scrollTop(
         $qnDesc.offset().top - $container.offset().top + $container.scrollTop()
       );
-    })
+    });
+
+    // General Function for Scroll to particular element
+
+    function scrollTo(selector) {
+      $(".mdl-layout__content").animate({
+        scrollTop: $(selector).offset().top
+      }, 200);
+    }
 
     
     var snackbarContainer = document.querySelector('#snackbar-container');
