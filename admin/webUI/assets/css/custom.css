@@ -266,16 +266,16 @@ body.home {
 
 /*So that the question name column and the question description doesn't scroll together*/
 
-.mdl-cell.mdl-cell--2-col.r-border {
+.qn-nav {
   height: 100vh;
   overflow-y: scroll;
 }
 
-.mdl-cell.mdl-cell--2-col.r-border .pt-20 {
+.qn-nav .no-item {
   padding-bottom: 200px;
 }
 
-.mdl-cell.mdl-cell--10-col.pl-30 {
+.qn-desc {
     height: 100vh;
     overflow-y: auto;
     padding-right: 30px;

@@ -29,23 +29,23 @@
 						<th class="mdl-data-table__cell--non-numeric">Name</th>
 						<th class="mdl-data-table__cell--non-numeric">Email</th>
 						<th class="mdl-data-table__cell--non-numeric">
-							<a href="" ng-click="sortType = 'score'; sortReverse = !sortReverse">
+							<a href="" ng-click="candidateVm.sortType = 'score'; candidateVm.sortReverse = !candidateVm.sortReverse">
 							Score
-							<span ng-show="sortType == 'score' && !sortReverse" class="fa fa-caret-down"></span>
-							<span ng-show="sortType == 'score' && sortReverse" class="fa fa-caret-up"></span>
+							<i ng-show="candidateVm.sortType == 'score' && !candidateVm.sortReverse" class="material-icons">arrow_drop_up</i>
+							<i ng-show="candidateVm.sortType == 'score' && candidateVm.sortReverse" class="material-icons">arrow_drop_down</i>
 							</a>
 						</th>
 						<th class="mdl-data-table__cell--non-numeric">
-							<a href="" ng-click="sortType = 'quiz_start'; sortReverse = !sortReverse">
+							<a href="" ng-click="candidateVm.sortType = 'quiz_start'; candidateVm.sortReverse = !candidateVm.sortReverse">
 							Quiz Start
-							<span ng-show="sortType == 'quiz_start' && !sortReverse" class="fa fa-caret-down"></span>
-							<span ng-show="sortType == 'quiz_start' && sortReverse" class="fa fa-caret-up"></span>
+							<i ng-show="candidateVm.sortType == 'quiz_start' && !candidateVm.sortReverse" class="material-icons">arrow_drop_up</i>
+							<i ng-show="candidateVm.sortType == 'quiz_start' && candidateVm.sortReverse" class="material-icons">arrow_drop_down</i>
 							</a>
 						</th>
 						<th class="mdl-data-table__cell--non-numeric">Actions</th>
 					</tr>
 				</thead>
-				<tbody ng-repeat="candidate in candidateVm.quizCandidates | orderBy:sortType:sortReverse | filter:searchCand">
+				<tbody ng-repeat="candidate in candidateVm.quizCandidates | orderBy:candidateVm.sortType:candidateVm.sortReverse | filter:searchCand">
 					<tr ng-if="candidate.complete == 'true'">
 						<td class="mdl-data-table__cell--non-numeric">{{candidate.name}}</td>
 						<td class="mdl-data-table__cell--non-numeric">{{candidate.email}}</td>

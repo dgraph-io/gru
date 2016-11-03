@@ -12,7 +12,7 @@
 		</div>
 		<div class="mdl-tabs vertical-mdl-tabs mdl-js-tabs mdl-js-ripple-effect mt-30">
 	    <div class="mdl-grid mdl-grid--no-spacing">
-	      <div class="mdl-cell mdl-cell--2-col r-border">
+	      <div class="mdl-cell mdl-cell--2-col r-border qn-nav">
 	        <div class="mdl-tabs__tab-bar">
 	          <!-- <a href="#" class=" pv-5" ng-repeat="question in mainVm.allQuestions" ng-class="{'is-active': $index == 0}" ng-click="allQVm.setQuestion(question, $index)">
 							{{question.name}}
@@ -20,12 +20,12 @@
 	          <div class="side-tabs pv-5" ng-repeat="question in mainVm.allQuestions" ng-class="{'is-active': allQVm.question == question}" ng-click="allQVm.question = question">
 						  	{{question.name}}
 	          </div>
-	          <div class="pt-20 text-center text-red" ng-show="allQVm.noItemFound">
+	          <div class="pt-20 text-center text-red no-item" ng-show="allQVm.noItemFound">
 							<div>No more questions available</div>
 				 		</div>
 	        </div>
 	      </div>
-	      <div class="mdl-cell mdl-cell--10-col pl-30">
+	      <div class="mdl-cell mdl-cell--10-col pl-30 qn-desc">
          	<div class="mdl-tabs__panel is-active" id="tab{{allQVm.questionIndex}}-panel">
          		<div class="mdl-grid no-pad">
 							<div class="mdl-cell mdl-cell--2-col mdl-cell--middle">
