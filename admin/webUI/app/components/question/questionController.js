@@ -359,7 +359,7 @@
 			// When questionis clicked on the side nav bar, we fetch its 
 			// information from backend and refresh it.
 			questionService.getQuestion(questionId).then(function(data){
-				allQVm.question = data.root[0]
+				allQVm.question = data.root[0];
 			})
 
 		}

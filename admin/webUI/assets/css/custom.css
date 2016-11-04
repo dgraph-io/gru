@@ -157,24 +157,24 @@ button.btn-lg {
 
 /* So that top bar takes up less space.*/
 
-.mdl-layout__header {
+.reduce-height {
   min-height: 40px;
 }
 
-.mdl-layout__header-row {
+.reduce-height .mdl-layout__header-row {
   height: 40px;
+}
+
+.reduce-height .mdl-navigation__link {
+  line-height: 40px;
 }
 
 .mdl-grid {
   padding-top: 0px;
 }
 
-.mdl-cell--12-col {
+.qn-page {
   margin-top: 0px;
-}
-
-.mdl-layout__header-row .mdl-navigation__link {
-  line-height: 40px;
 }
 
 .option {

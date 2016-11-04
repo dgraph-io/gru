@@ -128,7 +128,6 @@
 		.then(function(data){
 			editInviteVm.candidateBak = data['quiz.candidate'][0];
 			editInviteVm.candidate = angular.copy(editInviteVm.candidateBak);
-
 			editInviteVm.candidate.dates = new Date(getDate(editInviteVm.candidate.validity));
 
 			editInviteVm.initAllQuiz();
@@ -138,7 +137,7 @@
 
 		function editInvite() {
 			editInviteVm.candidate.id = candidateUID;
-			editInviteVm.candidate.quiz_id = editInviteVm.quizID;
+			editInviteVm.candidate.quiz_id = "";
 			editInviteVm.candidate.old_quiz_id = "";
 			editInviteVm.candidate.validity = formatDate(editInviteVm.candidate.dates);
 
@@ -158,28 +157,40 @@
 
 			var requestData = angular.copy(editInviteVm.candidate);
 
-			inviteService.alreadyInvited(editInviteVm.candidate.quiz_id, editInviteVm.candidate.email).then(function(invited){
-					if (invited) {
-						SNACKBAR({
-							message: "Candidate has already been invited.",
-							messageType: "error",
-						})
-						return
-					} else {
-						inviteService.editInvite(requestData)
-						.then(function(data){
-							SNACKBAR({
-								message: data.Message,
-								messageType: "success",
-							})
-							$state.transitionTo("invite.dashboard", {
-								quizID:  editInviteVm.quizID,
-							})
-						}, function(err){
-							console.log(err)
-						})
-					}
+			function update() {
+				inviteService.editInvite(requestData)
+				.then(function(data){
+					SNACKBAR({
+						message: data.Message,
+						messageType: "success",
+					})
+					$state.transitionTo("invite.dashboard", {
+						quizID:  editInviteVm.quizID,
+					})
+				}, function(err){
+					console.log(err)
 				})
+			}
+
+			// If either the email or the quiz changes, we wan't to validate that the email
+			// shouldn't be already invited to this quiz.
+			if (editInviteVm.candidateBak.email != editInviteVm.candidate.email || editInviteVm.candidate.quiz._uid_ != editInviteVm.candidateBak["candidate.quiz"][0]._uid_) {
+				inviteService.alreadyInvited(editInviteVm.candidate.quiz._uid_, editInviteVm.candidate.email).then(function(invited){
+						if (invited) {
+							SNACKBAR({
+								message: "Candidate has already been invited.",
+								messageType: "error",
+							})
+							return
+						} else {
+							// Not invited yet, update.
+							update()
+						}
+					})
+			// Both email and quiz are same so maybe validity changed, we update.
+			} else {
+				update()
+			}
 		}
 
 		function initAllQuiz() {

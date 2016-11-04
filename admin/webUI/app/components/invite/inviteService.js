@@ -49,7 +49,7 @@
     
     // TODO - Move to a location where other services can access this.
     services.proxy = function(data) {
-      return MainService.post('/proxy',data)
+      return MainService.post('/proxy',data);
     }
     
     return services;
