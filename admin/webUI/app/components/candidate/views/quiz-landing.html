@@ -64,8 +64,21 @@
 				</div>
 			</div>
 
+			<div class="mdl-grid landing-grid">
+				<div class="mdl-cell mdl-cell--2-col mdl-cell--middle">
+					<h4>Name</h4>
+				</div>
+				<div class="mdl-cell mdl-cell--8-col pl-20 lc-border">
+					<div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label mt-20">
+						<input class="mdl-textfield__input" type="name" id="name" ng-model="qlVm.candidate.name">
+						<label class="mdl-textfield__label" for="name">Please enter your name.</label>
+						<span class="mdl-textfield__error">Name can't be empty.</span>
+					</div>
+				</div>
+			</div>
+
 			<div class="text-center mt-30">
-				<button class="mdl-button mdl-js-button mdl-js-ripple-effect btn-lg" ng-click="mainVm.goTo('candidate.quiz')" ng-disabled="qlVm.checkedInfo()">
+				<button class="mdl-button mdl-js-button mdl-js-ripple-effect btn-lg" ng-click="qlVm.saveName()" ng-disabled="qlVm.checkedInfo()">
 			    START QUIZ
 			  </button>
 			  <div>

@@ -1,10 +1,12 @@
 (function(){
 
-	function quizLandingController($scope, $state, $stateParams, $q, $http, $interpolate) {
+	function quizLandingController($scope, $state, $stateParams, $http, $interpolate, quizLandingService) {
 
 	// VARIABLE DECLARATION
 		qlVm = this;
+		qlVm.candidate = {name: ""};
 		qlVm.invalidUser = false;
+		qlVm.saveName = saveName;
 		mainVm.pageName = "quiz-landing";
 
 		if(!$stateParams.quiz_token) {
@@ -89,19 +91,36 @@
 			var checkedInput = $(".quiz-landing .mdl-checkbox__input:checked").length;
 			var totalInput = qlVm.info.General.length + qlVm.info.Score.length + qlVm.info.Contact.length;
 
-			return (checkedInput == totalInput) ? false : true;
+			return (checkedInput == totalInput) && qlVm.candidate.name != "" ? false : true;
+		}
+
+		function saveName() {
+			var requestData = {
+				name: qlVm.candidate.name,
+			};
+
+			var ctoken = JSON.parse(localStorage.getItem("candidate_info"));
+			ctoken.Name = qlVm.candidate.name
+			localStorage.setItem('candidate_info', JSON.stringify(ctoken));
+
+			quizLandingService.addName(requestData).then(function(data){
+				console.log(data);
+				mainVm.goTo('candidate.quiz')
+			}, function(err){
+				console.log(err);
+			});
 		}
 	}
 
 	// CANDIDATE QUIZ
 	var quizLandingDependency = [
 		"$scope",
-	    "$state",
-	    "$stateParams",
-	    "$q",
-	    "$http",
-	    "$interpolate",
-	    quizLandingController
+		"$state",
+		"$stateParams",
+		"$http",
+		"$interpolate",
+		"quizLandingService",
+		quizLandingController
 	];
 	angular.module('GruiApp').controller('quizLandingController', quizLandingDependency);
 })();

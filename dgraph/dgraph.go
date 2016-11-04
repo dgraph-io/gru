@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/dgraph-io/gru/admin/server"
 	"github.com/pkg/errors"
 )
 
@@ -93,4 +94,21 @@ func Query(q string) ([]byte, error) {
 		return []byte{}, errors.Wrap(err, "Couldn't read response body")
 	}
 	return b, nil
+}
+
+func Proxy(w http.ResponseWriter, r *http.Request) {
+	sr := server.Response{}
+	b, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		sr.Write(w, err.Error(), "Couldn't read body", http.StatusBadRequest)
+		return
+	}
+
+	// TODO - Later send bytes directly to Dgraph.
+	res, err := Query(string(b))
+	if err != nil {
+		sr.Write(w, err.Error(), "Couldn't read body", http.StatusBadRequest)
+		return
+	}
+	w.Write(res)
 }

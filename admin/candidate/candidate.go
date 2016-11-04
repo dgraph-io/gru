@@ -47,6 +47,7 @@ func index(quizId string) string {
 			validity
 			complete
 			quiz_start
+			invite_sent
 			candidate.question {
 				candidate.score
 			}
@@ -79,7 +80,6 @@ func add(c Candidate) string {
 		<_uid_:` + c.QuizId + `> <quiz.candidate> <_new_:c> .
 		<_new_:c> <candidate.quiz> <_uid_:` + c.QuizId + `> .
 		<_new_:c> <email> "` + c.Email + `" .
-		<_new_:c> <name> "` + c.Name + `" .
 		<_new_:c> <token> "` + c.Token + `" .
 		<_new_:c> <validity> "` + c.Validity + `" .
 		<_new_:c> <invite_sent> "` + time.Now().UTC().String() + `" .
@@ -115,11 +115,6 @@ func Add(w http.ResponseWriter, r *http.Request) {
 		sr.Write(w, "", err.Error(), http.StatusInternalServerError)
 		return
 	}
-	if mr.Code != "ErrorOk" {
-		sr.Write(w, mr.Message, "Mutation couldn't be applied by Dgraph.",
-			http.StatusInternalServerError)
-		return
-	}
 
 	// mutation applied successfully, lets send a mail to the candidate.
 	uid, ok := mr.Uids["c"]
@@ -140,7 +135,6 @@ func Add(w http.ResponseWriter, r *http.Request) {
 func edit(c Candidate) string {
 	m := new(dgraph.Mutation)
 	m.Set(`<_uid_:` + c.Uid + `> <email> "` + c.Email + `" . `)
-	m.Set(`<_uid_:` + c.Uid + `> <name> "` + c.Name + `" . `)
 	m.Set(`<_uid_:` + c.Uid + `> <validity> "` + c.Validity + `" . `)
 
 	// When the quiz for which candidate is invited is changed, we get both OldQuizId

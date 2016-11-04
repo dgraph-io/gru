@@ -50,7 +50,7 @@
 						<td class="mdl-data-table__cell--non-numeric">{{candidate.name}}</td>
 						<td class="mdl-data-table__cell--non-numeric">{{candidate.email}}</td>
 						<td class="mdl-data-table__cell--non-numeric">{{candidate.score | number: 2}}</td>
-						<td class="mdl-data-table__cell--non-numeric">{{candidate.quiz_start | date : 'dd/MM/yy h:mm a'}}</td>
+						<td class="mdl-data-table__cell--non-numeric">{{candidate.quiz_start | date : 'MMM dd, yyyy'}}</td>
 						<td class="mdl-data-table__cell--non-numeric">
 							<a ui-sref="invite.report({candidateID: candidate._uid_})">VIEW REPORT</a>
 						</span>
@@ -73,16 +73,22 @@
 			<table class="mdl-data-table mdl-shadow--2dp">
 				<thead>
 					<tr>
-						<th class="mdl-data-table__cell--non-numeric">Name</th>
 						<th class="mdl-data-table__cell--non-numeric">Email</th>
+						<th class="mdl-data-table__cell--non-numeric">
+							<a href="" ng-click="candidateVm.sortType = 'invite_sent'; candidateVm.sortReverse = !candidateVm.sortReverse">
+							Invited
+							<i ng-show="candidateVm.sortType == 'invite_sent' && !candidateVm.sortReverse" class="material-icons">arrow_drop_up</i>
+							<i ng-show="candidateVm.sortType == 'invite_sent' && candidateVm.sortReverse" class="material-icons">arrow_drop_down</i>
+							</a>
+						</th>
 						<th class="mdl-data-table__cell--non-numeric">Validity</th>
 						<th class="mdl-data-table__cell--non-numeric">Actions</th>
 					</tr>
 				</thead>
-				<tbody ng-repeat="candidate in candidateVm.quizCandidates | filter:searchCand">
+				<tbody ng-repeat="candidate in candidateVm.quizCandidates | orderBy:candidateVm.sortType:candidateVm.sortReverse | filter:searchCand">
 					<tr ng-if="candidate.complete != 'true'">
-						<td class="mdl-data-table__cell--non-numeric">{{candidate.name}}</td>
 						<td class="mdl-data-table__cell--non-numeric">{{candidate.email}}</td>
+						<td class="mdl-data-table__cell--non-numeric">{{candidate.invite_sent | date : 'MMM dd, yyyy'}}</td>
 						<td class="mdl-data-table__cell--non-numeric">{{candidate.validity}}</td>
 						<td class="mdl-data-table__cell--non-numeric">
 							<a ui-sref="invite.edit({quizID: candidateVm.quizID, candidateID: candidate._uid_})">EDIT</a> 

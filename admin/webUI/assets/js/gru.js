@@ -101,7 +101,6 @@
         $qnDesc.offset().top - $container.offset().top + $container.scrollTop()
       );
     })
-
     
     var snackbarContainer = document.querySelector('#snackbar-container');
     window.SNACKBAR = function(setting) {

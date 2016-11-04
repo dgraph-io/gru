@@ -1,23 +1,23 @@
 <div ng-controller="allQuestionController as allQVm" class="question-listing" id="question-listing">	
 	<div class="" ng-if="mainVm.allQuestions.length">
-		<div class="mdl-grid mdl-grid--no-spacing mt-20 b-border">
+		<div class="mdl-grid mdl-grid--no-spacing b-border">
 			<div class="mdl-cell mdl-cell--6-col mdl-cell--4-col-tablet pl-5">
 				<h5>
 					List of all questions
 				</h5>
 			</div>
 			<div class="mdl-cell mdl-cell--6-col mdl-cell--4-col-tablet">
-				<button class="mdl-button btn-succes bg-green pull-right" ng-click="mainVm.goTo('question.add')">Add New</button>
+				<button class="mdl-button btn-succes bg-green pull-right mt-10" ng-click="mainVm.goTo('question.add')">Add New</button>
 			</div>
 		</div>
-		<div class="mdl-tabs vertical-mdl-tabs mdl-js-tabs mdl-js-ripple-effect mt-30">
-	    <div class="mdl-grid mdl-grid--no-spacing">
+		<div class="mdl-tabs vertical-mdl-tabs mdl-js-tabs mdl-js-ripple-effect mt-10">
+	    <div class="mdl-grid mdl-grid--no-spacing qn-index">
 	      <div class="mdl-cell mdl-cell--2-col r-border qn-nav">
 	        <div class="mdl-tabs__tab-bar">
 	          <!-- <a href="#" class=" pv-5" ng-repeat="question in mainVm.allQuestions" ng-class="{'is-active': $index == 0}" ng-click="allQVm.setQuestion(question, $index)">
 							{{question.name}}
 	          </a> -->
-	          <div class="side-tabs pv-5" ng-repeat="question in mainVm.allQuestions" ng-class="{'is-active': allQVm.question == question}" ng-click="allQVm.question = question">
+	          <div class="side-tabs pv-5" ng-repeat="question in mainVm.allQuestions" ng-class="{'is-active': allQVm.question == question}" ng-click="allQVm.getQuestion(question._uid_)">
 						  	{{question.name}}
 	          </div>
 	          <div class="pt-20 text-center text-red no-item" ng-show="allQVm.noItemFound">
@@ -66,20 +66,20 @@
 								</span>
 							</div>
 						</div>
-						<div class="mt-20 pl-10">
+						<div class="mt-10 pl-10">
 							<strong>QUESTION CONTENT</strong>
-							<pre class="ph-20 pv-10 full-border code-block" ng-bind-html="questionVm.markDownFormat(mainVm.unescapeText(allQVm.question.text))"></pre>
+							<pre class="ph-20 pv-5 full-border code-block" ng-bind-html="questionVm.markDownFormat(mainVm.unescapeText(allQVm.question.text))"></pre>
 						</div>
 
-						<div class="mdl-grid no-pad mt-20" ng-repeat="option in allQVm.question['question.option'] track by $index">
+						<div class="mdl-grid no-pad mt-5" ng-repeat="option in allQVm.question['question.option'] track by $index">
 							<div class="mdl-cell mdl-cell--2-col mdl-cell--middle">
 								<span class="bold" ng-class="{'text-green': questionVm.isCorrect(option, allQVm.question['question.correct'])}">
 									OPTIONS {{$index + 1}}
 									<i class="material-icons mdi-sm" ng-show="questionVm.isCorrect(option, allQVm.question['question.correct'])">check_circle</i>
 								</span>
 							</div>
-							<div class="mdl-cell mdl-cell--10-col full-border">
-								<div class="ph-10 pt-10 position-relative">
+							<div class="mdl-cell mdl-cell--10-col full-border option">
+								<div class="ph-10 position-relative">
 									<pre ng-bind-html="questionVm.markDownFormat(mainVm.unescapeText(option.name))" class="code-block"></pre>
 								</div>
 							</div>
