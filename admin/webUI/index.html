@@ -22,7 +22,7 @@
 </head>
 <body ng-controller="MainController as mainVm" class="position-relative {{mainVm.pageName}} ng-clo" autoscroll="" ng-class="{'admin-panel': mainVm.isLoggedIn()}">
     <div class="web-layout-transparent mdl-layout mdl-js-layout mdl-layout--fixed-header  ng-cloak" >
-      <header class="mdl-layout__header mdl-shadow--2dp {{mainVm.notification.class}}" ng-class="{'notification-header' : mainVm.showNotification}">
+      <header class="mdl-layout__header mdl-shadow--2dp {{mainVm.notification.class}} reduce-height" ng-class="{'notification-header' : mainVm.showNotification}">
         <div class="mdl-layout__header-row">
           <!-- Title -->
           <a ui-sref="root"  ng-if="mainVm.isLoggedIn()" class="ng-cloak">

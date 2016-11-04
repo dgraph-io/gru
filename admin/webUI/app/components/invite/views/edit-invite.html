@@ -2,11 +2,6 @@
 	<div class="mdl-cell mdl-cell--6-col mdl-cell--3-offset">
 		<h4>Update Invite</h4>
 		<form ng-submit="editInviteVm.editInvite()">
-			<div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label" ng-class="{'is-dirty': editInviteVm.candidate.name}">
-				<input class="mdl-textfield__input" type="text" id="name" ng-model="editInviteVm.candidate.name">
-				<label class="mdl-textfield__label" for="name">Enter Name</label>
-			</div>
-
 			<div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label mt-20" ng-class="{'is-dirty': editInviteVm.candidate.email}">
 				<input class="mdl-textfield__input" type="email" id="email" ng-model="editInviteVm.candidate.email">
 				<label class="mdl-textfield__label" for="email">Enter Email</label>

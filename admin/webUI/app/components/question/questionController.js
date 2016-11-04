@@ -283,6 +283,7 @@
 
 		// FUNCTION DECLARATION
 		allQVm.getAllQuestions = getAllQuestions;
+		allQVm.getQuestion = getQuestion;
 		allQVm.setQuestion = setQuestion;
 
 		// INITITIALIZERS
@@ -292,6 +293,7 @@
 
 		// FUNCTION DEFINITIONS
 		function getAllQuestions(questionID) {
+
 			if(questionID && !allQVm.lazyStatus && allQVm.noItemFound) {
 				return 
 			}
@@ -302,6 +304,10 @@
 			var hideLoader = questionID ? true : false;
 
 			allQVm.showLazyLoader = true;
+			// TODO - Fetch only meta for all questions, and details for just the
+			// first question because we anyway refetch the questions from the server
+			// on click. In the meta call, fetch tags and multiple status too so that
+			// we can do filtering based on that.
 			questionService.getAllQuestions(data, hideLoader).then(function(data){
 				if(data.code == "ErrorInvalidRequest" || !data.debug[0].question) {
 					allQVm.noItemFound = true;
@@ -314,8 +320,8 @@
 					if(mainVm.allQuestions && mainVm.allQuestions.length) {
 						dataArrayLength = dataArray.length;
 						for(var i = 0; i < dataArrayLength; i++) {
-               mainVm.allQuestions.push(dataArray[i]);
-            }
+							mainVm.allQuestions.push(dataArray[i]);
+						}
 					} else {
 						mainVm.allQuestions = data.debug[0].question;
 						
@@ -347,6 +353,15 @@
 				allQVm.showLazyLoader = false;
 				console.log(err)
 			});
+		}
+
+		function getQuestion(questionId) {
+			// When questionis clicked on the side nav bar, we fetch its 
+			// information from backend and refresh it.
+			questionService.getQuestion(questionId).then(function(data){
+				allQVm.question = data.root[0];
+			})
+
 		}
 
 		$(document).ready(function(){

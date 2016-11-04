@@ -48,26 +48,33 @@
 			inviteVm.newInvite.quiz_id = inviteVm.newInvite.quiz._uid_;
 			inviteVm.newInvite.validity = dateTime;
 
-			inviteService.inviteCandidate(inviteVm.newInvite).then(function(data){
-				SNACKBAR({
-					message: data.Message,
-					messageType: "success",
-				});
-				if(data.Success) {
-					$state.transitionTo("invite.dashboard", {
-						quizID: inviteVm.newInvite.quiz_id,
-					})
-					inviteVm.newInvite = {}
-				}
-			}, function(err){
-				console.log(err)
-			});
+			inviteService.alreadyInvited(inviteVm.newInvite.quiz_id, inviteVm.newInvite.email).then(function(invited){
+					if (invited) {
+						SNACKBAR({
+							message: "Candidate has already been invited.",
+							messageType: "error",
+						})
+						return
+					} else {
+						inviteService.inviteCandidate(inviteVm.newInvite).then(function(data){
+							SNACKBAR({
+								message: data.Message,
+								messageType: "success",
+							});
+							if(data.Success) {
+								$state.transitionTo("invite.dashboard", {
+									quizID: inviteVm.newInvite.quiz_id,
+								})
+								inviteVm.newInvite = {}
+							}
+						}, function(err){
+							console.log(err)
+						});
+					}
+				})
 		}
 
 		function invalidateInput(inputs) {
-			if(!inputs.name) {
-				return "Please Enter Valid Name";
-			}
 			if(!isValidEmail(inputs.email)) {
 				return "Please Enter Valid Email"; 
 			}
@@ -121,7 +128,6 @@
 		.then(function(data){
 			editInviteVm.candidateBak = data['quiz.candidate'][0];
 			editInviteVm.candidate = angular.copy(editInviteVm.candidateBak);
-
 			editInviteVm.candidate.dates = new Date(getDate(editInviteVm.candidate.validity));
 
 			editInviteVm.initAllQuiz();
@@ -151,18 +157,40 @@
 
 			var requestData = angular.copy(editInviteVm.candidate);
 
-			inviteService.editInvite(requestData)
-			.then(function(data){
-				SNACKBAR({
-					message: data.Message,
-					messageType: "success",
+			function update() {
+				inviteService.editInvite(requestData)
+				.then(function(data){
+					SNACKBAR({
+						message: data.Message,
+						messageType: "success",
+					})
+					$state.transitionTo("invite.dashboard", {
+						quizID:  editInviteVm.quizID,
+					})
+				}, function(err){
+					console.log(err)
 				})
-				$state.transitionTo("invite.dashboard", {
-					quizID:  editInviteVm.quizID,
-				})
-			}, function(err){
-				console.log(err)
-			})
+			}
+
+			// If either the email or the quiz changes, we wan't to validate that the email
+			// shouldn't be already invited to this quiz.
+			if (editInviteVm.candidateBak.email != editInviteVm.candidate.email || editInviteVm.candidate.quiz._uid_ != editInviteVm.candidateBak["candidate.quiz"][0]._uid_) {
+				inviteService.alreadyInvited(editInviteVm.candidate.quiz._uid_, editInviteVm.candidate.email).then(function(invited){
+						if (invited) {
+							SNACKBAR({
+								message: "Candidate has already been invited.",
+								messageType: "error",
+							})
+							return
+						} else {
+							// Not invited yet, update.
+							update()
+						}
+					})
+			// Both email and quiz are same so maybe validity changed, we update.
+			} else {
+				update()
+			}
 		}
 
 		function initAllQuiz() {
@@ -221,6 +249,7 @@
 				// TODO - Maybe store invite in a format that frontend directly
 				// understands.
 				if (cand.complete == "false") {
+					cand.invite_sent = new Date(Date.parse(cand.invite_sent)) || '';
 					continue;
 				}
 				cand.quiz_start = new Date(Date.parse(cand.quiz_start)) || '';

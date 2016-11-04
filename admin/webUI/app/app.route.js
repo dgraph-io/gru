@@ -149,7 +149,7 @@
       .state('quiz-landing', {
         url: '/quiz/:quiz_token',
         templateUrl: quizLandingTemplate,
-        resolve: helper.resolveFor('quizLandingController'),
+        resolve: helper.resolveFor('quizLandingController','quizLandingService'),
       })
       .state('candidate', {
         url: '/candidate',
