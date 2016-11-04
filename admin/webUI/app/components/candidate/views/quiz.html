@@ -1,145 +1,136 @@
-<div class="main-content ng-cloak" ng-controller="candidateQuizController as cqVm">	
-	<div class="" ng-if="!cqVm.apiError">
-		<div class="mdl-grid mb-20" ng-class="{'quiz-ended mdl-shadow--2dp pv-20': cqVm.quizEnded, 'b-border': !cqVm.quizEnded }">
-			<div class="mdl-cell mdl-cell--8-col-tablet mdl-cell--middle resp-center" ng-class="{'mdl-cell--4-col': cqVm.quizEnded, 'mdl-cell--3-col': !cqVm.quizEnded }">
-				<h5 ng-if="cqVm.quizEnded" class="bold">Hi, {{candidateVm.info.Name}}. </h5>
-				<h5 class="bold mt-5 mb-5">Dgraph quiz <span ng-if="cqVm.quizEnded">ended</span></h5>
-			</div>
-			<div class="mdl-cell mdl-cell--7-col mdl-cell--6-col-tablet mdl-cell--middle big-font">
-				<span class="mdl-chip mdl-chip--contact" ng-if="!cqVm.quizEnded">
+<div class="main-content ng-cloak" ng-controller="candidateQuizController as cqVm">
+  <div class="" ng-if="!cqVm.apiError">
+    <div class="mdl-grid mb-20" ng-class="{'quiz-ended mdl-shadow--2dp pv-20': cqVm.quizEnded, 'b-border': !cqVm.quizEnded }">
+      <div class="mdl-cell mdl-cell--8-col-tablet mdl-cell--middle resp-center" ng-class="{'mdl-cell--4-col': cqVm.quizEnded, 'mdl-cell--3-col': !cqVm.quizEnded }">
+        <h5 ng-if="cqVm.quizEnded" class="bold">Hi, {{candidateVm.info.Name}}. </h5>
+        <h5 class="bold mt-5 mb-5">Dgraph quiz <span ng-if="cqVm.quizEnded">ended</span></h5>
+      </div>
+      <div class="mdl-cell mdl-cell--7-col mdl-cell--6-col-tablet mdl-cell--middle big-font">
+        <span class="mdl-chip mdl-chip--contact" ng-if="!cqVm.quizEnded">
 			    <span class="mdl-chip__contact mdl-color--teal mdl-color-text--white">Time left</span>
-			    <span class="mdl-chip__text bold text-center timer-chip-text"><span id="time"></span></span>
-				</span>
-
-				<div class="inline-block ml-20">
-					<span class="mdl-chip mdl-chip--contact">
+        <span class="mdl-chip__text bold text-center timer-chip-text"><span id="time"></span></span>
+        </span>
+        <div class="inline-block ml-20">
+          <span class="mdl-chip mdl-chip--contact">
 				    <span class="mdl-chip__contact mdl-color--teal mdl-color-text--white">
 				    	Time spent
 				    </span>
-				    <span class="mdl-chip__text bold text-center timer-chip-text"><span id="time-taken"></span></span>
-					</span>
-				</div>
-
-				<span class="mdl-chip mdl-chip--contact" ng-if="cqVm.quizEnded">
+          <span class="mdl-chip__text bold text-center timer-chip-text"><span id="time-taken"></span></span>
+          </span>
+        </div>
+        <span class="mdl-chip mdl-chip--contact" ng-if="cqVm.quizEnded">
 			    <span class="mdl-chip__contact mdl-color--teal mdl-color-text--white">
 			    	<span ng-if="cqVm.quizEnded">Final</span> Score
-			    </span>
-			    <span class="mdl-chip__text bold text-center ">{{cqVm.question.score}}</span>
-				</span>
-			</div>
-			<div class="mdl-cell mdl-cell--2-col mdl-cell--middle text-right big-font" ng-if="!cqVm.quizEnded">
-				<span class="mdl-chip mdl-chip--contact">
+        </span>
+        <span class="mdl-chip__text bold text-center ">{{cqVm.question.score}}</span>
+        </span>
+      </div>
+      <div class="mdl-cell mdl-cell--2-col mdl-cell--middle text-right big-font" ng-if="!cqVm.quizEnded">
+        <span class="mdl-chip mdl-chip--contact">
 			    <span class="mdl-chip__contact mdl-color--teal mdl-color-text--white">
 			    	<span ng-if="cqVm.quizEnded">Final</span> Score
-			    </span>
-			    <span class="mdl-chip__text bold text-center ">{{cqVm.question.score}}</span>
-				</span>
-			</div>
-			<div ng-show="cqVm.quizEnded" class="pl-10 t-border">
-				<div ng-show="!cqVm.feedbackSubmitted">
-					<form ng-submit="cqVm.submitFeedback()">
-						<div class="mdl-textfield mdl-js-textfield">
-					    <textarea class="mdl-textfield__input" type="text" rows= "5" cols="70" id="feedback" ng-model="cqVm.feedback"></textarea>
-					    <label class="mdl-textfield__label" for="feedback">Thanks for taking the quiz. We'll get back to you regarding next steps.</br>
-					    If you have any feedback for us, please let us know by writing it here.</label>
-					  </div>
-
-					  <button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect btn-lg">
-					  	SUBMIT
-					  </button>
-					</form>
-				</div>
-				<div ng-if="cqVm.feedbackSubmitted" class="text-green pt-10">
-					<i class="material-icons">feedback</i> Thank you for your feedback!
-				</div>
-			</div>
-		</div>
-	
-		<div ng-if="!cqVm.quizEnded">
-			<div class="mdl-grid" ng-if="cqVm.question.text">
-				<div class="mdl-cell mdl-cell--9-col">
-					<div class="question">
-						<span ng-if="cqVm.question.multiple == 'true'">(Multiple Choice)</span>
-						<pre ng-bind-html="mainVm.markDownFormat(mainVm.unescapeText(cqVm.question.text))" class="code-block"></pre>
-					</div>
-
-					<div class="options pt-20">
-						<label class="pb-10">OPTIONS</label>
-						<div ng-if="cqVm.question.multiple == 'false'">
-							<div ng-repeat="option in cqVm.question['question.option']">
-								<label class="mdl-radio mdl-js-radio mdl-js-ripple-effect mt-10" for="option{{$index}}">
-								  <input type="radio" id="option{{$index}}" class="mdl-radio__button" name="answer" value="{{option._uid_}}" ng-model="cqVm.answer">
-								  <span class="mdl-radio__label">
+        </span>
+        <span class="mdl-chip__text bold text-center ">{{cqVm.question.score}}</span>
+        </span>
+      </div>
+      <div ng-show="cqVm.quizEnded" class="pl-10 t-border">
+        <div ng-show="!cqVm.feedbackSubmitted">
+          <form ng-submit="cqVm.submitFeedback()">
+            <div class="mdl-textfield mdl-js-textfield">
+              <textarea class="mdl-textfield__input" type="text" rows="5" cols="70" id="feedback" ng-model="cqVm.feedback"></textarea>
+              <label class="mdl-textfield__label" for="feedback">Thanks for taking the quiz. We'll get back to you regarding next steps.</br>
+                If you have any feedback for us, please let us know by writing it here.</label>
+            </div>
+            <button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect btn-lg">
+              SUBMIT
+            </button>
+          </form>
+        </div>
+        <div ng-if="cqVm.feedbackSubmitted" class="text-green pt-10">
+          <i class="material-icons">feedback</i> Thank you for your feedback!
+        </div>
+      </div>
+    </div>
+    <div ng-if="!cqVm.quizEnded">
+      <div class="mdl-grid" ng-if="cqVm.question.text">
+        <div class="mdl-cell mdl-cell--9-col">
+          <div class="question">
+            <span ng-if="cqVm.question.multiple == 'true'">(Multiple Choice)</span>
+            <pre ng-bind-html="mainVm.markDownFormat(mainVm.unescapeText(cqVm.question.text))" class="code-block"></pre>
+          </div>
+          <div class="options pt-20">
+            <label class="pb-10">OPTIONS</label>
+            <div ng-if="cqVm.question.multiple == 'false'">
+              <div ng-repeat="option in cqVm.question['question.option']">
+                <label class="mdl-radio mdl-js-radio mdl-js-ripple-effect mt-10" for="option{{$index}}">
+                  <input type="radio" id="option{{$index}}" class="mdl-radio__button" name="answer" value="{{option._uid_}}" ng-model="cqVm.answer">
+                  <span class="mdl-radio__label">
 								  	<pre ng-bind-html="mainVm.markDownFormat(mainVm.unescapeText(option.name))" class="pl-20 pr-20 pt-10 code-block full-border-grey"></pre>
 								  </span>
-								</label>
-							</div>
-						</div>
-						<div  ng-if="cqVm.question.multiple == 'true'">
-							<div ng-repeat="option in cqVm.question['question.option']">
-								<label class="mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect mt-10" for="option{{$index}}">
-								  <input type="checkbox" name="answer" id="option{{$index}}" class="mdl-checkbox__input" ng-model="cqVm.answer[option._uid_]">
-								  <span class="mdl-checkbox__label">
+                </label>
+              </div>
+            </div>
+            <div ng-if="cqVm.question.multiple == 'true'">
+              <div ng-repeat="option in cqVm.question['question.option']">
+                <label class="mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect mt-10" for="option{{$index}}">
+                  <input type="checkbox" name="answer" id="option{{$index}}" class="mdl-checkbox__input" ng-model="cqVm.answer[option._uid_]">
+                  <span class="mdl-checkbox__label">
 								  	<pre ng-bind-html="mainVm.markDownFormat(mainVm.unescapeText(option.name))" class="pl-20 pr-20 pt-10 code-block full-border-grey"></pre>
 								  </span>
-								</label>
-							</div>
-						</div>
-					</div>
-
-					<div class="submission mt-30">
-						<button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect btn-lg" ng-click="cqVm.submitAnswer()">
-						  Submit
-						</button>
-						<a href="" class="ml-20" ng-click="cqVm.submitAnswer(true)">SKIP</a>
-					</div>
-				</div>
-
-				<div class="mdl-cell mdl-cell--3-col">
-					<div class="pb-30 mdl-shadow--2dp">
-						<div class="alert alert-success">
-							Scoring
-						</div>
-
-						<div class="pl-10">
-							<div class="mdl-grid pad-0">
-								<div class="mdl-cell mdl-cell--6-col mdl-cell--middle">
-									<label>CORRECT</label>
-								</div>
-								<div class="mdl-cell mdl-cell--6-col">
-									<button class="mdl-button mdl-js-button mdl-button--fab mdl-button--mini-fab btn-success">
-									  +{{cqVm.question.positive}}
-									</button>
-								</div>
-							</div>
-							<div class="mdl-grid pad-0">
-								<div class="mdl-cell mdl-cell--6-col mdl-cell--middle">
-									<label>INCORRECT </label>
-								</div>
-								<div class="mdl-cell mdl-cell--6-col">
-									<button class="mdl-button mdl-js-button mdl-button--fab mdl-button--mini-fab btn-red">
-									  -{{cqVm.question.negative}}
-									</button>
-								</div>
-							</div>
-							<div class="mdl-grid pad-0">
-								<div class="mdl-cell mdl-cell--6-col mdl-cell--middle">
-									<label>SKIP </label>
-								</div>
-								<div class="mdl-cell mdl-cell--6-col">
-									<button class="mdl-button mdl-js-button mdl-button--fab mdl-button--mini-fab btn-default">
-									  0
-									</button>
-								</div>
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
-	<div ng-if="cqVm.apiError" class="mt-30 text-center text-red">
-		<h4 ng-bind-html="cqVm.apiError"></h4>
-	</div>
+                </label>
+              </div>
+            </div>
+          </div>
+          <div class="submission mt-30">
+            <button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect btn-lg" ng-click="cqVm.submitAnswer()">
+              Submit
+            </button>
+            <a href="" class="ml-20" ng-click="cqVm.submitAnswer(true)">SKIP</a>
+          </div>
+        </div>
+        <div class="mdl-cell mdl-cell--3-col">
+          <div class="pb-30 mdl-shadow--2dp">
+            <div class="alert alert-success">
+              Scoring
+            </div>
+            <div class="pl-10">
+              <div class="mdl-grid pad-0">
+                <div class="mdl-cell mdl-cell--6-col mdl-cell--middle">
+                  <label>CORRECT</label>
+                </div>
+                <div class="mdl-cell mdl-cell--6-col">
+                  <button class="mdl-button mdl-js-button mdl-button--fab mdl-button--mini-fab btn-success">
+                    +{{cqVm.question.positive}}
+                  </button>
+                </div>
+              </div>
+              <div class="mdl-grid pad-0">
+                <div class="mdl-cell mdl-cell--6-col mdl-cell--middle">
+                  <label>INCORRECT </label>
+                </div>
+                <div class="mdl-cell mdl-cell--6-col">
+                  <button class="mdl-button mdl-js-button mdl-button--fab mdl-button--mini-fab btn-red">
+                    -{{cqVm.question.negative}}
+                  </button>
+                </div>
+              </div>
+              <div class="mdl-grid pad-0">
+                <div class="mdl-cell mdl-cell--6-col mdl-cell--middle">
+                  <label>SKIP </label>
+                </div>
+                <div class="mdl-cell mdl-cell--6-col">
+                  <button class="mdl-button mdl-js-button mdl-button--fab mdl-button--mini-fab btn-default">
+                    0
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div ng-if="cqVm.apiError" class="mt-30 text-center text-red">
+    <h4 ng-bind-html="cqVm.apiError"></h4>
+  </div>
 </div>
-

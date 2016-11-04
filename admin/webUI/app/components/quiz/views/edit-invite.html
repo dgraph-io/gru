@@ -1,48 +1,43 @@
 <div class="mdl-grid" ng-controller="editInviteController as editeditInviteVm">
-	<div class="mdl-cell mdl-cell--5-col">
-		<h4>Update Invite</h4>
-		<form ng-submit="editInviteVm.editInvite()">
-			<div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
-		    <input class="mdl-textfield__input" type="text" id="name" ng-model="editInviteVm.edit.name">
-		    <label class="mdl-textfield__label" for="name">Enter Name</label>
-		  </div>
-
-		  <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label mt-20">
-		    <input class="mdl-textfield__input" type="email" id="email" ng-model="editInviteVm.edit.email">
-		    <label class="mdl-textfield__label" for="email">Enter Email</label>
-		    <span class="mdl-textfield__error">Should be valid email</span>
-		  </div>
-
-		  <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label mt-20">
-		    <input class="mdl-textfield__input" type="date" id="datePicker" ng-model="editInviteVm.edit.dates">
-		    <label class="mdl-textfield__label" for="datePicker">Enter validity</label>
-		    <span class="mdl-textfield__error">Should be valid date</span>
-		  </div>
-				
-			<div class="mt-20" ng-if="editInviteVm.edit.quiz">
-				<label class="bold">Selected Quiz</label>
-				<div class="mt-5">
-					<span class="mdl-chip mdl-chip--deletable">
+  <div class="mdl-cell mdl-cell--5-col">
+    <h4>Update Invite</h4>
+    <form ng-submit="editInviteVm.editInvite()">
+      <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+        <input class="mdl-textfield__input" type="text" id="name" ng-model="editInviteVm.edit.name">
+        <label class="mdl-textfield__label" for="name">Enter Name</label>
+      </div>
+      <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label mt-20">
+        <input class="mdl-textfield__input" type="email" id="email" ng-model="editInviteVm.edit.email">
+        <label class="mdl-textfield__label" for="email">Enter Email</label>
+        <span class="mdl-textfield__error">Should be valid email</span>
+      </div>
+      <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label mt-20">
+        <input class="mdl-textfield__input" type="date" id="datePicker" ng-model="editInviteVm.edit.dates">
+        <label class="mdl-textfield__label" for="datePicker">Enter validity</label>
+        <span class="mdl-textfield__error">Should be valid date</span>
+      </div>
+      <div class="mt-20" ng-if="editInviteVm.edit.quiz">
+        <label class="bold">Selected Quiz</label>
+        <div class="mt-5">
+          <span class="mdl-chip mdl-chip--deletable">
 				    <span class="mdl-chip__text">{{editInviteVm.edit.quiz.name}}</span>
-				    <button type="button" class="mdl-chip__action" ng-click="editInviteVm.removeSelectedQuiz(key)">
-				    	<i class="material-icons">cancel</i>
-				    </button>
-					</span>
-				</div>
-			</div>
-			
-			<div class="mt-20">
-				<button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect action-btn" ng-disabled="!editInviteVm.edit.quiz">
-				  Update Invite
-				</button>
-				<span ng-if="!editInviteVm.edit.quiz">
+          <button type="button" class="mdl-chip__action" ng-click="editInviteVm.removeSelectedQuiz(key)">
+            <i class="material-icons">cancel</i>
+          </button>
+          </span>
+        </div>
+      </div>
+      <div class="mt-20">
+        <button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect action-btn" ng-disabled="!editInviteVm.edit.quiz">
+          Update Invite
+        </button>
+        <span ng-if="!editInviteVm.edit.quiz">
 					Select the quiz to proceed
 				</span>
-			</div>
-		</form>
-	</div>
-
-	<div class="mdl-cell mdl-cell--6-col  mdl-cell--1-offset">
-		<div ng-include="'app/components/quiz/views/quiz-selection.html'"></div>
-	</div>
+      </div>
+    </form>
+  </div>
+  <div class="mdl-cell mdl-cell--6-col  mdl-cell--1-offset">
+    <div ng-include="'app/components/quiz/views/quiz-selection.html'"></div>
+  </div>
 </div>

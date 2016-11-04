@@ -1,86 +1,84 @@
 <div class="mdl-grid container" ng-controller="editQuestionController as editQuesVm">
-	<div class="mdl-cell mdl-cell--12-col">
-		<h5>
+  <div class="mdl-cell mdl-cell--12-col">
+    <h5>
 			Update Question
 		</h5>
-		<form ng-submit="editQuesVm.updateQuestionForm()">
-			<div class="mdl-grid no-pad">
-				<div class="mdl-cell mdl-cell--12-col ml-0">
-				  <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label" ng-class="{'is-dirty': editQuesVm.newQuestion.name}">
-				    <input class="mdl-textfield__input" type="text" name="name" id="question-name" ng-model="editQuesVm.newQuestion.name">
-				    <label class="mdl-textfield__label" for="question-name">Question Name</label>
-				  </div>
-				</div>
-			</div>
-			<div class="mdl-grid no-pad">
-				<div class="mdl-cell mdl-cell--12-col ml-0">
-					<div class="mdl-tabs mdl-js-tabs mdl-js-ripple-effect">
-					  <div class="mdl-tabs__tab-bar">
-				      <a href="#question-panel" class="mdl-tabs__tab is-active">Question Text</a>
-				      <a href="#preview-panel" class="mdl-tabs__tab">Preview</a>
-					  </div>
-					  <div class="mdl-tabs__panel is-active" id="question-panel">
-					    <textarea ui-codemirror="cmOption" ng-model="editQuesVm.cmModel" class="hide"></textarea>
-					  </div>
-					  <div class="mdl-tabs__panel" id="preview-panel">
-					    <pre ng-bind-html="editQuesVm.outputMarked" class="code-block"></pre>
-					  </div>
-					</div>
-				</div>
-			</div>
-			<div class="mdl-grid no-pad">
-				<div class="mdl-cell mdl-cell--3-col ml-0">
-					<div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label" ng-class="{'is-dirty': editQuesVm.newQuestion.positive}">
-				    <input class="mdl-textfield__input" type="number" name="positive" id="positive-mark" ng-model="editQuesVm.newQuestion.positive" step="0.01" min="1">
-				    <label class="mdl-textfield__label" for="positive-mark">Positive Score</label>
-				  </div>
-				</div>
-				<div class="mdl-cell mdl-cell--3-col">
-				  <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label" ng-class="{'is-dirty': editQuesVm.newQuestion.negative}">
-				    <input class="mdl-textfield__input" type="number" name="negative" id="negative-mark" ng-model="editQuesVm.newQuestion.negative" step="0.01" min="1">
-				    <label class="mdl-textfield__label" for="negative-mark">Negative Score</label>
-				  </div>
-				</div>
-			</div>
-			<div class="mdl-grid no-pad options-panel" ng-repeat="option in editQuesVm.newQuestion.optionsBak track by $index" ng-init="option.is_correct=questionVm.isCorrect(option, editQuesVm.newQuestion['question.correct'])">
-				<div class="mdl-cell mdl-cell--6-col ml-0">
-					<textarea ui-codemirror="editQuesVm.editor.option{{$index}}" ng-model="option.name" class="hide"></textarea>
-				</div>
-				<div class="mdl-cell mdl-cell--2-col pt-20">
-				  <label class="mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect" for="correct-{{$index + 1}}">
-					  <input type="checkbox" id="correct-{{$index + 1}}" class="mdl-checkbox__input" ng-model="option.is_correct">
-					  <span class="mdl-checkbox__label">Is correct</span>
-					</label>
-				</div>
-			</div>
-			<div class="mdl-grid no-pad">
-				<div class="mdl-cell mdl-cell--6-col ml-0">
-				 	<ui-select multiple tagging="questionVm.addNewTag" theme="select2" ng-model="editQuesVm.newQuestion['question.tag']" class="mdl-select" on-remove="editQuesVm.onRemoveTag($item, $model, editQuesVm.newQuestion)" on-select="questionVm.onTagSelect($item, $model, true)">
-				    <ui-select-match  placeholder="Enter tags">
-				        <span ng-bind="$item.name"></span>
-				    </ui-select-match>
-				    <ui-select-choices repeat="tag in (questionVm.allTags | filter: $select.search)">
-				        <span ng-bind="tag.name"></span>
-				    </ui-select-choices>
-					</ui-select>
-				</div>
-			</div>
-
-			<div class="mdl-grid no-pad">
-				<div class="mdl-cell mdl-cell--6-col ml-0">
-				  <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label" ng-class="{'is-dirty': editQuesVm.newQuestion.notes}">
-				    <input class="mdl-textfield__input" type="text" name="name" id="question-name" ng-model="editQuesVm.newQuestion.notes">
-				    <label class="mdl-textfield__label" for="question-name">Question Note</label>
-				  </div>
-				</div>
-			</div>
-
-			<button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mt-20">
-			  Update Question
-			</button>
-			<button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mt-20 ml-20" ng-click="questionVm.transitionToQuestion(editQuesVm.originalQuestion._uid_)">
-			  Cancel
-			</button>
-		</form>
-	</div>
+    <form ng-submit="editQuesVm.updateQuestionForm()">
+      <div class="mdl-grid no-pad">
+        <div class="mdl-cell mdl-cell--12-col ml-0">
+          <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label" ng-class="{'is-dirty': editQuesVm.newQuestion.name}">
+            <input class="mdl-textfield__input" type="text" name="name" id="question-name" ng-model="editQuesVm.newQuestion.name">
+            <label class="mdl-textfield__label" for="question-name">Question Name</label>
+          </div>
+        </div>
+      </div>
+      <div class="mdl-grid no-pad">
+        <div class="mdl-cell mdl-cell--12-col ml-0">
+          <div class="mdl-tabs mdl-js-tabs mdl-js-ripple-effect">
+            <div class="mdl-tabs__tab-bar">
+              <a href="#question-panel" class="mdl-tabs__tab is-active">Question Text</a>
+              <a href="#preview-panel" class="mdl-tabs__tab">Preview</a>
+            </div>
+            <div class="mdl-tabs__panel is-active" id="question-panel">
+              <textarea ui-codemirror="cmOption" ng-model="editQuesVm.cmModel" class="hide"></textarea>
+            </div>
+            <div class="mdl-tabs__panel" id="preview-panel">
+              <pre ng-bind-html="editQuesVm.outputMarked" class="code-block"></pre>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="mdl-grid no-pad">
+        <div class="mdl-cell mdl-cell--3-col ml-0">
+          <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label" ng-class="{'is-dirty': editQuesVm.newQuestion.positive}">
+            <input class="mdl-textfield__input" type="number" name="positive" id="positive-mark" ng-model="editQuesVm.newQuestion.positive" step="0.01" min="1">
+            <label class="mdl-textfield__label" for="positive-mark">Positive Score</label>
+          </div>
+        </div>
+        <div class="mdl-cell mdl-cell--3-col">
+          <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label" ng-class="{'is-dirty': editQuesVm.newQuestion.negative}">
+            <input class="mdl-textfield__input" type="number" name="negative" id="negative-mark" ng-model="editQuesVm.newQuestion.negative" step="0.01" min="1">
+            <label class="mdl-textfield__label" for="negative-mark">Negative Score</label>
+          </div>
+        </div>
+      </div>
+      <div class="mdl-grid no-pad options-panel" ng-repeat="option in editQuesVm.newQuestion.optionsBak track by $index" ng-init="option.is_correct=questionVm.isCorrect(option, editQuesVm.newQuestion['question.correct'])">
+        <div class="mdl-cell mdl-cell--6-col ml-0">
+          <textarea ui-codemirror="editQuesVm.editor.option{{$index}}" ng-model="option.name" class="hide"></textarea>
+        </div>
+        <div class="mdl-cell mdl-cell--2-col pt-20">
+          <label class="mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect" for="correct-{{$index + 1}}">
+            <input type="checkbox" id="correct-{{$index + 1}}" class="mdl-checkbox__input" ng-model="option.is_correct">
+            <span class="mdl-checkbox__label">Is correct</span>
+          </label>
+        </div>
+      </div>
+      <div class="mdl-grid no-pad">
+        <div class="mdl-cell mdl-cell--6-col ml-0">
+          <ui-select multiple tagging="questionVm.addNewTag" theme="select2" ng-model="editQuesVm.newQuestion['question.tag']" class="mdl-select" on-remove="editQuesVm.onRemoveTag($item, $model, editQuesVm.newQuestion)" on-select="questionVm.onTagSelect($item, $model, true)">
+            <ui-select-match placeholder="Enter tags">
+              <span ng-bind="$item.name"></span>
+            </ui-select-match>
+            <ui-select-choices repeat="tag in (questionVm.allTags | filter: $select.search)">
+              <span ng-bind="tag.name"></span>
+            </ui-select-choices>
+          </ui-select>
+        </div>
+      </div>
+      <div class="mdl-grid no-pad">
+        <div class="mdl-cell mdl-cell--6-col ml-0">
+          <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label" ng-class="{'is-dirty': editQuesVm.newQuestion.notes}">
+            <input class="mdl-textfield__input" type="text" name="name" id="question-name" ng-model="editQuesVm.newQuestion.notes">
+            <label class="mdl-textfield__label" for="question-name">Question Note</label>
+          </div>
+        </div>
+      </div>
+      <button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mt-20">
+        Update Question
+      </button>
+      <button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mt-20 ml-20" ng-click="questionVm.transitionToQuestion(editQuesVm.originalQuestion._uid_)">
+        Cancel
+      </button>
+    </form>
+  </div>
 </div>

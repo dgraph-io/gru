@@ -1,21 +1,19 @@
 <div class="mdl-grid container mt-20 ng-cloak" ng-controller="loginController as loginVm">
-	<div class="mdl-cell--5-col margin-center">
-		<h5>Login</h5>
-  	<form ng-submit="loginVm.authenticate()">
-		  <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
-		    <input class="mdl-textfield__input" type="text" id="username" ng-model="loginVm.authData.user">
-		    <label class="mdl-textfield__label" for="username">Enter Username</label>
-		  </div>
-
-		  <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
-		    <input class="mdl-textfield__input" type="password" id="password" ng-model="loginVm.authData.password">
-		    <label class="mdl-textfield__label" for="password">Enter Password</label>
-		  </div>
-
-		  <button class="mdl-button btn mdl-js-button mdl-button--raised mdl-js-ripple-effect width100">
-			  Login
-			  <i class="material-icons">lock</i>
-			</button>
-		</form>
-  </div>	
+  <div class="mdl-cell--5-col margin-center">
+    <h5>Login</h5>
+    <form ng-submit="loginVm.authenticate()">
+      <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+        <input class="mdl-textfield__input" type="text" id="username" ng-model="loginVm.authData.user">
+        <label class="mdl-textfield__label" for="username">Enter Username</label>
+      </div>
+      <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+        <input class="mdl-textfield__input" type="password" id="password" ng-model="loginVm.authData.password">
+        <label class="mdl-textfield__label" for="password">Enter Password</label>
+      </div>
+      <button class="mdl-button btn mdl-js-button mdl-button--raised mdl-js-ripple-effect width100">
+        Login
+        <i class="material-icons">lock</i>
+      </button>
+    </form>
+  </div>
 </div>

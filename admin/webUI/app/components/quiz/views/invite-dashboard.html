@@ -2,30 +2,28 @@
 	<a class="mdl-button btn-succes bg-green pull-right" ui-sref="quiz.invite">Invite</a>
 </h5>
 <div class="mdl-grid" ng-controller="inviteController as inviteVm">
-	<div class="mdl-cell mdl-cell--12-col">
-		<table class="mdl-data-table mdl-shadow--2dp">
-		  <thead>
-		    <tr>
-		      <th class="mdl-data-table__cell--non-numeric">Name</th>
-		      <th class="mdl-data-table__cell--non-numeric">Email</th>
-		      <th class="mdl-data-table__cell--non-numeric">Validity</th>
-		      <th class="mdl-data-table__cell--non-numeric">Actions</th>
-		    </tr>
-		  </thead>
-		  <tbody ng-repeat="candidate in inviteVm.quizCandidates">
-		    <tr >
-		      <td class="mdl-data-table__cell--non-numeric">{{candidate.name}}</td>
-		      <td class="mdl-data-table__cell--non-numeric">{{candidate.email}}</td>
-		      <td class="mdl-data-table__cell--non-numeric">{{candidate.validity}}</td>
-		      <td class="mdl-data-table__cell--non-numeric">
-		      	<a href="" ng-click="inviteVm.resendEmail(candidate._uid_)">RESEND EMAIL</a> 
-		      	 &nbsp;|&nbsp;
-		      	<a ui-sref="quiz.edit-invite({candidateID: candidate._uid_, index: $index})">EDIT</a> 
-		      	 &nbsp;|&nbsp;
-		      	<a href="">DELETE</a>
-		     	</td>
-		    </tr>
-		  </tbody>
-		</table>
-	</div>
+  <div class="mdl-cell mdl-cell--12-col">
+    <table class="mdl-data-table mdl-shadow--2dp">
+      <thead>
+        <tr>
+          <th class="mdl-data-table__cell--non-numeric">Name</th>
+          <th class="mdl-data-table__cell--non-numeric">Email</th>
+          <th class="mdl-data-table__cell--non-numeric">Validity</th>
+          <th class="mdl-data-table__cell--non-numeric">Actions</th>
+        </tr>
+      </thead>
+      <tbody ng-repeat="candidate in inviteVm.quizCandidates">
+        <tr>
+          <td class="mdl-data-table__cell--non-numeric">{{candidate.name}}</td>
+          <td class="mdl-data-table__cell--non-numeric">{{candidate.email}}</td>
+          <td class="mdl-data-table__cell--non-numeric">{{candidate.validity}}</td>
+          <td class="mdl-data-table__cell--non-numeric">
+            <a href="" ng-click="inviteVm.resendEmail(candidate._uid_)">RESEND EMAIL</a> &nbsp;|&nbsp;
+            <a ui-sref="quiz.edit-invite({candidateID: candidate._uid_, index: $index})">EDIT</a> &nbsp;|&nbsp;
+            <a href="">DELETE</a>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
 </div>

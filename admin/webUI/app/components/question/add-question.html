@@ -1,60 +1,60 @@
 <div class="mdl-grid container">
-	<div class="mdl-cell mdl-cell--12-col" ng-controller="addQuestionController as addQueVm">
-		<h5>
+  <div class="mdl-cell mdl-cell--12-col" ng-controller="addQuestionController as addQueVm">
+    <h5>
 			Add New Question
 		</h5>
-		<form ng-submit="addQueVm.addQuestionForm()" class="question-form">
-			<div class="mdl-grid no-pad">
-				<div class="mdl-cell mdl-cell--12-col ml-0">
-				  <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label" ng-class="{'is-dirty': addQueVm.newQuestion.name}">
-				    <input class="mdl-textfield__input" type="text" name="name" id="question-name" ng-model="addQueVm.newQuestion.name">
-				    <label class="mdl-textfield__label" for="question-name">Question Name</label>
-				  </div>
-				</div>
-			</div>
-			<div class="mdl-grid no-pad">
-				<div class="mdl-cell mdl-cell--12-col ml-0">
-					<div class="mdl-tabs mdl-js-tabs mdl-js-ripple-effect">
-					  <div class="mdl-tabs__tab-bar">
-				      <a href="#question-panel" class="mdl-tabs__tab is-active">Question Text</a>
-				      <a href="#preview-panel" class="mdl-tabs__tab">Preview</a>
-					  </div>
-					  <div class="mdl-tabs__panel is-active" id="question-panel">
-					    <textarea ui-codemirror="cmOption" ng-model="addQueVm.cmModel" class="hide"></textarea>
-					  </div>
-					  <div class="mdl-tabs__panel" id="preview-panel">
-					    <pre ng-bind-html="mainVm.markDownFormat(addQueVm.outputMarked)" class="code-block"></pre>
-					  </div>					
-					</div>
-				</div>
-			</div>
-			<div class="mdl-grid no-pad">
-				<div class="mdl-cell mdl-cell--3-col ml-0">
-					<div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label" ng-class="{'is-dirty': addQueVm.newQuestion.positive}">
-				    <input class="mdl-textfield__input" type="number" name="positive" id="positive-mark" ng-model="addQueVm.newQuestion.positive" step="0.01" min="1">
-				    <label class="mdl-textfield__label" for="positive-mark">Positive Score</label>
-				  </div>
-				</div>
-				<div class="mdl-cell mdl-cell--3-col">
-				  <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label" ng-class="{'is-dirty': addQueVm.newQuestion.negative}">
-				    <input class="mdl-textfield__input" type="number" name="negative" id="negative-mark" ng-model="addQueVm.newQuestion.negative" step="0.01" min="1">
-				    <label class="mdl-textfield__label" for="negative-mark">Negative Score</label>
-				  </div>
-				</div>
-			</div>
-			<div class="mdl-grid no-pad options-panel" ng-repeat="idx in mainVm.getNumber(questionVm.optionsCount) track by $index">
-				<div class="mdl-cell mdl-cell--6-col ml-0">
-					Option {{$index + 1}}
-					<textarea ui-codemirror="addQueVm.editor.option{{$index}}" ng-model="addQueVm.newQuestion.optionsBak['option'+$index].name" class="hide" placeholder="text"></textarea>
-					<!-- <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+    <form ng-submit="addQueVm.addQuestionForm()" class="question-form">
+      <div class="mdl-grid no-pad">
+        <div class="mdl-cell mdl-cell--12-col ml-0">
+          <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label" ng-class="{'is-dirty': addQueVm.newQuestion.name}">
+            <input class="mdl-textfield__input" type="text" name="name" id="question-name" ng-model="addQueVm.newQuestion.name">
+            <label class="mdl-textfield__label" for="question-name">Question Name</label>
+          </div>
+        </div>
+      </div>
+      <div class="mdl-grid no-pad">
+        <div class="mdl-cell mdl-cell--12-col ml-0">
+          <div class="mdl-tabs mdl-js-tabs mdl-js-ripple-effect">
+            <div class="mdl-tabs__tab-bar">
+              <a href="#question-panel" class="mdl-tabs__tab is-active">Question Text</a>
+              <a href="#preview-panel" class="mdl-tabs__tab">Preview</a>
+            </div>
+            <div class="mdl-tabs__panel is-active" id="question-panel">
+              <textarea ui-codemirror="cmOption" ng-model="addQueVm.cmModel" class="hide"></textarea>
+            </div>
+            <div class="mdl-tabs__panel" id="preview-panel">
+              <pre ng-bind-html="mainVm.markDownFormat(addQueVm.outputMarked)" class="code-block"></pre>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="mdl-grid no-pad">
+        <div class="mdl-cell mdl-cell--3-col ml-0">
+          <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label" ng-class="{'is-dirty': addQueVm.newQuestion.positive}">
+            <input class="mdl-textfield__input" type="number" name="positive" id="positive-mark" ng-model="addQueVm.newQuestion.positive" step="0.01" min="1">
+            <label class="mdl-textfield__label" for="positive-mark">Positive Score</label>
+          </div>
+        </div>
+        <div class="mdl-cell mdl-cell--3-col">
+          <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label" ng-class="{'is-dirty': addQueVm.newQuestion.negative}">
+            <input class="mdl-textfield__input" type="number" name="negative" id="negative-mark" ng-model="addQueVm.newQuestion.negative" step="0.01" min="1">
+            <label class="mdl-textfield__label" for="negative-mark">Negative Score</label>
+          </div>
+        </div>
+      </div>
+      <div class="mdl-grid no-pad options-panel" ng-repeat="idx in mainVm.getNumber(questionVm.optionsCount) track by $index">
+        <div class="mdl-cell mdl-cell--6-col ml-0">
+          Option {{$index + 1}}
+          <textarea ui-codemirror="addQueVm.editor.option{{$index}}" ng-model="addQueVm.newQuestion.optionsBak['option'+$index].name" class="hide" placeholder="text"></textarea>
+          <!-- <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
 				    <input class="mdl-textfield__input" type="text" name="option-{{$index + 1}}" id="option-{{$index + 1}}" ng-model="addQueVm.newQuestion.optionsBak['option' + $index].name">
 				    <label class="mdl-textfield__label" for="option-{{$index + 1}}">Option {{$index + 1}}</label>
 				  </div> -->
-				</div>
-				<div class="mdl-cell mdl-cell--2-col pt-20">
-				  <label class="mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect mdl-success" for="correct-{{$index + 1}}" ng-class="{'is-checked': addQueVm.newQuestion.optionsBak['option' + $index].is_correct == true}">
-					  <input type="checkbox" id="correct-{{$index + 1}}" class="mdl-checkbox__input" ng-model="addQueVm.newQuestion.optionsBak['option' + $index].is_correct">
-					  <span class="mdl-checkbox__label">Is correct
+        </div>
+        <div class="mdl-cell mdl-cell--2-col pt-20">
+          <label class="mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect mdl-success" for="correct-{{$index + 1}}" ng-class="{'is-checked': addQueVm.newQuestion.optionsBak['option' + $index].is_correct == true}">
+            <input type="checkbox" id="correct-{{$index + 1}}" class="mdl-checkbox__input" ng-model="addQueVm.newQuestion.optionsBak['option' + $index].is_correct">
+            <span class="mdl-checkbox__label">Is correct
 					</label>
 				</div>
 			</div>
@@ -63,29 +63,27 @@
 				 	<ui-select multiple tagging="questionVm.addNewTag" theme="select2" ng-model="addQueVm.newQuestion.tags" class="mdl-select" on-select="questionVm.onTagSelect($item, $model)">
 				    <ui-select-match  placeholder="Enter tags">
 				        <span ng-bind="$item.name"></span>
-				    </ui-select-match>
-				    <ui-select-choices repeat="tag in (questionVm.allTags | filter: $select.search) track by $index">
-				        <span ng-bind="tag.name"></span>
-				    </ui-select-choices>
-					</ui-select>
-				</div>
-			</div>
-			<div class="mdl-grid no-pad">
-				<div class="mdl-cell mdl-cell--6-col ml-0">
-				  <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label" ng-class="{'is-dirty': addQueVm.newQuestion.notes}">
-				    <input class="mdl-textfield__input" type="text" name="name" id="question-name" ng-model="addQueVm.newQuestion.notes">
-				    <label class="mdl-textfield__label" for="question-name">Question Note</label>
-				  </div>
-				</div>
-			</div>
-
-			<button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mt-20">
-			  Save Question
-			</button>
-
-			<button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mt-20 ml-20" type="reset" ng-click="addQueVm.resetForm()">
-				  Reset
-			</button>
-		</form>
-	</div>
+            </ui-select-match>
+            <ui-select-choices repeat="tag in (questionVm.allTags | filter: $select.search) track by $index">
+              <span ng-bind="tag.name"></span>
+            </ui-select-choices>
+            </ui-select>
+        </div>
+      </div>
+      <div class="mdl-grid no-pad">
+        <div class="mdl-cell mdl-cell--6-col ml-0">
+          <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label" ng-class="{'is-dirty': addQueVm.newQuestion.notes}">
+            <input class="mdl-textfield__input" type="text" name="name" id="question-name" ng-model="addQueVm.newQuestion.notes">
+            <label class="mdl-textfield__label" for="question-name">Question Note</label>
+          </div>
+        </div>
+      </div>
+      <button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mt-20">
+        Save Question
+      </button>
+      <button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mt-20 ml-20" type="reset" ng-click="addQueVm.resetForm()">
+        Reset
+      </button>
+    </form>
+  </div>
 </div>

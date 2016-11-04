@@ -1,20 +1,18 @@
 <div class="mdl-grid" ng-controller="addCandidatesController as acVm">
-	<div class="mdl-cell mdl-cell--6-col mdl-cell--3-offset">
-		<h4>Invite candidate for the quiz</h4>
-		<form ng-submit="inviteVm.inviteCandidate()">
-			<div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label mt-20">
-				<input class="mdl-textfield__input" type="email" id="email" ng-model="inviteVm.newInvite.email">
-				<label class="mdl-textfield__label" for="email">Candidate Email</label>
-				<span class="mdl-textfield__error">Should be valid email</span>
-			</div>
-
-			<div class="mdl-textfield mdl-textfield--floating-label mt-20 is-dirty is-focused">
-				<input class="mdl-textfield__input" type="date" id="datePicker" ng-model="inviteVm.newInvite.dates">
-				<label class="mdl-textfield__label" for="datePicker">Enter Validity</label>
-				<span class="mdl-textfield__error">Should be valid date</span>
-			</div>
-
-			<!-- <div class="mt-20" ng-if="inviteVm.newInvite.quiz">
+  <div class="mdl-cell mdl-cell--6-col mdl-cell--3-offset">
+    <h4>Invite candidate for the quiz</h4>
+    <form ng-submit="inviteVm.inviteCandidate()">
+      <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label mt-20">
+        <input class="mdl-textfield__input" type="email" id="email" ng-model="inviteVm.newInvite.email">
+        <label class="mdl-textfield__label" for="email">Candidate Email</label>
+        <span class="mdl-textfield__error">Should be valid email</span>
+      </div>
+      <div class="mdl-textfield mdl-textfield--floating-label mt-20 is-dirty is-focused">
+        <input class="mdl-textfield__input" type="date" id="datePicker" ng-model="inviteVm.newInvite.dates">
+        <label class="mdl-textfield__label" for="datePicker">Enter Validity</label>
+        <span class="mdl-textfield__error">Should be valid date</span>
+      </div>
+      <!-- <div class="mt-20" ng-if="inviteVm.newInvite.quiz">
 				<label class="bold">Selected Quiz</label>
 				<div class="mt-5">
 					<span class="mdl-chip mdl-chip--deletable">
@@ -25,28 +23,25 @@
 					</span>
 				</div>
 			</div> -->
-
-			<ui-select theme="select2" ng-model="inviteVm.newInvite.quiz" class="mdl-select">
-				<ui-select-match  placeholder="Select Quiz">
-					<span ng-bind="$select.selected.name"></span>
-				</ui-select-match>
-				<ui-select-choices repeat="quiz in (inviteVm.allQuizes | filter: $select.search) track by $index">
-					<span ng-bind="quiz.name"></span>
-				</ui-select-choices>
-			</ui-select>
-			
-			<div class="mt-20">
-				<button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mt-20 action-btn" ng-disabled="!inviteVm.newInvite.quiz">
-					Send Invite
-				</button>
-				<button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mt-20 ml-20" type="reset" ng-click="inviteVm.resetForm()">
-					Reset
-				</button>
-			</div>
-		</form>
-	</div>
-
-<!-- 	<div class="mdl-cell mdl-cell--6-col  mdl-cell--1-offset">
+      <ui-select theme="select2" ng-model="inviteVm.newInvite.quiz" class="mdl-select">
+        <ui-select-match placeholder="Select Quiz">
+          <span ng-bind="$select.selected.name"></span>
+        </ui-select-match>
+        <ui-select-choices repeat="quiz in (inviteVm.allQuizes | filter: $select.search) track by $index">
+          <span ng-bind="quiz.name"></span>
+        </ui-select-choices>
+      </ui-select>
+      <div class="mt-20">
+        <button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mt-20 action-btn" ng-disabled="!inviteVm.newInvite.quiz">
+          Send Invite
+        </button>
+        <button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mt-20 ml-20" type="reset" ng-click="inviteVm.resetForm()">
+          Reset
+        </button>
+      </div>
+    </form>
+  </div>
+  <!-- 	<div class="mdl-cell mdl-cell--6-col  mdl-cell--1-offset">
 		<div ng-include="'app/components/invite/views/quiz-selection.html'"></div>
 	</div> -->
 </div>

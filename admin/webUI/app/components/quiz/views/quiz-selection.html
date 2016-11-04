@@ -4,17 +4,17 @@
   <label class="mdl-textfield__label" for="search_quiz">Search Quiz name</label>
 </div>
 <div class="quiz mt-20" ng-repeat="quiz in quizVm.allQuizes | filter:searchQ">
-	<div class="mdl-grid no-pad">
-		<div class="mdl-cell mdl-cell--1-col">
-			<label class="mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect" for="quiz-{{$index}}" ng-class="{'is-checked': inviteVm.newInvite.quiz.name == quiz.name}">
-			  <input type="checkbox" id="quiz-{{$index}}" class="mdl-checkbox__input" ng-model="inviteVm.newInvite.quiz" ng-true-value="{{quiz}}">
-			  <span class="mdl-checkbox__label"></span>
-			</label>
-		</div>
-		<div class="mdl-cell mdl-cell--8-col">
-			<a href="">
+  <div class="mdl-grid no-pad">
+    <div class="mdl-cell mdl-cell--1-col">
+      <label class="mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect" for="quiz-{{$index}}" ng-class="{'is-checked': inviteVm.newInvite.quiz.name == quiz.name}">
+        <input type="checkbox" id="quiz-{{$index}}" class="mdl-checkbox__input" ng-model="inviteVm.newInvite.quiz" ng-true-value="{{quiz}}">
+        <span class="mdl-checkbox__label"></span>
+      </label>
+    </div>
+    <div class="mdl-cell mdl-cell--8-col">
+      <a href="">
 		    {{quiz.name}}
 			</a>
-		</div>
-	</div>
+    </div>
+  </div>
 </div>

@@ -1,22 +1,22 @@
-(function(){
+(function() {
 
   function questionService($q, $http, $rootScope, MainService) {
 
-  	var services = {}; //Object to return
+    var services = {}; //Object to return
 
-    services.saveQuestion = function(data){
+    services.saveQuestion = function(data) {
       return MainService.post('/add-question', data);
     }
 
-    services.editQuestion = function(data){
+    services.editQuestion = function(data) {
       return MainService.put('/question/' + data._uid_, data);
     }
 
-    services.getAllQuestions = function(requestData, hideLoader){
+    services.getAllQuestions = function(requestData, hideLoader) {
       return MainService.post('/get-all-questions', requestData, hideLoader);
     }
 
-    services.getQuestion = function(questionID){
+    services.getQuestion = function(questionID) {
       return MainService.get('/question/' + questionID);
     }
 
@@ -31,5 +31,5 @@
     questionService
   ];
 
-  angular.module('GruiApp').service('questionService', questionServiceArray); 
+  angular.module('GruiApp').service('questionService', questionServiceArray);
 })();

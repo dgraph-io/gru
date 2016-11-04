@@ -1,55 +1,55 @@
 //Angular Routes defined here.
 
 // Setting Module
-(function(){
-  angular.module('GruiRoutes', ['GruiApp',]);
+(function() {
+  angular.module('GruiRoutes', ['GruiApp', ]);
 
-    // Template, dirctives, js/css urls
+  // Template, dirctives, js/css urls
 
-    var  homeTemplate = 'app/components/home/home.html';
-    var  indexTemplate = 'app/index.html';
-    var  loginTemplate = 'app/components/login/index.html';
+  var homeTemplate = 'app/components/home/home.html';
+  var indexTemplate = 'app/index.html';
+  var loginTemplate = 'app/components/login/index.html';
 
-    var  questionTemplate = 'app/components/question/index.html';
-    var  allQuestionTemplate = 'app/components/question/all-question.html?v=20161025-1';
-    var  addQuestionTemplate = 'app/components/question/add-question.html?v=20161027-1';
-    var  editQuestionTemplate = 'app/components/question/views/edit-question.html?v=20161027-1';
+  var questionTemplate = 'app/components/question/index.html';
+  var allQuestionTemplate = 'app/components/question/all-question.html?v=20161025-1';
+  var addQuestionTemplate = 'app/components/question/add-question.html?v=20161027-1';
+  var editQuestionTemplate = 'app/components/question/views/edit-question.html?v=20161027-1';
 
-    var  quizTemplate = 'app/components/quiz/index.html';
-    var  addQuizTemplate = 'app/components/quiz/add-quiz.html';
-    var  editQuizTemplate = 'app/components/quiz/edit-quiz.html';
-    var  allQuizTemplate = 'app/components/quiz/all-quiz.html';
+  var quizTemplate = 'app/components/quiz/index.html';
+  var addQuizTemplate = 'app/components/quiz/add-quiz.html';
+  var editQuizTemplate = 'app/components/quiz/edit-quiz.html';
+  var allQuizTemplate = 'app/components/quiz/all-quiz.html';
 
-    var  inviteTemplate = 'app/components/invite/index.html';
-    var  inviteDashboardTemplate = 'app/components/invite/views/invite-dashboard.html?v=20161018-1';
-    var  inviteUserTemplate = 'app/components/invite/views/invite-user.html';
-    var  editInviteTemplate = 'app/components/invite/views/edit-invite.html';
-    var  candidateReportTemplate = 'app/components/invite/views/candidate-report.html';
+  var inviteTemplate = 'app/components/invite/index.html';
+  var inviteDashboardTemplate = 'app/components/invite/views/invite-dashboard.html?v=20161018-1';
+  var inviteUserTemplate = 'app/components/invite/views/invite-user.html';
+  var editInviteTemplate = 'app/components/invite/views/edit-invite.html';
+  var candidateReportTemplate = 'app/components/invite/views/candidate-report.html';
 
-    var  candidateIndexTemplate = 'app/components/candidate/index.html';
-    var  candidateLandingTemplate = 'app/components/candidate/views/landing.html';
-    var  candidateQuizTemplate = 'app/components/candidate/views/quiz.html?v=20161027-1';
+  var candidateIndexTemplate = 'app/components/candidate/index.html';
+  var candidateLandingTemplate = 'app/components/candidate/views/landing.html';
+  var candidateQuizTemplate = 'app/components/candidate/views/quiz.html?v=20161027-1';
 
-    var  quizLandingTemplate = 'app/components/candidate/views/quiz-landing.html';
+  var quizLandingTemplate = 'app/components/candidate/views/quiz-landing.html';
 
-    // CSS for View/Directives
-    var angularSelectCSS = "assets/lib/css/angular-select.min.css";
-    var codeMirrorCSS = "assets/lib/css/codemirror.css";
-    var githubCSS = "assets/lib/css/github.css";
+  // CSS for View/Directives
+  var angularSelectCSS = "assets/lib/css/angular-select.min.css";
+  var codeMirrorCSS = "assets/lib/css/codemirror.css";
+  var githubCSS = "assets/lib/css/github.css";
 
-    function MainRoutes($stateProvider, $locationProvider, $urlRouterProvider, helper) {
-      'use strict';
+  function MainRoutes($stateProvider, $locationProvider, $urlRouterProvider, helper) {
+    'use strict';
 
-      // Set the following to true to enable the HTML5 Mode
-      // You may have to set <base> tag in index and a routing configuration in your server
-      $locationProvider.html5Mode(false);
-      // $locationProvider.hashPrefix('!');
+    // Set the following to true to enable the HTML5 Mode
+    // You may have to set <base> tag in index and a routing configuration in your server
+    $locationProvider.html5Mode(false);
+    // $locationProvider.hashPrefix('!');
 
-      // default route
-      $urlRouterProvider.otherwise('/login');
+    // default route
+    $urlRouterProvider.otherwise('/login');
 
-      // --------------Application Routes---------------
-      $stateProvider
+    // --------------Application Routes---------------
+    $stateProvider
       .state('root', {
         url: '/admin',
         templateUrl: homeTemplate,
@@ -73,7 +73,9 @@
         parent: 'question',
         templateUrl: allQuestionTemplate,
         css: [angularSelectCSS, githubCSS],
-        params: { quesID: null},
+        params: {
+          quesID: null
+        },
         authenticate: true,
       })
       .state('question.add', {
@@ -149,7 +151,7 @@
       .state('quiz-landing', {
         url: '/quiz/:quiz_token',
         templateUrl: quizLandingTemplate,
-        resolve: helper.resolveFor('quizLandingController','quizLandingService'),
+        resolve: helper.resolveFor('quizLandingController', 'quizLandingService'),
       })
       .state('candidate', {
         url: '/candidate',
@@ -169,17 +171,17 @@
         templateUrl: candidateQuizTemplate,
       })
 
-    }
+  }
 
-    // Dependency and rout function array
-    var GruiRoutes = [
-    '$stateProvider', 
-    '$locationProvider', 
+  // Dependency and rout function array
+  var GruiRoutes = [
+    '$stateProvider',
+    '$locationProvider',
     '$urlRouterProvider',
     'RouteHelpersProvider',
     MainRoutes,
-    ]
+  ]
 
-    // Getting module and setting routes
-    angular.module('GruiRoutes').config(GruiRoutes);
-  })();
+  // Getting module and setting routes
+  angular.module('GruiRoutes').config(GruiRoutes);
+})();

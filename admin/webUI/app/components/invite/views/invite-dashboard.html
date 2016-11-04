@@ -1,103 +1,101 @@
-<div ng-controller="candidatesController as candidateVm">	
-	<div class="mdl-grid">
-		<div class="mdl-cell mdl-cell--6-col mdl-cell--middle">
-			<h5>Candidate List for Quiz</h5>
-		</div>
-		<div class="mdl-cell mdl-cell--6-col text-right mdl-cell--middle">
-			<button class="mdl-button btn btn-succes bg-green" ng-click="mainVm.goTo('invite.add')">Invite</button>
-		</div>
-	</div>
-
-<div class="mdl-tabs mdl-js-tabs mdl-js-ripple-effect">
-  <div class="mdl-tabs__tab-bar">
+<div ng-controller="candidatesController as candidateVm">
+  <div class="mdl-grid">
+    <div class="mdl-cell mdl-cell--6-col mdl-cell--middle">
+      <h5>Candidate List for Quiz</h5>
+    </div>
+    <div class="mdl-cell mdl-cell--6-col text-right mdl-cell--middle">
+      <button class="mdl-button btn btn-succes bg-green" ng-click="mainVm.goTo('invite.add')">Invite</button>
+    </div>
+  </div>
+  <div class="mdl-tabs mdl-js-tabs mdl-js-ripple-effect">
+    <div class="mdl-tabs__tab-bar">
       <a href="#completed" class="mdl-tabs__tab is-active">Completed</a>
       <a href="#not-taken" class="mdl-tabs__tab">Not Completed</a>
-  </div>
-
-  <div class="mdl-tabs__panel is-active" id="completed">
-	<div class="mdl-grid">
-		<div class="mdl-cell mdl-cell--12-col">
-			<form action="#">
-			  <div class="mdl-textfield mdl-js-textfield">
-			    <input class="mdl-textfield__input" type="text" ng-model="searchCand">
-			    <label class="mdl-textfield__label" for="sample1">Search candidate by Name/Email</label>
-			  </div>
-			</form>
-			<table class="mdl-data-table mdl-shadow--2dp">
-				<thead>
-					<tr>
-						<th class="mdl-data-table__cell--non-numeric">Name</th>
-						<th class="mdl-data-table__cell--non-numeric">Email</th>
-						<th class="mdl-data-table__cell--non-numeric">
-							<a href="" ng-click="candidateVm.sortType = 'score'; candidateVm.sortReverse = !candidateVm.sortReverse">
+    </div>
+    <div class="mdl-tabs__panel is-active" id="completed">
+      <div class="mdl-grid">
+        <div class="mdl-cell mdl-cell--12-col">
+          <form action="#">
+            <div class="mdl-textfield mdl-js-textfield">
+              <input class="mdl-textfield__input" type="text" ng-model="searchCand">
+              <label class="mdl-textfield__label" for="sample1">Search candidate by Name/Email</label>
+            </div>
+          </form>
+          <table class="mdl-data-table mdl-shadow--2dp">
+            <thead>
+              <tr>
+                <th class="mdl-data-table__cell--non-numeric">Name</th>
+                <th class="mdl-data-table__cell--non-numeric">Email</th>
+                <th class="mdl-data-table__cell--non-numeric">
+                  <a href="" ng-click="candidateVm.sortType = 'score'; candidateVm.sortReverse = !candidateVm.sortReverse">
 							Score
 							<i ng-show="candidateVm.sortType == 'score' && !candidateVm.sortReverse" class="material-icons">arrow_drop_up</i>
 							<i ng-show="candidateVm.sortType == 'score' && candidateVm.sortReverse" class="material-icons">arrow_drop_down</i>
 							</a>
-						</th>
-						<th class="mdl-data-table__cell--non-numeric">
-							<a href="" ng-click="candidateVm.sortType = 'quiz_start'; candidateVm.sortReverse = !candidateVm.sortReverse">
+                </th>
+                <th class="mdl-data-table__cell--non-numeric">
+                  <a href="" ng-click="candidateVm.sortType = 'quiz_start'; candidateVm.sortReverse = !candidateVm.sortReverse">
 							Quiz Start
 							<i ng-show="candidateVm.sortType == 'quiz_start' && !candidateVm.sortReverse" class="material-icons">arrow_drop_up</i>
 							<i ng-show="candidateVm.sortType == 'quiz_start' && candidateVm.sortReverse" class="material-icons">arrow_drop_down</i>
 							</a>
-						</th>
-						<th class="mdl-data-table__cell--non-numeric">Actions</th>
-					</tr>
-				</thead>
-				<tbody ng-repeat="candidate in candidateVm.quizCandidates | orderBy:candidateVm.sortType:candidateVm.sortReverse | filter:searchCand">
-					<tr ng-if="candidate.complete == 'true'">
-						<td class="mdl-data-table__cell--non-numeric">{{candidate.name}}</td>
-						<td class="mdl-data-table__cell--non-numeric">{{candidate.email}}</td>
-						<td class="mdl-data-table__cell--non-numeric">{{candidate.score | number: 2}}</td>
-						<td class="mdl-data-table__cell--non-numeric">{{candidate.quiz_start | date : 'MMM dd, yyyy'}}</td>
-						<td class="mdl-data-table__cell--non-numeric">
-							<a ui-sref="invite.report({candidateID: candidate._uid_})">VIEW REPORT</a>
-						</span>
-						</td>
-					</tr>
-				</tbody>
-			</table>
-		</div>
-	</div>
-  </div>
-  <div class="mdl-tabs__panel" id="not-taken">
-	<div class="mdl-grid">
-		<div class="mdl-cell mdl-cell--12-col">
-			<form action="#">
-			  <div class="mdl-textfield mdl-js-textfield">
-			    <input class="mdl-textfield__input" type="text" id="sample1" ng-model="searchCand">
-			    <label class="mdl-textfield__label" for="sample1">Search candidate by Name/Email</label>
-			  </div>
-			</form>
-			<table class="mdl-data-table mdl-shadow--2dp">
-				<thead>
-					<tr>
-						<th class="mdl-data-table__cell--non-numeric">Email</th>
-						<th class="mdl-data-table__cell--non-numeric">
-							<a href="" ng-click="candidateVm.sortType = 'invite_sent'; candidateVm.sortReverse = !candidateVm.sortReverse">
+                </th>
+                <th class="mdl-data-table__cell--non-numeric">Actions</th>
+              </tr>
+            </thead>
+            <tbody ng-repeat="candidate in candidateVm.quizCandidates | orderBy:candidateVm.sortType:candidateVm.sortReverse | filter:searchCand">
+              <tr ng-if="candidate.complete == 'true'">
+                <td class="mdl-data-table__cell--non-numeric">{{candidate.name}}</td>
+                <td class="mdl-data-table__cell--non-numeric">{{candidate.email}}</td>
+                <td class="mdl-data-table__cell--non-numeric">{{candidate.score | number: 2}}</td>
+                <td class="mdl-data-table__cell--non-numeric">{{candidate.quiz_start | date : 'MMM dd, yyyy'}}</td>
+                <td class="mdl-data-table__cell--non-numeric">
+                  <a ui-sref="invite.report({candidateID: candidate._uid_})">VIEW REPORT</a>
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="mdl-tabs__panel" id="not-taken">
+      <div class="mdl-grid">
+        <div class="mdl-cell mdl-cell--12-col">
+          <form action="#">
+            <div class="mdl-textfield mdl-js-textfield">
+              <input class="mdl-textfield__input" type="text" id="sample1" ng-model="searchCand">
+              <label class="mdl-textfield__label" for="sample1">Search candidate by Name/Email</label>
+            </div>
+          </form>
+          <table class="mdl-data-table mdl-shadow--2dp">
+            <thead>
+              <tr>
+                <th class="mdl-data-table__cell--non-numeric">Email</th>
+                <th class="mdl-data-table__cell--non-numeric">
+                  <a href="" ng-click="candidateVm.sortType = 'invite_sent'; candidateVm.sortReverse = !candidateVm.sortReverse">
 							Invited
 							<i ng-show="candidateVm.sortType == 'invite_sent' && !candidateVm.sortReverse" class="material-icons">arrow_drop_up</i>
 							<i ng-show="candidateVm.sortType == 'invite_sent' && candidateVm.sortReverse" class="material-icons">arrow_drop_down</i>
 							</a>
-						</th>
-						<th class="mdl-data-table__cell--non-numeric">Validity</th>
-						<th class="mdl-data-table__cell--non-numeric">Actions</th>
-					</tr>
-				</thead>
-				<tbody ng-repeat="candidate in candidateVm.quizCandidates | orderBy:candidateVm.sortType:candidateVm.sortReverse | filter:searchCand">
-					<tr ng-if="candidate.complete != 'true'">
-						<td class="mdl-data-table__cell--non-numeric">{{candidate.email}}</td>
-						<td class="mdl-data-table__cell--non-numeric">{{candidate.invite_sent | date : 'MMM dd, yyyy'}}</td>
-						<td class="mdl-data-table__cell--non-numeric">{{candidate.validity}}</td>
-						<td class="mdl-data-table__cell--non-numeric">
-							<a ui-sref="invite.edit({quizID: candidateVm.quizID, candidateID: candidate._uid_})">EDIT</a> 
-						</span>
-						</td>
-					</tr>
-				</tbody>
-			</table>
-		</div>
-	</div>
+                </th>
+                <th class="mdl-data-table__cell--non-numeric">Validity</th>
+                <th class="mdl-data-table__cell--non-numeric">Actions</th>
+              </tr>
+            </thead>
+            <tbody ng-repeat="candidate in candidateVm.quizCandidates | orderBy:candidateVm.sortType:candidateVm.sortReverse | filter:searchCand">
+              <tr ng-if="candidate.complete != 'true'">
+                <td class="mdl-data-table__cell--non-numeric">{{candidate.email}}</td>
+                <td class="mdl-data-table__cell--non-numeric">{{candidate.invite_sent | date : 'MMM dd, yyyy'}}</td>
+                <td class="mdl-data-table__cell--non-numeric">{{candidate.validity}}</td>
+                <td class="mdl-data-table__cell--non-numeric">
+                  <a ui-sref="invite.edit({quizID: candidateVm.quizID, candidateID: candidate._uid_})">EDIT</a>
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
   </div>
-</div>
