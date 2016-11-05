@@ -1,80 +1,89 @@
 <div class="mdl-grid ng-cloak container" ng-controller="quizLandingController as qlVm">
-	<div class="mdl-cell mdl-cell--12-col" ng-if="!qlVm.invalidUser">
-		<!-- MDL Spinner Component -->
-		<div class="text-center" ng-if="!qlVm.validated">
-			<h4 class="text-center mb-30">Welcome for the quiz</h4>
-			<div class="mdl-spinner mdl-js-spinner is-active"></div>
-			<div class="mt-10">
-				AUTHENTICATING
-			</div>
-		</div>
-		<div class="ng-cloak quiz-landing" ng-if="qlVm.validated">
-			<h4 class="text-center bold">
-				INSTRUCTIONS
-				<div class="text-center base-font">(Mark each instruction after reading)</div>
-			</h4>
-			<div class="mdl-grid landing-grid">
-				<!-- General Instructions -->
-				<div class="mdl-cell mdl-cell--2-col mdl-cell--middle">
-					<h4>General</h4>
-				</div>
-				<div class="mdl-cell mdl-cell--10-col pl-20 lc-border">
-					<div class="info-section">
-						<div class="pv-5" ng-repeat="info in qlVm.info.General">
-							<label class="mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect mdl-success" for="general-{{$index}}">
-							  <input type="checkbox" id="general-{{$index}}" class="mdl-checkbox__input" ng-model="general$index">
-							  <span class="mdl-checkbox__label" ng-bind-html="info"></span>
-							</label>
-						</div>
-					</div>
-				</div>
-			</div>
-
-			<div class="mdl-grid landing-grid">
-				<!-- Scoring Instructions -->
-				<div class="mdl-cell mdl-cell--2-col mdl-cell--middle">
-					<h4>Scoring</h4>
-				</div>
-				<div class="mdl-cell mdl-cell--10-col pl-20 lc-border">
-					<div class="info-section">
-					 	<div class="pv-5" ng-repeat="info in qlVm.info.Score">
-							<label class="mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect mdl-success" for="score-{{$index}}">
-							  <input type="checkbox" id="score-{{$index}}" class="mdl-checkbox__input" ng-model="score$index">
-							  <span class="mdl-checkbox__label" ng-bind-html="info"></span>
-							</label>
-						</div>
-					</div>
-				</div>
-			</div>
-
-			<div class="mdl-grid landing-grid">
-				<!-- General Instructions -->
-				<div class="mdl-cell mdl-cell--2-col mdl-cell--middle">
-					<h4>Contact</h4>
-				</div>
-				<div class="mdl-cell mdl-cell--10-col pl-20 lc-border">
-					<div class="info-section">
-					 	<div class="pv-5" ng-repeat="info in qlVm.info.Contact">
-							<label class="mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect mdl-success" for="contact-{{$index}}">
-							  <input type="checkbox" id="contact-{{$index}}" class="mdl-checkbox__input" ng-model="score$index">
-							  <span class="mdl-checkbox__label" ng-bind-html="info"></span>
-							</label>
-						</div>
-					</div>
-				</div>
-			</div>
-
-			<div class="text-center mt-30">
-				<button class="mdl-button mdl-js-button mdl-js-ripple-effect btn-lg" ng-click="mainVm.goTo('candidate.quiz')" ng-disabled="qlVm.checkedInfo()">
-			    START QUIZ
-			  </button>
-			  <div>
-					<small class="help-block">Read the instructions carefully before starting the test.</small>
-				</div>
-			</div>
-		</div>
-	</div>
-	<div class="mdl-cell mdl-cell--12-col text-red" ng-if="qlVm.invalidUser">
-		<div data-ng-include data-src="'app/shared/_not_authorized.html'"></div>
-	</div>
+  <div class="mdl-cell mdl-cell--12-col" ng-if="!qlVm.invalidUser">
+    <!-- MDL Spinner Component -->
+    <div class="text-center" ng-if="!qlVm.validated">
+      <h4 class="text-center mb-30">Welcome for the quiz</h4>
+      <div class="mdl-spinner mdl-js-spinner is-active"></div>
+      <div class="mt-10">
+        AUTHENTICATING
+      </div>
+    </div>
+    <div class="ng-cloak quiz-landing" ng-if="qlVm.validated">
+      <h4 class="text-center bold">
+      INSTRUCTIONS
+      </h4>
+      <div class="text-center base-font">(Mark each instruction after reading)</div>
+      <div class="mdl-grid landing-grid">
+        <!-- General Instructions -->
+        <div class="mdl-cell mdl-cell--2-col mdl-cell--middle">
+          <h4>General</h4>
+        </div>
+        <div class="mdl-cell mdl-cell--10-col pl-20 lc-border">
+          <div class="info-section">
+            <div class="pv-5" ng-repeat="info in qlVm.info.General">
+              <label class="mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect mdl-success" for="general-{{$index}}">
+                <input type="checkbox" id="general-{{$index}}" class="mdl-checkbox__input" ng-model="general$index">
+                <span class="mdl-checkbox__label" ng-bind-html="info"></span>
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="mdl-grid landing-grid">
+        <!-- Scoring Instructions -->
+        <div class="mdl-cell mdl-cell--2-col mdl-cell--middle">
+          <h4>Scoring</h4>
+        </div>
+        <div class="mdl-cell mdl-cell--10-col pl-20 lc-border">
+          <div class="info-section">
+            <div class="pv-5" ng-repeat="info in qlVm.info.Score">
+              <label class="mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect mdl-success" for="score-{{$index}}">
+                <input type="checkbox" id="score-{{$index}}" class="mdl-checkbox__input" ng-model="score$index">
+                <span class="mdl-checkbox__label" ng-bind-html="info"></span>
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="mdl-grid landing-grid">
+        <!-- General Instructions -->
+        <div class="mdl-cell mdl-cell--2-col mdl-cell--middle">
+          <h4>Contact</h4>
+        </div>
+        <div class="mdl-cell mdl-cell--10-col pl-20 lc-border">
+          <div class="info-section">
+            <div class="pv-5" ng-repeat="info in qlVm.info.Contact">
+              <label class="mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect mdl-success" for="contact-{{$index}}">
+                <input type="checkbox" id="contact-{{$index}}" class="mdl-checkbox__input" ng-model="score$index">
+                <span class="mdl-checkbox__label" ng-bind-html="info"></span>
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="mdl-grid landing-grid">
+        <div class="mdl-cell mdl-cell--2-col mdl-cell--middle">
+          <h4>Name</h4>
+        </div>
+        <div class="mdl-cell mdl-cell--8-col pl-20 lc-border">
+          <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label mt-20">
+            <input class="mdl-textfield__input" type="name" id="name" ng-model="qlVm.candidate.name">
+            <label class="mdl-textfield__label" for="name">Please enter your name.</label>
+            <span class="mdl-textfield__error">Name can't be empty.</span>
+          </div>
+        </div>
+      </div>
+      <div class="text-center mt-30">
+        <button class="mdl-button mdl-js-button mdl-js-ripple-effect btn-lg" ng-click="qlVm.saveName()" ng-disabled="qlVm.checkedInfo()">
+          START QUIZ
+        </button>
+        <div>
+          <small class="help-block">Read the instructions carefully before starting the test.</small>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="mdl-cell mdl-cell--12-col text-red" ng-if="qlVm.invalidUser">
+    <div data-ng-include data-src="'app/shared/_not_authorized.html'"></div>
+  </div>
 </div>

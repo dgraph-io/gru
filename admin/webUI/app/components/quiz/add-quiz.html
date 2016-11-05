@@ -1,63 +1,60 @@
 <div class="mdl-grid" ng-controller="addQuizController as addQVm">
-	<div class="mdl-cell mdl-cell--5-col">
-		<h4>Add quiz details</h4>
-		<form ng-submit="quizVm.addQuizForm()">
-			<div class="mdl-grid no-pad no-margin-lr">
-				<div class="mdl-cell mdl-cell--12-col">
-				  <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label" ng-class="{'is-dirty': quizVm.newQuiz.name}">
-				    <input class="mdl-textfield__input" type="text" name="text" id="quiz-name" ng-model="quizVm.newQuiz.name">
-				    <label class="mdl-textfield__label" for="quiz-name">Quiz name</label>
-				  </div>
-				</div>
-			</div>
-			<div class="mdl-grid no-pad no-margin-lr">
-				<div class="mdl-cell mdl-cell--12-col">
-				  <div class="duration-inputs">
-					  <div class="mdl-textfield mdl-js-textfield" ng-class="{'is-dirty': quizVm.newQuiz.hours}">
-					    <input class="mdl-textfield__input" type="number" pattern="-?[0-9]*(\.[0-9]+)?" ng-model="quizVm.newQuiz.hours" id="hour" min="0" max="24">
-					    <label class="mdl-textfield__label" for="hour">Hour</label>
-					    <span class="mdl-textfield__error">Not Valid</span>
-					  </div>
-					  <div class="mdl-textfield mdl-js-textfield" ng-class="{'is-dirty': quizVm.newQuiz.minutes}">
-					    <input class="mdl-textfield__input" type="number" pattern="-?[0-9]*(\.[0-9]+)?" ng-model="quizVm.newQuiz.minutes" id="minutes" min="1" max="60">
-					    <label class="mdl-textfield__label" for="minutes">Minute</label>
-					    <span class="mdl-textfield__error">Not Valid</span>
-					  </div>
-						<div class="mdl-textfield mdl-js-textfield"  ng-class="{'is-dirty': quizVm.newQuiz.seconds}">
-					    <input class="mdl-textfield__input" type="number" pattern="-?[0-9]*(\.[0-9]+)?" ng-model="quizVm.newQuiz.seconds" id="seconds" min="0" max="60">
-					    <label class="mdl-textfield__label" for="seconds">Second</label>
-					    <span class="mdl-textfield__error">Not Valid</span>
-					  </div>
-					</div>
-				</div>
-			</div>
-
-			<div ng-if="quizVm.newQuiz.questions">
-				<label class="bold">
-					{{mainVm.objLen(quizVm.newQuiz.questions)}} 
-					Question<span ng-if="mainVm.objLen(quizVm.newQuiz.questions) > 1">s</span>,
-					Total Score: {{quizVm.getTotalScore(quizVm.newQuiz.questions)}}
-				</label>
-				<div ng-repeat="(key, question) in quizVm.newQuiz.questions" ng-if="question.text">
-					{{parseInt(question.positive)}}
-					<span class="mdl-chip mdl-chip--deletable quiz-questions">
+  <div class="mdl-cell mdl-cell--5-col">
+    <h4>Add quiz details</h4>
+    <form ng-submit="quizVm.addQuizForm()">
+      <div class="mdl-grid no-pad no-margin-lr">
+        <div class="mdl-cell mdl-cell--12-col">
+          <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label" ng-class="{'is-dirty': quizVm.newQuiz.name}">
+            <input class="mdl-textfield__input" type="text" name="text" id="quiz-name" ng-model="quizVm.newQuiz.name">
+            <label class="mdl-textfield__label" for="quiz-name">Quiz name</label>
+          </div>
+        </div>
+      </div>
+      <div class="mdl-grid no-pad no-margin-lr">
+        <div class="mdl-cell mdl-cell--12-col">
+          <div class="duration-inputs">
+            <div class="mdl-textfield mdl-js-textfield" ng-class="{'is-dirty': quizVm.newQuiz.hours}">
+              <input class="mdl-textfield__input" type="number" pattern="-?[0-9]*(\.[0-9]+)?" ng-model="quizVm.newQuiz.hours" id="hour" min="0" max="24">
+              <label class="mdl-textfield__label" for="hour">Hour</label>
+              <span class="mdl-textfield__error">Not Valid</span>
+            </div>
+            <div class="mdl-textfield mdl-js-textfield" ng-class="{'is-dirty': quizVm.newQuiz.minutes}">
+              <input class="mdl-textfield__input" type="number" pattern="-?[0-9]*(\.[0-9]+)?" ng-model="quizVm.newQuiz.minutes" id="minutes" min="1" max="60">
+              <label class="mdl-textfield__label" for="minutes">Minute</label>
+              <span class="mdl-textfield__error">Not Valid</span>
+            </div>
+            <div class="mdl-textfield mdl-js-textfield" ng-class="{'is-dirty': quizVm.newQuiz.seconds}">
+              <input class="mdl-textfield__input" type="number" pattern="-?[0-9]*(\.[0-9]+)?" ng-model="quizVm.newQuiz.seconds" id="seconds" min="0" max="60">
+              <label class="mdl-textfield__label" for="seconds">Second</label>
+              <span class="mdl-textfield__error">Not Valid</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div ng-if="quizVm.newQuiz.questions">
+        <label class="bold">
+          {{mainVm.objLen(quizVm.newQuiz.questions)}} Question
+          <span ng-if="mainVm.objLen(quizVm.newQuiz.questions) > 1">s</span>, Total Score: {{quizVm.getTotalScore(quizVm.newQuiz.questions)}}
+        </label>
+        <div ng-repeat="(key, question) in quizVm.newQuiz.questions" ng-if="question.text">
+          {{parseInt(question.positive)}}
+          <span class="mdl-chip mdl-chip--deletable quiz-questions">
 				    <span class="mdl-chip__text">{{question.name}}</span>
-				    <button type="button" class="mdl-chip__action" ng-click="quizVm.removeSelectedQuestion(key)">
-				    	<i class="material-icons">cancel</i>
-				    </button>
-					</span>
-				</div>
-			</div>
-
-			<button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mt-20 mt-20">
-			  Save Quiz
-			</button>
-			<button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mt-20 ml-20" type="reset" ng-click="quizVm.resetForm()">
-				  Reset
-			</button>
-		</form>
-	</div>
-	<div class="mdl-cell mdl-cell--6-col mdl-cell--1-offset">
-		<div ng-include="'app/components/quiz/question-selection.html'"></div>
-	</div>
+          <button type="button" class="mdl-chip__action" ng-click="quizVm.removeSelectedQuestion(key)">
+            <i class="material-icons">cancel</i>
+          </button>
+          </span>
+        </div>
+      </div>
+      <button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mt-20 mt-20">
+        Save Quiz
+      </button>
+      <button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mt-20 ml-20" type="reset" ng-click="quizVm.resetForm()">
+        Reset
+      </button>
+    </form>
+  </div>
+  <div class="mdl-cell mdl-cell--6-col mdl-cell--1-offset">
+    <div ng-include="'app/components/quiz/question-selection.html'"></div>
+  </div>
 </div>

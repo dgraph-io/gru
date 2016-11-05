@@ -73,7 +73,9 @@
         parent: 'question',
         templateUrl: allQuestionTemplate,
         css: [angularSelectCSS, githubCSS],
-        params: { quesID: null },
+        params: {
+          quesID: null
+        },
         authenticate: true,
       })
       .state('question.add', {
@@ -149,7 +151,7 @@
       .state('quiz-landing', {
         url: '/quiz/:quiz_token',
         templateUrl: quizLandingTemplate,
-        resolve: helper.resolveFor('quizLandingController'),
+        resolve: helper.resolveFor('quizLandingController', 'quizLandingService'),
       })
       .state('candidate', {
         url: '/candidate',

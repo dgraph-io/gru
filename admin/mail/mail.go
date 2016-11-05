@@ -61,7 +61,7 @@ func SendReport(name string, score, maxScore float64, body string) {
 	}
 
 	from := mail.NewEmail("Gru", "join@dgraph.io")
-	subject := fmt.Sprintf("Gru: Candidate %v scored %.2f/%.2f in the demo test", name,
+	subject := fmt.Sprintf("%v scored %.2f/%.2f in the demo test", name,
 		score, maxScore)
 	to := mail.NewEmail("Dgraph", "join@dgraph.io")
 

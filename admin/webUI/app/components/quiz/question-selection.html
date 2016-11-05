@@ -4,11 +4,11 @@
   <label class="mdl-textfield__label" for="search_question">Search question name</label>
 </div>
 <div class="question mt-20" ng-repeat="question in mainVm.allQuestions | filter:searchQ">
-	<div class="mdl-grid no-pad clickable-hover">
-		<div class="mdl-cell mdl-cell--12-col">
-			<label class="mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect height-inherit" for="question-{{$index}}" ng-class="{'is-checked': mainVm.hasKey(quizVm.newQuiz.questions, 'question-'+$index)}">
-			  <input type="checkbox" id="question-{{$index}}" class="mdl-checkbox__input" ng-model="quizVm.newQuiz.questions['question-'+$index]" ng-true-value="{{question}}" ng-change="quizVm.removeCheckedQuestion($index)">
-			  <span class="mdl-checkbox__label">
+  <div class="mdl-grid no-pad clickable-hover">
+    <div class="mdl-cell mdl-cell--12-col">
+      <label class="mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect height-inherit" for="question-{{$index}}" ng-class="{'is-checked': mainVm.hasKey(quizVm.newQuiz.questions, 'question-'+$index)}">
+        <input type="checkbox" id="question-{{$index}}" class="mdl-checkbox__input" ng-model="quizVm.newQuiz.questions['question-'+$index]" ng-true-value="{{question}}" ng-change="quizVm.removeCheckedQuestion($index)">
+        <span class="mdl-checkbox__label">
 			  	{{question.name}}
 			  	<div class="base-font">
 			  		Positve Score: {{question.positive}} &nbsp;&nbsp;
@@ -18,18 +18,18 @@
 				  		<span ng-if="question['question.correct'].length == 1">
 				  			<i class="material-icons">done</i>
 				  		</span>
-				  		<span ng-if="question['question.correct'].length > 1">
+        <span ng-if="question['question.correct'].length > 1">
 				  			<i class="material-icons">done_all</i>
 				  		</span>
-				  	</span>
-			  	</div>
-			  	<span ng-repeat="tags in question['question.tag'] track by $index">
+        </span>
+    </div>
+    <span ng-repeat="tags in question['question.tag'] track by $index">
 						<span class="mdl-chip">
 					    <span class="mdl-chip__text">{{tags.name}}</span>
-						</span>
-					</span>
-			  </span>
-			</label>
-		</div>
-	</div>
+    </span>
+    </span>
+    </span>
+    </label>
+  </div>
+</div>
 </div>

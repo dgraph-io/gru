@@ -131,7 +131,7 @@ button.btn-lg {
 }
 
 .mdl-button {
-  height: 48px;
+  height: 42px;
   background: #ff0000;
   color: white;
 }
@@ -192,6 +192,39 @@ button.btn-lg {
 .mdl-cell.no-margin-lr {
   margin-left: 0;
   margin-right: 0;
+}
+
+
+/* So that top bar takes up less space.*/
+
+.reduce-height {
+  min-height: 40px;
+}
+
+.reduce-height .mdl-layout__header-row {
+  height: 40px;
+}
+
+.reduce-height .mdl-navigation__link {
+  line-height: 40px;
+}
+
+.mdl-grid {
+  padding-top: 0px;
+}
+
+.qn-page {
+  margin-top: 0px;
+}
+
+.option {
+  margin-top: 4px;
+  margin-bottom: 4px;
+}
+
+.option p {
+  margin-top: 5px;
+  margin-bottom: 5px;
 }
 
 
@@ -318,16 +351,16 @@ body.home {
 
 /*So that the question name column and the question description doesn't scroll together*/
 
-.mdl-cell.mdl-cell--2-col.r-border {
+.qn-nav {
   height: 100vh;
   overflow-y: scroll;
 }
 
-.mdl-cell.mdl-cell--2-col.r-border .pt-20 {
+.qn-nav .no-item {
   padding-bottom: 200px;
 }
 
-.mdl-cell.mdl-cell--10-col.pl-30 {
+.qn-desc {
   height: 100vh;
   overflow-y: auto;
   padding-right: 30px;

@@ -100,6 +100,7 @@ func Validate(w http.ResponseWriter, r *http.Request) {
 		sr.Write(w, err.Error(), "", http.StatusInternalServerError)
 		return
 	}
+
 	vr := validateRes{
 		Token:    t,
 		Duration: timeLeft(c.quizStart, c.quizDuration).String(),

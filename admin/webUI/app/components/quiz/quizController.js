@@ -21,7 +21,9 @@
     // Function for fetching next question
 
     function getAllQuestions() {
-      quesRequest = { id: "" };
+      quesRequest = {
+        id: ""
+      };
       questionService.getAllQuestions(quesRequest).then(function(data) {
         var data = data;
         mainVm.allQuestions = data.debug[0].question;
@@ -61,7 +63,9 @@
       var qustionsClone = angular.copy(quizVm.newQuiz.questions)
       angular.forEach(qustionsClone, function(value, key) {
         if (qustionsClone[key]) {
-          questions.push({ _uid_: value._uid_ });
+          questions.push({
+            _uid_: value._uid_
+          });
         }
       });
 
