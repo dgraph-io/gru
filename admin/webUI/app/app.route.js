@@ -18,11 +18,11 @@
   var quizTemplate = 'app/components/quiz/index.html';
   var addQuizTemplate = 'app/components/quiz/add-quiz.html';
   var editQuizTemplate = 'app/components/quiz/edit-quiz.html';
-  var allQuizTemplate = 'app/components/quiz/all-quiz.html';
+  var allQuizTemplate = 'app/components/quiz/all-quiz.html?v=20161105-1';
 
   var inviteTemplate = 'app/components/invite/index.html';
-  var inviteDashboardTemplate = 'app/components/invite/views/invite-dashboard.html?v=20161018-1';
-  var inviteUserTemplate = 'app/components/invite/views/invite-user.html';
+  var inviteDashboardTemplate = 'app/components/invite/views/invite-dashboard.html?v=20161105-1';
+  var inviteUserTemplate = 'app/components/invite/views/invite-user.html?v=20161105-1';
   var editInviteTemplate = 'app/components/invite/views/edit-invite.html';
   var candidateReportTemplate = 'app/components/invite/views/candidate-report.html';
 
@@ -133,6 +133,9 @@
         parent: 'invite',
         css: [angularSelectCSS],
         templateUrl: inviteUserTemplate,
+        params: {
+          quizID: null
+        },
         authenticate: true,
       })
       .state('invite.edit', {

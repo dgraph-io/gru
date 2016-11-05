@@ -7,17 +7,40 @@
     mainVm.pageName = "invite-page"
 
     // FUNCTION DECLARATION
+    inviteVm.getAllQuizes = getAllQuizes;
     inviteVm.inviteCandidate = inviteCandidate;
     inviteVm.removeSelectedQuiz = removeSelectedQuiz;
     inviteVm.setMinDate = setMinDate;
     inviteVm.resetForm = resetForm;
     inviteVm.invalidateInput = invalidateInput;
+    inviteVm.preSeleteQuiz = preSeleteQuiz;
 
-    quizService.getAllQuizes().then(function(data) {
-      inviteVm.allQuizes = data.debug[0].quiz;
-    }, function(err) {
-      console.log(err);
-    })
+
+    function getAllQuizes(quizID) {
+      if (!inviteVm.allQuizes) {
+        quizService.getAllQuizes().then(function(data) {
+          inviteVm.allQuizes = data.debug[0].quiz;
+
+          preSeleteQuiz(quizID);
+        }, function(err) {
+          console.log(err);
+        })
+      } else {
+        preSeleteQuiz(quizID);
+      }
+    }
+
+    function preSeleteQuiz(quizID) {
+      if (quizID) {
+        var qLen = inviteVm.allQuizes.length;
+        for (var i = 0; i < qLen; i++) {
+          if (inviteVm.allQuizes[i]._uid_ == quizID) {
+            inviteVm.newInvite.quiz = inviteVm.allQuizes[i];
+            break;
+          }
+        }
+      }
+    }
 
     function setMinDate() {
       setTimeout(function() {
@@ -98,7 +121,10 @@
 
   function addCandidatesController($state, $stateParams) {
     acVm = this;
+    var quizID = $state.params.quizID;
+
     inviteVm.setMinDate();
+    inviteVm.getAllQuizes(quizID);
   }
 
 
@@ -115,6 +141,7 @@
     editInviteVm.goToDashboard = goToDashboard;
 
     inviteVm.setMinDate();
+    inviteVm.getAllQuizes();
 
     if (!candidateUID) {
       SNACKBAR({
@@ -244,28 +271,30 @@
     inviteService.getInvitedCandidates(candidatesVm.quizID).then(function(data) {
       candidatesVm.quizCandidates = data.quiz[0]["quiz.candidate"];
 
-      for (var i = 0; i < candidatesVm.quizCandidates.length; i++) {
-        var cand = candidatesVm.quizCandidates[i]
-          // TODO - Maybe store invite in a format that frontend directly
-          // understands.
-        if (cand.complete == "false") {
-          cand.invite_sent = new Date(Date.parse(cand.invite_sent)) || '';
-          continue;
-        }
-        cand.quiz_start = new Date(Date.parse(cand.quiz_start)) || '';
-        var score = 0.0;
-        for (var j = 0; j < cand["candidate.question"].length; j++) {
-          score += parseFloat(cand["candidate.question"][j]["candidate.score"]) || 0;
-        }
-        cand.score = score;
-      }
-
       if (!candidatesVm.quizCandidates) {
         SNACKBAR({
           message: "Invite Candidate first to see all candidate",
           messageType: "error",
         });
-        $state.transitionTo("invite.add");
+        $state.transitionTo("invite.add", {
+          quizID: candidatesVm.quizID,
+        });
+      } else {
+        for (var i = 0; i < candidatesVm.quizCandidates.length; i++) {
+          var cand = candidatesVm.quizCandidates[i]
+            // TODO - Maybe store invite in a format that frontend directly
+            // understands.
+          if (cand.complete == "false") {
+            cand.invite_sent = new Date(Date.parse(cand.invite_sent)) || '';
+            continue;
+          }
+          cand.quiz_start = new Date(Date.parse(cand.quiz_start)) || '';
+          var score = 0.0;
+          for (var j = 0; j < cand["candidate.question"].length; j++) {
+            score += parseFloat(cand["candidate.question"][j]["candidate.score"]) || 0;
+          }
+          cand.score = score;
+        }
       }
     }, function(err) {
       console.log(err);
