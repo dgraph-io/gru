@@ -43,6 +43,7 @@
     questionVm.onTagSelect = onTagSelect;
     questionVm.markDownFormat = markDownFormat;
     questionVm.transitionToQuestion = transitionToQuestion;
+    questionVm.transitionToQuestion = transitionToQuestion;
     questionVm.getAllTags();
 
     // FUNCTION DEFINITION
@@ -285,6 +286,9 @@
     allQVm.getAllQuestions = getAllQuestions;
     allQVm.getQuestion = getQuestion;
     allQVm.setQuestion = setQuestion;
+    allQVm.setFilter = setFilter;
+    allQVm.filterBy = filterBy;
+    allQVm.removeFilter = removeFilter;
 
     // INITITIALIZERS
     console.log($stateParams);
@@ -385,6 +389,29 @@
     function setQuestion(question, index) {
       allQVm.question = question;
       allQVm.questionIndex = index;
+    }
+
+    function setFilter(tag) {
+      allQVm.filter = {}
+      allQVm.filter.tag = tag;
+    }
+
+    function filterBy(question) {
+      if (allQVm.filter && allQVm.filter.tag) {
+        var found = false;
+        angular.forEach(question['question.tag'], function(tag) {
+          if (tag._uid_ == allQVm.filter.tag._uid_) {
+            found = true;
+          }
+        });
+        return found;
+      } else {
+        return true;
+      }
+    }
+
+    function removeFilter() {
+      delete allQVm.filter;
     }
 
   } // AllQuestionController
