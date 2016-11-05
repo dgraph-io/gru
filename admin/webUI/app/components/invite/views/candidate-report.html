@@ -1,125 +1,119 @@
 <div class="mdl-grid no-pad" ng-controller="candidateReportController as cReportVm">
-	<div class="mdl-cell mdl-cell--12-col" ng-if="!cReportVm.inValidID">
-		<div class="mdl-grid report-header no-pad">
-			<div class="mdl-cell mdl-cell--2-col">
-				<i class="material-icons mdi-lg">account_box</i>
-			</div>
-			<div class="mdl-cell mdl-cell--10-col mdl-cell--middle uppercase">
-				{{cReportVm.info.name}}
-			</div>
-		</div>
-		
-		<div class="mdl-grid mdl-chip-info no-pad mt-30">
-			<div class="mdl-cell mdl-cell--7-col no-margin-lr">
-				<div class="mb-10">
-					<span class="mdl-chip mdl-chip--contact">
-				    <span class="mdl-chip__contact mdl-color--teal mdl-color-text--white">
-				    	<i class="material-icons">account_circle</i>
-				   	</span>
-				    <span class="mdl-chip__text">Name</span>
-					</span>
-					<div class="cmdl-chip-value inline-block">
-						{{cReportVm.info.name}}
-			    </div>
-			  </div>
-
-		    <div class="mb-10">
-					<span class="mdl-chip mdl-chip--contact">
-				    <span class="mdl-chip__contact mdl-color--teal mdl-color-text--white">
-				    	<i class="material-icons">email</i>
-				   	</span>
-				    <span class="mdl-chip__text">Email</span>
-					</span>
-					<div class="cmdl-chip-value inline-block">
-						{{cReportVm.info.email}}
-			    </div>
-				</div>
-				<div class="mb-10">
-					<span class="mdl-chip mdl-chip--contact">
-				    <span class="mdl-chip__contact mdl-color--teal mdl-color-text--white">
-				    	<i class="material-icons">timer</i>
-				   	</span>
-				    <span class="mdl-chip__text">Time Taken</span>
-					</span>
-					<div class="cmdl-chip-value inline-block">
-						<span ng-if="cReportVm.timeTaken.hours">
-							{{cReportVm.timeTaken.hours}} Hour<span ng-if="cReportVm.timeTaken.hours > 1">s</span>
-						</span>
-						<span ng-if="cReportVm.timeTaken.minutes">
-							{{cReportVm.timeTaken.minutes}} Minute<span ng-if="cReportVm.timeTaken.minutes > 1">s</span>
-						</span>
-						<span ng-if="cReportVm.timeTaken.seconds">
-							{{cReportVm.timeTaken.seconds}} Second<span ng-if="cReportVm.timeTaken.seconds > 1">s</span>
-						</span>
-			    </div>
-				</div>
-			</div>
-
-			<div class="mdl-cell mdl-cell--5-col text-center">
-				<svg class="spinner" width="180" height="180" viewBox="-2 -2 70 70" id="total_score">
-					<circle class="path" fill="none" stroke-width="8" stroke-linecap="round" cx="33" cy="33" r="30"></circle>
-					<circle class="path prograss-circle" fill="none" stroke-width="8" stroke-linecap="round" cx="33" cy="33" r="30" style="stroke-dashoffset: {{cReportVm.circleProgressWidth}};"></circle>
-					
-					<!-- <text x="50%" y="50%" text-anchor="middle">Look, I’m centered!Look, I’m centered!</text> -->
-					<text x="50%" y="48%" text-anchor="middle" style="font-size: .4em">
-						Total Score
-					</text>
-					<text x="50%" y="60%" text-anchor="middle" style="font-size: .4em">
-						{{cReportVm.info.total_score}}/{{cReportVm.info.max_score}}
-					</text>
-				</svg> 
-			</div>
-		</div>
-		
-		<div class="mdl-grid no-pad mt-10" ng-if="cReportVm.info.feedback">
-			<div class="mdl-cell mdl-cell--3-col">
-				<i class="material-icons">feedback</i> FEEDBACK
-			</div>
-			<div class="mdl-cell mdl-cell--9-col no-margin-lr">
-				{{cReportVm.info.feedback}}
-			</div>
-		</div>
-
-		<div class="mdl-grid no-pad">
-			<div class="mdl-cell mdl-cell--12-col no-margin-lr">
-				<h5> Question Details </h5>
-				<table class="mdl-data-table mdl-shadow--2dp">
-				  <thead>
-				    <tr>
-				      <th class="mdl-data-table__cell--non-numeric">S.NO.</th>
-				      <th class="mdl-data-table__cell--non-numeric">QUESTION NAME</th>
-				      <th class="mdl-data-table__cell--non-numeric">TIME TAKEN</th>
-				      <th>SCORE</th>
-				    </tr>
-				  </thead>
-				  <tbody>
-				    <tr ng-repeat="question in cReportVm.info.questions | filter:searchQ">
-				      <td class="mdl-data-table__cell--non-numeric">{{$index + 1}}</td>
-				      <td class="mdl-data-table__cell--non-numeric">{{question.name}}</td>
-				      <td class="mdl-data-table__cell--non-numeric">
-				      	<span ng-if="question.parsedTime.hours">
-									{{question.parsedTime.hours}} Hour<span ng-if="question.parsedTime.hours > 1">s</span>
-								</span>
-								<span ng-if="question.parsedTime.minutes">
-									{{question.parsedTime.minutes}} Minute<span ng-if="question.parsedTime.minutes > 1">s</span>
-								</span>
-								<span ng-if="question.parsedTime.seconds">
-									{{question.parsedTime.seconds}} Second<span ng-if="question.parsedTime.seconds > 1">s</span>
-								</span>
-								<span ng-if="!question.parsedTime">
-									--
-								</span>
-				      </td>
-				      <td>
-								{{question.score}}
-				      </td>
-				    </tr>
-				  </tbody>
-				</table>
-			</div>
-		</div>
-	</div>
-	<div class="mdl-cell mdl-cell--12-col" ng-if="cReportVm.inValidID">
-		<h5 class="text-red mt-30">Not a valid user</h5>
-	</div>
+  <div class="mdl-cell mdl-cell--12-col" ng-if="!cReportVm.inValidID">
+    <div class="mdl-grid report-header no-pad">
+      <div class="mdl-cell mdl-cell--2-col">
+        <i class="material-icons mdi-lg">account_box</i>
+      </div>
+      <div class="mdl-cell mdl-cell--10-col mdl-cell--middle uppercase">
+        {{cReportVm.info.name}}
+      </div>
+    </div>
+    <div class="mdl-grid mdl-chip-info no-pad mt-30">
+      <div class="mdl-cell mdl-cell--7-col no-margin-lr">
+        <div class="mb-10">
+          <span class="mdl-chip mdl-chip--contact">
+            <span class="mdl-chip__contact mdl-color--teal mdl-color-text--white">
+              <i class="material-icons">account_circle</i>
+            </span>
+          <span class="mdl-chip__text">Name</span>
+          </span>
+          <div class="cmdl-chip-value inline-block">
+            {{cReportVm.info.name}}
+          </div>
+        </div>
+        <div class="mb-10">
+          <span class="mdl-chip mdl-chip--contact">
+            <span class="mdl-chip__contact mdl-color--teal mdl-color-text--white">
+              <i class="material-icons">email</i>
+            </span>
+          <span class="mdl-chip__text">Email</span>
+          </span>
+          <div class="cmdl-chip-value inline-block">
+            {{cReportVm.info.email}}
+          </div>
+        </div>
+        <div class="mb-10">
+          <span class="mdl-chip mdl-chip--contact">
+            <span class="mdl-chip__contact mdl-color--teal mdl-color-text--white">
+              <i class="material-icons">timer</i>
+            </span>
+          <span class="mdl-chip__text">Time Taken</span>
+          </span>
+          <div class="cmdl-chip-value inline-block">
+            <span ng-if="cReportVm.timeTaken.hours">
+              {{cReportVm.timeTaken.hours}} Hour<span ng-if="cReportVm.timeTaken.hours > 1">s</span>
+            </span>
+            <span ng-if="cReportVm.timeTaken.minutes">
+              {{cReportVm.timeTaken.minutes}} Minute<span ng-if="cReportVm.timeTaken.minutes > 1">s</span>
+            </span>
+            <span ng-if="cReportVm.timeTaken.seconds">
+              {{cReportVm.timeTaken.seconds}} Second<span ng-if="cReportVm.timeTaken.seconds > 1">s</span>
+            </span>
+          </div>
+        </div>
+      </div>
+      <div class="mdl-cell mdl-cell--5-col text-center">
+        <svg class="spinner" width="180" height="180" viewBox="-2 -2 70 70" id="total_score">
+          <circle class="path" fill="none" stroke-width="8" stroke-linecap="round" cx="33" cy="33" r="30"></circle>
+          <circle class="path prograss-circle" fill="none" stroke-width="8" stroke-linecap="round" cx="33" cy="33" r="30" style="stroke-dashoffset: {{cReportVm.circleProgressWidth}};"></circle>
+          <!-- <text x="50%" y="50%" text-anchor="middle">Look, I’m centered!Look, I’m centered!</text> -->
+          <text x="50%" y="48%" text-anchor="middle" style="font-size: .4em">
+            Total Score
+          </text>
+          <text x="50%" y="60%" text-anchor="middle" style="font-size: .4em">
+            {{cReportVm.info.total_score}}/{{cReportVm.info.max_score}}
+          </text>
+        </svg>
+      </div>
+    </div>
+    <div class="mdl-grid no-pad mt-10" ng-if="cReportVm.info.feedback">
+      <div class="mdl-cell mdl-cell--3-col">
+        <i class="material-icons">feedback</i> FEEDBACK
+      </div>
+      <div class="mdl-cell mdl-cell--9-col no-margin-lr">
+        {{cReportVm.info.feedback}}
+      </div>
+    </div>
+    <div class="mdl-grid no-pad">
+      <div class="mdl-cell mdl-cell--12-col no-margin-lr">
+        <h5> Question Details </h5>
+        <table class="mdl-data-table mdl-shadow--2dp">
+          <thead>
+            <tr>
+              <th class="mdl-data-table__cell--non-numeric">S.NO.</th>
+              <th class="mdl-data-table__cell--non-numeric">QUESTION NAME</th>
+              <th class="mdl-data-table__cell--non-numeric">TIME TAKEN</th>
+              <th>SCORE</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr ng-repeat="question in cReportVm.info.questions | filter:searchQ">
+              <td class="mdl-data-table__cell--non-numeric">{{$index + 1}}</td>
+              <td class="mdl-data-table__cell--non-numeric">{{question.name}}</td>
+              <td class="mdl-data-table__cell--non-numeric">
+                <span ng-if="question.parsedTime.hours">
+                  {{question.parsedTime.hours}} Hour<span ng-if="question.parsedTime.hours > 1">s</span>
+                </span>
+                <span ng-if="question.parsedTime.minutes">
+                  {{question.parsedTime.minutes}} Minute<span ng-if="question.parsedTime.minutes > 1">s</span>
+                </span>
+                <span ng-if="question.parsedTime.seconds">
+                  {{question.parsedTime.seconds}} Second<span ng-if="question.parsedTime.seconds > 1">s</span>
+                </span>
+                <span ng-if="!question.parsedTime">
+                  --
+                </span>
+              </td>
+              <td>
+                {{question.score}}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="mdl-cell mdl-cell--12-col" ng-if="cReportVm.inValidID">
+    <h5 class="text-red mt-30">Not a valid user</h5>
+  </div>
 </div>

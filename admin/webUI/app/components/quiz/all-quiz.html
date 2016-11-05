@@ -1,52 +1,49 @@
 <div class="" ng-controller="allQuizController as allQuizVm">
-	<div ng-if="quizVm.allQuizes">
-		<div class="mdl-grid mdl-grid--no-spacing mt-20">
-			<div class="mdl-cell mdl-cell--6-col mdl-cell--4-col-tablet">
-				<h5>
+  <div ng-if="quizVm.allQuizes">
+    <div class="mdl-grid mdl-grid--no-spacing mt-20">
+      <div class="mdl-cell mdl-cell--6-col mdl-cell--4-col-tablet">
+        <h5>
 					List of all quizes
 				</h5>
-			</div>
-			<div class="mdl-cell mdl-cell--6-col mdl-cell--4-col-tablet">
-				<button class="mdl-button btn-succes bg-green pull-right" ng-click="mainVm.goTo('quiz.add')">Add New</button>
-			</div>
-		</div>
-		<div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label mb-20">
-		  <input class="mdl-textfield__input" type="text" id="search_question" ng-model="searchQ">
-		  <label class="mdl-textfield__label" for="search_question">Search quiz name</label>
-		</div>
-		<div class="quiz">
-			<table class="mdl-data-table mdl-shadow--2dp">
-			  <thead>
-			    <tr>
-			      <th class="mdl-data-table__cell--non-numeric">Quiz Name</th>
-			      <th class="mdl-data-table__cell--non-numeric">Duration</th>
-			      <th class="mdl-data-table__cell--non-numeric">Actions</th>
-			    </tr>
-			  </thead>
-			  <tbody>
-			    <tr ng-repeat="quiz in quizVm.allQuizes | filter:searchQ">
-			      <td class="mdl-data-table__cell--non-numeric">{{quiz.name}}</td>
-			      <td class="mdl-data-table__cell--non-numeric">{{quiz.duration}}</td>
-			      <td class="mdl-data-table__cell--non-numeric">		      	 
-			      	<a ui-sref="quiz.edit({quizID: quiz._uid_})">EDIT</a> 
-			      	 &nbsp;|&nbsp;
-			      	<a ui-sref="invite.dashboard({quizID: quiz._uid_})">
+      </div>
+      <div class="mdl-cell mdl-cell--6-col mdl-cell--4-col-tablet">
+        <button class="mdl-button btn-succes bg-green pull-right" ng-click="mainVm.goTo('quiz.add')">Add New</button>
+      </div>
+    </div>
+    <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label mb-20">
+      <input class="mdl-textfield__input" type="text" id="search_question" ng-model="searchQ">
+      <label class="mdl-textfield__label" for="search_question">Search quiz name</label>
+    </div>
+    <div class="quiz">
+      <table class="mdl-data-table mdl-shadow--2dp">
+        <thead>
+          <tr>
+            <th class="mdl-data-table__cell--non-numeric">Quiz Name</th>
+            <th class="mdl-data-table__cell--non-numeric">Duration</th>
+            <th class="mdl-data-table__cell--non-numeric">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr ng-repeat="quiz in quizVm.allQuizes | filter:searchQ">
+            <td class="mdl-data-table__cell--non-numeric">{{quiz.name}}</td>
+            <td class="mdl-data-table__cell--non-numeric">{{quiz.duration}}</td>
+            <td class="mdl-data-table__cell--non-numeric">
+              <a ui-sref="quiz.edit({quizID: quiz._uid_})">EDIT</a> &nbsp;|&nbsp;
+              <a ui-sref="invite.dashboard({quizID: quiz._uid_})">
 								CANDIDATES						
-							</a>
-							&nbsp;|&nbsp;
-			      	<a ui-sref="invite.add" class="">
+							</a> &nbsp;|&nbsp;
+              <a ui-sref="invite.add" class="">
 								INVITE
 							</a>
-			     	</td>
-			    </tr>
-			  </tbody>
-			</table>
-		</div>
-	</div>
-	<div class="text-center" ng-if="!quizVm.allQuizes">
-		<h4 class="text-center">
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="text-center" ng-if="!quizVm.allQuizes">
+    <h4 class="text-center">
 			Could not find any quizes.
-		</h4>
-		Go to <a ui-sref="quiz.add">Add Quiz</a> page to some.
-	</div>
+		</h4> Go to <a ui-sref="quiz.add">Add Quiz</a> page to some.
+  </div>
 </div>

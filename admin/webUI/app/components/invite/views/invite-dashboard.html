@@ -1,43 +1,43 @@
-<div ng-controller="candidatesController as candidateVm">	
-	<div class="mdl-grid">
-		<div class="mdl-cell mdl-cell--6-col mdl-cell--middle">
-			<h5>Candidate List for Quiz</h5>
-		</div>
-		<div class="mdl-cell mdl-cell--6-col text-right mdl-cell--middle">
-			<button class="mdl-button btn btn-succes bg-green" ng-click="mainVm.goTo('invite.add')">Invite</button>
-		</div>
-	</div>
-	<div class="mdl-grid">
-		<div class="mdl-cell mdl-cell--12-col">
-			<table class="mdl-data-table mdl-shadow--2dp">
-			  <thead>
-			    <tr>
-			      <th class="mdl-data-table__cell--non-numeric">Name</th>
-			      <th class="mdl-data-table__cell--non-numeric">Email</th>
-			      <th class="mdl-data-table__cell--non-numeric">Validity</th>
-			      <th class="mdl-data-table__cell--non-numeric">Actions</th>
-			    </tr>
-			  </thead>
-			  <tbody ng-repeat="candidate in candidateVm.quizCandidates">
-			    <tr >
-			      <td class="mdl-data-table__cell--non-numeric">{{candidate.name}}</td>
-			      <td class="mdl-data-table__cell--non-numeric">{{candidate.email}}</td>
-			      <td class="mdl-data-table__cell--non-numeric">{{candidate.validity}}</td>
-			      <td class="mdl-data-table__cell--non-numeric">
-			      	<a ui-sref="invite.edit({quizID: candidateVm.quizID, candidateID: candidate._uid_})">EDIT</a> 
-<!-- 			      	<span ng-if="candidate.complete == 'true'"">
-			      		&nbsp;|&nbsp;
-              	<a ui-sref="invite.report({candidateID: candidate._uid_})" ng-if="candidate.complete == 'true'">VIEW REPORT</a>
+<div ng-controller="candidatesController as candidateVm">
+  <div class="mdl-grid">
+    <div class="mdl-cell mdl-cell--6-col mdl-cell--middle">
+      <h5>Candidate List for Quiz</h5>
+    </div>
+    <div class="mdl-cell mdl-cell--6-col text-right mdl-cell--middle">
+      <button class="mdl-button btn btn-succes bg-green" ng-click="mainVm.goTo('invite.add')">Invite</button>
+    </div>
+  </div>
+  <div class="mdl-grid">
+    <div class="mdl-cell mdl-cell--12-col">
+      <table class="mdl-data-table mdl-shadow--2dp">
+        <thead>
+          <tr>
+            <th class="mdl-data-table__cell--non-numeric">Name</th>
+            <th class="mdl-data-table__cell--non-numeric">Email</th>
+            <th class="mdl-data-table__cell--non-numeric">Validity</th>
+            <th class="mdl-data-table__cell--non-numeric">Actions</th>
+          </tr>
+        </thead>
+        <tbody ng-repeat="candidate in candidateVm.quizCandidates">
+          <tr>
+            <td class="mdl-data-table__cell--non-numeric">{{candidate.name}}</td>
+            <td class="mdl-data-table__cell--non-numeric">{{candidate.email}}</td>
+            <td class="mdl-data-table__cell--non-numeric">{{candidate.validity}}</td>
+            <td class="mdl-data-table__cell--non-numeric">
+              <a ui-sref="invite.edit({quizID: candidateVm.quizID, candidateID: candidate._uid_})">EDIT</a>
+              <!--              <span ng-if="candidate.complete == 'true'"">
+                &nbsp;|&nbsp;
+                <a ui-sref="invite.report({candidateID: candidate._uid_})" ng-if="candidate.complete == 'true'">VIEW REPORT</a>
               </span> 
-		// Right now lets just show the report for everyone. When we are no longer getting any crashes,we'd show only for candidates
-		who completed the quiz.
+    // Right now lets just show the report for everyone. When we are no longer getting any crashes,we'd show only for candidates
+    who completed the quiz.
               -->
               &nbsp;|&nbsp;
               <a ui-sref="invite.report({candidateID: candidate._uid_})">VIEW REPORT</a>
-			     	</td>
-			    </tr>
-			  </tbody>
-			</table>
-		</div>
-	</div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
 </div>
