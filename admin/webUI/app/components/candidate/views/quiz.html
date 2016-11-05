@@ -1,23 +1,33 @@
 <div class="main-content ng-cloak" ng-controller="candidateQuizController as cqVm">
   <div class="" ng-if="!cqVm.apiError">
-    <div class="mdl-grid mb-10" ng-class="{'quiz-ended mdl-shadow--2dp pv-20': cqVm.quizEnded, 'b-border': !cqVm.quizEnded }">
-      <div class="mdl-cell mdl-cell--8-col-tablet mdl-cell--middle resp-center" ng-class="{'mdl-cell--4-col': cqVm.quizEnded, 'mdl-cell--3-col': !cqVm.quizEnded }">
+    <div class="mdl-grid" ng-class="{'quiz-ended mdl-shadow--2dp pv-20': cqVm.quizEnded, 'b-border': !cqVm.quizEnded }">
+      <div class="mdl-cell mdl-cell--3-col mdl-cell--8-col-tablet mdl-cell--middle resp-center" ng-if="cqVm.quizEnded">
         <h5 ng-if="cqVm.quizEnded" class="bold">Hi, {{candidateVm.info.Name}}. </h5>
         <h5 class="bold mt-5 mb-5">Dgraph quiz <span ng-if="cqVm.quizEnded">ended</span></h5>
       </div>
-      <div class="mdl-cell mdl-cell--7-col mdl-cell--6-col-tablet mdl-cell--middle big-font time-stats">
+      <div class="mdl-cell mdl-cell--4-col mdl-cell--3-col-tablet mdl-cell--middle big-font time-stats" ng-if="!cqVm.quizEnded">
         <span class="mdl-chip mdl-chip--contact mr-20" ng-if="!cqVm.quizEnded">
-			    <span class="mdl-chip__contact mdl-color--teal mdl-color-text--white">Time left</span>
-        <span class="mdl-chip__text bold text-center timer-chip-text"><span id="time"></span></span>
+			    <span class="mdl-chip__contact mdl-color--teal mdl-color-text--white">
+			    	Total Time left
+			    </span>
+        <span class="mdl-chip__text bold text-center timer-chip-text">
+		        <span id="time"></span>
         </span>
-        <div class="inline-block">
-          <span class="mdl-chip mdl-chip--contact">
-				    <span class="mdl-chip__contact mdl-color--teal mdl-color-text--white">
-				    	Time spent
-				    </span>
-          <span class="mdl-chip__text bold text-center timer-chip-text"><span id="time-taken"></span></span>
-          </span>
-        </div>
+        </span>
+        <!-- <span class="mdl-chip mdl-chip--contact" ng-if="cqVm.quizEnded">
+			    <span class="mdl-chip__contact mdl-color--teal mdl-color-text--white">
+			    	<span ng-if="cqVm.quizEnded">Final</span> Score
+        </span>
+        <span class="mdl-chip__text bold text-center ">{{cqVm.question.score}}</span>
+        </span> -->
+      </div>
+      <div class="mdl-cell mdl-cell--5-col mdl-cell--3-col-tablet mdl-cell--middle text-center resp-center time-stats mv-0">
+        <span class="mdl-chip mdl-chip--contact">
+			    <span class="mdl-chip__contact mdl-color--teal mdl-color-text--white">
+			    	Time spent
+        </span>
+        <span class="mdl-chip__text bold text-center timer-chip-text"><span id="time-taken"></span></span>
+        </span>
         <span class="mdl-chip mdl-chip--contact" ng-if="cqVm.quizEnded">
 			    <span class="mdl-chip__contact mdl-color--teal mdl-color-text--white">
 			    	<span ng-if="cqVm.quizEnded">Final</span> Score
@@ -25,7 +35,7 @@
         <span class="mdl-chip__text bold text-center ">{{cqVm.question.score}}</span>
         </span>
       </div>
-      <div class="mdl-cell mdl-cell--2-col mdl-cell--middle text-right big-font quiz-score" ng-if="!cqVm.quizEnded">
+      <div class="mdl-cell mdl-cell--3-col mdl-cell--2-col-tablet mdl-cell--middle text-right big-font quiz-score" ng-if="!cqVm.quizEnded">
         <span class="mdl-chip mdl-chip--contact">
 			    <span class="mdl-chip__contact mdl-color--teal mdl-color-text--white">
 			    	<span ng-if="cqVm.quizEnded">Final</span> Score
@@ -55,37 +65,51 @@
     </div>
     <div ng-if="!cqVm.quizEnded">
       <div class="mdl-grid question-stats" ng-if="cqVm.question.text">
-        <div class="mdl-cell mdl-cell--3-col mdl-cell--8-col-tablet mdl-cell--4-col-phone mdl-cell--1-order-desktop mdl-cell--order-1-desktop mb-20">
-          <div class="pb-10 mdl-shadow--2dp">
-            <div class="alert alert-success">
+        <div class="mdl-cell mdl-cell--3-col mdl-cell--8-col-tablet mdl-cell--4-col-phone mdl-cell--1-order-desktop mdl-cell--order-1-desktop mb-5">
+          <div class="mdl-shadow--2dp">
+            <div class="alert alert-success mdl-cell--hide-phone mdl-cell--hide-tablet">
               Scoring
             </div>
-            <div class="pl-10">
+            <div>
               <div class="mdl-grid pad-0">
-                <div class="mdl-cell mdl-cell--6-col mdl-cell--middle">
-                  <label>CORRECT</label>
+                <div class="mdl-cell mdl-cell--6-col mdl-cell--8-col-tablet mdl-cell--middle">
+                  <label>
+                    CORRECT
+                    <span class="text-green mdl-cell--hide-desktop ph-block">
+                  		<span class="mdl-cell--hide-phone">:</span> +{{cqVm.question.positive}}
+                    </span>
+                  </label>
                 </div>
-                <div class="mdl-cell mdl-cell--6-col">
+                <div class="mdl-cell mdl-cell--6-col mdl-cell--hide-tablet mdl-cell--hide-phone">
                   <button class="mdl-button mdl-js-button mdl-button--fab mdl-button--mini-fab btn-success">
                     +{{cqVm.question.positive}}
                   </button>
                 </div>
               </div>
               <div class="mdl-grid pad-0">
-                <div class="mdl-cell mdl-cell--6-col mdl-cell--middle">
-                  <label>INCORRECT </label>
+                <div class="mdl-cell mdl-cell--6-col mdl-cell--8-col-tablet mdl-cell--middle">
+                  <label>INCORRECT
+                    <span class="text-red mdl-cell--hide-desktop ph-block">
+                  		<span class="mdl-cell--hide-phone">:</span> -{{cqVm.question.negative}}
+                    </span>
+                  </label>
                 </div>
-                <div class="mdl-cell mdl-cell--6-col">
+                <div class="mdl-cell mdl-cell--6-col mdl-cell--hide-tablet mdl-cell--hide-phone">
                   <button class="mdl-button mdl-js-button mdl-button--fab mdl-button--mini-fab btn-red">
                     -{{cqVm.question.negative}}
                   </button>
                 </div>
               </div>
               <div class="mdl-grid pad-0">
-                <div class="mdl-cell mdl-cell--6-col mdl-cell--middle">
-                  <label>SKIP </label>
+                <div class="mdl-cell mdl-cell--6-col mdl-cell--8-col-tablet mdl-cell--middle">
+                  <label>
+                    SKIP
+                    <span class="text-red mdl-cell--hide-desktop ph-block">
+                    	<span class="mdl-cell--hide-phone">:</span> 0
+                    </span>
+                  </label>
                 </div>
-                <div class="mdl-cell mdl-cell--6-col">
+                <div class="mdl-cell mdl-cell--6-col mdl-cell--hide-tablet mdl-cell--hide-phone">
                   <button class="mdl-button mdl-js-button mdl-button--fab mdl-button--mini-fab btn-default">
                     0
                   </button>
@@ -122,7 +146,7 @@
               </div>
             </div>
           </div>
-          <div class="submission mt-30">
+          <div class="submission mt-30 ph-center">
             <button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect btn-lg" ng-click="cqVm.submitAnswer()">
               Submit
             </button>

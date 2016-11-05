@@ -476,6 +476,10 @@ body.home {
   font-size: 20px;
 }
 
+.quiz-ended .text-center {
+  text-align: left;
+}
+
 .candidate .options pre {
   display: block;
   padding-left: 10px !important;
@@ -580,9 +584,6 @@ circle.path.prograss-circle {
     width: 32%;
     text-align: center;
   }
-  .quiz-score.text-right {
-    text-align: left;
-  }
   .quiz-ended {
     width: 90%;
   }
@@ -607,5 +608,15 @@ circle.path.prograss-circle {
     width: 100%;
     text-align: center
   }
+  .ph-center {
+    text-align: center;
+  }
+  .ph-block {
+    display: block
+  }
   /*PAGE SPECIFIC*/
+  .quiz-score.text-right,
+  .time-stats.text-center {
+    text-align: left;
+  }
 }
