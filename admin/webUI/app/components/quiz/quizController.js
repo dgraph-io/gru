@@ -30,6 +30,8 @@
       }, function(err) {
         console.log(err)
       });
+
+      $rootScope.updgradeMDL();
     }
 
     function removeSelectedQuestion(key) {
