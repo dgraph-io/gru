@@ -6,5 +6,10 @@
   "js": {
     "indent_char": " ",
     "indent_size": 2
+  },
+  "css": {
+    "allowed_file_extensions": ["css", "scss", "sass", "less"],
+    "indent_char": " ",
+    "indent_size": 2
   }
 }

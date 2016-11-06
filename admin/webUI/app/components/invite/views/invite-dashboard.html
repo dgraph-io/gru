@@ -51,7 +51,6 @@
                 <td class="mdl-data-table__cell--non-numeric">{{candidate.quiz_start | date : 'MMM dd, yyyy'}}</td>
                 <td class="mdl-data-table__cell--non-numeric">
                   <a ui-sref="invite.report({candidateID: candidate._uid_})">VIEW REPORT</a>
-                  </span>
                 </td>
               </tr>
             </tbody>
@@ -74,10 +73,10 @@
                 <th class="mdl-data-table__cell--non-numeric">Email</th>
                 <th class="mdl-data-table__cell--non-numeric">
                   <a href="" ng-click="candidateVm.sortType = 'invite_sent'; candidateVm.sortReverse = !candidateVm.sortReverse">
-							Invited
-							<i ng-show="candidateVm.sortType == 'invite_sent' && !candidateVm.sortReverse" class="material-icons">arrow_drop_up</i>
-							<i ng-show="candidateVm.sortType == 'invite_sent' && candidateVm.sortReverse" class="material-icons">arrow_drop_down</i>
-							</a>
+              Invited
+              <i ng-show="candidateVm.sortType == 'invite_sent' && !candidateVm.sortReverse" class="material-icons">arrow_drop_up</i>
+              <i ng-show="candidateVm.sortType == 'invite_sent' && candidateVm.sortReverse" class="material-icons">arrow_drop_down</i>
+              </a>
                 </th>
                 <th class="mdl-data-table__cell--non-numeric">Validity</th>
                 <th class="mdl-data-table__cell--non-numeric">Actions</th>
@@ -90,7 +89,6 @@
                 <td class="mdl-data-table__cell--non-numeric">{{candidate.validity}}</td>
                 <td class="mdl-data-table__cell--non-numeric">
                   <a ui-sref="invite.edit({quizID: candidateVm.quizID, candidateID: candidate._uid_})">EDIT</a>
-                  </span>
                 </td>
               </tr>
             </tbody>
@@ -99,3 +97,4 @@
       </div>
     </div>
   </div>
+</div>

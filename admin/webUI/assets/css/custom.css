@@ -1,49 +1,64 @@
 /*MDL DESIGN REWRITE*/
+
 .mdl-layout__content {
   padding-bottom: 100px;
 }
+
 .mdl-layout-title {
   color: #EC3D2E;
 }
+
 .mdl-layout__header-row .mdl-navigation__link {
   cursor: pointer;
   min-width: 50px;
   padding: 0 10px;
   color: black;
 }
+
 .mdl-layout__header-row .mdl-navigation__link:hover,
 .dropdown-wrapper:hover .mdl-navigation__link {
   box-shadow: inset 0 -3px 0 0 #EC3D2E;
   color: #EC3D2E;
 }
+
 .mdl-layout-title {
   font-weight: bold;
 }
+
 .mdl-layout__container .mdl-layout__header {
   background: white;
   position: relative;
 }
+
 .mdl-layout__header .mdl-layout__drawer-button {
   color: black;
 }
+
 .mdl-layout__header .mdl-layout__drawer-button i {
   margin-top: -10px;
 }
+
 .mdl-list__item-primary-content {
   color: black;
 }
+
 .mdl-grid.no-pad {
   padding: 0;
 }
+
 .mdl-grid.no-margin-lr .mdl-cell {
   margin: 10px 0;
 }
+
 .ng-cloak {
   display: none;
 }
+
 button.btn-lg {
-    min-width: 201px;
+  min-width: 201px;
 }
+
+
 /*.mdl-grid.no-pad .mdl-cell {
   margin: 0;
   width: 100%;
@@ -53,22 +68,27 @@ button.btn-lg {
   background-color: #EC3D2E;
   color: white;
 }
+
 .mdl-button.btn-red {
   background: red;
 }
+
 .mdl-button.action-btn {
   min-width: 100px;
   margin-right: 15px;
   color: white;
 }
+
 .mdl-button:focus:not(:active) {
   background-color: #E91E63;
 }
 
-.mdl-button:hover, .action-btn:hover {
+.mdl-button:hover,
+.action-btn:hover {
   background-color: rgba(255, 101, 69, 1.00);
   color: white;
 }
+
 .mdl-grid.standard-size {
   width: 90%;
 }
@@ -80,6 +100,7 @@ button.btn-lg {
 .mdl-checkbox.is-checked .mdl-checkbox__tick-outline {
   background: rgb(236, 61, 46)url("data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgi…sZT0iZmlsbDojZmZmZmZmO2ZpbGwtb3BhY2l0eToxO3N0cm9rZTpub25lIiAvPgo8L3N2Zz4K");
 }
+
 .mdl-checkbox.is-checked .mdl-checkbox__box-outline {
   border: 2px solid RGB(236, 61, 46);
 }
@@ -87,30 +108,38 @@ button.btn-lg {
 .mdl-card {
   width: 100%;
 }
+
 .mdl-card__title {
   height: 140px;
   color: #EC3D2E;
 }
+
 .mdl-textfield {
   width: 100%;
 }
+
 .mdl-textfield__input:focus {
   outline: 0;
 }
+
 .mdl-tabs__tab-bar {
   justify-content: flex-start;
 }
+
 .material-icons {
   vertical-align: middle;
 }
+
 .mdl-button {
   height: 42px;
   background: #ff0000;
   color: white;
 }
+
 .mdl-button.btn {
   margin-top: 20px;
 }
+
 .mdl-button:hover {
   background-color: #E91E63;
 }
@@ -119,41 +148,52 @@ button.btn-lg {
   vertical-align: sub;
   font-size: 20px;
 }
+
 .mdl-chip.danger-chip:hover {
   background: #F44336;
 }
+
 .mdl-chip.danger-chip {
   background: #FF5722;
   color: white;
 }
+
 .mdl-chip.white-chip {
-    background: white;
-    border: 1px solid #F44336;
+  background: white;
+  border: 1px solid #F44336;
 }
+
 .slide-link.is-active .mdl-chip {
   background: white;
   color: black;
 }
+
 .mdl-checkbox {
   height: inherit;
 }
 
 .mdl-success.is-checked .mdl-checkbox__tick-outline {
-    background: green;
+  background: green;
 }
+
 .mdl-success.is-checked .mdl-checkbox__box-outline {
-    border: 2px solid green;
+  border: 2px solid green;
 }
+
 .mdl-success.is-checked .mdl-checkbox__label {
-    color: green;
+  color: green;
 }
-.mdl-button[disabled][disabled], .mdl-button.mdl-button--disabled.mdl-button--disabled {
+
+.mdl-button[disabled][disabled],
+.mdl-button.mdl-button--disabled.mdl-button--disabled {
   border: 1px solid #9E9E9E;
 }
+
 .mdl-cell.no-margin-lr {
   margin-left: 0;
   margin-right: 0;
 }
+
 
 /* So that top bar takes up less space.*/
 
@@ -186,6 +226,8 @@ button.btn-lg {
   margin-top: 5px;
   margin-bottom: 5px;
 }
+
+
 /*HOME PAGE*/
 
 body.home {
@@ -209,12 +251,16 @@ body.home {
 .panel-card {
   margin-left: 30px;
 }
+
+
 /*CANDIDATE*/
+
 .candidate .question {
   background: rgba(212, 213, 213, 0.26);
   padding: 22px 10px 1px;
   border-radius: 5px;
 }
+
 
 /*QUESTION PAGE CSS*/
 
@@ -246,7 +292,7 @@ body.home {
 }
 
 .question-form .mdl-checkbox.is-checked .mdl-checkbox__label {
-    color: #4CB973;
+  color: #4CB973;
 }
 
 .select2-container {
@@ -259,30 +305,35 @@ body.home {
 
 .mdl-select.select2-container .select2-choices {
   border: none;
-  border-bottom: 1px solid rgba(0,0,0,.12);
+  border-bottom: 1px solid rgba(0, 0, 0, .12);
   background-image: none;
 }
 
-.mdl-select.select2-container .select2-choices .select2-search-field input{
+.mdl-select.select2-container .select2-choices .select2-search-field input {
   font-size: 16px;
   font-family: 'Montserrat', sans-serif;
-  color: rgba(0,0,0,.26);
+  color: rgba(0, 0, 0, .26);
 }
-.mdl-select.select2-container .select2-choices .select2-search-choice{
+
+.mdl-select.select2-container .select2-choices .select2-search-choice {
   line-height: 20px;
 }
+
 .mdl-select.select2-container .select2-search-choice-close {
   left: 3px;
   top: 53%;
   transform: translateY(-50%);
 }
+
 .mdl-select.select2-container.select2-container-active .select2-choices,
 .mdl-select .select2-drop-active {
   border: 1px solid #EC3D2E;
 }
+
 .mdl-select .select2-drop-active {
   border-top: none;
 }
+
 .mdl-select .select2-results .select2-highlighted {
   background: #EC3D2E;
 }
@@ -291,10 +342,12 @@ body.home {
   width: 100% !important;
   position: absolute;
 }
+
 .question-action {
   min-width: 100px;
   line-height: 48px;
 }
+
 
 /*So that the question name column and the question description doesn't scroll together*/
 
@@ -308,25 +361,30 @@ body.home {
 }
 
 .qn-desc {
-    height: 100vh;
-    overflow-y: auto;
-    padding-right: 30px;
-    padding-bottom: 200px;
+  height: 100vh;
+  overflow-y: auto;
+  padding-right: 30px;
+  padding-bottom: 200px;
 }
 
+
 /*QUIZ PAGE CSS*/
+
 .duration-inputs .mdl-textfield {
   width: 32%;
 }
+
 .quiz-cover.mdl-card__title {
   background: url("../img/quiz-cover.png");
   background-size: 100% 100%;
 }
+
 .alert {
   padding: 10px 10px;
   margin-bottom: 10px;
   color: white;
 }
+
 .alert-info {
   background: #019CFC;
 }
@@ -339,17 +397,18 @@ body.home {
   font-size: 14px;
   color: white;
 }
+
 .mdl-button--fab.mdl-button--small-fab {
-    height: 34px;
-    min-width: 34px;
-    width: 34px;
+  height: 34px;
+  min-width: 34px;
+  width: 34px;
 }
 
 .quiz-questions.mdl-chip {
   height: inherit;
 }
 
-.quiz-questions.mdl-chip .mdl-chip__text{
+.quiz-questions.mdl-chip .mdl-chip__text {
   white-space: normal;
 }
 
@@ -362,7 +421,9 @@ body.home {
   margin-top: -5px;
 }
 
+
 /* CODEMIRROR*/
+
 #question-panel .CodeMirror {
   border-bottom: 1px solid black;
   min-height: 380px;
@@ -381,6 +442,7 @@ body.home {
   padding-top: 10px;
 }
 
+
 /*QUIZ TAKING */
 
 .mdl-chip__contact {
@@ -390,7 +452,7 @@ body.home {
 }
 
 .timer-chip-text {
-    width: 84px;
+  width: 84px;
 }
 
 .mdl-chip--contact .mdl-chip__text {
@@ -400,15 +462,22 @@ body.home {
 
 .quiz-ended {
   position: fixed;
-  width: 66%;
+  width: 80%;
   top: 50%;
-  transform: translateY(-50%);
+  left: 50%;
+  transform: translate(-50%, -50%);
 }
+
 .quiz-ended .pull-right {
   float: none;
 }
+
 .quiz-ended .mdl-chip__contact {
   font-size: 20px;
+}
+
+.quiz-ended .text-center {
+  text-align: left;
 }
 
 .candidate .options pre {
@@ -428,28 +497,34 @@ body.home {
   line-height: 50px;
 }
 
+
 /*INVITE PAGE*/
 
 .select2-container .select2-choice {
   padding: 8px;
   background-image: none;
 }
+
 .select2-dropdown-open .select2-choice {
   background: white;
 }
 
-.select2-container .select2-choice .select2-arrow{
+.select2-container .select2-choice .select2-arrow {
   background: white;
   background-image: none;
 }
+
 .select2-container .select2-choice .select2-arrow b {
   background-position: 0 10px;
 }
+
 .select2-dropdown-open .select2-choice .select2-arrow b {
   background-position: -18px 10px;
 }
 
+
 /*CANDIDATE REPORT*/
+
 .report-header {
   background: #e0e0e0;
 }
@@ -484,14 +559,70 @@ circle.path.prograss-circle {
   stroke-dashoffset: 184;
   transition: 2s;
 }
-    
+
+
 /*TABLET + MOBILE SPECIFIC CSS*/
-@media (max-width: 840px) {
+
+@media (max-width: 839px) {
   .resp-center {
     text-align: center;
   }
+  /*QUIZ LANDING*/
+  .landing-grid .lc-border {
+    border-top: 1px solid #FF5722;
+    border-left: none;
+  }
+  .landing-grid h4 {
+    margin: 0;
+  }
+  .landing-grid .info-section {
+    padding-top: 10px;
+  }
+  /*QUIZ PAGE*/
+  .question-stats .mdl-grid {
+    display: inline-block;
+    width: 32%;
+    text-align: center;
+  }
+  .quiz-ended {
+    width: 90%;
+  }
+  .quiz-ended .time-stats {
+    width: 100%;
+    text-align: center;
+  }
+  .quiz-ended .mdl-textfield__label {
+    white-space: normal;
+  }
+  .quiz-stats {
+    width: 330px;
+  }
+  .quiz-stats > .mdl-cell {
+    text-align: left;
+  }
 }
 
+
 /*MOBILE SPECIFIC CSS*/
+
 @media (max-width: 480px) {
+  .mdl-layout__header-row {
+    padding: 0;
+  }
+  .mdl-layout-title {
+    display: block;
+    width: 100%;
+    text-align: center
+  }
+  .ph-center {
+    text-align: center;
+  }
+  .ph-block {
+    display: block
+  }
+  /*PAGE SPECIFIC*/
+  .quiz-score.text-right,
+  .time-stats.text-center {
+    text-align: left;
+  }
 }

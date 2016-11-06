@@ -36,10 +36,12 @@
           }"
 
       services.proxy(query).then(function(data) {
-        var candidates = data.quiz[0]["quiz.candidate"]
-        for (var i = 0; i < candidates.length; i++) {
-          if (candidates[i].email === email) {
-            return deferred.resolve(true);
+        var candidates = data.quiz[0]["quiz.candidate"];
+        if (candidates) {
+          for (var i = 0; i < candidates.length; i++) {
+            if (candidates[i].email === email) {
+              return deferred.resolve(true);
+            }
           }
         }
         return deferred.resolve(false);
