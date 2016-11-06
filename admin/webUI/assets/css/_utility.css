@@ -102,6 +102,10 @@
   width: 100%;
 }
 
+.width-inherit {
+  width: inherit;
+}
+
 .b-border {
   border-bottom: 1px solid rgba(0, 0, 0, .12);
 }
@@ -170,6 +174,10 @@
 
 .vbottom {
   vertical-align: bottom;
+}
+
+.v-texttop {
+  vertical-align: text-top;
 }
 
 .material-icons.mdi-lg {

@@ -288,6 +288,7 @@
     allQVm.setQuestion = setQuestion;
     allQVm.setFilter = setFilter;
     allQVm.filterBy = filterBy;
+    allQVm.setOption = setOption;
     allQVm.removeFilter = removeFilter;
 
     // INITITIALIZERS
@@ -392,26 +393,65 @@
     }
 
     function setFilter(tag) {
-      allQVm.filter = {}
+      allQVm.filter = allQVm.filter || {};
       allQVm.filter.tag = tag;
+      allQVm.filter.option = false;
     }
 
+    // TODO : Write modular code Filtering
     function filterBy(question) {
       if (allQVm.filter && allQVm.filter.tag) {
         var found = false;
+        var hasMultipleAnswers = allQVm.filter.options && question["question.correct"].length > 1
         angular.forEach(question['question.tag'], function(tag) {
           if (tag._uid_ == allQVm.filter.tag._uid_) {
             found = true;
           }
+          // if (allQVm.filter.multipleOption && hasMultipleAnswers && found) {
+          //   found = true;
+          // } else if (allQVm.filter.multipleOption && hasMultipleAnswers && !found) {
+          //   found = false;
+          // } else if (allQVm.filter.multipleOption && !hasMultipleAnswers && !found) {
+          //   found = false;
+          // } else if (allQVm.filter.multipleOption && !hasMultipleAnswers && found) {
+          //   found = false;
+          // }
         });
         return found;
+      } else if (allQVm.filter && allQVm.filter.option) {
+        if (allQVm.filter.option == 2) {
+          if (question["question.correct"].length > 1) {
+            return true
+          } else {
+            return false;
+          }
+        } else {
+          if (question["question.correct"].length == 1) {
+            return true
+          } else {
+            return false;
+          }
+        }
       } else {
         return true;
       }
     }
 
+    function setOption(question) {
+      // Active first question visible after filter
+      if (allQVm.filter && allQVm.filter.option) {
+        delete allQVm.filter.tag;
+        setTimeout(function() {
+          var question = $(".side-tabs");
+          if (question.length) {
+            question[0].click();
+          }
+        }, 300);
+      }
+    }
+
     function removeFilter() {
-      delete allQVm.filter;
+      delete allQVm.filter.tag;
     }
 
   } // AllQuestionController
