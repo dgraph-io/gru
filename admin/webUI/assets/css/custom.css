@@ -563,7 +563,7 @@ circle.path.prograss-circle {
 
 /*TABLET + MOBILE SPECIFIC CSS*/
 
-@media (max-width: 840px) {
+@media (max-width: 839px) {
   .resp-center {
     text-align: center;
   }
@@ -593,6 +593,12 @@ circle.path.prograss-circle {
   }
   .quiz-ended .mdl-textfield__label {
     white-space: normal;
+  }
+  .quiz-stats {
+    width: 330px;
+  }
+  .quiz-stats > .mdl-cell {
+    text-align: left;
   }
 }
 
