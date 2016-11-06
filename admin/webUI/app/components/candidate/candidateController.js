@@ -104,6 +104,8 @@
           setTimeout(function() {
             componentHandler.upgradeAllRegistered();
           }, 10);
+
+          scrollTo(".main-content");
         }, function(err) {
           if (err.status != 0) {
             if (err.data.Message) {

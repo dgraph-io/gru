@@ -110,8 +110,8 @@ angular.module('GruiApp').constant('APP_REQUIRES', {
     'questionServices': ['app/components/question/questionServices.js'],
     'quizController': ['app/components/quiz/quizController.js'],
     'quizServices': ['app/components/quiz/quizServices.js'],
-    'inviteController': ['app/components/invite/inviteController.js?v=20161018-1'],
-    'inviteService': ['app/components/invite/inviteService.js?v=20161018-1'],
+    'inviteController': ['app/components/invite/inviteController.js?v=20161105-1'],
+    'inviteService': ['app/components/invite/inviteService.js?v=20161106-1'],
     'quizLandingController': ['app/components/candidate/quizLandingController.js?v=20161027-1'],
     'quizLandingService': ['app/components/candidate/quizLandingService.js?v=20161027-1'],
     'candidateController': ['app/components/candidate/candidateController.js?v=20161025-1'],
@@ -338,8 +338,8 @@ angular.module('GruiApp').provider('RouteHelpers', ['APP_REQUIRES', function(app
       return Object.prototype.toString.call(obj) == "[object Object]"
     }
 
-    function goTo(state) {
-      $state.transitionTo(state);
+    function goTo(state, data) {
+      $state.transitionTo(state, data);
     }
 
     function getAllTags() {

@@ -12,9 +12,9 @@
       <div class="mdl-cell mdl-cell--7-col no-margin-lr">
         <div class="mb-10">
           <span class="mdl-chip mdl-chip--contact">
-				    <span class="mdl-chip__contact mdl-color--teal mdl-color-text--white">
-				    	<i class="material-icons">account_circle</i>
-				   	</span>
+            <span class="mdl-chip__contact mdl-color--teal mdl-color-text--white">
+              <i class="material-icons">account_circle</i>
+            </span>
           <span class="mdl-chip__text">Name</span>
           </span>
           <div class="cmdl-chip-value inline-block">
@@ -23,9 +23,9 @@
         </div>
         <div class="mb-10">
           <span class="mdl-chip mdl-chip--contact">
-				    <span class="mdl-chip__contact mdl-color--teal mdl-color-text--white">
-				    	<i class="material-icons">email</i>
-				   	</span>
+            <span class="mdl-chip__contact mdl-color--teal mdl-color-text--white">
+              <i class="material-icons">email</i>
+            </span>
           <span class="mdl-chip__text">Email</span>
           </span>
           <div class="cmdl-chip-value inline-block">
@@ -34,20 +34,20 @@
         </div>
         <div class="mb-10">
           <span class="mdl-chip mdl-chip--contact">
-				    <span class="mdl-chip__contact mdl-color--teal mdl-color-text--white">
-				    	<i class="material-icons">timer</i>
-				   	</span>
+            <span class="mdl-chip__contact mdl-color--teal mdl-color-text--white">
+              <i class="material-icons">timer</i>
+            </span>
           <span class="mdl-chip__text">Time Taken</span>
           </span>
           <div class="cmdl-chip-value inline-block">
             <span ng-if="cReportVm.timeTaken.hours">
-							{{cReportVm.timeTaken.hours}} Hour<span ng-if="cReportVm.timeTaken.hours > 1">s</span>
+              {{cReportVm.timeTaken.hours}} Hour<span ng-if="cReportVm.timeTaken.hours > 1">s</span>
             </span>
             <span ng-if="cReportVm.timeTaken.minutes">
-							{{cReportVm.timeTaken.minutes}} Minute<span ng-if="cReportVm.timeTaken.minutes > 1">s</span>
+              {{cReportVm.timeTaken.minutes}} Minute<span ng-if="cReportVm.timeTaken.minutes > 1">s</span>
             </span>
             <span ng-if="cReportVm.timeTaken.seconds">
-							{{cReportVm.timeTaken.seconds}} Second<span ng-if="cReportVm.timeTaken.seconds > 1">s</span>
+              {{cReportVm.timeTaken.seconds}} Second<span ng-if="cReportVm.timeTaken.seconds > 1">s</span>
             </span>
           </div>
         </div>
@@ -92,17 +92,17 @@
               <td class="mdl-data-table__cell--non-numeric">{{question.name}}</td>
               <td class="mdl-data-table__cell--non-numeric">
                 <span ng-if="question.parsedTime.hours">
-									{{question.parsedTime.hours}} Hour<span ng-if="question.parsedTime.hours > 1">s</span>
+                  {{question.parsedTime.hours}} Hour<span ng-if="question.parsedTime.hours > 1">s</span>
                 </span>
                 <span ng-if="question.parsedTime.minutes">
-									{{question.parsedTime.minutes}} Minute<span ng-if="question.parsedTime.minutes > 1">s</span>
+                  {{question.parsedTime.minutes}} Minute<span ng-if="question.parsedTime.minutes > 1">s</span>
                 </span>
                 <span ng-if="question.parsedTime.seconds">
-									{{question.parsedTime.seconds}} Second<span ng-if="question.parsedTime.seconds > 1">s</span>
+                  {{question.parsedTime.seconds}} Second<span ng-if="question.parsedTime.seconds > 1">s</span>
                 </span>
                 <span ng-if="!question.parsedTime">
-									--
-								</span>
+                  --
+                </span>
               </td>
               <td>
                 {{question.score}}

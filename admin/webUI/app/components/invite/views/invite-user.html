@@ -12,17 +12,6 @@
         <label class="mdl-textfield__label" for="datePicker">Enter Validity</label>
         <span class="mdl-textfield__error">Should be valid date</span>
       </div>
-      <!-- <div class="mt-20" ng-if="inviteVm.newInvite.quiz">
-				<label class="bold">Selected Quiz</label>
-				<div class="mt-5">
-					<span class="mdl-chip mdl-chip--deletable">
-				    <span class="mdl-chip__text">{{inviteVm.newInvite.quiz.name}}</span>
-				    <button type="button" class="mdl-chip__action" ng-click="inviteVm.removeSelectedQuiz(key)">
-				    	<i class="material-icons">cancel</i>
-				    </button>
-					</span>
-				</div>
-			</div> -->
       <ui-select theme="select2" ng-model="inviteVm.newInvite.quiz" class="mdl-select">
         <ui-select-match placeholder="Select Quiz">
           <span ng-bind="$select.selected.name"></span>
@@ -41,7 +30,4 @@
       </div>
     </form>
   </div>
-  <!-- 	<div class="mdl-cell mdl-cell--6-col  mdl-cell--1-offset">
-		<div ng-include="'app/components/invite/views/quiz-selection.html'"></div>
-	</div> -->
 </div>

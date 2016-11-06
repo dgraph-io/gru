@@ -478,9 +478,10 @@ body.home {
 
 .quiz-ended {
   position: fixed;
-  width: 66%;
+  width: 80%;
   top: 50%;
-  transform: translateY(-50%);
+  left: 50%;
+  transform: translate(-50%, -50%);
 }
 
 .quiz-ended .pull-right {
@@ -489,6 +490,10 @@ body.home {
 
 .quiz-ended .mdl-chip__contact {
   font-size: 20px;
+}
+
+.quiz-ended .text-center {
+  text-align: left;
 }
 
 .candidate .options pre {
@@ -574,13 +579,66 @@ circle.path.prograss-circle {
 
 /*TABLET + MOBILE SPECIFIC CSS*/
 
-@media (max-width: 840px) {
+@media (max-width: 839px) {
   .resp-center {
     text-align: center;
+  }
+  /*QUIZ LANDING*/
+  .landing-grid .lc-border {
+    border-top: 1px solid #FF5722;
+    border-left: none;
+  }
+  .landing-grid h4 {
+    margin: 0;
+  }
+  .landing-grid .info-section {
+    padding-top: 10px;
+  }
+  /*QUIZ PAGE*/
+  .question-stats .mdl-grid {
+    display: inline-block;
+    width: 32%;
+    text-align: center;
+  }
+  .quiz-ended {
+    width: 90%;
+  }
+  .quiz-ended .time-stats {
+    width: 100%;
+    text-align: center;
+  }
+  .quiz-ended .mdl-textfield__label {
+    white-space: normal;
+  }
+  .quiz-stats {
+    width: 330px;
+  }
+  .quiz-stats > .mdl-cell {
+    text-align: left;
   }
 }
 
 
 /*MOBILE SPECIFIC CSS*/
 
-@media (max-width: 480px) {}
+@media (max-width: 480px) {
+  .mdl-layout__header-row {
+    padding: 0;
+  }
+  .mdl-layout-title {
+    display: block;
+    width: 100%;
+    text-align: center
+  }
+  .ph-center {
+    text-align: center;
+  }
+  .ph-block {
+    display: block
+  }
+  /*PAGE SPECIFIC*/
+  .quiz-score.text-right,
+  .time-stats.text-center {
+    text-align: left;
+  }
+}

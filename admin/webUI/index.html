@@ -9,13 +9,10 @@
   <meta name="author" content="Dgraph Labs">
   <title ng-bind="SEO.title">Gru</title>
   <link rel="stylesheet" href="assets/lib/css/material.indigo-pink.min.css">
-  <!-- Material Design core CSS -->
   <link href='https://fonts.googleapis.com/css?family=Montserrat' rel='stylesheet' type='text/css'>
   <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Tangerine">
-  <!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/3.4.5/select2.css"> -->
   <link rel="stylesheet" href="assets/lib/css/select2.css?v=20161102">
   <link rel="stylesheet" href="assets/css/main.css?v=20161107-1">
-  <!-- Google analytics tracking code -->
 </head>
 
 <body ng-controller="MainController as mainVm" class="position-relative {{mainVm.pageName}} ng-clo" autoscroll="" ng-class="{'admin-panel': mainVm.isLoggedIn()}">
@@ -25,16 +22,15 @@
         <!-- Title -->
         <a ui-sref="root" ng-if="mainVm.isLoggedIn()" class="ng-cloak">
           <span class="mdl-layout-title font-tangerine">
-                GRU-Admin
-            </span>
+            GRU-Admin
+          </span>
         </a>
         <span class="mdl-layout-title font-tangerine ng-cloak" ng-if="!mainVm.isLoggedIn()">
-            GRU - Dgraph Screening Quiz
-          </span>
-        <!-- Add spacer, to align navigation to the right -->
+          GRU - Dgraph Screening Quiz
+        </span>
         <div class="mdl-layout-spacer"></div>
         <!-- Navigation -->
-        <nav class="mdl-navigation ng-cloak" ng-show="mainVm.isLoggedIn()">
+        <nav class="mdl-navigation ng-cloak" ng-if="mainVm.isLoggedIn()">
           <div class="dropdown-wrapper">
             <div class="dropdown-link mdl-navigation__link">
               QUESTION
@@ -120,7 +116,7 @@
     'assets/lib/js/ocLazyLoad.min.js',
     'assets/lib/js/duration.js',
     'app/app.module.js?v=20161025-1',
-    'app/app.route.js?v=20161027-1',
+    'app/app.route.js?v=20161105-5',
     'assets/js/gru.js?v=20160405-1'
   ].forEach(function(src) {
     var script = document.createElement('script');

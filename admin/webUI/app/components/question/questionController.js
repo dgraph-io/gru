@@ -122,9 +122,9 @@
         return "Please enter all the options"
       }
 
-      hasCorrectAnswer = false,
-        hasEmptyName = false;
-      correct = 0
+      hasCorrectAnswer = false;
+      hasEmptyName = false;
+      correct = 0;
       angular.forEach(inputs.options, function(value, key) {
         if (value.is_correct) {
           hasCorrectAnswer = true;
@@ -297,7 +297,6 @@
 
     // FUNCTION DEFINITIONS
     function getAllQuestions(questionID) {
-
       if (questionID && !allQVm.lazyStatus && allQVm.noItemFound) {
         return
       }

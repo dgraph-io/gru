@@ -139,6 +139,11 @@
   padding-bottom: 60px;
 }
 
+.pl-0,
+.ph-0 {
+  padding-left: 0;
+}
+
 .pl-5,
 .ph-5 {
   padding-left: 5px;
@@ -162,6 +167,11 @@
 .pl-30,
 .ph-30 {
   padding-left: 30px;
+}
+
+.pr-0,
+.ph-0 {
+  padding-right: 0;
 }
 
 .pr-10,
