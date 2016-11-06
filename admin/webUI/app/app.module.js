@@ -338,8 +338,8 @@ angular.module('GruiApp').provider('RouteHelpers', ['APP_REQUIRES', function(app
       return Object.prototype.toString.call(obj) == "[object Object]"
     }
 
-    function goTo(state) {
-      $state.transitionTo(state);
+    function goTo(state, data) {
+      $state.transitionTo(state, data);
     }
 
     function getAllTags() {
