@@ -106,7 +106,7 @@ angular.module('GruiApp').constant('APP_REQUIRES', {
     'homeController': ['app/components/home/homeController.js'],
     'loginController': ['app/components/login/loginController.js'],
     'loginService': ['app/components/login/loginService.js'],
-    'questionController': ['app/components/question/questionController.js?v=20161027-1'],
+    'questionController': ['app/components/question/questionController.js?v=20161107-1'],
     'questionServices': ['app/components/question/questionServices.js'],
     'quizController': ['app/components/quiz/quizController.js'],
     'quizServices': ['app/components/quiz/quizServices.js'],

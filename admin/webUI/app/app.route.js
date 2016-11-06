@@ -11,7 +11,7 @@
   var loginTemplate = 'app/components/login/index.html';
 
   var questionTemplate = 'app/components/question/index.html';
-  var allQuestionTemplate = 'app/components/question/all-question.html?v=20161025-1';
+  var allQuestionTemplate = 'app/components/question/all-question.html?v=20161007-1';
   var addQuestionTemplate = 'app/components/question/add-question.html?v=20161027-1';
   var editQuestionTemplate = 'app/components/question/views/edit-question.html?v=20161027-1';
 

@@ -90,6 +90,10 @@
   text-transform: uppercase;
 }
 
+.capitalize {
+  text-transform: capitalize;
+}
+
 .show-none {
   display: none;
 }

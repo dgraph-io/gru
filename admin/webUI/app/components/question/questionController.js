@@ -43,7 +43,6 @@
     questionVm.onTagSelect = onTagSelect;
     questionVm.markDownFormat = markDownFormat;
     questionVm.transitionToQuestion = transitionToQuestion;
-    questionVm.transitionToQuestion = transitionToQuestion;
     questionVm.getAllTags();
 
     // FUNCTION DEFINITION
@@ -288,8 +287,8 @@
     allQVm.setQuestion = setQuestion;
     allQVm.setFilter = setFilter;
     allQVm.filterBy = filterBy;
-    allQVm.setOption = setOption;
-    allQVm.removeFilter = removeFilter;
+    allQVm.removeAllFilter = removeAllFilter;
+    allQVm.setFirstQuestion = setFirstQuestion;
 
     // INITITIALIZERS
     console.log($stateParams);
@@ -392,66 +391,90 @@
       allQVm.questionIndex = index;
     }
 
-    function setFilter(tag) {
+    function setFilter(filter_value, key) {
       allQVm.filter = allQVm.filter || {};
-      allQVm.filter.tag = tag;
-      allQVm.filter.option = false;
+      if (key == 'tag') {
+        if (allQVm.filter.tag) {
+          var tagIndex = mainVm.indexOfObject(allQVm.filter.tag, filter_value);
+          if (tagIndex > -1) {
+            allQVm.filter.tag.splice(tagIndex, 1);
+          } else {
+            allQVm.filter.tag.push(filter_value);
+          }
+        } else {
+          allQVm.filter.tag = [];
+          allQVm.filter.tag.push(filter_value);
+        }
+      }
+
+      if (!key) {
+        allQVm.filter[filter_value] = allQVm.filter[filter_value] ? false : true;
+        if (filter_value == 'multiple') {
+          allQVm.filter.single = false;
+        } else if (filter_value == 'single') {
+          allQVm.filter.multiple = false;
+        }
+      }
+
+      allQVm.setFirstQuestion();
     }
 
     // TODO : Write modular code Filtering
     function filterBy(question) {
       if (allQVm.filter && allQVm.filter.tag) {
         var found = false;
-        var hasMultipleAnswers = allQVm.filter.options && question["question.correct"].length > 1
-        angular.forEach(question['question.tag'], function(tag) {
-          if (tag._uid_ == allQVm.filter.tag._uid_) {
-            found = true;
+        // var hasMultipleAnswers = allQVm.filter.options && question["question.correct"].length > 1;
+
+        var tagFound = true;
+        var tagsLen = allQVm.filter.tag.length;
+        for (var i = 0; i < tagsLen; i++) {
+          var tagIndex = mainVm.indexOfObject(question['question.tag'], allQVm.filter.tag[i]);
+          if (tagIndex == -1) {
+            tagFound = false;
+            break;
           }
-          // if (allQVm.filter.multipleOption && hasMultipleAnswers && found) {
-          //   found = true;
-          // } else if (allQVm.filter.multipleOption && hasMultipleAnswers && !found) {
-          //   found = false;
-          // } else if (allQVm.filter.multipleOption && !hasMultipleAnswers && !found) {
-          //   found = false;
-          // } else if (allQVm.filter.multipleOption && !hasMultipleAnswers && found) {
-          //   found = false;
-          // }
-        });
-        return found;
-      } else if (allQVm.filter && allQVm.filter.option) {
-        if (allQVm.filter.option == 2) {
-          if (question["question.correct"].length > 1) {
-            return true
-          } else {
-            return false;
+          if (tagIndex > -1 && (allQVm.filter.multiple && question['question.correct'].length == 1)) {
+            tagFound = false;
           }
-        } else {
-          if (question["question.correct"].length == 1) {
-            return true
-          } else {
-            return false;
+          if (tagIndex > -1 && (allQVm.filter.single && question['question.correct'].length > 1)) {
+            tagFound = false;
           }
+          if (!tagFound) break;
         }
-      } else {
+        return tagFound
+      }
+      // else if (allQVm.filter && allQVm.filter.option) {
+      //   if (allQVm.filter.option == 2) {
+      //     if (question["question.correct"].length > 1) {
+      //       return true
+      //     } else {
+      //       return false;
+      //     }
+      //   } else {
+      //     if (question["question.correct"].length == 1) {
+      //       return true
+      //     } else {
+      //       return false;
+      //     }
+      //   }
+      // } 
+      else {
         return true;
       }
     }
 
-    function setOption(question) {
-      // Active first question visible after filter
-      if (allQVm.filter && allQVm.filter.option) {
-        delete allQVm.filter.tag;
-        setTimeout(function() {
-          var question = $(".side-tabs");
-          if (question.length) {
-            question[0].click();
-          }
-        }, 300);
-      }
+    function removeAllFilter() {
+      delete allQVm.filter;
+      allQVm.setFirstQuestion();
     }
 
-    function removeFilter() {
-      delete allQVm.filter.tag;
+    function setFirstQuestion() {
+      setTimeout(function() {
+        var question = $(".side-tabs");
+        if (question.length) {
+          question[0].click();
+        }
+      }, 300);
     }
 
   } // AllQuestionController

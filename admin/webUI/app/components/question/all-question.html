@@ -1,13 +1,31 @@
 <div ng-controller="allQuestionController as allQVm" class="question-listing" id="question-listing">
   <div class="" ng-if="mainVm.allQuestions.length">
     <div class="mdl-grid mdl-grid--no-spacing b-border">
-      <div class="mdl-cell mdl-cell--2-col mdl-cell--4-col-tablet pl-5">
+      <!-- <div class="mdl-cell mdl-cell--2-col mdl-cell--4-col-tablet pl-5">
         <h5>
           List of all questions
         </h5>
-      </div>
-      <div class="mdl-cell mdl-cell--4-col mdl-cell--4-col-tablet pl-5 mdl-cell--middle">
-        <div class="mt-10">
+      </div> -->
+      <div class="mdl-cell mdl-cell--11-col mdl-cell--4-col-tablet pl-5 mdl-cell--middle">
+        <div class="mt-15 pb-5">
+          <div class="tag-wrapper">
+            <div class="inline-block" ng-repeat="tag in questionVm.allTags track by tag._uid_">
+              <div class="tag-filter capitalize" ng-click="allQVm.setFilter(tag, 'tag')" ng-class="{'selected-filter': mainVm.indexOfObject(allQVm.filter.tag, tag) > -1}">
+                {{tag.name}}
+              </div>
+            </div>
+            <div class="tag-filter capitalize" ng-click="allQVm.setFilter('multiple')" ng-class="{'selected-filter': allQVm.filter.multiple}">
+              Multiple
+            </div>
+            <div class="tag-filter capitalize" ng-click="allQVm.setFilter('single')" ng-class="{'selected-filter': allQVm.filter.single}">
+              Single
+            </div>
+            <div class="inline-block">
+              <span class="text-red clickable" ng-click="allQVm.removeAllFilter()" ng-show="allQVm.filter.tag.length > 1 || (allQVm.filter.tag.length && (allQVm.filter.multiple || allQVm.filter.single))">
+                Clear All
+              </span>
+            </div>
+          </div>
           <!-- <label class="mdl-radio mdl-js-radio mdl-js-ripple-effect" for="single-choice-filter" ng-class="{'is-checked': allQVm.filter.option == 1}">
             <input type="radio" id="single-choice-filter" ng-model="allQVm.filter.option" class="mdl-radio__button" name="options" value="1" ng-click="allQVm.uncheck($event)" ng-change="allQVm.setOption()">
             <span class="mdl-radio__label">Single Choice</span>
@@ -16,7 +34,7 @@
             <input type="radio" id="multiple-choice-filter" ng-model="allQVm.filter.option" class="mdl-radio__button" name="options" value="2" ng-change="allQVm.setOption()" ng-click="allQVm.uncheck($event)">
             <span class="mdl-radio__label">Multiple Choice</span>
           </label> -->
-          <label class="mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect v-texttop width-inherit" for="single-option-filter" ng-class="{'is-checked': allQVm.filter.option == 1}">
+          <!-- <label class="mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect v-texttop width-inherit" for="single-option-filter" ng-class="{'is-checked': allQVm.filter.option == 1}">
             <input type="checkbox" id="single-option-filter" class="mdl-checkbox__input" ng-model="allQVm.filter.option" ng-change="allQVm.setOption()" ng-true-value="1">
             <span class="mdl-checkbox__label">Single Choice</span>
           </label>
@@ -31,10 +49,10 @@
               <i class="material-icons ">cancel</i>
             </button>
             </span>
-          </div>
+          </div> -->
         </div>
       </div>
-      <div class="mdl-cell mdl-cell--6-col mdl-cell--4-col-tablet ">
+      <div class="mdl-cell mdl-cell--1-col mdl-cell--4-col-tablet ">
         <button class="mdl-button btn-succes bg-green pull-right mt-10 " ng-click="mainVm.goTo( 'question.add') ">Add New</button>
       </div>
     </div>
@@ -42,15 +60,18 @@
       <div class="mdl-grid mdl-grid--no-spacing qn-index ">
         <div class="mdl-cell mdl-cell--2-col r-border qn-nav ">
           <div class="mdl-tabs__tab-bar ">
-            <div class="side-tabs pv-5 " ng-repeat="question in mainVm.allQuestions | filter: allQVm.filterBy" ng-class="{ 'is-active': allQVm.question._uid_==question._uid_} " ng-click="allQVm.getQuestion(question._uid_)">
+            <div class="side-tabs pv-5 " ng-repeat="question in filteredQues = (mainVm.allQuestions | filter: allQVm.filterBy)" ng-class="{ 'is-active': allQVm.question._uid_==question._uid_} " ng-click="allQVm.getQuestion(question._uid_)">
               {{question.name}}
             </div>
             <div class="pt-20 text-center text-red no-item " ng-show="allQVm.noItemFound ">
               <div>No more questions available</div>
             </div>
+            <div class="text-red" ng-show="!filteredQues.length">
+              No Result!
+            </div>
           </div>
         </div>
-        <div class="mdl-cell mdl-cell--10-col pl-30 qn-desc ">
+        <div class="mdl-cell mdl-cell--10-col pl-30 qn-desc " ng-show="filteredQues.length">
           <div class="mdl-tabs__panel is-active " id="tab{{allQVm.questionIndex}}-panel ">
             <div class="mdl-grid no-pad ">
               <div class="mdl-cell mdl-cell--2-col mdl-cell--middle ">
@@ -85,7 +106,7 @@
               </div>
               <div class="mdl-cell mdl-cell--10-col ">
                 <span ng-repeat="tag in allQVm.question[ 'question.tag'] track by $index ">
-                  <span class="mdl-chip clickable " ng-click="allQVm.setFilter(tag) ">
+                  <span class="mdl-chip clickable " ng-click="allQVm.setFilter(tag)">
                     <span class="mdl-chip__text ">{{tag.name}}</span>
                 </span>
                 </span>
@@ -124,6 +145,9 @@
               </div>
             </div>
           </div>
+        </div>
+        <div class="mdl-cell mdl-cell--10-col pl-30 text-red" ng-show="filteredQues.length == 0">
+          <h5>No Question content!</h5>
         </div>
       </div>
     </div>
