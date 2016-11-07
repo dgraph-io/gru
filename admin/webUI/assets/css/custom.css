@@ -1,9 +1,5 @@
 /*MDL DESIGN REWRITE*/
 
-.mdl-layout__content {
-  padding-bottom: 100px;
-}
-
 .mdl-layout-title {
   color: #EC3D2E;
 }
@@ -276,13 +272,17 @@ body.home {
   cursor: pointer;
 }
 
-.tag-filter:hover {
+.tag-filter:not(.selected-filter):hover {
   background-color: #dedede;
 }
 
-.tag-filter.selected-filter {
+.selected-filter {
   background: #009688;
   color: white;
+}
+
+.selected-filter.option-filter {
+  background: #2196F3;
 }
 
 .typesearch {

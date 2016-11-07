@@ -1,23 +1,23 @@
 <div ng-controller="allQuestionController as allQVm" class="question-listing" id="question-listing">
   <div class="" ng-if="mainVm.allQuestions.length">
     <div class="mdl-grid mdl-grid--no-spacing b-border">
-      <!-- <div class="mdl-cell mdl-cell--2-col mdl-cell--4-col-tablet pl-5">
-        <h5>
-          List of all questions
-        </h5>
-      </div> -->
-      <div class="mdl-cell mdl-cell--11-col mdl-cell--4-col-tablet pl-5 mdl-cell--middle">
-        <div class="mt-15 pb-5">
+      <div class="mdl-cell mdl-cell--2-col mdl-cell--4-col-tablet pl-5 mdl-cell--middle">
+        <div class="pv-10">
+          {{filteredQues.length}} QUESTION<span ng-if="filteredQues.length > 1">S</span>
+        </div>
+      </div>
+      <div class="mdl-cell mdl-cell--9-col mdl-cell--4-col-tablet pl-5 mdl-cell--middle">
+        <div class="mt-10 pb-5">
           <div class="tag-wrapper">
             <div class="inline-block" ng-repeat="tag in questionVm.allTags track by tag._uid_">
               <div class="tag-filter capitalize" ng-click="allQVm.setFilter(tag, 'tag')" ng-class="{'selected-filter': mainVm.indexOfObject(allQVm.filter.tag, tag) > -1}">
                 {{tag.name}}
               </div>
             </div>
-            <div class="tag-filter capitalize" ng-click="allQVm.setFilter('multiple')" ng-class="{'selected-filter': allQVm.filter.multiple}">
+            <div class="tag-filter capitalize option-filter" ng-click="allQVm.setFilter('multiple')" ng-class="{'selected-filter': allQVm.filter.multiple}">
               Multiple
             </div>
-            <div class="tag-filter capitalize" ng-click="allQVm.setFilter('single')" ng-class="{'selected-filter': allQVm.filter.single}">
+            <div class="tag-filter capitalize option-filter" ng-click="allQVm.setFilter('single')" ng-class="{'selected-filter': allQVm.filter.single}">
               Single
             </div>
             <div class="inline-block">
@@ -26,30 +26,6 @@
               </span>
             </div>
           </div>
-          <!-- <label class="mdl-radio mdl-js-radio mdl-js-ripple-effect" for="single-choice-filter" ng-class="{'is-checked': allQVm.filter.option == 1}">
-            <input type="radio" id="single-choice-filter" ng-model="allQVm.filter.option" class="mdl-radio__button" name="options" value="1" ng-click="allQVm.uncheck($event)" ng-change="allQVm.setOption()">
-            <span class="mdl-radio__label">Single Choice</span>
-          </label>
-          <label class="mdl-radio mdl-js-radio mdl-js-ripple-effect ml-10" for="multiple-choice-filter" ng-class="{'is-checked': allQVm.filter.option == 2}">
-            <input type="radio" id="multiple-choice-filter" ng-model="allQVm.filter.option" class="mdl-radio__button" name="options" value="2" ng-change="allQVm.setOption()" ng-click="allQVm.uncheck($event)">
-            <span class="mdl-radio__label">Multiple Choice</span>
-          </label> -->
-          <!-- <label class="mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect v-texttop width-inherit" for="single-option-filter" ng-class="{'is-checked': allQVm.filter.option == 1}">
-            <input type="checkbox" id="single-option-filter" class="mdl-checkbox__input" ng-model="allQVm.filter.option" ng-change="allQVm.setOption()" ng-true-value="1">
-            <span class="mdl-checkbox__label">Single Choice</span>
-          </label>
-          <label class="mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect v-texttop width-inherit ml-10" for="multiple-option-filter" ng-class="{'is-checked': allQVm.filter.option == 2}">
-            <input type="checkbox" id="multiple-option-filter" class="mdl-checkbox__input" ng-model="allQVm.filter.option" ng-change="allQVm.setOption()" ng-true-value="2">
-            <span class="mdl-checkbox__label">Multiple Choice</span>
-          </label>
-          <div class="inline-block" ng-if="allQVm.filter.tag">
-            <span class="mdl-chip mdl-chip--deletable ">
-              <span class="mdl-chip__text ">{{allQVm.filter.tag.name}}</span>
-            <button type="button " class="mdl-chip__action " ng-click="allQVm.removeFilter() ">
-              <i class="material-icons ">cancel</i>
-            </button>
-            </span>
-          </div> -->
         </div>
       </div>
       <div class="mdl-cell mdl-cell--1-col mdl-cell--4-col-tablet ">
@@ -58,16 +34,16 @@
     </div>
     <div class="mdl-tabs vertical-mdl-tabs mdl-js-tabs mdl-js-ripple-effect mt-10 ">
       <div class="mdl-grid mdl-grid--no-spacing qn-index ">
-        <div class="mdl-cell mdl-cell--2-col r-border qn-nav ">
-          <div class="mdl-tabs__tab-bar ">
+        <div class="mdl-cell mdl-cell--2-col r-border ">
+          <div class="qn-nav">
             <div class="side-tabs pv-5 " ng-repeat="question in filteredQues = (mainVm.allQuestions | filter: allQVm.filterBy)" ng-class="{ 'is-active': allQVm.question._uid_==question._uid_} " ng-click="allQVm.getQuestion(question._uid_)">
               {{question.name}}
             </div>
             <div class="pt-20 text-center text-red no-item " ng-show="allQVm.noItemFound ">
               <div>No more questions available</div>
             </div>
-            <div class="text-red" ng-show="!filteredQues.length">
-              No Result!
+            <div class="text-red text-center pt-20" ng-show="!filteredQues.length">
+              No questions matched the given criteria.
             </div>
           </div>
         </div>
@@ -106,7 +82,7 @@
               </div>
               <div class="mdl-cell mdl-cell--10-col ">
                 <span ng-repeat="tag in allQVm.question[ 'question.tag'] track by $index ">
-                  <span class="mdl-chip clickable " ng-click="allQVm.setFilter(tag)">
+                  <span class="mdl-chip clickable" ng-click="allQVm.setFilter(tag, 'tag')" ng-class="{'selected-filter': mainVm.indexOfObject(allQVm.filter.tag, tag) > -1}">
                     <span class="mdl-chip__text ">{{tag.name}}</span>
                 </span>
                 </span>
@@ -145,9 +121,6 @@
               </div>
             </div>
           </div>
-        </div>
-        <div class="mdl-cell mdl-cell--10-col pl-30 text-red" ng-show="filteredQues.length == 0">
-          <h5>No Question content!</h5>
         </div>
       </div>
     </div>

@@ -369,19 +369,20 @@
 
     $(document).ready(function() {
 
-      $(window).unbind('scroll');
-      setTimeout(function() {
-        window.addEventListener('scroll', function() {
-          if ($("#question-listing").length) {
-            var contentLen = $('.mdl-layout__content').scrollTop() + $('.mdl-layout__content').height();
-            var docHeight = getDocHeight("question-listing");
-            if (contentLen >= docHeight && allQVm.lazyStatus && mainVm.allQuestions && mainVm.allQuestions.length) {
-              allQVm.getAllQuestions(allQVm.lastQuestion);
-              allQVm.lazyStatus = false;
-            }
-          }
-        }, true);
-      }, 100);
+      // CODE FOR PAGINATION
+      // $(window).unbind('scroll');
+      // setTimeout(function() {
+      //   window.addEventListener('scroll', function() {
+      //     if ($("#question-listing").length) {
+      //       var contentLen = $('.mdl-layout__content').scrollTop() + $('.mdl-layout__content').height();
+      //       var docHeight = getDocHeight("question-listing");
+      //       if (contentLen >= docHeight && allQVm.lazyStatus && mainVm.allQuestions && mainVm.allQuestions.length) {
+      //         allQVm.getAllQuestions(allQVm.lastQuestion);
+      //         allQVm.lazyStatus = false;
+      //       }
+      //     }
+      //   }, true);
+      // }, 100);
 
     });
 
@@ -420,7 +421,7 @@
 
     // TODO : Write modular code Filtering
     function filterBy(question) {
-      if (allQVm.filter && allQVm.filter.tag) {
+      if (allQVm.filter && allQVm.filter.tag && allQVm.filter.tag.length) {
         var found = false;
         // var hasMultipleAnswers = allQVm.filter.options && question["question.correct"].length > 1;
 
@@ -441,23 +442,19 @@
           if (!tagFound) break;
         }
         return tagFound
-      }
-      // else if (allQVm.filter && allQVm.filter.option) {
-      //   if (allQVm.filter.option == 2) {
-      //     if (question["question.correct"].length > 1) {
-      //       return true
-      //     } else {
-      //       return false;
-      //     }
-      //   } else {
-      //     if (question["question.correct"].length == 1) {
-      //       return true
-      //     } else {
-      //       return false;
-      //     }
-      //   }
-      // } 
-      else {
+      } else if (allQVm.filter && allQVm.filter.multiple) {
+        if (question["question.correct"].length > 1) {
+          return true
+        } else {
+          return false;
+        }
+      } else if (allQVm.filter && allQVm.filter.single) {
+        if (question["question.correct"].length == 1) {
+          return true
+        } else {
+          return false;
+        }
+      } else {
         return true;
       }
     }
