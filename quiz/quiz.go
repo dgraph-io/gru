@@ -216,7 +216,7 @@ func sendReport(cid string) {
 	if err = t.Execute(buf, s); err != nil {
 		fmt.Println(err)
 	}
-	mail.SendReport(s.Name, s.TotalScore, s.MaxScore, buf.String())
+	mail.SendReport(s.Name, s.QuizName, s.TotalScore, s.MaxScore, buf.String())
 }
 
 func candQuery(cid string) string {
