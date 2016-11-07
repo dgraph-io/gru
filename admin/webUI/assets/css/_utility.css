@@ -23,12 +23,20 @@
 .bg-green,
 .success {
   background: #4CAF50;
-  color: white;
+}
+
+.bg-red {
+  background: red;
+}
+
+.error {
+  background: #EC3D2E;
 }
 
 .bg-red,
+.bg-green,
+.success,
 .error {
-  background: #EC3D2E;
   color: white;
 }
 

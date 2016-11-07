@@ -68,7 +68,7 @@
         General: [
           "By taking this quiz, you agree not to discuss/post the questions shown here.",
           $interpolate("The duration of the quiz is <span class='bold text-red'> \
-						{{time_minutes}} minutes</span>. Timing would be clearly shown.")($scope),
+            {{time_minutes}} minutes</span>. Timing would be clearly shown.")($scope),
           "We recommend using a pen and paper to help visualize some of the questions.",
           "Once you start the quiz, the timer would not stop, irrespective of any client side issues.",
           "Questions can have single or multiple correct answers. They will be shown accordingly.",
@@ -76,6 +76,7 @@
         ],
         Score: [
           "There is NEGATIVE scoring for wrong answers. So, please DO NOT GUESS.",
+          "You can skip a question only after spending atleast 2 minutes on it.",
           "If you skip a question, the score awarded is always ZERO.",
           "If you skip a question, you can't go back and answer it again.",
           "Scoring for a question would be clearly marked on the right hand side box.",
@@ -106,7 +107,6 @@
       localStorage.setItem('candidate_info', JSON.stringify(ctoken));
 
       quizLandingService.addName(requestData).then(function(data) {
-        console.log(data);
         mainVm.goTo('candidate.quiz')
       }, function(err) {
         console.log(err);

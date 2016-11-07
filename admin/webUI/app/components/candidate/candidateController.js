@@ -46,7 +46,7 @@
     }
   }
 
-  function candidateQuizController($scope, $rootScope, $state, candidateService) {
+  function candidateQuizController($scope, $rootScope, $state, $interval, candidateService) {
     // VARIABLE DECLARATION
     cqVm = this;
     cqVm.total_score = 0
@@ -81,31 +81,32 @@
 
       candidateService.getQuestion()
         .then(function(data) {
-          $timeTakenElem = document.querySelector('#time-taken');
-          if (!cqVm.question) {
-            // Initialize timer if first time api call.
-            cqVm.getTime();
-            startTimer(0, $timeTakenElem, true);
-          } else {
-            $timeTakenElem.textContent = "00:00:00";
-            startTimer(1, $timeTakenElem, true);
-          }
-
           cqVm.question = data;
-          if (data._uid_ == "END") {
+
+          if (data._uid_ == "END") { //END QUIZ
             cqVm.stopQuiz();
             cqVm.total_score = data.score;
-          }
+          } else { //INIT DATA AND TIMERS
 
-          if (cqVm.question.multiple == "true") {
-            cqVm.answer = {};
+            var seconds = Duration.parse(data.time_taken).seconds()
+            $timeTakenElem = document.querySelector('#time-taken');
+            // So that we call getTime() when question is fetched the first time and update
+            // time.
+            cqVm.getTime();
+            $timeTakenElem.textContent = "00:00:00";
+            cqVm.timerObj.time_elapsed = 0;
+            startTimer(seconds, $timeTakenElem, true);
+
+            if (cqVm.question.multiple == "true") {
+              cqVm.answer = {};
+            }
           }
 
           setTimeout(function() {
             componentHandler.upgradeAllRegistered();
           }, 10);
 
-          scrollTo(".main-content");
+          scrollTo($(".candidate"));
         }, function(err) {
           if (err.status != 0) {
             if (err.data.Message) {
@@ -126,9 +127,9 @@
     }
 
     function clearAllTimers() {
-      clearInterval(cqVm.timerObj.time_taken);
-      clearInterval(cqVm.timerObj.time_left);
-      clearInterval(cqVm.timerObj.getTime);
+      $interval.cancel(cqVm.timerObj.time_taken);
+      $interval.cancel(cqVm.timerObj.time_left);
+      $interval.cancel(cqVm.timerObj.getTime);
     }
 
     function submitAnswer(skip) {
@@ -211,13 +212,13 @@
         hours, minutes, seconds;
 
       if (isReverse) {
-        clearInterval(cqVm.timerObj.time_taken);
-        cqVm.timerObj.time_taken = setInterval(function() {
+        $interval.cancel(cqVm.timerObj.time_taken);
+        cqVm.timerObj.time_taken = $interval(function foo() {
           manipulateTime(timer, display);
-          timer++;
+          cqVm.timerObj.time_elapsed = timer++;
         }, 1000);
       } else {
-        cqVm.timerObj.time_left = setInterval(function() {
+        cqVm.timerObj.time_left = $interval(function() {
           manipulateTime(timer, display, true);
           if (--timer < 0) {
             stopTimer();
@@ -231,7 +232,7 @@
     }
 
     function stopTimer() {
-      clearInterval(cqVm.timerObj.time_left);
+      $interval.cancel(cqVm.timerObj.time_left);
     }
 
     function initTimer(totalTime) {
@@ -268,14 +269,10 @@
           }
         }, function(err) {
           mainVm.initNotification();
-          // if(err.status == 0) {
-          //    mainVm.timeoutModal();
-          //    cqVm.stopQuiz();
-          // }
         })
     }
 
-    cqVm.timerObj.getTime = setInterval(function() {
+    cqVm.timerObj.getTime = $interval(function() {
       cqVm.getTime();
     }, 3000);
 
@@ -327,7 +324,6 @@
       };
       candidateService.sendFeedback(requestData)
         .then(function(data) {
-          console.log(data);
           cqVm.feedbackSubmitted = true;
         }, function(err) {
           console.log(err);
@@ -341,6 +337,7 @@
     "$scope",
     "$rootScope",
     "$state",
+    "$interval",
     "candidateService",
     candidateQuizController
   ];

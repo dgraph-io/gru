@@ -132,7 +132,7 @@ button.btn-lg {
 
 .mdl-button {
   height: 42px;
-  background: #ff0000;
+  background: #F44336;
   color: white;
 }
 
@@ -345,7 +345,7 @@ body.home {
 
 .question-action {
   min-width: 100px;
-  line-height: 48px;
+  line-height: 42px;
 }
 
 
@@ -487,6 +487,14 @@ body.home {
 
 .candidate .options label {
   width: 100%;
+}
+
+.candidate .options pre {
+  padding-top: 0px;
+}
+
+.candidate .options p {
+  margin-bottom: 0px;
 }
 
 .candidate-quiz-page .mdl-layout__header,

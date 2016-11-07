@@ -56,7 +56,8 @@ type Question struct {
 	Positive   float64 `json:"positive,string"`
 	Negative   float64 `json:"negative,string"`
 	// Score of the candidate is sent as part of the questions API.
-	Score float64 `json:"score"`
+	Score     float64 `json:"score"`
+	TimeTaken string  `json:"time_taken"`
 }
 
 // Candidate is used to keep track of the state of the quiz for a candidate.
@@ -74,6 +75,7 @@ type Candidate struct {
 	// refreshes the page/recovers from a crash.
 	lastQnUid  string
 	lastQnCuid string
+	lastQnTime time.Time
 }
 
 func updateMap(uid string, c Candidate) {

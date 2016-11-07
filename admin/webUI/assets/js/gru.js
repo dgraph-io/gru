@@ -105,9 +105,9 @@
 
     // General Function for Scroll to particular element
     function scrollTo(selector) {
-      $(".mdl-layout__content").animate({
-        scrollTop: $(selector).offset().top
-      }, 200);
+      $(".mdl-layout__content").animate(
+        $(selector).offset().top
+      );
     }
 
     var snackbarContainer = document.querySelector('#snackbar-container');

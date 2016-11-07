@@ -153,6 +153,7 @@ func AnswerHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	c.score = c.score + s
 	c.qns = c.qns[1:]
+	c.lastQnTime = time.Now().UTC()
 	updateMap(userId, c)
 
 	// Lets store some information about this question.
