@@ -276,6 +276,10 @@ body.home {
   background-color: #dedede;
 }
 
+.option-filter {
+  border: 1px solid #2196F3;
+}
+
 .selected-filter {
   background: #009688;
   color: white;
