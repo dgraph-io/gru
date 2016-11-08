@@ -37,6 +37,7 @@
             var token = data.data.token;
             if (data.data.quiz_started) {
               $state.transitionTo("candidate.quiz");
+              localStorage.setItem('candidate_info', JSON.stringify(data.data));
             } else {
               if (token) {
                 // $state.transitionTo("candidate.landing");

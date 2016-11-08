@@ -35,7 +35,14 @@
 
     // Check if user is authorized
     function checkValidity() {
-      var ctoken = JSON.parse(localStorage.getItem("candidate_info"));
+      var candToken = localStorage.getItem("candidate_info")
+        // If the candidate directly came to /quiz url to resume the quiz, then token might be null
+        // in incognito window. So we show him an error.
+      if (candToken == null) {
+        mainVm.errorMessage = "Please use the link sent to your mail to resume the quiz."
+        return false
+      }
+      var ctoken = JSON.parse(candToken);
 
       if (ctoken.token) {
         candidateVm.info = ctoken;
