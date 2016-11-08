@@ -4,20 +4,27 @@
       <div class="mdl-cell mdl-cell--2-col mdl-cell--4-col-tablet pl-5 mdl-cell--middle">
         <div class="pv-10">
           {{filteredQues.length}} QUESTION<span ng-if="filteredQues.length > 1">S</span>
+          <br>
+          <form action="#">
+            <div class="mdl-textfield mdl-js-textfield">
+              <input class="mdl-textfield__input" type="text" id="search" ng-model="allQVm.searchText">
+              <label class="mdl-textfield__label" for="search">Search by name</label>
+            </div>
+          </form>
         </div>
       </div>
       <div class="mdl-cell mdl-cell--9-col mdl-cell--4-col-tablet pl-5 mdl-cell--middle">
         <div class="mt-10 pb-5">
           <div class="tag-wrapper">
             <div class="inline-block" ng-repeat="tag in questionVm.allTags track by tag._uid_">
-              <div class="tag-filter capitalize" ng-click="allQVm.setFilter(tag, 'tag')" ng-class="{'selected-filter': mainVm.indexOfObject(allQVm.filter.tag, tag) > -1}">
+              <div class="tag-filter capitalize" ng-click="allQVm.toggleFilter(tag, 'tag')" ng-class="{'selected-filter': mainVm.indexOfObject(allQVm.filter.tag, tag) > -1}">
                 {{tag.name}}
               </div>
             </div>
-            <div class="tag-filter capitalize option-filter" ng-click="allQVm.setFilter('multiple')" ng-class="{'selected-filter': allQVm.filter.multiple}">
+            <div class="tag-filter capitalize option-filter" ng-click="allQVm.toggleFilter('multiple')" ng-class="{'selected-filter': allQVm.filter.multiple}">
               Multiple
             </div>
-            <div class="tag-filter capitalize option-filter" ng-click="allQVm.setFilter('single')" ng-class="{'selected-filter': allQVm.filter.single}">
+            <div class="tag-filter capitalize option-filter" ng-click="allQVm.toggleFilter('single')" ng-class="{'selected-filter': allQVm.filter.single}">
               Single
             </div>
             <div class="inline-block">
@@ -82,7 +89,7 @@
               </div>
               <div class="mdl-cell mdl-cell--10-col ">
                 <span ng-repeat="tag in allQVm.question[ 'question.tag'] track by $index ">
-                  <span class="mdl-chip clickable" ng-click="allQVm.setFilter(tag, 'tag')" ng-class="{'selected-filter': mainVm.indexOfObject(allQVm.filter.tag, tag) > -1}">
+                  <span class="mdl-chip clickable" ng-click="allQVm.toggleFilter(tag, 'tag')" ng-class="{'selected-filter': mainVm.indexOfObject(allQVm.filter.tag, tag) > -1}">
                     <span class="mdl-chip__text ">{{tag.name}}</span>
                 </span>
                 </span>

@@ -535,6 +535,13 @@ body.home {
 */
 
 
+/* Question listing page */
+
+.question-listing form {
+  margin-right: 15px;
+}
+
+
 /*INVITE PAGE*/
 
 .select2-container .select2-choice {

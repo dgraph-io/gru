@@ -285,10 +285,11 @@
     allQVm.getAllQuestions = getAllQuestions;
     allQVm.getQuestion = getQuestion;
     allQVm.setQuestion = setQuestion;
-    allQVm.setFilter = setFilter;
+    allQVm.toggleFilter = toggleFilter;
     allQVm.filterBy = filterBy;
     allQVm.removeAllFilter = removeAllFilter;
     allQVm.setFirstQuestion = setFirstQuestion;
+    allQVm.searchText = "";
 
     // INITITIALIZERS
     console.log($stateParams);
@@ -391,18 +392,15 @@
       allQVm.questionIndex = index;
     }
 
-    function setFilter(filter_value, key) {
+    function toggleFilter(filter_value, key) {
       allQVm.filter = allQVm.filter || {};
       if (key == 'tag') {
-        if (allQVm.filter.tag) {
-          var tagIndex = mainVm.indexOfObject(allQVm.filter.tag, filter_value);
-          if (tagIndex > -1) {
-            allQVm.filter.tag.splice(tagIndex, 1);
-          } else {
-            allQVm.filter.tag.push(filter_value);
-          }
+        allQVm.filter.tag || (allQVm.filter.tag = [])
+        var tagIndex = mainVm.indexOfObject(allQVm.filter.tag, filter_value);
+        // If tag is already there in our array, then we remove it.
+        if (tagIndex > -1) {
+          allQVm.filter.tag.splice(tagIndex, 1);
         } else {
-          allQVm.filter.tag = [];
           allQVm.filter.tag.push(filter_value);
         }
       }
@@ -421,10 +419,10 @@
 
     // TODO : Write modular code Filtering
     function filterBy(question) {
+      textFilterMatch = question.name.toUpperCase().indexOf(allQVm.searchText.toUpperCase()) != -1
+
       if (allQVm.filter && allQVm.filter.tag && allQVm.filter.tag.length) {
         var found = false;
-        // var hasMultipleAnswers = allQVm.filter.options && question["question.correct"].length > 1;
-
         var tagFound = true;
         var tagsLen = allQVm.filter.tag.length;
         for (var i = 0; i < tagsLen; i++) {
@@ -441,21 +439,21 @@
           }
           if (!tagFound) break;
         }
-        return tagFound
+        return textFilterMatch && tagFound
       } else if (allQVm.filter && allQVm.filter.multiple) {
         if (question["question.correct"].length > 1) {
-          return true
+          return textFilterMatch && true;
         } else {
-          return false;
+          return textFilterMatch && false;
         }
       } else if (allQVm.filter && allQVm.filter.single) {
         if (question["question.correct"].length == 1) {
-          return true
+          return textFilterMatch && true
         } else {
-          return false;
+          return textFilterMatch && false;
         }
       } else {
-        return true;
+        return textFilterMatch && true;
       }
     }
 
