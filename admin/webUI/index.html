@@ -12,7 +12,7 @@
   <link href='https://fonts.googleapis.com/css?family=Montserrat' rel='stylesheet' type='text/css'>
   <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Tangerine">
   <link rel="stylesheet" href="assets/lib/css/select2.css?v=20161102">
-  <link rel="stylesheet" href="assets/css/main.css?v=20161107-1">
+  <link rel="stylesheet" href="assets/css/main.css?v=20161108-1">
 </head>
 
 <body ng-controller="MainController as mainVm" class="position-relative {{mainVm.pageName}} ng-clo" autoscroll="" ng-class="{'admin-panel': mainVm.isLoggedIn()}">
@@ -71,7 +71,7 @@
           </div>
         </nav>
       </div>
-      <div class="notification-wrapper ng-cloak" ng-show="mainVm.showNotification">
+      <div class="notification-wrapper ng-cloak ng-hide" ng-show="mainVm.showNotification">
         <div class="notification-message">
           {{mainVm.notification.message}}
         </div>
@@ -91,8 +91,8 @@
     <div class="show-overlay overlay"></div>
     <div class="mdl-spinner mdl-js-spinner is-active"></div>
   </div>
-  <div class="modal-overlay ng-cloak" ng-show="mainVm.showModal"></div>
-  <div class="modal-wrapper ng-cloak" ng-show="mainVm.modal.template">
+  <div class="modal-overlay ng-cloak ng-hide" ng-show="mainVm.showModal"></div>
+  <div class="modal-wrapper ng-cloak ng-hide" ng-show="mainVm.modal.template">
     <!-- <div data-ng-include="mainVm.modal.template">
       </div> -->
     <div ng-bind-html="mainVm.modal.template">

@@ -505,13 +505,13 @@ body.home {
   margin-bottom: 0px;
 }
 
-.candidate-quiz-page .mdl-layout__header,
-.candidate-quiz-page .mdl-layout__header-row,
-.candidate-quiz-page .notification-message {
+/*.candidate-quiz-page .mdl-layout__header,
+.candidate-quiz-page .mdl-layout__header-row {
   height: 50px;
   min-height: 50px;
   line-height: 50px;
 }
+*/
 
 
 /*INVITE PAGE*/
