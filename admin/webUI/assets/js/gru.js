@@ -7,6 +7,7 @@
     window.formatDate = formatDate;
     window.getDocHeight = getDocHeight;
     window.scrollTo = scrollTo;
+    window.scrollNavInit = scrollNavInit;
 
 
     function getDocHeight(pageID) {
@@ -103,12 +104,88 @@
       );
     });
 
+
     // General Function for Scroll to particular element
+
     function scrollTo(selector) {
-      $(".mdl-layout__content").animate({
-        scrollTop: $(selector).offset().top
-      }, 200);
+      $container = $(".mdl-layout__content")
+
+      $container.scrollTop(
+        $(selector).offset().top - $container.offset().top + $container.scrollTop()
+      );
     }
+
+    // Function for Scroll to particular element, based on data-target
+
+    function scrollNavInit() {
+      $headerHeight = $(".mdl-layout__header-row").height();
+      var sidebarLinks = $(".sticky-sidebar-link"); // find the sidebar link
+      if (sidebarLinks) {
+        var aArray = []; // create the empty aArray
+        var sidebarLen = sidebarLinks.length;
+        for (var i = 0; i < sidebarLen; i++) {
+          var aChild = sidebarLinks[i];
+          var ahref = $(aChild).data('scrollto');
+          aArray.push(ahref);
+        }
+      }
+
+      $window = $(window);
+      $(".mdl-layout__content").scroll(function() {
+        var windowPos = $window.scrollTop(); // get the offset of the window from the top of page
+        var windowHeight = $window.height(); // get the height of the window
+        var docHeight = $(document).height();
+
+        for (var i = 0; i < aArray.length; i++) {
+          var theID = aArray[i];
+          var divPos = $(theID).offset().top - $headerHeight; // get the offset of the div from the top of page
+          var divHeight = $(theID).height(); // get the height of the div in question
+          if (windowPos >= divPos && windowPos < (divPos + divHeight)) {
+            $(".sticky-sidebar-link[data-scrollto='" + theID + "']").addClass("selected-sidebar");
+          } else {
+            $(".sticky-sidebar-link[data-scrollto='" + theID + "']").removeClass("selected-sidebar");
+          }
+        }
+
+        if (windowPos + windowHeight == docHeight) {
+          if (!$(".sticky-sidebar-link:last-child a").hasClass("selected-sidebar")) {
+            var navActiveCurrent = $(".selected-sidebar").attr("href");
+            $(".sticky-sidebar-link[data-scrollto='" + navActiveCurrent + "']").removeClass("selected-sidebar");
+            $(".sticky-sidebar-link:last-child a").addClass("selected-sidebar");
+          }
+        }
+
+        var $selectedSideBar = $(".selected-sidebar");
+        if ($selectedSideBar.length) {
+          if (!isScrolledIntoView($selectedSideBar)) {
+            $(".sticky-sidebar-content").scrollTop(
+              $selectedSideBar.offset().top
+            );
+          }
+        }
+      });
+
+      function isScrolledIntoView(elem) {
+        var docViewTop = $(window).scrollTop();
+        var docViewBottom = docViewTop + $(window).height();
+
+        var elemTop = elem.offset().top;
+        var elemBottom = elemTop + elem.height();
+
+        return ((elemBottom <= docViewBottom) && (elemTop >= docViewTop));
+      }
+
+    }
+
+    $(document).on("click", "[data-scrollto]", function() {
+      $this = $(this);
+      var scrollToElem = $this.data("scrollto");
+      if (scrollToElem == ".mdl-layout__content") {
+        $(scrollToElem).scrollTop(0);
+      } else {
+        scrollTo(scrollToElem);
+      }
+    });
 
     var snackbarContainer = document.querySelector('#snackbar-container');
     window.SNACKBAR = function(setting) {

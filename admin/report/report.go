@@ -59,6 +59,7 @@ type cq struct {
 
 type quiz struct {
 	Duration string `json:"duration"`
+	Name     string `json:"name"`
 }
 
 type candidates struct {
@@ -84,6 +85,7 @@ func reportQuery(id string) string {
                         feedback
                         complete
                         candidate.quiz {
+                                name
                                 duration
                         }
                         candidate.question {
@@ -120,6 +122,7 @@ type question struct {
 	Multiple  bool     `json:"multiple"`
 	Text      string   `json:"text"`
 	TimeTaken string   `json:"time_taken"`
+	Positive  float64  `json:"positive"`
 	Score     float64  `json:"score"`
 	Options   []option `json:"options"`
 	Correct   []string `json:"correct"`
@@ -130,8 +133,9 @@ type question struct {
 
 type Summary struct {
 	Id         string
-	Name       string     `json:"name"`
-	Email      string     `json:"email"`
+	Name       string `json:"name"`
+	Email      string `json:"email"`
+	QuizName   string
 	Feedback   string     `json:"feedback"`
 	TimeTaken  string     `json:"time_taken"`
 	TotalScore float64    `json:"total_score"`
@@ -202,6 +206,7 @@ func ReportSummary(cid string) (Summary, ReportError) {
 		}
 		s.TimeTaken = d.String()
 	}
+	s.QuizName = c.Quiz[0].Name
 
 	for _, qn := range c.CandidateQn {
 		s.TotalScore += qn.Score
@@ -213,6 +218,7 @@ func ReportSummary(cid string) (Summary, ReportError) {
 			Text:     q.Text,
 			Options:  q.Options,
 			Score:    qn.Score,
+			Positive: q.Positive,
 			Multiple: q.Multiple,
 			Correct:  uids(q.Correct),
 			Tags:     names(q.Tags),

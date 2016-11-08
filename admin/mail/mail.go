@@ -55,15 +55,15 @@ You can take the quiz anytime till ` + validity + ` by visiting <a href="` + url
 	x.Debug(response.Headers)
 }
 
-func SendReport(name string, score, maxScore float64, body string) {
+func SendReport(name string, quiz string, score, maxScore float64, body string) {
 	if *SENDGRID_API_KEY == "" {
 		return
 	}
 
 	from := mail.NewEmail("Gru", "join@dgraph.io")
-	subject := fmt.Sprintf("%v scored %.2f/%.2f in the demo test", name,
-		score, maxScore)
-	to := mail.NewEmail("Dgraph", "join@dgraph.io")
+	subject := fmt.Sprintf("%v scored %.2f/%.2f in the %v quiz", name,
+		score, maxScore, quiz)
+	to := mail.NewEmail("Dgraph", "pawan@dgraph.io")
 
 	content := mail.NewContent("text/html", body)
 	m := mail.NewV3MailInit(from, subject, to, content)

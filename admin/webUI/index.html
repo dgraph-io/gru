@@ -71,7 +71,7 @@
           </div>
         </nav>
       </div>
-      <div class="notification-wrapper ng-cloak" ng-show="mainVm.showNotification">
+      <div class="notification-wrapper ng-cloak ng-hide" ng-show="mainVm.showNotification">
         <div class="notification-message">
           {{mainVm.notification.message}}
         </div>
@@ -91,8 +91,8 @@
     <div class="show-overlay overlay"></div>
     <div class="mdl-spinner mdl-js-spinner is-active"></div>
   </div>
-  <div class="modal-overlay ng-cloak" ng-show="mainVm.showModal"></div>
-  <div class="modal-wrapper ng-cloak" ng-show="mainVm.modal.template">
+  <div class="modal-overlay ng-cloak ng-hide" ng-show="mainVm.showModal"></div>
+  <div class="modal-wrapper ng-cloak ng-hide" ng-show="mainVm.modal.template">
     <!-- <div data-ng-include="mainVm.modal.template">
       </div> -->
     <div ng-bind-html="mainVm.modal.template">
@@ -115,9 +115,9 @@
     'assets/lib/js/material.min.js',
     'assets/lib/js/ocLazyLoad.min.js',
     'assets/lib/js/duration.js',
-    'app/app.module.js?v=20161025-1',
-    'app/app.route.js?v=20161105-5',
-    'assets/js/gru.js?v=20160405-1'
+    'app/app.module.js?v=20161105-1',
+    'app/app.route.js?v=20161105-1',
+    'assets/js/gru.js?v=20161107-1'
   ].forEach(function(src) {
     var script = document.createElement('script');
     script.src = src;
