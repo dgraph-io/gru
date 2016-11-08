@@ -155,6 +155,7 @@
       .then(function(data) {
         editInviteVm.candidateBak = data['quiz.candidate'][0];
         editInviteVm.candidate = angular.copy(editInviteVm.candidateBak);
+
         editInviteVm.candidate.dates = new Date(getDate(editInviteVm.candidate.validity));
 
         editInviteVm.initAllQuiz();
@@ -301,12 +302,13 @@
     });
   }
 
-  function candidateReportController($rootScope, $stateParams, $state, inviteService) {
+  function candidateReportController($scope, $rootScope, $stateParams, $state, inviteService) {
     cReportVm = this;
     cReportVm.candidateID = $stateParams.candidateID;
 
     // Function
     cReportVm.initScoreCircle = initScoreCircle;
+    cReportVm.isCorrect = isCorrect;
 
     if (!cReportVm.candidateID) {
       cReportVm.inValidID = true;
@@ -323,12 +325,50 @@
         }
         cReportVm.info = data;
         cReportVm.timeTaken = mainVm.parseGoTime(cReportVm.info.time_taken);
-        cReportVm.info.feedback = unescape(cReportVm.info.feedback)
+        cReportVm.info.feedback = unescape(cReportVm.info.feedback).replace(/\n/, "<br>");
 
         cReportVm.initScoreCircle();
       }, function(error) {
         console.log(error);
-      })
+      }).then(function() {
+        var correct = [];
+        var skipped = [];
+        var incorrect = [];
+        var questions = cReportVm.info.questions;
+        quesLen = questions.length
+
+        for (var i = 0; i < questions.length; i++) {
+          qn = questions[i]
+
+          qn.answerArray = [];
+          for (var j = 0; j < qn.answers.length; j++) {
+            var answerObj = {
+              _uid_: qn.answers[j]
+            }
+            answerObj.is_correct = (qn.correct.indexOf(qn.answers[j]) > -1)
+            qn.answerArray.push(answerObj);
+          }
+          if ((qn.answers.length < qn.correct.length)) {
+            qn.notAnswered = qn.correct.length - qn.answers.length;
+          }
+
+          if (qn.answers.length === qn.correct.length && angular.equals(qn.answers.sort(),
+              qn.correct.sort())) {
+            correct.push(qn)
+          } else if (qn.score === 0 && qn.answers.length === 1) {
+            skipped.push(qn)
+            qn.isSkip = true
+          } else {
+            incorrect.push(qn)
+          }
+        }
+
+        cReportVm.info.questions = [].concat([], incorrect, skipped, correct);
+
+        setTimeout(function() {
+          scrollNavInit();
+        }, 0);
+      });
 
     function initScoreCircle() {
       var circleWidth = 2 * Math.PI * 30;
@@ -341,24 +381,45 @@
 
       $progressBar = $(".prograss-circle");
       if (cReportVm.info.total_score != 0) {
-        $progressBar.css({
-          'display': 'block'
-        });
+        $progressBar.css({ 'display': 'block' });
         if (cReportVm.info.total_score < 0) {
-          $progressBar.css({
-            'stroke': 'red'
-          });
+          $progressBar.css({ 'stroke': 'red' });
         }
       }
       setTimeout(function() {
-        $progressBar.css({
-          'stroke-dashoffset': circleProgressWidth
-        });
+        $progressBar.css({ 'stroke-dashoffset': circleProgressWidth });
       }, 100);
     }
+
+    function isCorrect(option, correct_options) {
+      var uid = option._uid_;
+      if (!correct_options) {
+        return false
+      }
+      var optLength = correct_options.length;
+
+      for (var i = 0; i < optLength; i++) {
+        if (correct_options[i] == uid) {
+          // option.is_correct = true
+          return true
+        }
+      }
+      return false
+    }
+
+    // var mdlContent = $(".mdl-layout__content");
+    $(".mdl-layout__content").scroll(function() {
+      if (this.scrollTop >= 100) {
+        cReportVm.pageScrolled = true;
+      } else {
+        cReportVm.pageScrolled = false;
+      }
+      $scope.$digest();
+    });
   }
 
   var candidateReportDependency = [
+    "$scope",
     "$rootScope",
     "$stateParams",
     "$state",

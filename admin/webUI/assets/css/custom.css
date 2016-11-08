@@ -269,6 +269,10 @@ body.home {
   background-size: 100% 100%;
 }
 
+.tag-filter .mdl-select.select2-container {
+  padding-top: 0;
+}
+
 .typesearch {
   position: relative;
 }
@@ -317,6 +321,10 @@ body.home {
 
 .mdl-select.select2-container .select2-choices .select2-search-choice {
   line-height: 20px;
+  background-color: initial;
+  background-image: none;
+  border-color: black;
+  color: black;
 }
 
 .mdl-select.select2-container .select2-search-choice-close {
@@ -537,12 +545,46 @@ body.home {
   background: #e0e0e0;
 }
 
+.question-heading {
+  background: #3F51B5;
+  color: white;
+  margin-top: 10px;
+}
+
 .mdl-chip-info .mdl-chip__text {
-  width: 140px;
+  min-width: 120px;
+}
+
+.mdl-chip-info .mdl-chip__contact {
+  padding: 0 4px;
+}
+
+.sticky-sidebar {
+  width: calc(25% - 16px);
+}
+
+.sticky-sidebar .sticky-sidebar-content {
+  position: absolute;
+  width: 100%;
+  height: 100vh;
+  overflow-y: auto;
+  background: #f5f7f9;
+}
+
+.sticky-sidebar .selected-sidebar {
+  background: #3F51B5;
+  color: white;
+}
+
+.sticky-sidebar-link {
+  cursor: pointer;
+}
+
+.sticky-sidebar-link:not(.selected-sidebar):hover {
+  background: rgba(213, 214, 214, 0.3);
 }
 
 .cmdl-chip-value {
-  min-width: 240px;
   height: 32px;
   line-height: 32px;
   vertical-align: middle;
@@ -568,12 +610,39 @@ circle.path.prograss-circle {
   transition: 2s;
 }
 
+.scroll-top {
+  height: 53px;
+  position: fixed;
+  bottom: 0;
+  right: 20px;
+  transform: translateY(100%);
+  transition: .2s;
+}
+
+.scroll-top.scrollTop-active {
+  transform: translateY(-40px);
+}
+
 
 /*TABLET + MOBILE SPECIFIC CSS*/
 
 @media (max-width: 839px) {
+  html,
+  body {
+    font-size: 13px;
+  }
   .resp-center {
     text-align: center;
+  }
+  .report-page.mr-100 {
+    margin-right: 0;
+  }
+  svg#total_score {
+    width: 140px;
+    height: 140px;
+  }
+  .mdl-chip-info .cmdl-chip-value {
+    padding: 0 10px;
   }
   /*QUIZ LANDING*/
   .landing-grid .lc-border {
@@ -614,6 +683,19 @@ circle.path.prograss-circle {
 /*MOBILE SPECIFIC CSS*/
 
 @media (max-width: 480px) {
+  html,
+  body {
+    font-size: 12px;
+  }
+  .cmdl-chip-value {
+    margin-left: 0;
+    margin-top: 0;
+    display: block;
+  }
+  .mdl-chip-info .mdl-chip__text {
+    min-width: 40px;
+    font-size: 14px;
+  }
   .mdl-layout__header-row {
     padding: 0;
   }

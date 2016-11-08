@@ -11,7 +11,7 @@
   var loginTemplate = 'app/components/login/index.html';
 
   var questionTemplate = 'app/components/question/index.html';
-  var allQuestionTemplate = 'app/components/question/all-question.html?v=20161025-1';
+  var allQuestionTemplate = 'app/components/question/all-question.html?v=20161105-1';
   var addQuestionTemplate = 'app/components/question/add-question.html?v=20161027-1';
   var editQuestionTemplate = 'app/components/question/views/edit-question.html?v=20161027-1';
 
@@ -20,11 +20,11 @@
   var editQuizTemplate = 'app/components/quiz/edit-quiz.html';
   var allQuizTemplate = 'app/components/quiz/all-quiz.html?v=20161105-1';
 
-  var inviteTemplate = 'app/components/invite/index.html';
+  var inviteTemplate = 'app/components/invite/index.html?v=20161105-1';
   var inviteDashboardTemplate = 'app/components/invite/views/invite-dashboard.html?v=20161105-1';
   var inviteUserTemplate = 'app/components/invite/views/invite-user.html?v=20161105-1';
-  var editInviteTemplate = 'app/components/invite/views/edit-invite.html';
-  var candidateReportTemplate = 'app/components/invite/views/candidate-report.html';
+  var editInviteTemplate = 'app/components/invite/views/edit-invite.html?v=20161105-1';
+  var candidateReportTemplate = 'app/components/invite/views/candidate-report.html?v=20161108-1';
 
   var candidateIndexTemplate = 'app/components/candidate/index.html';
   var candidateLandingTemplate = 'app/components/candidate/views/landing.html';
@@ -73,9 +73,7 @@
         parent: 'question',
         templateUrl: allQuestionTemplate,
         css: [angularSelectCSS, githubCSS],
-        params: {
-          quesID: null
-        },
+        params: { quesID: null },
         authenticate: true,
       })
       .state('question.add', {
@@ -120,7 +118,7 @@
         url: '/admin/invite',
         abstract: true,
         templateUrl: inviteTemplate,
-        resolve: helper.resolveFor('inviteController', 'quizServices', 'inviteService'),
+        resolve: helper.resolveFor('inviteController', 'quizServices', 'inviteService', 'marked', 'highlight'),
       })
       .state('invite.dashboard', {
         url: '/dashboard/:quizID',
@@ -148,13 +146,14 @@
       .state('invite.report', {
         url: '/candidate-report/:candidateID',
         parent: 'invite',
+        css: [githubCSS],
         templateUrl: candidateReportTemplate,
         authenticate: true,
       })
       .state('quiz-landing', {
         url: '/quiz/:quiz_token',
         templateUrl: quizLandingTemplate,
-        resolve: helper.resolveFor('quizLandingController', 'quizLandingService'),
+        resolve: helper.resolveFor('quizLandingController'),
       })
       .state('candidate', {
         url: '/candidate',

@@ -20,6 +20,10 @@
   background: rgba(213, 214, 214, 0.3);
 }
 
+.bg-white {
+  background: white;
+}
+
 .bg-green,
 .success {
   background: #4CAF50;
@@ -46,6 +50,10 @@
 
 .position-relative {
   position: relative;
+}
+
+.position-fixed {
+  position: fixed;
 }
 
 .tr-corner {
@@ -180,8 +188,20 @@
   vertical-align: bottom;
 }
 
-.material-icons.mdi-lg {
+.material-icons.mdi-xl {
   font-size: 80px;
+}
+
+.material-icons.mdi-lg {
+  font-size: 54px;
+}
+
+.material-icons.mdi-xl {
+  font-size: 80px;
+}
+
+.material-icons.mdi-lg {
+  font-size: 54px;
 }
 
 .material-icons.mdi-sm {
@@ -203,8 +223,7 @@
   position: relative;
 }
 
-.dropdown-wrapper.mdl-navigation__link,
-{
+.dropdown-wrapper.mdl-navigation__link {
   opacity: 1;
 }
 
