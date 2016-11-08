@@ -76,6 +76,7 @@ type Candidate struct {
 	lastQnUid  string
 	lastQnCuid string
 	lastQnTime time.Time
+	mailSent   bool
 }
 
 func updateMap(uid string, c Candidate) {

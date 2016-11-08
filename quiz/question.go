@@ -73,7 +73,11 @@ func QuestionHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		w.Write(b)
-		go sendReport(userId)
+		if !c.mailSent {
+			go sendReport(userId)
+			c.mailSent = true
+			updateMap(userId, c)
+		}
 		return
 	}
 

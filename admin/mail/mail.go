@@ -10,6 +10,7 @@ import (
 )
 
 var SENDGRID_API_KEY = flag.String("sendgrid", "", "Sendgrid API Key")
+var reportMail = flag.String("report", "join@dgraph.io", "Email on which to send the reports.")
 
 // TODO - Later just have one IP address with port info.
 var Ip = flag.String("ip", "http://localhost:2020", "Public IP address of server")
@@ -63,7 +64,7 @@ func SendReport(name string, quiz string, score, maxScore float64, body string) 
 	from := mail.NewEmail("Gru", "join@dgraph.io")
 	subject := fmt.Sprintf("%v scored %.2f/%.2f in the %v quiz", name,
 		score, maxScore, quiz)
-	to := mail.NewEmail("Dgraph", "pawan@dgraph.io")
+	to := mail.NewEmail("Dgraph", *reportMail)
 
 	content := mail.NewContent("text/html", body)
 	m := mail.NewV3MailInit(from, subject, to, content)

@@ -55,7 +55,11 @@ func PingHandler(w http.ResponseWriter, r *http.Request) {
 				sr.Write(w, res.Message, "", http.StatusInternalServerError)
 				return
 			}
-			go sendReport(userId)
+			if !c.mailSent {
+				go sendReport(userId)
+				c.mailSent = true
+				updateMap(userId, c)
+			}
 		}
 		pr.TimeLeft = timeLeft.String()
 	}
