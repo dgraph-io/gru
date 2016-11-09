@@ -234,7 +234,7 @@
       }
 
       var requestData = angular.copy(addQueVm.newQuestion);
-      requestData.notes = requestData.notes || "none";
+      requestData.notes = requestData.notes;
 
       // Hit the API
       questionService.saveQuestion(JSON.stringify(requestData))
@@ -559,7 +559,7 @@
       }
 
       var requestData = angular.copy(editQuesVm.newQuestion);
-      requestData.notes = requestData.notes || "none";
+      requestData.notes = requestData.notes;
       questionService.editQuestion(requestData).then(function(data) {
         SNACKBAR({
           message: data.Message,

@@ -31,24 +31,23 @@ type Option struct {
 }
 
 func add(q Question) string {
-	m := `mutation {
-		set {
-		  <root> <question> <_new_:qn> .
-		  <_new_:qn> <name> "` + q.Name + `" .
-		  <_new_:qn> <text> "` + q.Text + `" .
-		  <_new_:qn> <positive> "` + strconv.FormatFloat(q.Positive, 'g', -1, 64) + `" .
-		  <_new_:qn> <negative> "` + strconv.FormatFloat(q.Negative, 'g', -1, 64) + `" .
-		  <_new_:qn> <notes> "` + q.Notes + `" .`
+	m := new(dgraph.Mutation)
+	m.Set(`<root> <question> <_new_:qn> .`)
+	m.Set(`<_new_:qn> <name> "` + q.Name + `" .`)
+	m.Set(`<_new_:qn> <text> "` + q.Text + `" .`)
+	if q.Notes != "" {
+		m.Set(`<_new_:qn> <notes> "` + q.Notes + `" .`)
+	}
+	m.Set(`<_new_:qn> <positive> "` + strconv.FormatFloat(q.Positive, 'g', -1, 64) + `" .`)
+	m.Set(`<_new_:qn> <negative> "` + strconv.FormatFloat(q.Negative, 'g', -1, 64) + `" .`)
 
 	correct := 0
 	for i, opt := range q.Options {
 		idx := strconv.Itoa(i)
-		m += `
-		<_new_:qn> <question.option> <_new_:o` + idx + `> .
-		<_new_:o` + idx + `> <name> "` + opt.Text + `" .`
+		m.Set(`<_new_:qn> <question.option> <_new_:o` + idx + `> .`)
+		m.Set(`<_new_:o` + idx + `> <name> "` + opt.Text + `" .`)
 		if opt.IsCorrect {
-			m += `
-			<_new_:qn> <question.correct> <_new_:o` + idx + `> .`
+			m.Set(`<_new_:qn> <question.correct> <_new_:o` + idx + `> .`)
 			correct++
 		}
 	}
@@ -56,28 +55,21 @@ func add(q Question) string {
 	for i, t := range q.Tags {
 		idx := strconv.Itoa(i)
 		if t.Uid != "" {
-			m += `
-			<_new_:qn> <question.tag> <_uid_:` + t.Uid + `> .
-			<_uid_:` + t.Uid + `> <tag.question> <_new_:qn> . `
+			m.Set(`<_new_:qn> <question.tag> <_uid_:` + t.Uid + `> .`)
+			m.Set(`<_uid_:` + t.Uid + `> <tag.question> <_new_:qn> . `)
 		} else {
-			m += `
-			<_new_:t` + idx + `> <name> "` + t.Name + `" .
-			<_new_:qn> <question.tag> <_new_:t` + idx + `> .
-			<_new_:t` + idx + `> <tag.question> <_new_:qn> . `
+			m.Set(`<_new_:t` + idx + `> <name> "` + t.Name + `" .`)
+			m.Set(`<_new_:qn> <question.tag> <_new_:t` + idx + `> .`)
+			m.Set(`<_new_:t` + idx + `> <tag.question> <_new_:qn> .`)
 		}
 	}
 
 	if correct > 1 {
-		m += `
-		<_new_:qn> <multiple> "true" . `
+		m.Set(`<_new_:qn> <multiple> "true" . `)
 	} else {
-		m += `
-		<_new_:qn> <multiple> "false" . `
+		m.Set(`<_new_:qn> <multiple> "false" . `)
 	}
-	m += `
-	  }
-  }	`
-	return m
+	return m.String()
 }
 
 // TODO - Move this inline with add, like we have for edit.
@@ -217,7 +209,9 @@ func edit(q Question) (string, error) {
 	}
 	m.Set(`<_uid_:` + q.Uid + `> <name> "` + q.Name + `" .`)
 	m.Set(`<_uid_:` + q.Uid + `> <text> "` + q.Text + `" .`)
-	m.Set(`<_uid_:` + q.Uid + `> <notes> "` + q.Notes + `" .`)
+	if q.Notes != "" {
+		m.Set(`<_uid_:` + q.Uid + `> <notes> "` + q.Notes + `" .`)
+	}
 
 	if q.Positive == 0 || q.Negative == 0 {
 		return "", fmt.Errorf("Positive/Negative score can't be zero.")
