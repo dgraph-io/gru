@@ -259,19 +259,18 @@ func checkAndUpdate(uid string) (int, error) {
 	q := candQuery(uid)
 	var resp resp
 	if err := dgraph.QueryAndUnmarshal(q, &resp); err != nil {
-		return http.StatusInternalServerError, err
+		return http.StatusInternalServerError, fmt.Errorf("Something went wrong.")
 	}
 
 	if len(resp.Cand) != 1 || len(resp.Cand[0].Quiz) != 1 {
 		// No candidiate found with given uid
-		return http.StatusUnauthorized, fmt.Errorf("Candidate not found")
+		return http.StatusUnauthorized, fmt.Errorf("Invalid token.")
 	}
 
 	cand := resp.Cand[0]
 	quiz := cand.Quiz[0]
 	if cand.Complete {
 		return http.StatusUnauthorized, fmt.Errorf("You have already completed the quiz.")
-
 	}
 	if quiz.Id == "" {
 		return http.StatusUnauthorized, fmt.Errorf("Invalid token.")
@@ -289,7 +288,7 @@ func checkAndUpdate(uid string) (int, error) {
 	// required.
 	var err error
 	if c.validity, err = time.Parse("2006-01-02 15:04:05 +0000 UTC", cand.Validity); err != nil {
-		return http.StatusInternalServerError, err
+		return http.StatusInternalServerError, fmt.Errorf("Something went wrong.")
 	}
 	if c.validity.Before(time.Now()) {
 		return http.StatusUnauthorized,
@@ -299,7 +298,7 @@ func checkAndUpdate(uid string) (int, error) {
 	// We check that quiz duration hasn't elapsed in case the candidate tries
 	// to validate again say after a browser crash.
 	if c.quizDuration, err = time.ParseDuration(quiz.Duration); err != nil {
-		return http.StatusInternalServerError, err
+		return http.StatusInternalServerError, fmt.Errorf("Something went wrong.")
 	}
 
 	if timeLeft(c.quizStart, c.quizDuration) < 0 {
@@ -316,7 +315,7 @@ func checkAndUpdate(uid string) (int, error) {
 	// Get quiz questions for the quiz id.
 	qnsUnanswered, err := quizQns(quiz.Id, qa)
 	if err != nil {
-		return http.StatusInternalServerError, err
+		return http.StatusInternalServerError, fmt.Errorf("Something went wrong.")
 	}
 
 	shuffleQuestions(qnsUnanswered)

@@ -185,6 +185,7 @@ func runHTTPServer(address string) {
 	adminRouter.HandleFunc("/candidate/{id}", candidate.Edit).Methods("PUT", "OPTIONS")
 	adminRouter.HandleFunc("/candidate/{id}", candidate.Get).Methods("GET", "OPTIONS")
 	adminRouter.HandleFunc("/candidate/report/{id}", report.Report).Methods("GET", "OPTIONS")
+	adminRouter.HandleFunc("/candidate/invite/{id}", candidate.ResendInvite).Methods("POST", "OPTIONS")
 	adminRouter.HandleFunc("/candidates", candidate.Index).Methods("GET", "OPTIONS")
 
 	n := negroni.Classic()

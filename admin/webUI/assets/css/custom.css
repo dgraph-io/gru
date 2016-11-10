@@ -566,6 +566,18 @@ body.home {
   background-position: -18px 10px;
 }
 
+.cancel-invite-modal.modal-wrapper {
+  width: 300px
+}
+
+.mdl-dialog__content {
+  padding: 20px 10px 0 10px;
+}
+
+.mdl-dialog__title {
+  padding: 24px 10px 0;
+}
+
 
 /*CANDIDATE REPORT*/
 

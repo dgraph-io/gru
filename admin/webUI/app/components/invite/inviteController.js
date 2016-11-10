@@ -255,10 +255,17 @@
     }
   }
 
-  function candidatesController($rootScope, $stateParams, $state, inviteService) {
+  function candidatesController($scope, $rootScope, $stateParams, $state, inviteService) {
     candidatesVm = this;
     candidatesVm.sortType = 'score';
     candidatesVm.sortReverse = true;
+    candidatesVm.expires = expires;
+    candidatesVm.cancel = cancel;
+    candidatesVm.resend = resend;
+    candidatesVm.delete = deleteCand;
+    candidatesVm.showCancelModal = showCancelModal;
+    candidatesVm.candidate_email = "";
+    candidatesVm.deleteCandFromArray = deleteFromArray;
 
     candidatesVm.quizID = $stateParams.quizID;
 
@@ -281,10 +288,14 @@
           quizID: candidatesVm.quizID,
         });
       } else {
-        for (var i = 0; i < candidatesVm.quizCandidates.length; i++) {
+        var i = candidatesVm.quizCandidates.length
+        while (i--) {
           var cand = candidatesVm.quizCandidates[i]
-            // TODO - Maybe store invite in a format that frontend directly
-            // understands.
+          if (cand.deleted === 'true') {
+            candidatesVm.quizCandidates.splice(i, 1)
+          }
+          // TODO - Maybe store invite in a format that frontend directly
+          // understands.
           if (cand.complete == "false") {
             cand.invite_sent = new Date(Date.parse(cand.invite_sent)) || '';
             continue;
@@ -300,6 +311,98 @@
     }, function(err) {
       console.log(err);
     });
+
+    function showCancelModal(candidateID, email) {
+      console.log(email)
+      candidatesVm.candidate_email = email;
+      mainVm.openModal({
+        template: $(".canel-invite-template").html(),
+        isString: true,
+        showYes: true,
+        class: "cancel-invite-modal"
+      });
+    }
+
+    function expires(validity) {
+      var validity_date = new Date(validity)
+      var today = new Date();
+      var diff = (validity_date - today) / (1000 * 60 * 60 * 24)
+      var numDays = Math.round(diff)
+      if (numDays <= 0) {
+        return "Expired"
+      }
+      return numDays
+    }
+
+    function deleteFromArray(candidateID) {
+      var idx = -1
+      for (var i = 0; i < candidatesVm.quizCandidates.length; i++) {
+        if (candidatesVm.quizCandidates[i]._uid_ == candidateID) {
+          idx = i;
+          break;
+        }
+      }
+      if (idx >= 0) {
+        candidatesVm.quizCandidates.splice(idx, 1)
+      }
+    }
+
+    function cancel(candidate) {
+      inviteService.cancelInvite(candidate, candidatesVm.quizID).then(function(cancelled) {
+        if (!cancelled) {
+          SNACKBAR({
+            message: "Invite could not be cancelled.",
+            messageType: "error",
+          })
+          return
+        }
+        SNACKBAR({
+          message: "Invite cancelled successfully.",
+        })
+        deleteFromArray(candidate._uid_)
+        $state.transitionTo("invite.dashboard", {
+          quizID: candidatesVm.quizID,
+        })
+      })
+    }
+
+    function deleteCand(candidateId) {
+      inviteService.deleteCand(candidateId).then(function(deleted) {
+        if (!deleted) {
+          SNACKBAR({
+            message: "Candidate couldn't be deleted.",
+            messageType: "error",
+          })
+          return
+        }
+        SNACKBAR({
+          message: "Candidate deleted successfully.",
+        })
+
+        deleteFromArray(candidateId)
+        $state.transitionTo("invite.dashboard", {
+          quizID: candidatesVm.quizID,
+        })
+      })
+    }
+
+    function resend(candidateID) {
+      inviteService.resendInvite(candidateID).then(function(response) {
+        if (!response.success) {
+          SNACKBAR({
+            message: response.message,
+            messageType: "error",
+          })
+          return
+        }
+        SNACKBAR({
+          message: response.message
+        })
+        $state.transitionTo("invite.dashboard", {
+          quizID: candidatesVm.quizID,
+        })
+      })
+    }
   }
 
   function candidateReportController($scope, $rootScope, $stateParams, $state, inviteService) {
@@ -317,7 +420,6 @@
 
     inviteService.getReport(cReportVm.candidateID)
       .then(function(data) {
-        console.log(data);
         for (var i = 0; i < data.questions.length; i++) {
           if (data.questions[i].time_taken != "-1") {
             data.questions[i].parsedTime = mainVm.parseGoTime(data.questions[i].time_taken)
@@ -429,6 +531,7 @@
   angular.module('GruiApp').controller('candidateReportController', candidateReportDependency);
 
   var candidatesDependency = [
+    "$scope",
     "$rootScope",
     "$stateParams",
     "$state",

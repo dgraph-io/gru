@@ -91,14 +91,15 @@
     <div class="show-overlay overlay"></div>
     <div class="mdl-spinner mdl-js-spinner is-active"></div>
   </div>
-  <div class="modal-overlay ng-cloak ng-hide" ng-show="mainVm.showModal"></div>
-  <div class="modal-wrapper ng-cloak ng-hide" ng-show="mainVm.modal.template">
-    <!-- <div data-ng-include="mainVm.modal.template">
-      </div> -->
-    <div ng-bind-html="mainVm.modal.template">
-    </div>
-    <div class="modal-actions text-right pt-20" ng-hide="mainVm.modal.hideClose" ng-click="mainVm.hideModal()">
-      <button class="mdl-button">Close</button>
+  <div class="modal-overlay ng-cloak" ng-show="mainVm.showModal"></div>
+  <div class=" ng-cloak">
+    <div class="{{mainVm.modal.class}} modal-wrapper" ng-show="mainVm.modal.template">
+      <div data-ng-include="mainVm.modal.template" ng-if="!mainVm.modal.isString"></div>
+      <div ng-bind-html="mainVm.modal.template" ng-if="mainVm.modal.isString" class="modal-content"></div>
+      <div class="modal-actions text-right pt-20">
+        <button class="mdl-button" ng-click="mainVm.hideModal()" ng-hide="mainVm.modal.hideClose">Cancel</button>
+        <button class="mdl-button submit" ng-if="mainVm.modal.showYes">Yes</button>
+      </div>
     </div>
   </div>
   <!-- Javascript Loading, Asynchronously -->

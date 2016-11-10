@@ -120,7 +120,7 @@ angular.module('GruiApp').constant('APP_REQUIRES', {
     'codeMirror': ['assets/lib/js/codemirror.js'],
     'javascript': ['assets/lib/js/javascript.js'],
     'marked': ['https://cdnjs.cloudflare.com/ajax/libs/marked/0.3.2/marked.min.js'],
-    'highlight': ['assets/lib/js/highlight.pack.js'],
+    'highlight': ['assets/lib/js/highlight.pack.js']
   },
 });
 
@@ -188,6 +188,7 @@ angular.module('GruiApp').provider('RouteHelpers', ['APP_REQUIRES', function(app
     "$rootScope",
     "$state",
     "$stateParams",
+    "$sce",
     "$http",
     "$q",
     "MainService",
@@ -206,7 +207,7 @@ angular.module('GruiApp').provider('RouteHelpers', ['APP_REQUIRES', function(app
   // CONTROLLERS, SERVICES FUNCTION DEFINITION
 
   // MAIN CONTROLLER
-  function MainController($scope, $rootScope, $state, $stateParams, $http, $q, MainService) {
+  function MainController($scope, $rootScope, $state, $stateParams, $sce, $http, $q, MainService) {
     //ViewModal binding using this, instead of $scope
     //Must be use with ControllerAs syntax in view
     mainVm = this; // $Scope aliase
@@ -289,9 +290,19 @@ angular.module('GruiApp').provider('RouteHelpers', ['APP_REQUIRES', function(app
       if (!setting.template) {
         return
       }
-      mainVm.modal = {
-        template: setting.template
+      mainVm.modal = {};
+
+      // CHECK IF TEMPLATE IS STRING OR URL
+      mainVm.modal.isString = setting.isString ? true : false;
+      if (mainVm.modal.isString) {
+        setting.template = $sce.trustAsHtml(setting.template);
       }
+
+      // SET TEMPLATE
+      mainVm.modal.template = setting.template;
+      mainVm.modal.class = setting.class || "";
+      mainVm.modal.showYes = setting.showYes || false;
+
       mainVm.showModal = true;
     }
 
@@ -306,6 +317,7 @@ angular.module('GruiApp').provider('RouteHelpers', ['APP_REQUIRES', function(app
       mainVm.openModal({
         // template: "./app/shared/_server_crash.html",
         template: modalContent,
+        isString: true,
       });
       $rootScope.$broadcast("endQuiz", {
         message: modalContent,

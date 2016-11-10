@@ -29,30 +29,30 @@
                   <th class="mdl-data-table__cell--non-numeric">Email</th>
                   <th class="mdl-data-table__cell--non-numeric">
                     <a href="" ng-click="candidateVm.sortType = 'score'; candidateVm.sortReverse = !candidateVm.sortReverse">
-  							Score
-  							<i ng-show="candidateVm.sortType == 'score' && !candidateVm.sortReverse" class="material-icons">arrow_drop_up</i>
-  							<i ng-show="candidateVm.sortType == 'score' && candidateVm.sortReverse" class="material-icons">arrow_drop_down</i>
-  							</a>
+                    Score
+                    <i ng-show="candidateVm.sortType == 'score' && !candidateVm.sortReverse" class="material-icons">arrow_drop_up</i>
+                    <i ng-show="candidateVm.sortType == 'score' && candidateVm.sortReverse" class="material-icons">arrow_drop_down</i>
+                  </a>
                   </th>
                   <th class="mdl-data-table__cell--non-numeric">
                     <a href="" ng-click="candidateVm.sortType = 'quiz_start'; candidateVm.sortReverse = !candidateVm.sortReverse">
-  							Quiz Start
-  							<i ng-show="candidateVm.sortType == 'quiz_start' && !candidateVm.sortReverse" class="material-icons">arrow_drop_up</i>
-  							<i ng-show="candidateVm.sortType == 'quiz_start' && candidateVm.sortReverse" class="material-icons">arrow_drop_down</i>
-  							</a>
+                    Quiz Start
+                    <i ng-show="candidateVm.sortType == 'quiz_start' && !candidateVm.sortReverse" class="material-icons">arrow_drop_up</i>
+                    <i ng-show="candidateVm.sortType == 'quiz_start' && candidateVm.sortReverse" class="material-icons">arrow_drop_down</i>
+                  </a>
                   </th>
                   <th class="mdl-data-table__cell--non-numeric">Actions</th>
                 </tr>
               </thead>
-              <tbody ng-repeat="candidate in candidateVm.quizCandidates | orderBy:candidateVm.sortType:candidateVm.sortReverse | filter:searchCand">
-                <tr ng-if="candidate.complete == 'true'">
+              <tbody ng-repeat="candidate in candidateVm.quizCandidates | orderBy:candidateVm.sortType:candidateVm.sortReverse | filter:searchCand" on-finish-render="ngRepeatFinished">
+                <tr ng-show="candidate.complete == 'true'">
                   <td class="mdl-data-table__cell--non-numeric">{{candidate.name}}</td>
                   <td class="mdl-data-table__cell--non-numeric">{{candidate.email}}</td>
                   <td class="mdl-data-table__cell--non-numeric">{{candidate.score | number: 2}}</td>
                   <td class="mdl-data-table__cell--non-numeric">{{candidate.quiz_start | date : 'MMM dd, yyyy'}}</td>
                   <td class="mdl-data-table__cell--non-numeric">
-                    <a ui-sref="invite.report({candidateID: candidate._uid_})">VIEW REPORT</a>
-                    </span>
+                    <a ui-sref="invite.report({candidateID: candidate._uid_})">VIEW REPORT</a> &nbsp;|&nbsp;
+                    <a ng-click="candidateVm.delete(candidate._uid_)" href="">DELETE</a>
                   </td>
                 </tr>
               </tbody>
@@ -65,8 +65,8 @@
           <div class="mdl-cell mdl-cell--12-col">
             <form action="#">
               <div class="mdl-textfield mdl-js-textfield">
-                <input class="mdl-textfield__input" type="text" id="sample1" ng-model="searchCand">
-                <label class="mdl-textfield__label" for="sample1">Search candidate by Name/Email</label>
+                <input class="mdl-textfield__input" type="text" id="search-cand" ng-model="searchCand">
+                <label class="mdl-textfield__label" for="search-cand">Search candidate by Name/Email</label>
               </div>
             </form>
             <table class="mdl-data-table mdl-shadow--2dp">
@@ -75,29 +75,46 @@
                   <th class="mdl-data-table__cell--non-numeric">Email</th>
                   <th class="mdl-data-table__cell--non-numeric">
                     <a href="" ng-click="candidateVm.sortType = 'invite_sent'; candidateVm.sortReverse = !candidateVm.sortReverse">
-  							Invited
-  							<i ng-show="candidateVm.sortType == 'invite_sent' && !candidateVm.sortReverse" class="material-icons">arrow_drop_up</i>
-  							<i ng-show="candidateVm.sortType == 'invite_sent' && candidateVm.sortReverse" class="material-icons">arrow_drop_down</i>
-  							</a>
+              Invited
+              <i ng-show="candidateVm.sortType == 'invite_sent' && !candidateVm.sortReverse" class="material-icons">arrow_drop_up</i>
+              <i ng-show="candidateVm.sortType == 'invite_sent' && candidateVm.sortReverse" class="material-icons">arrow_drop_down</i>
+              </a>
                   </th>
-                  <th class="mdl-data-table__cell--non-numeric">Validity</th>
+                  <th class="mdl-data-table__cell--non-numeric">
+                    <a href="" ng-click="candidateVm.sortType = 'validity'; candidateVm.sortReverse = !candidateVm.sortReverse">
+              Expires (days)
+              <i ng-show="candidateVm.sortType == 'validity' && !candidateVm.sortReverse" class="material-icons">arrow_drop_up</i>
+              <i ng-show="candidateVm.sortType == 'validity' && candidateVm.sortReverse" class="material-icons">arrow_drop_down</i>
+              </a>
+                  </th>
                   <th class="mdl-data-table__cell--non-numeric">Actions</th>
                 </tr>
               </thead>
               <tbody ng-repeat="candidate in candidateVm.quizCandidates | orderBy:candidateVm.sortType:candidateVm.sortReverse | filter:searchCand">
-                <tr ng-if="candidate.complete != 'true'">
+                <tr ng-show="candidate.complete != 'true' && candidate.cancel != 'true'">
                   <td class="mdl-data-table__cell--non-numeric">{{candidate.email}}</td>
                   <td class="mdl-data-table__cell--non-numeric">{{candidate.invite_sent | date : 'MMM dd, yyyy'}}</td>
-                  <td class="mdl-data-table__cell--non-numeric">{{candidate.validity}}</td>
+                  <td class="mdl-data-table__cell--non-numeric">{{candidateVm.expires(candidate.validity)}}</td>
                   <td class="mdl-data-table__cell--non-numeric">
-                    <a ui-sref="invite.edit({quizID: candidateVm.quizID, candidateID: candidate._uid_})">EDIT</a>
-                    </span>
+                    <a ui-sref="invite.edit({quizID: candidateVm.quizID, candidateID: candidate._uid_})">EDIT</a> &nbsp;|&nbsp;
+                    <a ng-click="candidateVm.resend(candidate._uid_)" href="">RESEND</a> &nbsp;|&nbsp;
+                    <a ng-click="candidateVm.cancel(candidate)" href="">CANCEL</a>
+                    <!-- <a ng-click="candidateVm.showModal(candidate._uid_, candidate.email)" href="">CANCEL</a> &nbsp;|&nbsp; -->
+                    <!-- <a ng-click="candidateVm.showCancelModal(candidate._uid_, candidate.email)" href="">MODAL</a> -->
                   </td>
                 </tr>
               </tbody>
             </table>
           </div>
         </div>
+      </div>
+    </div>
+    <div class="canel-invite-template ng-hide">
+      <h4 class="mdl-dialog__title">Cancel</h4>
+      <div class="mdl-dialog__content pb-0">
+        <p>
+          Are you sure that you wan't to cancel the invite sent to {{candidateVm.candidate_email}}?
+        </p>
       </div>
     </div>
   </div>
