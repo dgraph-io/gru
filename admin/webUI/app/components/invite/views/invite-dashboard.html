@@ -34,6 +34,7 @@
                     <i ng-show="candidateVm.sortType == 'score' && candidateVm.sortReverse" class="material-icons">arrow_drop_down</i>
                   </a>
                   </th>
+                  <th class="mdl-data-table__cell--non-numeric">Percentile</th>
                   <th class="mdl-data-table__cell--non-numeric">
                     <a href="" ng-click="candidateVm.sortType = 'quiz_start'; candidateVm.sortReverse = !candidateVm.sortReverse">
                     Quiz Start
@@ -49,6 +50,7 @@
                   <td class="mdl-data-table__cell--non-numeric">{{candidate.name}}</td>
                   <td class="mdl-data-table__cell--non-numeric">{{candidate.email}}</td>
                   <td class="mdl-data-table__cell--non-numeric">{{candidate.score | number: 2}}</td>
+                  <td class="mdl-data-table__cell--non-numeric">{{((candidateVm.completedLen - candidate.idx)/candidateVm.completedLen) * 100 | number: 2}}</td>
                   <td class="mdl-data-table__cell--non-numeric">{{candidate.quiz_start | date : 'MMM dd, yyyy'}}</td>
                   <td class="mdl-data-table__cell--non-numeric">
                     <a ui-sref="invite.report({candidateID: candidate._uid_})">VIEW REPORT</a> &nbsp;|&nbsp;

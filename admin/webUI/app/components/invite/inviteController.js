@@ -288,11 +288,15 @@
           quizID: candidatesVm.quizID,
         });
       } else {
+        // TODO - Separate out candidates who have completed the test vs who haven't
+        // taken it yet into separate arrays.
         var i = candidatesVm.quizCandidates.length
         while (i--) {
           var cand = candidatesVm.quizCandidates[i]
+            // Candidates are only soft deleted, so we skip those who are deleted.
           if (cand.deleted === 'true') {
             candidatesVm.quizCandidates.splice(i, 1)
+            continue
           }
           // TODO - Maybe store invite in a format that frontend directly
           // understands.
@@ -300,13 +304,30 @@
             cand.invite_sent = new Date(Date.parse(cand.invite_sent)) || '';
             continue;
           }
+
           cand.quiz_start = new Date(Date.parse(cand.quiz_start)) || '';
           var score = 0.0;
           for (var j = 0; j < cand["candidate.question"].length; j++) {
             score += parseFloat(cand["candidate.question"][j]["candidate.score"]) || 0;
           }
           cand.score = score;
+          candidatesVm.quizCandidates[i] = cand;
         }
+        // candidatesVm.completedLength = index;
+        candidatesVm.quizCandidates.sort(function(c1, c2) {
+          return c2.score - c1.score
+        })
+
+        // To calculate percentile. The list doesn't contain deleted candidates,
+        // we also ignore those who haven't completed the test.
+        var index = 1;
+        for (var i = 0; i < candidatesVm.quizCandidates.length; i++) {
+          if (candidatesVm.quizCandidates[i].complete == "true") {
+            candidatesVm.quizCandidates[i].idx = index;
+            index++;
+          }
+        }
+        candidatesVm.completedLen = index - 1
       }
     }, function(err) {
       console.log(err);
