@@ -47,7 +47,7 @@
               </thead>
               <tbody ng-repeat="candidate in candidateVm.quizCandidates | orderBy:candidateVm.sortType:candidateVm.sortReverse | filter:searchCand" on-finish-render="ngRepeatFinished">
                 <tr ng-show="candidate.complete == 'true'">
-                  <td class="mdl-data-table__cell--non-numeric">{{candidate.name}}</td>
+                  <td class="mdl-data-table__cell--non-numeric">{{candidate.name.split(' ')[0]}}</td>
                   <td class="mdl-data-table__cell--non-numeric">{{candidate.email}}</td>
                   <td class="mdl-data-table__cell--non-numeric">{{candidate.score | number: 2}}</td>
                   <td class="mdl-data-table__cell--non-numeric">{{((candidateVm.completedLen - candidate.idx)/candidateVm.completedLen) * 100 | number: 2}}</td>
