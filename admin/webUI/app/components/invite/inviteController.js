@@ -293,13 +293,8 @@
         var i = candidatesVm.quizCandidates.length
         while (i--) {
           var cand = candidatesVm.quizCandidates[i]
-            // Candidates are only soft deleted, so we skip those who are deleted.
-          if (cand.deleted === 'true') {
-            candidatesVm.quizCandidates.splice(i, 1)
-            continue
-          }
-          // TODO - Maybe store invite in a format that frontend directly
-          // understands.
+            // TODO - Maybe store invite in a format that frontend directly
+            // understands.
           if (cand.complete == "false") {
             cand.invite_sent = new Date(Date.parse(cand.invite_sent)) || '';
             continue;
@@ -315,16 +310,21 @@
         }
 
         candidatesVm.quizCandidates.sort(function(c1, c2) {
-          return c1.score - c2.score;
+          return c2.score - c1.score;
         })
 
-        // To calculate percentile. The list doesn't contain deleted candidates,
-        // we also ignore those who haven't completed the test.
+        // To calculate percentile. We ignore those who haven't completed the test.
         var index = 0;
-        for (var i = 0; i < candidatesVm.quizCandidates.length; i++) {
+        var i = candidatesVm.quizCandidates.length
+        while (i--) {
           if (candidatesVm.quizCandidates[i].complete == "true") {
             candidatesVm.quizCandidates[i].idx = index;
             index++;
+          }
+          // Now that we included deleted candidates for percentile calculation, lets
+          // delete them so that they aren't rendered.
+          if (candidatesVm.quizCandidates[i].deleted === 'true') {
+            candidatesVm.quizCandidates.splice(i, 1)
           }
         }
         candidatesVm.completedLen = index;
