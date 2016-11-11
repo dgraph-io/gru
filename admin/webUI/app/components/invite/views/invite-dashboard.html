@@ -50,7 +50,7 @@
                   <td class="mdl-data-table__cell--non-numeric">{{candidate.name.split(' ')[0]}}</td>
                   <td class="mdl-data-table__cell--non-numeric">{{candidate.email}}</td>
                   <td class="mdl-data-table__cell--non-numeric">{{candidate.score | number: 2}}</td>
-                  <td class="mdl-data-table__cell--non-numeric">{{((candidate.idx)/candidateVm.completedLen) * 100 | number: 2}}</td>
+                  <td class="mdl-data-table__cell--non-numeric">{{((candidateVm.completedLen - candidate.idx -1)/candidateVm.completedLen) * 100 | number: 2}}</td>
                   <td class="mdl-data-table__cell--non-numeric">{{candidate.quiz_start | date : 'MMM dd, yyyy'}}</td>
                   <td class="mdl-data-table__cell--non-numeric">
                     <a ui-sref="invite.report({candidateID: candidate._uid_})">VIEW REPORT</a> &nbsp;|&nbsp;

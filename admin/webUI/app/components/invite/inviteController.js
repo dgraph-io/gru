@@ -310,7 +310,7 @@
         }
 
         candidatesVm.quizCandidates.sort(function(c1, c2) {
-          return c2.score - c1.score;
+          return c1.score - c2.score;
         })
 
         // To calculate percentile. We ignore those who haven't completed the test.
