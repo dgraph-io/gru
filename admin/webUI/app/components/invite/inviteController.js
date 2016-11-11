@@ -313,21 +313,21 @@
           cand.score = score;
           candidatesVm.quizCandidates[i] = cand;
         }
-        // candidatesVm.completedLength = index;
+
         candidatesVm.quizCandidates.sort(function(c1, c2) {
-          return c2.score - c1.score
+          return c1.score - c2.score;
         })
 
         // To calculate percentile. The list doesn't contain deleted candidates,
         // we also ignore those who haven't completed the test.
-        var index = 1;
+        var index = 0;
         for (var i = 0; i < candidatesVm.quizCandidates.length; i++) {
           if (candidatesVm.quizCandidates[i].complete == "true") {
             candidatesVm.quizCandidates[i].idx = index;
             index++;
           }
         }
-        candidatesVm.completedLen = index - 1
+        candidatesVm.completedLen = index;
       }
     }, function(err) {
       console.log(err);
