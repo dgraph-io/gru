@@ -387,7 +387,7 @@
 }
 
 .modal-wrapper {
-  position: absolute;
+  position: fixed;
   padding: 15px;
   top: 50%;
   left: 50%;

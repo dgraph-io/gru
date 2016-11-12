@@ -255,7 +255,7 @@
     }
   }
 
-  function candidatesController($scope, $rootScope, $stateParams, $state, inviteService) {
+  function candidatesController($scope, $rootScope, $stateParams, $state, $timeout, $templateCache, inviteService, moment) {
     candidatesVm = this;
     candidatesVm.sortType = 'score';
     candidatesVm.sortReverse = true;
@@ -266,6 +266,16 @@
     candidatesVm.showCancelModal = showCancelModal;
     candidatesVm.candidate_email = "";
     candidatesVm.deleteCandFromArray = deleteFromArray;
+
+    candidatesVm.expires = expires;
+    candidatesVm.showCancelModal = showCancelModal;
+    candidatesVm.initiateCancel = initiateCancel;
+    candidatesVm.showDeleteModal = showDeleteModal;
+    candidatesVm.initiateDelete = initiateDelete;
+    candidatesVm.deleteCandFromArray = deleteFromArray;
+    candidatesVm.cancel = cancel;
+    candidatesVm.resend = resend;
+    candidatesVm.delete = deleteCand;
 
     candidatesVm.quizID = $stateParams.quizID;
 
@@ -293,8 +303,12 @@
         var i = candidatesVm.quizCandidates.length
         while (i--) {
           var cand = candidatesVm.quizCandidates[i]
-            // TODO - Maybe store invite in a format that frontend directly
-            // understands.
+          if (cand.deleted === 'true') {
+            candidatesVm.quizCandidates.splice(i, 1)
+          }
+          // TODO
+          //- Maybe store invite in a format that frontend directly
+          // understands.
           if (cand.complete == "false") {
             cand.invite_sent = new Date(Date.parse(cand.invite_sent)) || '';
             continue;
@@ -333,15 +347,44 @@
       console.log(err);
     });
 
-    function showCancelModal(candidateID, email) {
-      console.log(email)
-      candidatesVm.candidate_email = email;
-      mainVm.openModal({
-        template: $(".canel-invite-template").html(),
-        isString: true,
-        showYes: true,
-        class: "cancel-invite-modal"
-      });
+    function showCancelModal(candidate) {
+      // Timeout to let dirty checking done first then modal content get
+      // updated variable text
+      candidatesVm.currentCancel = {};
+      candidatesVm.currentCancel = candidate;
+      $timeout(function() {
+        mainVm.openModal({
+          template: "cancel-modal-template",
+          showYes: true,
+          hideClose: true,
+          class: "cancel-invite-modal",
+        });
+      }, 10);
+    }
+
+    function initiateCancel() {
+      if (candidatesVm.currentCancel) {
+        candidatesVm.cancel(candidatesVm.currentCancel);
+      }
+    }
+
+    function showDeleteModal(candidate) {
+      candidatesVm.currentDeleteName = candidate.name;
+      candidatesVm.currentDelete = candidate._uid_;
+      $timeout(function() {
+        mainVm.openModal({
+          template: "delete-candidate-template",
+          showYes: true,
+          hideClose: true,
+          class: "delete-candidate-modal",
+        });
+      }, 10);
+    }
+
+    function initiateDelete() {
+      if (candidatesVm.currentDelete) {
+        candidatesVm.delete(candidatesVm.currentDelete);
+      }
     }
 
     function expires(validity) {
@@ -384,6 +427,9 @@
         $state.transitionTo("invite.dashboard", {
           quizID: candidatesVm.quizID,
         })
+
+        candidatesVm.currentCancel = {};
+        mainVm.hideModal();
       })
     }
 
@@ -404,6 +450,13 @@
         $state.transitionTo("invite.dashboard", {
           quizID: candidatesVm.quizID,
         })
+
+        candidatesVm.currentDelete = "";
+        mainVm.hideModal();
+      }, function(err) {
+        console.log(error)
+        candidatesVm.currentDelete = "";
+        mainVm.hideModal();
       })
     }
 
@@ -556,7 +609,10 @@
     "$rootScope",
     "$stateParams",
     "$state",
+    "$timeout",
+    "$templateCache",
     "inviteService",
+    "moment",
     candidatesController
   ];
   angular.module('GruiApp').controller('candidatesController', candidatesDependency);
