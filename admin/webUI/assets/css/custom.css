@@ -1,5 +1,9 @@
 /*MDL DESIGN REWRITE*/
 
+.mdl-layout__drawer-button {
+  display: none;
+}
+
 .mdl-layout-title {
   color: #EC3D2E;
 }
@@ -672,6 +676,9 @@ circle.path.prograss-circle {
   body {
     font-size: 13px;
   }
+  .home-grid .panel-card {
+    margin-left: 0;
+  }
   .resp-center {
     text-align: center;
   }
@@ -728,6 +735,21 @@ circle.path.prograss-circle {
   body {
     font-size: 12px;
   }
+  .home-grid {
+    padding: 20px 20px 50px;
+  }
+  .mdl-layout__header-row {
+    padding: 0;
+    padding-left: 54px;
+  }
+  .mdl-layout__drawer .mdl-navigation {
+    padding-top: 0;
+  }
+  .mdl-layout__drawer-button {
+    display: block;
+    height: 32px;
+    line-height: 38px;
+  }
   .cmdl-chip-value {
     margin-left: 0;
     margin-top: 0;
@@ -737,13 +759,9 @@ circle.path.prograss-circle {
     min-width: 40px;
     font-size: 14px;
   }
-  .mdl-layout__header-row {
-    padding: 0;
-  }
   .mdl-layout-title {
     display: block;
     width: 100%;
-    text-align: center
   }
   .ph-center {
     text-align: center;

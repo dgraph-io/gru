@@ -228,6 +228,10 @@
   display: block;
 }
 
+.overflow-auto {
+  overflow: auto;
+}
+
 
 /*Dropdown Menu*/
 

@@ -12,7 +12,7 @@
   <link href='https://fonts.googleapis.com/css?family=Montserrat' rel='stylesheet' type='text/css'>
   <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Tangerine">
   <link rel="stylesheet" href="assets/lib/css/select2.css?v=20161102">
-  <link rel="stylesheet" href="assets/css/main.css?v=20161108-1">
+  <link rel="stylesheet" href="assets/css/main.css?v=20161113-1">
 </head>
 
 <body ng-controller="MainController as mainVm" class="position-relative {{mainVm.pageName}} ng-clo" autoscroll="" ng-class="{'admin-panel': mainVm.isLoggedIn()}">
@@ -30,7 +30,7 @@
         </span>
         <div class="mdl-layout-spacer"></div>
         <!-- Navigation -->
-        <nav class="mdl-navigation ng-cloak" ng-if="mainVm.isLoggedIn()">
+        <nav class="mdl-navigation ng-cloak mdl-cell--hide-phone" ng-if="mainVm.isLoggedIn()">
           <div class="dropdown-wrapper">
             <div class="dropdown-link mdl-navigation__link">
               QUESTION
@@ -79,6 +79,18 @@
         </div>
       </div>
     </header>
+    <div class="mdl-layout__drawer">
+      <span class="mdl-layout-title">GRU<span ng-if="mainVm.isLoggedIn()">-Admin</span></span>
+      <nav class="mdl-navigation" ng-if="mainVm.isLoggedIn()">
+        <a class="mdl-navigation__link" ui-sref="question.all">Questions</a>
+        <a class="mdl-navigation__link" ui-sref="quiz.all">Quizes</a>
+        <a class="mdl-navigation__link" ui-sref="invite.add">Invite</a>
+        <hr>
+        <a class="mdl-navigation__link" href="" ng-click="mainVm.logout()">
+          <i class="material-icons">exit_to_app</i> Logout
+        </a>
+      </nav>
+    </div>
     <main data-ui-view="" class="mdl-layout__content">
     </main>
     <!-- <div data-ng-include data-src="'app/shared/_footer.html'"></div> -->
@@ -118,7 +130,7 @@
     'assets/lib/js/duration.js',
     'app/app.module.js?v=20161105-1',
     'app/app.route.js?v=20161105-1',
-    'assets/js/gru.js?v=20161107-1'
+    'assets/js/gru.js?v=20161113-1'
   ].forEach(function(src) {
     var script = document.createElement('script');
     script.src = src;

@@ -1,11 +1,11 @@
-<div class="mdl-grid container" ng-controller="candidatesController as candidatesVm">
+<div class="mdl-grid container overflow-auto" ng-controller="candidatesController as candidatesVm">
   <div class="mdl-cell--12-col">
     <div class="mdl-grid">
-      <div class="mdl-cell mdl-cell--6-col mdl-cell--middle">
+      <div class="mdl-cell mdl-cell--6-col mdl-cell--5-col-tablet mdl-cell--3-col-phone mdl-cell--middle">
         <h5>Candidate List for Quiz</h5>
       </div>
-      <div class="mdl-cell mdl-cell--6-col text-right mdl-cell--middle">
-        <button class="mdl-button btn btn-succes bg-green" ng-click="mainVm.goTo('invite.add', {quizID: candidatesVm.quizID})">Invite</button>
+      <div class="mdl-cell mdl-cell--6-col mdl-cell--3-col-tablet mdl-cell--1-col-phone text-right mdl-cell--middle">
+        <button class="mdl-button btn-succes bg-green" ng-click="mainVm.goTo('invite.add', {quizID: candidatesVm.quizID})">Invite</button>
       </div>
     </div>
     <div class="mdl-tabs mdl-js-tabs mdl-js-ripple-effect">
