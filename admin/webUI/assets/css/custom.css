@@ -579,6 +579,16 @@ body.home {
   font-size: 2rem;
 }
 
+.report-viewed a {
+  text-decoration: none;
+  color: #673AB7;
+}
+
+.report-viewed {
+  background: #009688;
+  color: white;
+}
+
 
 /*CANDIDATE REPORT*/
 
