@@ -12,7 +12,7 @@
   <link href='https://fonts.googleapis.com/css?family=Montserrat' rel='stylesheet' type='text/css'>
   <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Tangerine">
   <link rel="stylesheet" href="assets/lib/css/select2.css?v=20161102">
-  <link rel="stylesheet" href="assets/css/main.css?v=20161108-1">
+  <link rel="stylesheet" href="assets/compiled/css/gru.min.css?v=20161108-1">
 </head>
 
 <body ng-controller="MainController as mainVm" class="position-relative {{mainVm.pageName}} ng-clo" autoscroll="" ng-class="{'admin-panel': mainVm.isLoggedIn()}">
@@ -105,8 +105,9 @@
   <!-- Javascript Loading, Asynchronously -->
   <script>
   [
-    '/assets/lib/js/angular.min.js',
-    '/assets/lib/js/angular-sanitize.min.js',
+    // 'assets/compiled/js/vendor.min.js',
+    'assets/lib/js/angular.min.js',
+    'assets/lib/js/angular-sanitize.min.js',
     'assets/lib/js/angular-route.min.js?v=20161018-1',
     'assets/lib/js/angular-ui-router.min.js',
     'assets/lib/js/angular-css.min.js',

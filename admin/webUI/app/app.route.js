@@ -66,7 +66,7 @@
         abstract: true,
         templateUrl: questionTemplate,
         css: [angularSelectCSS, githubCSS],
-        resolve: helper.resolveFor('questionController', 'questionServices', 'angular-select', 'codeMirror', 'javascript', 'marked', 'highlight'),
+        resolve: helper.resolveFor('questionController', 'questionServices', 'codeMirror', 'javascript', 'marked', 'highlight'),
       })
       .state('question.all', {
         url: '/all-questions',

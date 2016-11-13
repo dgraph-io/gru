@@ -116,13 +116,12 @@ angular.module('GruiApp').constant('APP_REQUIRES', {
     'quizLandingService': ['app/components/candidate/quizLandingService.js?v=20161027-1'],
     'candidateController': ['app/components/candidate/candidateController.js?v=20161105-1'],
     'candidateService': ['app/components/candidate/candidateService.js'],
-    'angular-select': ['assets/lib/js/angular-select.min.js'],
-    'codeMirror': ['assets/lib/js/codemirror.js'],
-    'javascript': ['assets/lib/js/javascript.js'],
-    'marked': ['assets/lib/js/marked.min.js'],
-    'highlight': ['assets/lib/js/highlight.pack.js'],
-    'moment': ['assets/lib/js/moment.min.js'],
-    'angular-moment': ['assets/lib/js/angular-moment.min.js']
+    'codeMirror': ['assets/lib/lazyload-lib/codemirror.js'],
+    'javascript': ['assets/lib/lazyload-lib/javascript.js'],
+    'marked': ['assets/lib/lazyload-lib/marked.min.js'],
+    'highlight': ['assets/lib/lazyload-lib/highlight.pack.js'],
+    'moment': ['assets/lib/lazyload-lib/moment.min.js'],
+    'angular-moment': ['assets/lib/lazyload-lib/angular-moment.min.js']
   },
 });
 
