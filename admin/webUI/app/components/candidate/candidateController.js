@@ -337,6 +337,12 @@
         });
     }
 
+    $scope.$on("$destroy", function() {
+      if (cqVm.timerObj.getTime) {
+        $interval.cancel(cqVm.timerObj.getTime);
+      }
+    });
+
   }
 
   // CANDIDATE QUIZ
