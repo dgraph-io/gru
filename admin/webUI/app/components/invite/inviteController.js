@@ -449,8 +449,8 @@
       })
     }
 
-    function resend(candidateID) {
-      inviteService.resendInvite(candidateID).then(function(response) {
+    function resend(candidate) {
+      inviteService.resendInvite(candidate).then(function(response) {
         if (!response.success) {
           SNACKBAR({
             message: response.message,

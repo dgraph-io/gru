@@ -101,7 +101,7 @@
                   <td class="mdl-data-table__cell--non-numeric">{{candidatesVm.expires(candidate.validity)}}</td>
                   <td class="mdl-data-table__cell--non-numeric">
                     <a ui-sref="invite.edit({quizID: candidatesVm.quizID, candidateID: candidate._uid_})">EDIT</a> &nbsp;|&nbsp;
-                    <a ng-click="candidatesVm.resend(candidate._uid_)" href="">RESEND</a> &nbsp;|&nbsp;
+                    <a ng-click="candidatesVm.resend(candidate)" href="">RESEND</a> &nbsp;|&nbsp;
                     <a ng-click="candidatesVm.showCancelModal(candidate)" href="">CANCEL</a>
                   </td>
                 </tr>

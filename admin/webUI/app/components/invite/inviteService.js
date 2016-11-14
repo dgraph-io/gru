@@ -49,40 +49,49 @@
       return deferred.promise;
     }
 
-    services.resendInvite = function(candidateID) {
+    services.resendInvite = function(candidate) {
       var deferred = $q.defer();
-      // TODO - User filter on email after incorporating Dgraph schema.
-      var query = "{\n\
-        quiz.candidate(_uid_: " + candidateID + ") {\n\
-          email\n\
-          token\n\
-          validity\n\
-        }\n\
-      }"
+      validity = new Date(candidate.validity)
+        // If candidate validity has expired then we update it.
+      if (validity < Date.now()) {
+        // New validity should be 7 days from now.
+        var new_validity = new Date();
+        new_validity.setDate(new_validity.getDate() + 7)
+        var date = new_validity.getDate(),
+          month = new_validity.getMonth() + 1,
+          year = new_validity.getFullYear();
 
-      services.proxy(query).then(function(data) {
-        var candidate = data["quiz.candidate"][0];
-        if (candidate == null) {
-          return deferred.resolve({
-            success: false,
-            message: "No candidate found."
-          });
-        }
-        return candidate
-      }).then(function(candidate) {
-        var payload = {
-          "email": candidate.email,
-          "token": candidate.token,
-          "validity": candidate.validity
-        }
+        var val = year + "-" + month + "-" + date + " 00:00:00 +0000 UTC";
 
-        MainService.post('/candidate/invite/' + candidateID, payload).then(function(data) {
-          return deferred.resolve({
-            sucess: true,
-            message: data.Message
-          })
+        var mutation = "mutation {\n\
+            set {\n\
+              <_uid_:" + candidate._uid_ + "> <validity> \"" + val + "\" .\n\
+            }\n\
+          }"
+
+        services.proxy(mutation).then(function(res) {
+          if (res.code != "ErrorOk") {
+            return deferred.resolve({
+              success: false,
+              message: "Validity couldn't be extended."
+            })
+          }
         })
-      });
+        candidate.validity = val
+      }
+
+      var payload = {
+        "email": candidate.email,
+        "token": candidate.token,
+        "validity": candidate.validity
+      }
+
+      MainService.post('/candidate/invite/' + candidate._uid_, payload).then(function(data) {
+        return deferred.resolve({
+          sucess: true,
+          message: data.Message
+        })
+      })
       return deferred.promise;
     }
 
