@@ -55,7 +55,7 @@ func QuestionHandler(w http.ResponseWriter, r *http.Request) {
 		// No more questions to ask. Client ends quiz when question id is END.
 		q := Question{
 			Id:    "END",
-			Score: x.Truncate(c.score),
+			Score: x.ToFixed(c.score, 2),
 		}
 
 		// Lets store that the user successfully completed the test.
@@ -90,8 +90,7 @@ func QuestionHandler(w http.ResponseWriter, r *http.Request) {
 		qn.TimeTaken = time.Now().UTC().Sub(c.lastQnTime).String()
 	}
 
-	// Truncate score to two decimal places.
-	qn.Score = x.Truncate(c.score)
+	qn.Score = x.ToFixed(c.score, 2)
 	shuffleOptions(qn.Options)
 
 	if c.lastQnUid != "" && c.lastQnUid == qn.Id {

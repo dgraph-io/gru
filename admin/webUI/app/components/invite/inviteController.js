@@ -259,13 +259,6 @@
     candidatesVm = this;
     candidatesVm.sortType = 'score';
     candidatesVm.sortReverse = true;
-    candidatesVm.expires = expires;
-    candidatesVm.cancel = cancel;
-    candidatesVm.resend = resend;
-    candidatesVm.delete = deleteCand;
-    candidatesVm.showCancelModal = showCancelModal;
-    candidatesVm.candidate_email = "";
-    candidatesVm.deleteCandFromArray = deleteFromArray;
 
     candidatesVm.expires = expires;
     candidatesVm.showCancelModal = showCancelModal;

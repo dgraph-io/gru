@@ -3,6 +3,7 @@ package x
 import (
 	"flag"
 	"fmt"
+	"math"
 
 	jwt "github.com/dgrijalva/jwt-go"
 )
@@ -24,8 +25,13 @@ func StringInSlice(a string, list []string) int {
 	return -1
 }
 
-func Truncate(f float64) float64 {
-	return float64(int(f*100)) / 100
+func round(num float64) int {
+	return int(num + math.Copysign(0.5, num))
+}
+
+func ToFixed(num float64, precision int) float64 {
+	output := math.Pow(10, float64(precision))
+	return float64(round(num*output)) / output
 }
 
 type Claims struct {

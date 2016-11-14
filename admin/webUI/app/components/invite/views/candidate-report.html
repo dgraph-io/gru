@@ -87,7 +87,7 @@
             Total Score
           </text>
           <text x="50%" y="60%" text-anchor="middle" style="font-size: .4em">
-            {{cReportVm.info.total_score}}/{{cReportVm.info.max_score}}
+            {{cReportVm.info.total_score | number: 2}}/{{cReportVm.info.max_score | number: 2}}
           </text>
         </svg>
       </div>
@@ -133,7 +133,7 @@
         </div>
       </div>
       <div class="mdl-cell mdl-cell--2-col mdl-cell--1-col-tablet mdl-cell--1-col-phone">
-        {{question.score}}
+        {{question.score | number: 2}}
       </div>
       <div class="mdl-cell mdl-cell--2-col mdl-cell--1-col-tablet mdl-cell--1-col-phone">
         <div ng-if="question.isSkip">

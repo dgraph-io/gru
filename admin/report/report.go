@@ -232,8 +232,8 @@ func ReportSummary(cid string) (Summary, ReportError) {
 		}
 		s.Questions = append(s.Questions, sq)
 	}
-	s.TotalScore = x.Truncate(s.TotalScore)
-	s.MaxScore = x.Truncate(s.MaxScore)
+	s.TotalScore = x.ToFixed(s.TotalScore, 2)
+	s.MaxScore = x.ToFixed(s.MaxScore, 2)
 	return s, ReportError{}
 }
 

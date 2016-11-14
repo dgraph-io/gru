@@ -33,7 +33,7 @@
           <span class="mdl-chip__contact mdl-color--teal mdl-color-text--white">
             <span ng-if="cqVm.quizEnded">Final</span> Score
         </span>
-        <span class="mdl-chip__text bold text-center ">{{cqVm.question.score}}</span>
+        <span class="mdl-chip__text bold text-center ">{{cqVm.question.score | number: 2}}</span>
         </span>
       </div>
       <div class="mdl-cell mdl-cell--3-col mdl-cell--8-col-tablet mdl-cell--middle text-right big-font quiz-score" ng-if="!cqVm.quizEnded">
@@ -41,7 +41,7 @@
           <span class="mdl-chip__contact mdl-color--teal mdl-color-text--white">
             <span ng-if="cqVm.quizEnded">Final</span> Score
         </span>
-        <span class="mdl-chip__text bold text-center ">{{cqVm.question.score}}</span>
+        <span class="mdl-chip__text bold text-center ">{{cqVm.question.score | number: 2}}</span>
         </span>
       </div>
       <div ng-show="cqVm.quizEnded" class="pl-10 t-border">
@@ -79,13 +79,13 @@
                   <label>
                     CORRECT
                     <span class="text-green mdl-cell--hide-desktop ph-block">
-                      <span class="mdl-cell--hide-phone">:</span> +{{cqVm.question.positive}}
+                      <span class="mdl-cell--hide-phone">:</span> +{{cqVm.question.positive | number: 2}}
                     </span>
                   </label>
                 </div>
                 <div class="mdl-cell mdl-cell--6-col mdl-cell--hide-tablet mdl-cell--hide-phone">
                   <button class="mdl-button mdl-js-button mdl-button--fab mdl-button--mini-fab btn-success">
-                    +{{cqVm.question.positive}}
+                    +{{cqVm.question.positive | number: 2}}
                   </button>
                 </div>
               </div>
@@ -93,13 +93,13 @@
                 <div class="mdl-cell mdl-cell--6-col mdl-cell--8-col-tablet mdl-cell--middle">
                   <label>INCORRECT
                     <span class="text-red mdl-cell--hide-desktop ph-block">
-                      <span class="mdl-cell--hide-phone">:</span> -{{cqVm.question.negative}}
+                      <span class="mdl-cell--hide-phone">:</span> -{{cqVm.question.negative | number: 2}}
                     </span>
                   </label>
                 </div>
                 <div class="mdl-cell mdl-cell--6-col mdl-cell--hide-tablet mdl-cell--hide-phone">
                   <button class="mdl-button mdl-js-button mdl-button--fab mdl-button--mini-fab btn-red">
-                    -{{cqVm.question.negative}}
+                    -{{cqVm.question.negative | number: 2}}
                   </button>
                 </div>
               </div>
