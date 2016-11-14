@@ -58,6 +58,25 @@ type Question struct {
 	// Score of the candidate is sent as part of the questions API.
 	Score     float64 `json:"score"`
 	TimeTaken string  `json:"time_taken"`
+	// Score on last question.
+	LastScore float64 `json:"last_score"`
+	// Max score possible answering all the questions left.
+	ScoreLeft float64 `json:"score_left"`
+	Idx       int     `json:"idx"`
+	// Total number of questions.
+	NumQns int `json:"num_qns"`
+}
+
+type question struct {
+	Id      string   `json:"_uid_"`
+	Text    string   `json:"text"`
+	Options []Answer `json:"question.option"`
+	Correct []struct {
+		Id string `json:"_uid_"`
+	} `json:"question.correct"`
+	IsMultiple bool    `json:"multiple,string"`
+	Positive   float64 `json:"positive,string"`
+	Negative   float64 `json:"negative,string"`
 }
 
 // Candidate is used to keep track of the state of the quiz for a candidate.
@@ -70,6 +89,13 @@ type Candidate struct {
 	quizDuration time.Duration
 	quizStart    time.Time
 	validity     time.Time
+	// number of questions left.
+	numQuestions int
+	qnIdx        int
+	// max score possible from questions left.
+	maxScoreLeft float64
+	// score on last question
+	lastScore float64
 
 	// We use these so that we can show candidate the same question if he
 	// refreshes the page/recovers from a crash.
@@ -98,14 +124,14 @@ func readMap(uid string) (Candidate, error) {
 type quiz struct {
 	Id        string     `json:"_uid_"`
 	Duration  string     `json:"duration"`
-	Questions []Question `json:"quiz.question"`
+	Questions []question `json:"quiz.question"`
 }
 
 type quizInfo struct {
 	Quizzes []quiz `json:"quiz"`
 }
 
-func quizQns(quizId string, qnsAsked []string) ([]Question, error) {
+func quizQns(quizId string, qnsAsked []string) ([]Question, float64, error) {
 	q := `{
 		quiz(_uid_: ` + quizId + `) {
 			quiz.question {
@@ -113,6 +139,9 @@ func quizQns(quizId string, qnsAsked []string) ([]Question, error) {
 				text
 				positive
 				negative
+				question.correct {
+					_uid_
+				}
 				question.option {
 					_uid_
 					name
@@ -124,27 +153,32 @@ func quizQns(quizId string, qnsAsked []string) ([]Question, error) {
 
 	var resp quizInfo
 	if err := dgraph.QueryAndUnmarshal(q, &resp); err != nil {
-		return []Question{}, err
+		return []Question{}, 0, err
 	}
 	if len(resp.Quizzes) != 1 {
-		return []Question{}, fmt.Errorf("Expected length of quizzes: %v. Got %v",
+		return []Question{}, 0, fmt.Errorf("Expected length of quizzes: %v. Got %v",
 			1, len(resp.Quizzes))
 	}
 
-	if len(qnsAsked) == 0 {
-		return resp.Quizzes[0].Questions, nil
-	}
-
 	allQns := resp.Quizzes[0].Questions
-	idx := 0
+	maxScore := 0.0
+	qns := make([]Question, 0, len(allQns))
 	for _, qn := range allQns {
-		if x.StringInSlice(qn.Id, qnsAsked) == -1 {
-			allQns[idx] = qn
-			idx++
+		if x.StringInSlice(qn.Id, qnsAsked) != -1 {
+			continue
 		}
+		que := Question{
+			Id:         qn.Id,
+			Text:       qn.Text,
+			Positive:   qn.Positive,
+			Negative:   qn.Negative,
+			IsMultiple: qn.IsMultiple,
+			Options:    qn.Options,
+		}
+		maxScore += qn.Positive * float64(len(qn.Correct))
+		qns = append(qns, que)
 	}
-	allQns = allQns[:idx]
-	return allQns, nil
+	return qns, maxScore, nil
 }
 
 // Used to fetch data about a candidate from Dgraph and populate Candidate struct.
@@ -313,10 +347,14 @@ func checkAndUpdate(uid string) (int, error) {
 	}
 
 	// Get quiz questions for the quiz id.
-	qnsUnanswered, err := quizQns(quiz.Id, qa)
+	qnsUnanswered, ms, err := quizQns(quiz.Id, qa)
 	if err != nil {
 		return http.StatusInternalServerError, fmt.Errorf("Something went wrong.")
 	}
+	// TODO - Get num questions from length of questions in the quiz, so that we
+	// are safe from server crashes.
+	c.numQuestions = len(qnsUnanswered)
+	c.maxScoreLeft = ms
 
 	shuffleQuestions(qnsUnanswered)
 	// Lets bring the last question asked to the first place.

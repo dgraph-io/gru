@@ -93,6 +93,11 @@ func QuestionHandler(w http.ResponseWriter, r *http.Request) {
 	qn.Score = x.ToFixed(c.score, 2)
 	shuffleOptions(qn.Options)
 
+	qn.NumQns = c.numQuestions
+	qn.Idx = c.qnIdx
+	qn.ScoreLeft = c.maxScoreLeft
+	qn.LastScore = c.lastScore
+	updateMap(userId, c)
 	if c.lastQnUid != "" && c.lastQnUid == qn.Id {
 		qn.Cid = c.lastQnCuid
 		server.MarshalAndWrite(w, &qn)
@@ -126,6 +131,8 @@ func QuestionHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	c.lastQnUid = qn.Id
+	qn.Idx = c.qnIdx + 1
+	c.qnIdx += 1
 	updateMap(userId, c)
 	server.MarshalAndWrite(w, &qn)
 }

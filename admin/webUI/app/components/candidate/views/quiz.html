@@ -66,6 +66,34 @@
         </div>
       </div>
     </div>
+    <!-- <div class="mdl-grid" ng-if="!cqVm.quizEnded" ng-class="{'quiz-ended mdl-shadow--2dp pv-20': cqVm.quizEnded, 'b-border quiz-stats': !cqVm.quizEnded }">
+  <div class="mdl-cell mdl-cell--4-col mdl-cell--8-col-tablet mdl-cell--middle big-font time-stats">
+    <span class="mdl-chip mdl-chip--contact mr-20">
+          <span class="mdl-chip__contact mdl-color--teal mdl-color-text--white">
+            Questions left
+          </span>
+    <span class="mdl-chip__text bold text-center timer-chip-text">
+            {{cqVm.question.qns_left}}
+          </span>
+    </span>
+  </div>
+  <div class="mdl-cell mdl-cell--5-col mdl-cell--8-col-tablet mdl-cell--middle text-center resp-center time-stats mv-0">
+    <span class="mdl-chip mdl-chip--contact">
+          <span class="mdl-chip__contact mdl-color--teal mdl-color-text--white">
+            <span>Score on last question</span>
+    </span>
+    <span class="mdl-chip__text bold text-center ">{{cqVm.question.last_score | number: 2}}</span>
+    </span>
+  </div>
+  <div class="mdl-cell mdl-cell--3-col mdl-cell--8-col-tablet mdl-cell--middle text-right big-font quiz-score">
+    <span class="mdl-chip mdl-chip--contact">
+          <span class="mdl-chip__contact mdl-color--teal mdl-color-text--white">
+          Max score left
+          </span>
+    <span class="mdl-chip__text bold text-center timer-chip-text">{{cqVm.question.score_left | number: 2}}</span>
+  </div>
+</div>
+ -->
     <div ng-if="!cqVm.quizEnded">
       <div class="mdl-grid question-stats" ng-if="cqVm.question.text">
         <div class="mdl-cell mdl-cell--3-col mdl-cell--8-col-tablet mdl-cell--4-col-phone mdl-cell--1-order-desktop mdl-cell--order-1-desktop mb-5">
@@ -123,6 +151,7 @@
         </div>
         <div class="mdl-cell mdl-cell--9-col">
           <div class="question">
+            <span>Question {{cqVm.question.idx}} of {{cqVm.question.num_qns}}</span>
             <span ng-if="cqVm.question.multiple == 'true'">(Multiple Choice)</span>
             <pre ng-bind-html="mainVm.markDownFormat(mainVm.unescapeText(cqVm.question.text))" class="code-block"></pre>
           </div>
