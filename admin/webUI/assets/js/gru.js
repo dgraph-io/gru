@@ -118,7 +118,7 @@
     function scrollNavInit() {
       $headerHeight = $(".mdl-layout__header-row").height();
       var sidebarLinks = $(".sticky-sidebar-link"); // find the sidebar link
-      if (sidebarLinks) {
+      if (sidebarLinks.length) {
         var aArray = []; // create the empty aArray
         var sidebarLen = sidebarLinks.length;
         for (var i = 0; i < sidebarLen; i++) {
@@ -126,6 +126,8 @@
           var ahref = $(aChild).data('scrollto');
           aArray.push(ahref);
         }
+      } else {
+        return
       }
 
       $window = $(window);

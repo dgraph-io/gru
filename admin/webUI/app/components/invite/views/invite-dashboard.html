@@ -44,7 +44,7 @@
                   <th class="mdl-data-table__cell--non-numeric">Actions</th>
                 </tr>
               </thead>
-              <tbody ng-repeat="candidate in candidatesVm.quizCandidates | orderBy:candidatesVm.sortType:candidatesVm.sortReverse | filter:searchCand" on-finish-render="ngRepeatFinished">
+              <tbody ng-repeat="candidate in candidatesVm.quizCandidates | orderBy:candidatesVm.sortType:candidatesVm.sortReverse | filter:searchCand" on-finish-render="ngRepeatFinished" ng-class="{'report-viewed': candidate._uid_ == inviteVm.reportViewed}">
                 <tr ng-show="candidate.complete == 'true'">
                   <td class="mdl-data-table__cell--non-numeric">{{candidate.name}}</td>
                   <td class="mdl-data-table__cell--non-numeric">{{candidate.email}}</td>

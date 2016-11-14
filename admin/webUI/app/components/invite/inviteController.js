@@ -342,6 +342,8 @@
           }
         }
         candidatesVm.completedLen = index;
+
+        scrollToCandidate();
       }
     }, function(err) {
       console.log(err);
@@ -477,13 +479,27 @@
         })
       })
     }
+
+    function scrollToCandidate() {
+      // Scroll page to candidate if his/her report was viewed
+      $timeout(function() {
+        $candidateViewed = $(".report-viewed");
+        if ($candidateViewed.length) {
+          $(".mdl-layout__content").scrollTop(
+            $candidateViewed.offset().top - 200
+          );
+        }
+      }, 10);
+    }
+
+    $(".mdl-layout__content").unbind("scroll");
   }
 
   function candidateReportController($scope, $rootScope, $stateParams, $state, inviteService) {
     cReportVm = this;
     cReportVm.candidateID = $stateParams.candidateID;
-
-    // Function
+    inviteVm.reportViewed = cReportVm.candidateID
+      // Function
     cReportVm.initScoreCircle = initScoreCircle;
     cReportVm.isCorrect = isCorrect;
 
