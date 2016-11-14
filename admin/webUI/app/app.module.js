@@ -450,6 +450,7 @@ angular.module('GruiApp').provider('RouteHelpers', ['APP_REQUIRES', function(app
             if (!hideLoader) {
               mainVm.showAjaxLoader = false;
             }
+            redirectIfUnautorized(response);
             deferred.reject(response);
           }
         );
@@ -479,8 +480,9 @@ angular.module('GruiApp').provider('RouteHelpers', ['APP_REQUIRES', function(app
             mainVm.showAjaxLoader = false;
             deferred.resolve(data.data);
           },
-          function(response, code) {
+          function(response) {
             mainVm.showAjaxLoader = false;
+            redirectIfUnautorized(response);
             deferred.reject(response);
           }
         );
@@ -504,8 +506,9 @@ angular.module('GruiApp').provider('RouteHelpers', ['APP_REQUIRES', function(app
             mainVm.showAjaxLoader = false;
             deferred.resolve(data.data);
           },
-          function(response, code) {
+          function(response) {
             mainVm.showAjaxLoader = false;
+            redirectIfUnautorized(response);
             deferred.reject(response);
           }
         );
@@ -513,8 +516,20 @@ angular.module('GruiApp').provider('RouteHelpers', ['APP_REQUIRES', function(app
       return deferred.promise;
     }
 
+    // PRIVATE FUNCTIONS
     function setAuth(auth) {
       $http.defaults.headers.common['Authorization'] = auth;
+    }
+
+    function redirectIfUnautorized(response) {
+      if (response.status !== 401) {
+        return
+      }
+      localStorage.removeItem("token");
+      SNACKBAR({
+        message: "You must login to access",
+      })
+      $state.transitionTo("login");
     }
 
     return services;
