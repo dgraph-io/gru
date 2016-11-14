@@ -203,6 +203,7 @@ angular.module('GruiApp').provider('RouteHelpers', ['APP_REQUIRES', function(app
     "$http",
     "$q",
     "$state",
+    "$location",
     MainService,
   ];
   angular.module('GruiApp').service("MainService", MainServiceDependency);
@@ -407,7 +408,7 @@ angular.module('GruiApp').provider('RouteHelpers', ['APP_REQUIRES', function(app
   }
 
   // MAIN Service
-  function MainService($http, $q, $state) {
+  function MainService($http, $q, $state, $location) {
     var services = {}; //Object to return
     services.post = post;
     services.get = get;
@@ -430,7 +431,7 @@ angular.module('GruiApp').provider('RouteHelpers', ['APP_REQUIRES', function(app
         // req.url = mainVm.candidate_url + url;
         candidateToken = JSON.parse(localStorage.getItem('candidate_info'));
 
-        if (window.location.hash.indexOf("admin") == -1 && candidateToken && candidateToken.token) {
+        if (mainVm.base_url.indexOf("admin") == -1 && candidateToken && candidateToken.token) {
           setAuth('Bearer ' + candidateToken.token);
         } else {
           // req.url = mainVm.admin_url + url;
@@ -462,12 +463,12 @@ angular.module('GruiApp').provider('RouteHelpers', ['APP_REQUIRES', function(app
       var deferred = $q.defer();
       var req = {
         method: 'GET',
-        url: mainVm.admin_url + url,
+        url: mainVm.base_url + url,
       }
 
       candidateToken = JSON.parse(localStorage.getItem('candidate_info'));
 
-      if (window.location.hash.indexOf("admin") == -1 && candidateToken && candidateToken.token) {
+      if (mainVm.base_url.indexOf("admin") == -1 && candidateToken && candidateToken.token) {
         setAuth('Bearer ' + candidateToken.token);
       } else {
         // req.url = mainVm.admin_url + url;
