@@ -30,7 +30,6 @@
       var query = "{\
                   quiz(_uid_: " + quizId + ") {\
                           quiz.candidate {\
-                                  cancel\
                                   email\
                           }\
                   }\
@@ -40,9 +39,6 @@
         var candidates = data.quiz[0]["quiz.candidate"];
         if (candidates) {
           for (var i = 0; i < candidates.length; i++) {
-            if (candidates[i].cancel === 'true') {
-              continue
-            }
             if (candidates[i].email === email) {
               return deferred.resolve(true);
             }

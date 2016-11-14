@@ -125,7 +125,6 @@
         parent: 'invite',
         templateUrl: inviteDashboardTemplate,
         authenticate: true,
-        resolve: helper.resolveFor('moment', 'angular-moment')
       })
       .state('invite.add', {
         url: '/invite-user',

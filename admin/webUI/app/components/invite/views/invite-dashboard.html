@@ -34,6 +34,7 @@
                     <i ng-show="candidatesVm.sortType == 'score' && candidatesVm.sortReverse" class="material-icons">arrow_drop_down</i>
                   </a>
                   </th>
+                  <th class="mdl-data-table__cell--non-numeric">Percentile</th>
                   <th class="mdl-data-table__cell--non-numeric">
                     <a href="" ng-click="candidatesVm.sortType = 'quiz_start'; candidatesVm.sortReverse = !candidatesVm.sortReverse">
                     Quiz Start
@@ -46,9 +47,11 @@
               </thead>
               <tbody ng-repeat="candidate in candidatesVm.quizCandidates | orderBy:candidatesVm.sortType:candidatesVm.sortReverse | filter:searchCand" on-finish-render="ngRepeatFinished" ng-class="{'report-viewed': candidate._uid_ == inviteVm.reportViewed}">
                 <tr ng-show="candidate.complete == 'true'">
-                  <td class="mdl-data-table__cell--non-numeric">{{candidate.name}}</td>
+                  <td class="mdl-data-table__cell--non-numeric">{{candidate.name.split(' ')[0]}}</td>
                   <td class="mdl-data-table__cell--non-numeric">{{candidate.email}}</td>
                   <td class="mdl-data-table__cell--non-numeric">{{candidate.score | number: 2}}</td>
+                  <!-- <td class="mdl-data-table__cell--non-numeric">{{candidate.idx | number: 2}}</td> -->
+                  <td class="mdl-data-table__cell--non-numeric">{{((candidatesVm.completedLen - candidate.idx)/candidatesVm.completedLen) * 100 | number: 2}}</td>
                   <td class="mdl-data-table__cell--non-numeric">{{candidate.quiz_start | date : 'MMM dd, yyyy'}}</td>
                   <td class="mdl-data-table__cell--non-numeric">
                     <a ui-sref="invite.report({candidateID: candidate._uid_})">VIEW REPORT</a> &nbsp;|&nbsp;

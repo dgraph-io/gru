@@ -120,9 +120,7 @@ angular.module('GruiApp').constant('APP_REQUIRES', {
     'codeMirror': ['assets/lib/js/codemirror.js'],
     'javascript': ['assets/lib/js/javascript.js'],
     'marked': ['assets/lib/js/marked.min.js'],
-    'highlight': ['assets/lib/js/highlight.pack.js'],
-    'moment': ['assets/lib/js/moment.min.js'],
-    'angular-moment': ['assets/lib/js/angular-moment.min.js']
+    'highlight': ['assets/lib/js/highlight.pack.js']
   },
 });
 

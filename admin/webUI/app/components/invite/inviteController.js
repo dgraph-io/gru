@@ -303,13 +303,8 @@
         var i = candidatesVm.quizCandidates.length
         while (i--) {
           var cand = candidatesVm.quizCandidates[i]
-          if (cand.deleted === 'true') {
-            candidatesVm.quizCandidates.splice(i, 1)
-          }
-          // TODO
-          //- Maybe store invite in a format that frontend directly
-          // understands.
           if (cand.complete == "false") {
+            cand.score = 0.0;
             cand.invite_sent = new Date(Date.parse(cand.invite_sent)) || '';
             continue;
           }
@@ -342,7 +337,6 @@
           }
         }
         candidatesVm.completedLen = index;
-
         scrollToCandidate();
       }
     }, function(err) {
@@ -523,15 +517,10 @@
       }, function(error) {
         console.log(error);
       }).then(function() {
-        var correct = [];
-        var skipped = [];
-        var incorrect = [];
         var questions = cReportVm.info.questions;
-        quesLen = questions.length
 
         for (var i = 0; i < questions.length; i++) {
           qn = questions[i]
-
           qn.answerArray = [];
           for (var j = 0; j < qn.answers.length; j++) {
             var answerObj = {
@@ -544,18 +533,10 @@
             qn.notAnswered = qn.correct.length - qn.answers.length;
           }
 
-          if (qn.answers.length === qn.correct.length && angular.equals(qn.answers.sort(),
-              qn.correct.sort())) {
-            correct.push(qn)
-          } else if (qn.score === 0 && qn.answers.length === 1) {
-            skipped.push(qn)
+          if (qn.score === 0 && qn.answers.length === 1) {
             qn.isSkip = true
-          } else {
-            incorrect.push(qn)
           }
         }
-
-        cReportVm.info.questions = [].concat([], incorrect, skipped, correct);
 
         setTimeout(function() {
           scrollNavInit();
@@ -628,7 +609,6 @@
     "$timeout",
     "$templateCache",
     "inviteService",
-    "moment",
     candidatesController
   ];
   angular.module('GruiApp').controller('candidatesController', candidatesDependency);
