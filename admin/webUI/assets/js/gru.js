@@ -116,20 +116,32 @@
     // Function for Scroll to particular element, based on data-target
 
     function scrollNavInit() {
-      $headerHeight = $(".mdl-layout__header-row").height();
-      var sidebarLinks = $(".sticky-sidebar-link"); // find the sidebar link
-      if (sidebarLinks) {
+      $mainContent = $(".mdl-layout__content");
+
+      $sidebarContent = $(".sticky-sidebar-content");
+      $sidebarLinks = $(".sticky-sidebar-link", $sidebarContent); // find the sidebar link
+      if ($sidebarLinks.length) {
         var aArray = []; // create the empty aArray
-        var sidebarLen = sidebarLinks.length;
+        var sidebarLen = $sidebarLinks.length;
         for (var i = 0; i < sidebarLen; i++) {
-          var aChild = sidebarLinks[i];
+          var aChild = $sidebarLinks[i];
           var ahref = $(aChild).data('scrollto');
           aArray.push(ahref);
         }
+      } else {
+        return
       }
 
+      $sidebarContent.hover(function() {
+        $mainContent.css({ 'overflow': 'hidden' });
+      }, function() {
+        $mainContent.css({ 'overflow': 'auto' });
+      })
+
       $window = $(window);
+      $headerHeight = $(".mdl-layout__header-row").height();
       $(".mdl-layout__content").scroll(function() {
+        console.log(this);
         var windowPos = $window.scrollTop(); // get the offset of the window from the top of page
         var windowHeight = $window.height(); // get the height of the window
         var docHeight = $(document).height();

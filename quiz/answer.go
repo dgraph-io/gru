@@ -76,7 +76,7 @@ type queInfo struct {
 	} `json:"question"`
 }
 
-func checkAnswer(qid string, ansIds []string) (float64, error) {
+func checkAnswer(qid string, ansIds []string) (float64, float64, error) {
 	q := `{
 		question(_uid_: ` + qid + `) {
 			question.correct {
@@ -89,10 +89,10 @@ func checkAnswer(qid string, ansIds []string) (float64, error) {
 
 	var qi queInfo
 	if err := dgraph.QueryAndUnmarshal(q, &qi); err != nil {
-		return 0, err
+		return 0, 0, err
 	}
 	if len(qi.Question) != 1 {
-		return 0, fmt.Errorf("There should be just one question returned")
+		return 0, 0, fmt.Errorf("There should be just one question returned")
 	}
 
 	qn := qi.Question[0]
@@ -102,7 +102,8 @@ func checkAnswer(qid string, ansIds []string) (float64, error) {
 	}
 
 	score := getScore(ansIds, correct, qn.Positive, qn.Negative)
-	return score, nil
+	maxScore := float64(len(correct)) * qn.Positive
+	return score, maxScore, nil
 }
 
 func AnswerHandler(w http.ResponseWriter, r *http.Request) {
@@ -147,13 +148,15 @@ func AnswerHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Lets get information about the question to check if the answer is right
 	// and calculate scores.
-	s, err := checkAnswer(qid, ansIds)
+	s, ms, err := checkAnswer(qid, ansIds)
 	if err != nil {
 		sr.Write(w, err.Error(), "", http.StatusInternalServerError)
 	}
 	c.score = c.score + s
 	c.qns = c.qns[1:]
 	c.lastQnTime = time.Now().UTC()
+	c.lastScore = s
+	c.maxScoreLeft = c.maxScoreLeft - ms
 	updateMap(userId, c)
 
 	// Lets store some information about this question.
