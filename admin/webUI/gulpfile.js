@@ -7,7 +7,8 @@ var gulp = require('gulp'),
   concat = require('gulp-concat'),
   order = require('gulp-order'),
   notify = require('gulp-notify'),
-  del = require("del");
+  del = require("del"),
+  browserSync = require("browser-sync").create();
 
 var lib_root_path = "assets/lib/";
 var style_files = ['assets/css/**/*.css', '!assets/css/main.css', ]
@@ -24,7 +25,8 @@ gulp.task('styles', function() {
     .pipe(cssnano())
     .pipe(concat('gru.min.css'))
     .pipe(gulp.dest('assets/compiled/css'))
-    .pipe(notify({ message: 'Minify css task completed.' }));
+    .pipe(browserSync.stream())
+    // .pipe(notify({ message: 'Minify css task completed.' }));
 });
 
 // Minify Javascript 
@@ -55,6 +57,16 @@ gulp.task('styles', function() {
 //     .pipe(notify({ message: 'Minify scripts task complete' }));
 // });
 
+gulp.task('browser-sync', function() {
+  browserSync.init(null, {
+    proxy: 'localhost:2020',
+    files: style_files,
+    browser: 'google chrome',
+    port: 5000,
+    open: false
+  });
+});
+
 // Watch on changes
 gulp.task('watch', function() {
   // Watch .css files
@@ -62,7 +74,7 @@ gulp.task('watch', function() {
 });
 
 // Default task
-gulp.task('default', ['cleanOldFiles', 'watch'], function() {
+gulp.task('default', ['cleanOldFiles', 'watch', 'browser-sync'], function() {
   gulp.start('styles');
   console.log("Started listing for changes..")
 });
