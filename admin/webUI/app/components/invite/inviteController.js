@@ -541,6 +541,7 @@
 
         setTimeout(function() {
           scrollNavInit();
+          adjustHeight();
         }, 0);
       });
 
@@ -563,6 +564,16 @@
       setTimeout(function() {
         $progressBar.css({ 'stroke-dashoffset': circleProgressWidth });
       }, 100);
+    }
+
+    function adjustHeight() {
+      var questions = $(".slide-wrapper"),
+        $lastQuestion = $(questions[questions.length - 1])
+
+      diff = $window.height() - $lastQuestion.height()
+      if (diff > 0) {
+        $(".dummy").height(diff)
+      }
     }
 
     function isCorrect(option, correct_options) {
