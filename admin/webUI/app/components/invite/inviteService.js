@@ -51,34 +51,30 @@
 
     services.resendInvite = function(candidate) {
       var deferred = $q.defer();
-      validity = new Date(candidate.validity)
-        // If candidate validity has expired then we update it.
-      if (validity < Date.now()) {
-        // New validity should be 7 days from now.
-        var new_validity = new Date();
-        new_validity.setDate(new_validity.getDate() + 7)
-        var date = new_validity.getDate(),
-          month = new_validity.getMonth() + 1,
-          year = new_validity.getFullYear();
+      // We update the validity to be 7 days from now on resending the invite.
+      var new_validity = new Date();
+      new_validity.setDate(new_validity.getDate() + 7)
+      var date = new_validity.getDate(),
+        month = new_validity.getMonth() + 1,
+        year = new_validity.getFullYear();
 
-        var val = year + "-" + month + "-" + date + " 00:00:00 +0000 UTC";
+      var val = year + "-" + month + "-" + date + " 00:00:00 +0000 UTC";
 
-        var mutation = "mutation {\n\
+      var mutation = "mutation {\n\
             set {\n\
               <_uid_:" + candidate._uid_ + "> <validity> \"" + val + "\" .\n\
             }\n\
           }"
 
-        services.proxy(mutation).then(function(res) {
-          if (res.code != "ErrorOk") {
-            return deferred.resolve({
-              success: false,
-              message: "Validity couldn't be extended."
-            })
-          }
-        })
-        candidate.validity = val
-      }
+      services.proxy(mutation).then(function(res) {
+        if (res.code != "ErrorOk") {
+          return deferred.resolve({
+            success: false,
+            message: "Validity couldn't be extended."
+          })
+        }
+      })
+      candidate.validity = val
 
       var payload = {
         "email": candidate.email,

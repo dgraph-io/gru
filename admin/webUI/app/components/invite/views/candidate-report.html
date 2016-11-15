@@ -77,6 +77,17 @@
             </span>
           </div>
         </div>
+        <div class="mb-10">
+          <span class="mdl-chip mdl-chip--contact">
+            <span class="mdl-chip__contact mdl-color--teal mdl-color-text--white">
+              <i class="material-icons">trending_up</i>
+            </span>
+          <span class="mdl-chip__text">Score</span>
+          </span>
+          <div class="cmdl-chip-value inline-block">
+            {{cReportVm.info.total_score | number: 2}}
+          </div>
+        </div>
       </div>
       <div class="mdl-cell mdl-cell--4-col mdl-cell--2-col-tablet text-center">
         <svg class="spinner" width="180" height="180" viewBox="-2 -2 70 70" id="total_score">
@@ -84,10 +95,10 @@
           <circle class="path prograss-circle" fill="none" stroke-width="8" stroke-linecap="round" cx="33" cy="33" r="30" style="stroke-dashoffset: {{cReportVm.circleProgressWidth}};"></circle>
           <!-- <text x="50%" y="50%" text-anchor="middle">Look, I’m centered!Look, I’m centered!</text> -->
           <text x="50%" y="48%" text-anchor="middle" style="font-size: .4em">
-            Total Score
+            Percentile
           </text>
           <text x="50%" y="60%" text-anchor="middle" style="font-size: .4em">
-            {{cReportVm.info.total_score | number: 2}}/{{cReportVm.info.max_score | number: 2}}
+            {{cReportVm.percentile() | number: 0}}
           </text>
         </svg>
       </div>

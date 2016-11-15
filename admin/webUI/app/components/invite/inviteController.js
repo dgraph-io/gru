@@ -269,6 +269,7 @@
     candidatesVm.cancel = cancel;
     candidatesVm.resend = resend;
     candidatesVm.delete = deleteCand;
+    candidatesVm.percentile = percentile;
 
     candidatesVm.quizID = $stateParams.quizID;
 
@@ -479,16 +480,23 @@
       }, 10);
     }
 
+    function percentile(size, idx) {
+      return ((size - idx) / size) * 100
+    }
+
     $(".mdl-layout__content").unbind("scroll");
   }
 
   function candidateReportController($scope, $rootScope, $stateParams, $state, inviteService) {
     cReportVm = this;
     cReportVm.candidateID = $stateParams.candidateID;
+    cReportVm.idx = $stateParams.idx;
+    cReportVm.total = $stateParams.total;
     inviteVm.reportViewed = cReportVm.candidateID
       // Function
     cReportVm.initScoreCircle = initScoreCircle;
     cReportVm.isCorrect = isCorrect;
+    cReportVm.percentile = percentile;
 
     if (!cReportVm.candidateID) {
       cReportVm.inValidID = true;
@@ -536,22 +544,22 @@
         }, 0);
       });
 
+    function percentile() {
+      return ((cReportVm.total - cReportVm.idx) / cReportVm.total) * 100
+    }
+
     function initScoreCircle() {
       var circleWidth = 2 * Math.PI * 30;
 
-      var percentage = (cReportVm.info.total_score * 100) / cReportVm.info.max_score;
+      var percentage = cReportVm.percentile();
 
       var circlePercentage = (circleWidth * percentage) / 100;
 
       var circleProgressWidth = circleWidth - circlePercentage;
 
       $progressBar = $(".prograss-circle");
-      if (cReportVm.info.total_score != 0) {
-        $progressBar.css({ 'display': 'block' });
-        if (cReportVm.info.total_score < 0) {
-          $progressBar.css({ 'stroke': 'red' });
-        }
-      }
+      $progressBar.css({ 'display': 'block' });
+
       setTimeout(function() {
         $progressBar.css({ 'stroke-dashoffset': circleProgressWidth });
       }, 100);

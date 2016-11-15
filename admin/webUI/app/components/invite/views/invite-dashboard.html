@@ -51,10 +51,10 @@
                   <td class="mdl-data-table__cell--non-numeric">{{candidate.email}}</td>
                   <td class="mdl-data-table__cell--non-numeric">{{candidate.score | number: 2}}</td>
                   <!-- <td class="mdl-data-table__cell--non-numeric">{{candidate.idx | number: 2}}</td> -->
-                  <td class="mdl-data-table__cell--non-numeric">{{((candidatesVm.completedLen - candidate.idx)/candidatesVm.completedLen) * 100 | number: 0}}</td>
+                  <td class="mdl-data-table__cell--non-numeric">{{candidatesVm.percentile(candidatesVm.completedLen, candidate.idx) | number: 0}}</td>
                   <td class="mdl-data-table__cell--non-numeric">{{candidate.quiz_start | date : 'MMM dd, yyyy'}}</td>
                   <td class="mdl-data-table__cell--non-numeric">
-                    <a ui-sref="invite.report({candidateID: candidate._uid_})">VIEW REPORT</a> &nbsp;|&nbsp;
+                    <a ui-sref="invite.report({candidateID: candidate._uid_, total: candidatesVm.completedLen, idx: candidate.idx})">VIEW REPORT</a> &nbsp;|&nbsp;
                     <!-- <a ng-click="candidatesVm.delete(candidate._uid_)" href="">DELETE</a> -->
                     <a ng-click="candidatesVm.showDeleteModal(candidate)" href="">DELETE</a>
                   </td>
