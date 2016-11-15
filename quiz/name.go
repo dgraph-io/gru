@@ -16,8 +16,9 @@ func CandidateName(w http.ResponseWriter, r *http.Request) {
 	}
 
 	n := r.PostFormValue("name")
-	if n == "" {
-		sr.Write(w, "", "Name can't be empty.", http.StatusBadRequest)
+	country := r.PostFormValue("country")
+	if n == "" || country == "" {
+		sr.Write(w, "", "Name/Country can't be empty.", http.StatusBadRequest)
 		return
 	}
 
@@ -36,6 +37,7 @@ func CandidateName(w http.ResponseWriter, r *http.Request) {
 	updateMap(userId, c)
 	m := new(dgraph.Mutation)
 	m.Set(`<_uid_:` + userId + `> <name> "` + n + `" .`)
+	m.Set(`<_uid_:` + userId + `> <country> "` + country + `" .`)
 	_, err = dgraph.SendMutation(m.String())
 	if err != nil {
 		sr.Write(w, "", err.Error(), http.StatusInternalServerError)

@@ -73,6 +73,21 @@
           </div>
         </div>
       </div>
+      <div class="mdl-grid landing-grid">
+        <div class="mdl-cell mdl-cell--2-col mdl-cell--middle">
+          <h4>Country</h4>
+        </div>
+        <div class="mdl-cell mdl-cell--8-col pl-20 lc-border">
+          <ui-select theme="select2" ng-model="qlVm.candidate.country" class="mdl-select">
+            <ui-select-match placeholder="Select your country">
+              <span ng-bind="$select.selected.name"></span>
+            </ui-select-match>
+            <ui-select-choices repeat="country in (qlVm.countries | filter: $select.search) track by country.code" position='down'>
+              <span ng-bind="country.name"></span>
+            </ui-select-choices>
+          </ui-select>
+        </div>
+      </div>
       <div class="text-center mt-30">
         <button class="mdl-button mdl-js-button mdl-js-ripple-effect btn-lg" ng-click="qlVm.saveName()" ng-disabled="qlVm.checkedInfo()">
           START QUIZ

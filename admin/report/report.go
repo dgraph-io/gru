@@ -66,6 +66,7 @@ type candidates struct {
 	Id          string `json:"_uid_"`
 	Name        string
 	Email       string
+	Country     string
 	Feedback    string
 	CandidateQn []cq   `json:"candidate.question"`
 	Complete    bool   `json:"complete,string"`
@@ -82,6 +83,7 @@ func reportQuery(id string) string {
                         _uid_
 			name
                         email
+                        country
                         feedback
                         complete
                         candidate.quiz {
@@ -135,6 +137,7 @@ type Summary struct {
 	Id         string
 	Name       string `json:"name"`
 	Email      string `json:"email"`
+	Country    string `json:"country"`
 	QuizName   string
 	Feedback   string     `json:"feedback"`
 	TimeTaken  string     `json:"time_taken"`
@@ -183,6 +186,7 @@ func ReportSummary(cid string) (Summary, ReportError) {
 	c := rep.Candidates[0]
 	s.Name = c.Name
 	s.Email = c.Email
+	s.Country = c.Country
 	s.Feedback = c.Feedback
 	// TODO - Check how to obtain sorted results from Dgraph.
 	if len(c.CandidateQn) == 0 {

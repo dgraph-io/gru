@@ -88,6 +88,17 @@
             {{cReportVm.info.total_score | number: 2}}
           </div>
         </div>
+        <div class="mb-10" ng-if="cReportVm.info.country!=''">
+          <span class="mdl-chip mdl-chip--contact">
+            <span class="mdl-chip__contact mdl-color--teal mdl-color-text--white">
+              <i class="material-icons">home</i>
+            </span>
+          <span class="mdl-chip__text">Country</span>
+          </span>
+          <div class="cmdl-chip-value inline-block">
+            {{cReportVm.info.country}}
+          </div>
+        </div>
       </div>
       <div class="mdl-cell mdl-cell--4-col mdl-cell--2-col-tablet text-center">
         <svg class="spinner" width="180" height="180" viewBox="-2 -2 70 70" id="total_score">
