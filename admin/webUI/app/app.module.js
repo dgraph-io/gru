@@ -390,6 +390,7 @@ angular.module('GruiApp').provider('RouteHelpers', ['APP_REQUIRES', function(app
       mainVm.notification.class = "notification-error";
       if (message) {
         mainVm.notification.message = message;
+        mainVm.consecutiveError = 1;
       } else {
         mainVm.notification.message = "Can't connect to the server. We will be back up in a bit...";
       }

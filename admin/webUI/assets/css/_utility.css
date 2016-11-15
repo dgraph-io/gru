@@ -444,12 +444,14 @@
 
 .notification-header .mdl-layout-title {
   color: white;
+  opacity: .2;
 }
 
 .notification-message {
   display: inline-block;
   padding: 10px 0;
   padding-right: 10px;
+  vertical-align: top;
 }
 
 .code-block pre {
