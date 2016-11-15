@@ -469,3 +469,9 @@
   border: 1px solid #ccc;
   border-radius: 4px;
 }
+
+@media (max-width: 839px) {
+  .scroll-fix {
+    position: relative;
+  }
+}
