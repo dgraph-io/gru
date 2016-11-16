@@ -58,19 +58,25 @@ type cq struct {
 }
 
 type quiz struct {
+	Id       string `json:"_uid_"`
 	Duration string `json:"duration"`
 	Name     string `json:"name"`
 }
 
 type candidates struct {
-	Id          string `json:"_uid_"`
-	Name        string
-	Email       string
-	Country     string
-	Feedback    string
-	CandidateQn []cq   `json:"candidate.question"`
-	Complete    bool   `json:"complete,string"`
-	Quiz        []quiz `json:"candidate.quiz"`
+	Id       string `json:"_uid_"`
+	Name     string
+	Email    string
+	Country  string
+	Feedback string
+	// Used to calculate percentile, repesents number of candidates having score
+	// <= current candidate.
+	Idx         int
+	Score       float64 `json:",string"`
+	CandidateQn []cq    `json:"candidate.question"`
+	Complete    bool    `json:"complete,string"`
+	Quiz        []quiz  `json:"candidate.quiz"`
+	TotalScore  float64
 }
 
 type report struct {
@@ -81,12 +87,14 @@ func reportQuery(id string) string {
 	return `query {
                 candidate(_uid_:` + id + `) {
                         _uid_
-			name
+                        name
                         email
                         country
                         feedback
+                        score
                         complete
                         candidate.quiz {
+                                _uid_
                                 name
                                 duration
                         }
@@ -135,9 +143,10 @@ type question struct {
 
 type Summary struct {
 	Id         string
-	Name       string `json:"name"`
-	Email      string `json:"email"`
-	Country    string `json:"country"`
+	Name       string  `json:"name"`
+	Email      string  `json:"email"`
+	Percentile float64 `json:"percentile"`
+	Country    string  `json:"country"`
 	QuizName   string
 	Feedback   string     `json:"feedback"`
 	TimeTaken  string     `json:"time_taken"`
@@ -167,6 +176,66 @@ type ReportError struct {
 	Err  string
 	Msg  string
 	code int
+}
+
+type quizRes struct {
+	Quiz []struct {
+		Candidates []candidates `json:"quiz.candidate"`
+	} `json:"quiz"`
+}
+
+// ByScore implements sort.Interface for []candidates based on
+// the Score field.
+type ByScore []candidates
+
+func (a ByScore) Len() int           { return len(a) }
+func (a ByScore) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a ByScore) Less(i, j int) bool { return a[i].Score > a[j].Score }
+
+func percentile(quizId string, cid string) (float64, error) {
+	q := `{
+	quiz(_uid_: ` + quizId + `) {
+		quiz.candidate {
+			_uid_
+			complete
+			score
+		}
+	}
+}
+`
+	var res quizRes
+	if err := dgraph.QueryAndUnmarshal(q, &res); err != nil {
+		return 0.0, err
+	}
+
+	candidates := res.Quiz[0].Candidates
+	i := 0
+	for _, cand := range candidates {
+		if cand.Complete == true {
+			// Lets retain only the candidates who have completed the test
+			// for percentile calculation.
+			candidates[i] = cand
+			i++
+		}
+	}
+	candidates = candidates[:i]
+
+	sort.Sort(ByScore(candidates))
+	lastScore := 0.0
+	lastIdx := len(candidates)
+	for idx, cand := range candidates {
+		if cand.Score != lastScore {
+			cand.Idx = len(candidates) - idx
+			lastIdx = len(candidates) - idx
+			lastScore = cand.Score
+		} else {
+			cand.Idx = lastIdx
+		}
+		if cand.Id == cid {
+			return float64(cand.Idx) / float64(len(candidates)) * 100, nil
+		}
+	}
+	return 0.0, nil
 }
 
 func ReportSummary(cid string) (Summary, ReportError) {
@@ -211,6 +280,11 @@ func ReportSummary(cid string) (Summary, ReportError) {
 		s.TimeTaken = d.String()
 	}
 	s.QuizName = c.Quiz[0].Name
+	perc, err := percentile(c.Quiz[0].Id, c.Id)
+	if err != nil {
+		return s, ReportError{"", "Error while calculating percentile", http.StatusInternalServerError}
+	}
+	s.Percentile = x.ToFixed(perc, 2)
 
 	for _, qn := range c.CandidateQn {
 		s.TotalScore += qn.Score

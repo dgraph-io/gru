@@ -147,10 +147,6 @@
         url: '/candidate-report/:candidateID',
         parent: 'invite',
         css: [githubCSS],
-        params: {
-          idx: null,
-          total: null
-        },
         templateUrl: candidateReportTemplate,
         authenticate: true,
       })

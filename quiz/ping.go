@@ -3,10 +3,12 @@ package quiz
 import (
 	"encoding/json"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/dgraph-io/gru/admin/server"
 	"github.com/dgraph-io/gru/dgraph"
+	"github.com/dgraph-io/gru/x"
 )
 
 type pingRes struct {
@@ -40,19 +42,12 @@ func PingHandler(w http.ResponseWriter, r *http.Request) {
 		end := c.quizStart.Add(c.quizDuration).Truncate(time.Second)
 		timeLeft := end.Sub(time.Now().UTC().Truncate(time.Second))
 		if timeLeft <= 0 {
-			m := `mutation {
-                        set {
-                                <_uid_:` + userId + `> <complete> "true" .
-                        }
-                        }
-                        `
-			res, err := dgraph.SendMutation(m)
+			m := new(dgraph.Mutation)
+			m.Set(`<_uid_:` + userId + `> <complete> "true" .`)
+			m.Set(`<_uid_:` + userId + `> <score> "` + strconv.FormatFloat(x.ToFixed(c.score, 2), 'g', -1, 64) + `" .`)
+			_, err := dgraph.SendMutation(m.String())
 			if err != nil {
 				sr.Write(w, "", err.Error(), http.StatusInternalServerError)
-				return
-			}
-			if res.Code != "ErrorOk" {
-				sr.Write(w, res.Message, "", http.StatusInternalServerError)
 				return
 			}
 			if !c.mailSent {

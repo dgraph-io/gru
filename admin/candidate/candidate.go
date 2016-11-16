@@ -45,6 +45,7 @@ func index(quizId string) string {
 			_uid_
 			name
 			email
+			score
 			token
 			validity
 			complete

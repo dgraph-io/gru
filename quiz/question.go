@@ -3,6 +3,7 @@ package quiz
 import (
 	"encoding/json"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/dgraph-io/gru/admin/server"
@@ -61,6 +62,7 @@ func QuestionHandler(w http.ResponseWriter, r *http.Request) {
 		// Lets store that the user successfully completed the test.
 		m := new(dgraph.Mutation)
 		m.Set(`<_uid_:` + userId + `> <complete> "true" .`)
+		m.Set(`<_uid_:` + userId + `> <score> "` + strconv.FormatFloat(x.ToFixed(c.score, 2), 'g', -1, 64) + `" .`)
 		_, err := dgraph.SendMutation(m.String())
 		if err != nil {
 			sr.Write(w, "", err.Error(), http.StatusInternalServerError)
