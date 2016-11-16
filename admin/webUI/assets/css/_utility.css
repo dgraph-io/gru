@@ -228,6 +228,10 @@
   display: block;
 }
 
+.overflow-auto {
+  overflow: auto;
+}
+
 
 /*Dropdown Menu*/
 
@@ -464,4 +468,10 @@
   background-color: #f5f5f5;
   border: 1px solid #ccc;
   border-radius: 4px;
+}
+
+@media (max-width: 839px) {
+  .scroll-fix {
+    position: relative;
+  }
 }

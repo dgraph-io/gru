@@ -207,12 +207,10 @@
       snackbarContainer.MaterialSnackbar.showSnackbar(data);
     }
 
-    $(document).on("click", ".reload-same-url", function() {
-      // var href = this.href
-      // window.location = window.location.href.split("?")[0];
-      // setTimeout(function() {
-      //   window.location.reload();
-      // }, 10);
-    });
+    function close() {
+      var d = document.querySelector('.mdl-layout');
+      d.MaterialLayout.toggleDrawer();
+    }
+    $(document).on("click", ".mdl-layout__drawer .mdl-navigation__link", close);
   })
 })();
