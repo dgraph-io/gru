@@ -514,9 +514,28 @@
         console.log(error);
       }).then(function() {
         var questions = cReportVm.info.questions;
+        var statistics = {
+          'easy': {
+            correct: 0,
+            total: 0
+          },
+          'medium': {
+            correct: 0,
+            total: 0
+          },
+          'hard': {
+            correct: 0,
+            total: 0
+          }
+        }
 
         for (var i = 0; i < questions.length; i++) {
           qn = questions[i]
+          d = difficulty(qn.tags)
+          if (d != "") {
+            statistics[d].total++;
+            correct(qn) && statistics[d].correct++;
+          }
           qn.answerArray = [];
           for (var j = 0; j < qn.answers.length; j++) {
             var answerObj = {
@@ -533,12 +552,30 @@
             qn.isSkip = true
           }
         }
+        cReportVm.statistics = statistics;
 
         setTimeout(function() {
           scrollNavInit();
           adjustHeight();
         }, 0);
       });
+
+    function difficulty(tags) {
+      for (var i = 0; i < tags.length; i++) {
+        if (tags[i] === "easy") {
+          return "easy"
+        } else if (tags[i] === "medium") {
+          return "medium"
+        } else if (tags[i] === "hard") {
+          return "hard"
+        }
+      }
+      return ""
+    }
+
+    function correct(question) {
+      return angular.equals(question.correct.sort(), question.answers.sort())
+    }
 
     function initScoreCircle() {
       var circleWidth = 2 * Math.PI * 30;

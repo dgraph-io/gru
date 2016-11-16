@@ -120,6 +120,24 @@
       </div>
       <div class="mdl-cell mdl-cell--9-col no-margin-lr" ng-bind-html="cReportVm.info.feedback"></div>
     </div>
+    <div class="mdl-grid no-pad mt-10">
+      <table class="mdl-data-table mdl-shadow--2dp">
+        <thead>
+          <tr>
+            <th class="mdl-data-table__cell--non-numeric">Easy</th>
+            <th class="mdl-data-table__cell--non-numeric">Medium</th>
+            <th class="mdl-data-table__cell--non-numeric">Hard</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="mdl-data-table__cell--non-numeric">{{cReportVm.statistics.easy.correct }}/{{ cReportVm.statistics.easy.total}}</td>
+            <td class="mdl-data-table__cell--non-numeric">{{cReportVm.statistics.medium.correct}} /{{ cReportVm.statistics.medium.total}}</td>
+            <td class="mdl-data-table__cell--non-numeric">{{cReportVm.statistics.hard.correct}} /{{ cReportVm.statistics.hard.total}}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
     <div class="mdl-grid no-pad">
       <div class="mdl-cell mdl-cell--12-col mdl-cell--hide-phone no-margin-lr">
         <h5> QUESTION DETAILS </h5>

@@ -24,7 +24,7 @@
   var inviteDashboardTemplate = 'app/components/invite/views/invite-dashboard.html?v=20161113-1';
   var inviteUserTemplate = 'app/components/invite/views/invite-user.html?v=20161113-1';
   var editInviteTemplate = 'app/components/invite/views/edit-invite.html?v=20161113-1';
-  var candidateReportTemplate = 'app/components/invite/views/candidate-report.html?v=20161108-1';
+  var candidateReportTemplate = 'app/components/invite/views/candidate-report.html?v=20161116-1';
 
   var candidateIndexTemplate = 'app/components/candidate/index.html';
   var candidateLandingTemplate = 'app/components/candidate/views/landing.html';
