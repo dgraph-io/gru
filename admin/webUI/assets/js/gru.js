@@ -165,6 +165,13 @@
         }
       });
 
+      $mdlContent = $(".mdl-layout__content");
+      $(".sticky-sidebar-content").hover(function() {
+        $mdlContent.addClass("overflow-hidden");
+      }, function() {
+        $mdlContent.removeClass("overflow-hidden");
+      })
+
       function isScrolledIntoView(elem) {
         var docViewTop = $(window).scrollTop();
         var docViewBottom = docViewTop + $(window).height();

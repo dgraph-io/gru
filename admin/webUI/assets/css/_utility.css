@@ -232,6 +232,10 @@
   overflow: auto;
 }
 
+.overflow-hidden {
+  overflow: hidden;
+}
+
 
 /*Dropdown Menu*/
 
