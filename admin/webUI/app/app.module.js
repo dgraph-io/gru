@@ -373,7 +373,7 @@ angular.module('GruiApp').provider('RouteHelpers', ['APP_REQUIRES', function(app
       }
     }
 
-    function initNotification() {
+    function initNotification(message) {
       mainVm.consecutiveError = mainVm.consecutiveError || 0;
       mainVm.consecutiveError += 1;
 
@@ -387,7 +387,12 @@ angular.module('GruiApp').provider('RouteHelpers', ['APP_REQUIRES', function(app
       mainVm.showNotification = true;
 
       mainVm.notification.class = "notification-error";
-      mainVm.notification.message = "Can't connect to the server. We will be back up in a bit...";
+      if (message) {
+        mainVm.notification.message = message;
+        mainVm.consecutiveError = 1;
+      } else {
+        mainVm.notification.message = "Can't connect to the server. We will be back up in a bit...";
+      }
     }
 
     function hideNotification(rejected) {

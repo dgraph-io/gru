@@ -275,7 +275,8 @@
             }
           }
         }, function(err) {
-          mainVm.initNotification();
+          var message = err.status == 0 ? "You internet seems to be offline, connecting..." : false;
+          mainVm.initNotification(message);
         })
     }
 
