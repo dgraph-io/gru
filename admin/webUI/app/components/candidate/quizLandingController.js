@@ -265,7 +265,7 @@
 
     // FUNCTION DECLARATION
     qlVm.validateQuiz = validateQuiz;
-    qlVm.checkedInfo = checkedInfo;
+    qlVm.validate = validateInput;
 
     // FUNCTION DEFINITION
     qlVm.validateQuiz();
@@ -336,11 +336,11 @@
       }
     }
 
-    function checkedInfo() {
+    function validateInput() {
       var checkedInput = $(".quiz-landing .mdl-checkbox__input:checked").length;
       var totalInput = qlVm.info.General.length + qlVm.info.Score.length + qlVm.info.Contact.length;
 
-      return (checkedInput == totalInput) && qlVm.candidate.name != "" && !qlVm.country && qlVm.candidate.country.name != "" ? false : true;
+      return (checkedInput == totalInput) && qlVm.candidate.name != "" && qlVm.candidate.country && qlVm.candidate.country.name != ""
     }
 
     function saveName() {
