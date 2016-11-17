@@ -3,8 +3,9 @@
     <h4>Invite candidate for the quiz</h4>
     <form ng-submit="inviteVm.inviteCandidate()">
       <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label mt-20">
-        <input class="mdl-textfield__input" type="email" id="email" ng-model="inviteVm.newInvite.email">
-        <label class="mdl-textfield__label" for="email">Candidate Email</label>
+        <textarea ng-model="inviteVm.newInvite.emails" class="mdl-textfield__input" placeholder="Enter candidate emails on separate lines." type="text" rows="5" id="email" ng-list="&#10;" ng-trim="false"></textarea>
+        <!-- <input class="mdl-textfield__input" id="email" ng-model="inviteVm.newInvite.email" ng-list> -->
+        <label class="mdl-textfield__label" for="email">Candidate Emails</label>
         <span class="mdl-textfield__error">Should be valid email</span>
       </div>
       <div class="mdl-textfield mdl-textfield--floating-label mt-20 is-dirty is-focused">

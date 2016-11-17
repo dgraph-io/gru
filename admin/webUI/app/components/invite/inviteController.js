@@ -71,10 +71,10 @@
       inviteVm.newInvite.quiz_id = inviteVm.newInvite.quiz._uid_;
       inviteVm.newInvite.validity = dateTime;
 
-      inviteService.alreadyInvited(inviteVm.newInvite.quiz_id, inviteVm.newInvite.email).then(function(invited) {
-        if (invited) {
+      inviteService.alreadyInvited(inviteVm.newInvite.quiz_id, inviteVm.newInvite.emails).then(function(email) {
+        if (email != "") {
           SNACKBAR({
-            message: "Candidate has already been invited.",
+            message: "Candidate with email " + email + " has already been invited.",
             messageType: "error",
           })
           return
@@ -98,8 +98,10 @@
     }
 
     function invalidateInput(inputs) {
-      if (!isValidEmail(inputs.email)) {
-        return "Please Enter Valid Email";
+      for (var i = 0; i < inputs.emails.length; i++) {
+        if (!isValidEmail(inputs.emails[i])) {
+          return inputs.emails[i] + " isn't a valid email."
+        }
       }
       if (!inputs.dates) {
         return "Please Enter Valid Date";
@@ -163,16 +165,26 @@
         console.log(err)
       });
 
+    function valid(input) {
+      if (!isValidEmail(input.email)) {
+        return input.email + " isn't a valid email."
+      }
+      if (!input.dates) {
+        return "Please Enter Valid Date";
+      }
+      return true
+    }
+
     function editInvite() {
       editInviteVm.candidate.id = candidateUID;
       editInviteVm.candidate.quiz_id = "";
       editInviteVm.candidate.old_quiz_id = "";
       editInviteVm.candidate.validity = formatDate(editInviteVm.candidate.dates);
 
-      var invalidateInput = inviteVm.invalidateInput(editInviteVm.candidate);
-      if (invalidateInput) {
+      var validateInput = valid(editInviteVm.candidate);
+      if (validateInput != true) {
         SNACKBAR({
-          message: invalidateInput,
+          message: validateInput,
           messageType: "error",
         })
         return
@@ -203,8 +215,8 @@
       // If either the email or the quiz changes, we wan't to validate that the email
       // shouldn't be already invited to this quiz.
       if (editInviteVm.candidateBak.email != editInviteVm.candidate.email || editInviteVm.candidate.quiz._uid_ != editInviteVm.candidateBak["candidate.quiz"][0]._uid_) {
-        inviteService.alreadyInvited(editInviteVm.candidate.quiz._uid_, editInviteVm.candidate.email).then(function(invited) {
-            if (invited) {
+        inviteService.alreadyInvited(editInviteVm.candidate.quiz._uid_, [editInviteVm.candidate.email]).then(function(email) {
+            if (email != "") {
               SNACKBAR({
                 message: "Candidate has already been invited.",
                 messageType: "error",

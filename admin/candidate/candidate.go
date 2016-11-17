@@ -77,24 +77,46 @@ func Index(w http.ResponseWriter, r *http.Request) {
 	w.Write(res)
 }
 
-func add(c Candidate) string {
-	return `
-	mutation {
-		set {
-		<_uid_:` + c.QuizId + `> <quiz.candidate> <_new_:c> .
-		<_new_:c> <candidate.quiz> <_uid_:` + c.QuizId + `> .
-		<_new_:c> <email> "` + c.Email + `" .
-		<_new_:c> <token> "` + c.Token + `" .
-		<_new_:c> <validity> "` + c.Validity + `" .
-		<_new_:c> <invite_sent> "` + time.Now().UTC().String() + `" .
-		<_new_:c> <complete> "false" .
-		}
-	}`
+func add(quizId, email string, validity time.Time) server.Response {
+	m := new(dgraph.Mutation)
+	token := randStringBytes(33)
+	m.Set(`<_uid_:` + quizId + `> <quiz.candidate> <_new_:c> .`)
+	m.Set(`<_new_:c> <candidate.quiz> <_uid_:` + quizId + `> .`)
+	m.Set(`<_new_:c> <email> "` + email + `" .`)
+	m.Set(`<_new_:c> <token> "` + token + `" .`)
+	m.Set(`<_new_:c> <validity> "` + validity.String() + `" .`)
+	m.Set(`<_new_:c> <invite_sent> "` + time.Now().UTC().String() + `" .`)
+	m.Set(`<_new_:c> <complete> "false" .`)
+
+	sr := server.Response{}
+	mr, err := dgraph.SendMutation(m.String())
+	if err != nil {
+		sr.Error = err.Error()
+		return sr
+	}
+
+	// mutation applied successfully, lets send a mail to the candidate.
+	uid, ok := mr.Uids["c"]
+	if !ok {
+		sr.Message = "Uid not returned for newly created candidate by Dgraph."
+		return sr
+	}
+
+	// Token sent in mail is uid + the random string.
+	go mail.Send(email, validity.Format("Mon Jan 2 15:04:05 MST 2006"),
+		uid+token)
+	return sr
+}
+
+type addCand struct {
+	Emails   []string
+	Validity string
+	QuizId   string `json:"quiz_id"`
 }
 
 func Add(w http.ResponseWriter, r *http.Request) {
 	sr := server.Response{}
-	var c Candidate
+	var c addCand
 	err := json.NewDecoder(r.Body).Decode(&c)
 	if err != nil {
 		sr.Write(w, err.Error(), "Couldn't decode JSON", http.StatusBadRequest)
@@ -103,36 +125,18 @@ func Add(w http.ResponseWriter, r *http.Request) {
 
 	var t time.Time
 	if t, err = time.Parse(validityLayout, c.Validity); err != nil {
-		sr.Message = "Couldn't parse the validity"
-		sr.Error = err.Error()
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write(server.MarshalResponse(sr))
+		sr.Write(w, err.Error(), "Couldn't parse the validity", http.StatusBadRequest)
 		return
 	}
 
-	c.Validity = t.String()
-	// TODO - Validate candidate fields shouldn't be empty.
-	c.Token = randStringBytes(33)
-	m := add(c)
-	mr, err := dgraph.SendMutation(m)
-	if err != nil {
-		sr.Write(w, "", err.Error(), http.StatusInternalServerError)
-		return
+	for _, email := range c.Emails {
+		if r := add(c.QuizId, email, t); r.Message != "" || r.Error != "" {
+			sr.Write(w, r.Error, r.Message, http.StatusInternalServerError)
+			return
+		}
 	}
-
-	// mutation applied successfully, lets send a mail to the candidate.
-	uid, ok := mr.Uids["c"]
-	if !ok {
-		sr.Write(w, "Uid not returned for newly created candidate by Dgraph.",
-			"", http.StatusInternalServerError)
-		return
-	}
-
-	// Token sent in mail is uid + the random string.
-	go mail.Send(c.Email, t.Format("Mon Jan 2 15:04:05 MST 2006"),
-		uid+c.Token)
-	sr.Message = "Candidate added successfully."
 	sr.Success = true
+	sr.Message = "Candidates invited successfully."
 	w.Write(server.MarshalResponse(sr))
 }
 

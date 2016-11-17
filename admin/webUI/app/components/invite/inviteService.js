@@ -24,7 +24,7 @@
       return MainService.get('/candidate/report/' + candidateID);
     }
 
-    services.alreadyInvited = function(quizId, email) {
+    services.alreadyInvited = function(quizId, emails) {
       var deferred = $q.defer();
       // TODO - User filter on email after incorporating Dgraph schema.
       var query = "{\
@@ -37,14 +37,15 @@
 
       services.proxy(query).then(function(data) {
         var candidates = data.quiz[0]["quiz.candidate"];
-        if (candidates) {
+        for (var j = 0; j < emails.length; j++) {
+          email = emails[j]
           for (var i = 0; i < candidates.length; i++) {
             if (candidates[i].email === email) {
-              return deferred.resolve(true);
+              return deferred.resolve(email);
             }
           }
         }
-        return deferred.resolve(false);
+        return deferred.resolve("");
       });
       return deferred.promise;
     }
