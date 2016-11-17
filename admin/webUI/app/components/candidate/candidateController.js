@@ -100,7 +100,7 @@
             // So that we call getTime() when question is fetched the first time and update
             // time.
             cqVm.getTime();
-            $timeTakenElem.textContent = "00:00:00";
+            $timeTakenElem.textContent = "00:00";
             cqVm.timerObj.time_elapsed = 0;
             startTimer(seconds, $timeTakenElem, true);
 
@@ -196,22 +196,20 @@
 
     function manipulateTime(timer, display, isTimeLeft) {
       hours = Math.floor(timer / 3600);
-      minutes = parseInt((timer / 60) % 60, 10);
+      minutes = hours * 60 + parseInt((timer / 60) % 60, 10);
       seconds = parseInt(timer % 60, 10);
 
       if (isTimeLeft) {
         cqVm.finalTimeLeft = {
-          hours: hours,
           minutes: minutes,
           seconds: seconds,
         }
       }
 
-      hours = hours < 10 ? "0" + hours : hours;
       minutes = minutes < 10 ? "0" + minutes : minutes;
       seconds = seconds < 10 ? "0" + seconds : seconds;
 
-      display.textContent = hours + ":" + minutes + ":" + seconds;
+      display.textContent = minutes + ":" + seconds;
     }
 
     function startTimer(duration, display, isReverse) {
@@ -267,7 +265,6 @@
               cqVm.initTimer(data.time_left)
             } else {
               cqVm.finalTimeLeft = {
-                hours: 0,
                 minutes: 0,
                 seconds: 0,
               }
@@ -289,28 +286,24 @@
         return
       }
       var quizTime = JSON.parse(localStorage.getItem("candidate_info")).duration;
-
-      var hours = quizTime.hours - cqVm.finalTimeLeft.hours;
       var minutes = quizTime.minutes - cqVm.finalTimeLeft.minutes;
       var seconds = quizTime.seconds - cqVm.finalTimeLeft.seconds;
 
-      timeTakenSec = hours * 3600 + minutes * 60 + seconds;
+      timeTakenSec = minutes * 60 + seconds;
 
       var timeTaken = {
-        hours: Math.floor(timeTakenSec / 3600),
         minutes: parseInt((timeTakenSec / 60) % 60, 10),
         seconds: parseInt(timeTakenSec % 60, 10),
       }
 
       // Adding prefix
-      hours = timeTaken.hours < 10 ? "0" + timeTaken.hours : timeTaken.hours;
       minutes = timeTaken.minutes < 10 ? "0" + timeTaken.minutes : timeTaken.minutes;
       seconds = timeTaken.seconds < 10 ? "0" + timeTaken.seconds : timeTaken.seconds;
 
-      var text = hours + ":" + minutes + ":" + seconds;
+      var text = minutes + ":" + seconds;
       $("#time-taken").text(text);
 
-      if (cqVm.finalTimeLeft.hours + cqVm.finalTimeLeft.minutes + cqVm.finalTimeLeft.seconds == 0) {
+      if (cqVm.finalTimeLeft.minutes + cqVm.finalTimeLeft.seconds == 0) {
         var elem = document.querySelector('#time');
         if (elem) {
           manipulateTime(0, elem)

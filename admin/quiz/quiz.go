@@ -3,7 +3,7 @@ package quiz
 import (
 	"encoding/json"
 	"net/http"
-	"time"
+	"strconv"
 
 	"github.com/dgraph-io/gru/admin/server"
 	"github.com/dgraph-io/gru/dgraph"
@@ -13,7 +13,7 @@ import (
 type Quiz struct {
 	Uid       string
 	Name      string
-	Duration  string
+	Duration  int
 	Questions []Question `json:"questions`
 }
 
@@ -32,18 +32,11 @@ func Add(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// We should be able to parse the duration.
-	_, err = time.ParseDuration(q.Duration)
-	if err != nil {
-		sr.Write(w, err.Error(), "Couldn't parse duration.", http.StatusBadRequest)
-		return
-	}
-
 	m := new(dgraph.Mutation)
 	m.Set(`<root> <quiz> <_new_:quiz> .`)
 	// TODO - Error if Name is empty.
 	m.Set(`<_new_:quiz> <name> "` + q.Name + `" .`)
-	m.Set(`<_new_:quiz> <duration> "` + q.Duration + `" . `)
+	m.Set(`<_new_:quiz> <duration> "` + strconv.Itoa(q.Duration) + `" . `)
 	for _, q := range q.Questions {
 		m.Set(`<_new_:quiz> <quiz.question> <_uid_:` + q.Uid + `> .`)
 	}
@@ -105,7 +98,7 @@ func edit(q Quiz) string {
 	m := new(dgraph.Mutation)
 	// TODO - Validate these fields.
 	m.Set(`<_uid_:` + q.Uid + `> <name> "` + q.Name + `" .`)
-	m.Set(`<_uid_:` + q.Uid + `> <duration> "` + q.Duration + `" .`)
+	m.Set(`<_uid_:` + q.Uid + `> <duration> "` + strconv.Itoa(q.Duration) + `" .`)
 
 	// Create and associate Tags
 	for _, que := range q.Questions {
@@ -129,22 +122,11 @@ func Edit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	q.Uid = qid
-
-	_, err = time.ParseDuration(q.Duration)
-	if err != nil {
-		sr.Write(w, err.Error(), "Couldn't parse duration", http.StatusBadRequest)
-		return
-	}
-
 	// TODO - Validate candidate fields shouldn't be empty.
 	m := edit(q)
-	mr, err := dgraph.SendMutation(m)
+	_, err = dgraph.SendMutation(m)
 	if err != nil {
 		sr.Write(w, "", err.Error(), http.StatusInternalServerError)
-		return
-	}
-	if mr.Code != "ErrorOk" {
-		sr.Write(w, mr.Message, "", http.StatusInternalServerError)
 		return
 	}
 

@@ -367,8 +367,7 @@ angular.module('GruiApp').provider('RouteHelpers', ['APP_REQUIRES', function(app
       var totalSec = duration.seconds();
 
       return {
-        hours: Math.floor(totalSec / 3600),
-        minutes: parseInt((totalSec / 60) % 60, 10),
+        minutes: Math.floor(totalSec / 3600) * 60 + parseInt((totalSec / 60) % 60, 10),
         seconds: parseInt(totalSec % 60, 10),
       }
     }

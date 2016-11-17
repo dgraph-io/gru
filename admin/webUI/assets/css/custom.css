@@ -403,7 +403,7 @@ body.home {
 /*QUIZ PAGE CSS*/
 
 .duration-inputs .mdl-textfield {
-  width: 32%;
+  width: 100%;
 }
 
 .quiz-cover.mdl-card__title {

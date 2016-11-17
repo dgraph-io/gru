@@ -285,11 +285,10 @@
               localStorage.setItem('candidate_info', JSON.stringify(data.data));
             } else {
               if (token) {
-                // $state.transitionTo("candidate.landing");
                 qlVm.validated = true;
                 $scope.time = data.data.duration;
                 time = mainVm.parseGoTime(data.data.duration)
-                $scope.time_minutes = time.hours * 60 + time.minutes
+                $scope.time_minutes = time.minutes
                 data.data.duration = time;
                 localStorage.setItem('candidate_info', JSON.stringify(data.data));
                 initInstructions();

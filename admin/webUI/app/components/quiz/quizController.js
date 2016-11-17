@@ -52,7 +52,6 @@
       var questions = []
       var requestData = {};
       requestData = angular.copy(quizVm.newQuiz);
-      console.log(requestData);
 
       areInValidateInput = quizVm.validateInput(requestData);
       if (areInValidateInput) {
@@ -73,7 +72,6 @@
 
       requestData.questions = questions;
 
-      requestData.duration = (requestData.hours || 0) + "h" + (requestData.minutes || 0) + "m" + (requestData.seconds || 0) + "s";
       quizService.saveQuiz(requestData)
         .then(function(data) {
           quizVm.newQuiz = {}
@@ -91,7 +89,7 @@
       if (!inputs.name) {
         return "Please enter valid Quiz name"
       }
-      if (!inputs.minutes && !inputs.hours) {
+      if (!inputs.duration) {
         return "Please enter valid time"
       }
       if (!inputs.questions) {
@@ -157,15 +155,10 @@
     quizService.getQuiz($stateParams.quizID)
       .then(function(data) {
         quizVm.newQuiz = data.root[0];
+        quizVm.newQuiz.duration = parseInt(quizVm.newQuiz.duration)
 
         editQuizVm.selectedQuestion = data.root[0]['quiz.question'];
         quizVm.newQuiz.newQuestions = [];
-
-        var duration = Duration.parse(quizVm.newQuiz.duration)
-        var seconds = duration.seconds();
-        quizVm.newQuiz.hours = parseInt(seconds / 3600) % 24;
-        quizVm.newQuiz.minutes = parseInt(seconds / 60) % 60;
-        quizVm.newQuiz.seconds = parseInt(seconds) % 60;
 
         quizVm.getAllQuestions();
       }, function(err) {
@@ -208,8 +201,6 @@
           });
         }
       }
-
-      quizVm.newQuiz.duration = (quizVm.newQuiz.hours || 0) + "h" + (quizVm.newQuiz.minutes || 0) + "m" + (quizVm.newQuiz.seconds || 0) + "s";
 
       // API CALL
       quizService.editQuiz(quizVm.newQuiz)

@@ -123,7 +123,7 @@ func readMap(uid string) (Candidate, error) {
 
 type quiz struct {
 	Id        string     `json:"_uid_"`
-	Duration  string     `json:"duration"`
+	Duration  int        `json:"duration,string"`
 	Questions []question `json:"quiz.question"`
 }
 
@@ -331,9 +331,7 @@ func checkAndUpdate(uid string) (int, error) {
 
 	// We check that quiz duration hasn't elapsed in case the candidate tries
 	// to validate again say after a browser crash.
-	if c.quizDuration, err = time.ParseDuration(quiz.Duration); err != nil {
-		return http.StatusInternalServerError, fmt.Errorf("Something went wrong.")
-	}
+	c.quizDuration = time.Minute * time.Duration(quiz.Duration)
 
 	if timeLeft(c.quizStart, c.quizDuration) < 0 {
 		return http.StatusUnauthorized, fmt.Errorf("Your token is no longer valid.")

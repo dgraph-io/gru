@@ -14,19 +14,9 @@
         <div class="mdl-grid no-pad no-margin-lr">
           <div class="mdl-cell mdl-cell--12-col">
             <div class="duration-inputs">
-              <div class="mdl-textfield mdl-js-textfield" ng-class="{'is-dirty': quizVm.newQuiz.hours}">
-                <input class="mdl-textfield__input" type="number" pattern="-?[0-9]*(\.[0-9]+)?" ng-model="quizVm.newQuiz.hours" id="hour" min="0" max="24">
-                <label class="mdl-textfield__label" for="hour">Hour</label>
-                <span class="mdl-textfield__error">Not Valid</span>
-              </div>
               <div class="mdl-textfield mdl-js-textfield" ng-class="{'is-dirty': quizVm.newQuiz.minutes}">
-                <input class="mdl-textfield__input" type="number" pattern="-?[0-9]*(\.[0-9]+)?" ng-model="quizVm.newQuiz.minutes" id="minutes" min="1" max="60">
-                <label class="mdl-textfield__label" for="minutes">Minute</label>
-                <span class="mdl-textfield__error">Not Valid</span>
-              </div>
-              <div class="mdl-textfield mdl-js-textfield" ng-class="{'is-dirty': quizVm.newQuiz.seconds}">
-                <input class="mdl-textfield__input" type="number" pattern="-?[0-9]*(\.[0-9]+)?" ng-model="quizVm.newQuiz.seconds" id="seconds" min="0" max="60">
-                <label class="mdl-textfield__label" for="seconds">Second</label>
+                <input class="mdl-textfield__input" type="number" pattern="-?[0-9]*(\.[0-9]+)?" ng-model="quizVm.newQuiz.duration" id="minutes" min="1" max="120">
+                <label class="mdl-textfield__label" for="minutes">Duration in minutes</label>
                 <span class="mdl-textfield__error">Not Valid</span>
               </div>
             </div>
