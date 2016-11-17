@@ -104,8 +104,8 @@
       <_uid_:" + candidate._uid_ + "> <token> \"" + candidate.token + "\" . \n\
       <_uid_:" + candidate._uid_ + "> <validity> \"" + candidate.validity + "\" . \n\
       <_uid_:" + candidate._uid_ + "> <complete> \"" + candidate.complete + "\" . \n\
-      <_uid_:" + candidate._uid_ + "> <candidate.quiz> <uid_:" + quizId + "> . \n\
-      <_uid_:" + quizId + "> < quiz.candidate > <_uid_:" + candidate._uid_ + "> .\n\
+      <_uid_:" + candidate._uid_ + "> <candidate.quiz> <_uid_:" + quizId + "> . \n\
+      <_uid_:" + quizId + "> <quiz.candidate> <_uid_:" + candidate._uid_ + "> .\n\
       }\n\
     }"
       services.proxy(mutation).then(function(data) {
