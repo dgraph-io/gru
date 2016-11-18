@@ -3,7 +3,6 @@ package mail
 import (
 	"flag"
 	"fmt"
-	"time"
 
 	"github.com/dgraph-io/gru/x"
 	sendgrid "github.com/sendgrid/sendgrid-go"
@@ -83,7 +82,6 @@ func SendReport(name string, quiz string, score, maxScore float64, body string) 
 }
 
 func Reject(name, email string) {
-	time.Sleep(time.Hour)
 	if *SENDGRID_API_KEY == "" {
 		fmt.Printf("Sending rejection mail to %v\n", name)
 		return

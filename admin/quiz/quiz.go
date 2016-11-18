@@ -10,6 +10,8 @@ import (
 	"github.com/gorilla/mux"
 )
 
+const timeLayout = "2006-01-02T15:04:05Z07:00"
+
 type Quiz struct {
 	Uid       string
 	Name      string

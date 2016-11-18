@@ -6,7 +6,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/dgraph-io/gru/admin/mail"
 	"github.com/dgraph-io/gru/admin/server"
 	"github.com/dgraph-io/gru/dgraph"
 	"github.com/dgraph-io/gru/x"
@@ -63,6 +62,7 @@ func QuestionHandler(w http.ResponseWriter, r *http.Request) {
 		// Lets store that the user successfully completed the test.
 		m := new(dgraph.Mutation)
 		m.Set(`<_uid_:` + userId + `> <complete> "true" .`)
+		m.Set(`<_uid_:` + userId + `> <completed_at> "` + time.Now().Format(timeLayout) + `" .`)
 		m.Set(`<_uid_:` + userId + `> <score> "` + strconv.FormatFloat(x.ToFixed(c.score, 2), 'g', -1, 64) + `" .`)
 		_, err := dgraph.SendMutation(m.String())
 		if err != nil {
@@ -75,15 +75,11 @@ func QuestionHandler(w http.ResponseWriter, r *http.Request) {
 			sr.Write(w, err.Error(), "", http.StatusInternalServerError)
 			return
 		}
-		w.Write(b)
-		if !c.mailSent {
-			if c.score <= c.quizCutoff {
-				go mail.Reject(c.name, c.email)
-			}
-			go sendReport(userId)
-			c.mailSent = true
-			updateMap(userId, c)
+		if err = sendMail(c, userId); err != nil {
+			sr.Write(w, err.Error(), "", http.StatusInternalServerError)
+			return
 		}
+		w.Write(b)
 		return
 	}
 

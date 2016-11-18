@@ -6,7 +6,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/dgraph-io/gru/admin/mail"
 	"github.com/dgraph-io/gru/admin/server"
 	"github.com/dgraph-io/gru/dgraph"
 	"github.com/dgraph-io/gru/x"
@@ -56,6 +55,7 @@ func PingHandler(w http.ResponseWriter, r *http.Request) {
 	// Time left is <=0, that means quiz should end now. Lets store this information.
 	m := new(dgraph.Mutation)
 	m.Set(`<_uid_:` + userId + `> <complete> "true" .`)
+	m.Set(`<_uid_:` + userId + `> <completed_at> "` + time.Now().Format(timeLayout) + `" .`)
 	m.Set(`<_uid_:` + userId + `> <score> "` + strconv.FormatFloat(x.ToFixed(c.score, 2), 'g', -1, 64) + `" .`)
 	_, err = dgraph.SendMutation(m.String())
 	if err != nil {
@@ -64,13 +64,9 @@ func PingHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	// Client may call ping twice after the timeLeft <= 0, but we wan't to send mail
 	// only once. So we check if we already sent the mail.
-	if !c.mailSent {
-		if c.score <= c.quizCutoff {
-			go mail.Reject(c.name, c.email)
-		}
-		go sendReport(userId)
-		c.mailSent = true
-		updateMap(userId, c)
+	if err = sendMail(c, userId); err != nil {
+		sr.Write(w, err.Error(), "", http.StatusInternalServerError)
+		return
 	}
 	json.NewEncoder(w).Encode(pr)
 }

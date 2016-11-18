@@ -186,16 +186,18 @@ func quizQns(quizId string, qnsAsked []string) ([]Question, float64, error) {
 
 // Used to fetch data about a candidate from Dgraph and populate Candidate struct.
 type cand struct {
-	Name       string
-	Email      string
-	Token      string    `json:"token"`
-	Validity   string    `json:"validity"`
-	Complete   bool      `json:"complete,string"`
-	Quiz       []quiz    `json:"candidate.quiz"`
-	Questions  []qids    `json:"candidate.question"`
-	QuizStart  time.Time `json:"quiz_start"`
-	LastQnUid  string    `json:"candidate.lastqnuid"`
-	LastQnCuid string    `json:"candidate.lastqncuid"`
+	Id          string `json:"_uid_"`
+	Name        string
+	Email       string
+	Token       string    `json:"token"`
+	Validity    string    `json:"validity"`
+	Complete    bool      `json:"complete,string"`
+	CompletedAt time.Time `json:"completed_at",string"`
+	Quiz        []quiz    `json:"candidate.quiz"`
+	Questions   []qids    `json:"candidate.question"`
+	QuizStart   time.Time `json:"quiz_start"`
+	LastQnUid   string    `json:"candidate.lastqnuid"`
+	LastQnCuid  string    `json:"candidate.lastqncuid"`
 }
 
 type resp struct {
@@ -374,4 +376,25 @@ func checkAndUpdate(uid string) (int, error) {
 	c.score = calcScore(cand.Questions)
 	updateMap(uid, c)
 	return http.StatusOK, nil
+}
+
+func sendMail(c Candidate, userId string) error {
+	if c.mailSent {
+		return nil
+	}
+	go sendReport(userId)
+	c.mailSent = true
+	updateMap(userId, c)
+
+	if c.score > c.quizCutoff {
+		return nil
+	}
+
+	m := new(dgraph.Mutation)
+	m.Set(`<_uid_:` + userId + `> <completed_at> "` + time.Now().Format(timeLayout) + `" .`)
+	m.Set(`<rejected> <candidate> <_uid_:` + userId + `> .`)
+	if _, err := dgraph.SendMutation(m.String()); err != nil {
+		return err
+	}
+	return nil
 }

@@ -199,5 +199,6 @@ func main() {
 	rand.Seed(time.Now().UnixNano())
 	flag.Parse()
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
+	go quiz.Reject()
 	runHTTPServer(*port)
 }
