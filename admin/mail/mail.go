@@ -3,6 +3,7 @@ package mail
 import (
 	"flag"
 	"fmt"
+	"time"
 
 	"github.com/dgraph-io/gru/x"
 	sendgrid "github.com/sendgrid/sendgrid-go"
@@ -79,4 +80,48 @@ func SendReport(name string, quiz string, score, maxScore float64, body string) 
 	x.Debug(response.StatusCode)
 	x.Debug(response.Body)
 	x.Debug(response.Headers)
+}
+
+func Reject(name, email string) {
+	time.Sleep(time.Hour)
+	if *SENDGRID_API_KEY == "" {
+		fmt.Printf("Sending rejection mail to %v\n", name)
+		return
+	}
+	from := mail.NewEmail("Pulkit Jain", "pulkit@dgraph.io")
+	subject := "Dgraph <> Quiz"
+	p := mail.NewPersonalization()
+	to := mail.NewEmail(name, email)
+	p.AddTos(to)
+	cc := mail.NewEmail("Dgraph", *reportMail)
+	p.AddCCs(cc)
+	body := `
+<html>
+<head>
+    <title></title>
+</head>
+<body>
+Hi ` + name + `,
+<br/><br/>
+Thanks for taking the time to complete the quiz. Unfortunately, the quiz score didn’t meet the expectations we had, so we’ve decided not to move forward with discussions regarding the full-time role.
+<br/><br/>
+Good luck with your future endeavors. If Dgraph interests you, I will encourage you to contribute to Dgraph as an open source contributor. A good starting point is <a href="https://dgraph.io">dgraph.io</a> where you’ll find links to our Slack and Discourse channels where we hang out.
+<br/><br/>
+Thanks<br/>
+Pulkit Rai<br/>
+<a href="https://dgraph.io">https://dgraph.io</a><br/>
+</body>
+</html>
+`
+	content := mail.NewContent("text/html", body)
+	m := mail.NewV3MailInit(from, subject, to, content)
+	m.AddPersonalizations(p)
+	request := sendgrid.GetRequest(*SENDGRID_API_KEY, "/v3/mail/send", "https://api.sendgrid.com")
+	request.Method = "POST"
+	request.Body = mail.GetRequestBody(m)
+	_, err := sendgrid.API(request)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
 }

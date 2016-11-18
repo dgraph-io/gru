@@ -82,11 +82,13 @@ type question struct {
 // Candidate is used to keep track of the state of the quiz for a candidate.
 type Candidate struct {
 	name         string
+	email        string
 	token        string
 	score        float64
 	qns          []Question
 	lastExchange time.Time
 	quizDuration time.Duration
+	quizCutoff   float64
 	quizStart    time.Time
 	validity     time.Time
 	// number of questions left.
@@ -124,6 +126,7 @@ func readMap(uid string) (Candidate, error) {
 type quiz struct {
 	Id        string     `json:"_uid_"`
 	Duration  int        `json:"duration,string"`
+	CutOff    float64    `json:"cut_off,string"`
 	Questions []question `json:"quiz.question"`
 }
 
@@ -184,6 +187,7 @@ func quizQns(quizId string, qnsAsked []string) ([]Question, float64, error) {
 // Used to fetch data about a candidate from Dgraph and populate Candidate struct.
 type cand struct {
 	Name       string
+	Email      string
 	Token      string    `json:"token"`
 	Validity   string    `json:"validity"`
 	Complete   bool      `json:"complete,string"`
@@ -266,6 +270,7 @@ func candQuery(cid string) string {
                 candidate.quiz {
                         _uid_
                         duration
+                        cut_off
                 }
                 candidate.question {
                         question.uid {
@@ -317,6 +322,7 @@ func checkAndUpdate(uid string) (int, error) {
 		lastQnCuid: cand.LastQnCuid,
 		name:       cand.Name,
 		token:      cand.Token,
+		email:      cand.Email,
 	}
 	// TODO - Check how can we store this in appropriate format so that explicit parsing isn't
 	// required.
@@ -336,6 +342,8 @@ func checkAndUpdate(uid string) (int, error) {
 	if timeLeft(c.quizStart, c.quizDuration) < 0 {
 		return http.StatusUnauthorized, fmt.Errorf("Your token is no longer valid.")
 	}
+
+	c.quizCutoff = quiz.CutOff
 
 	var qa []string
 	if len(cand.Questions) > 0 {

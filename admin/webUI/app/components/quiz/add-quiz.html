@@ -22,6 +22,14 @@
             </div>
           </div>
         </div>
+        <div class="mdl-grid no-pad no-margin-lr">
+          <div class="mdl-cell mdl-cell--12-col">
+            <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label" ng-class="{'is-dirty': quizVm.newQuiz.cut_off}">
+              <input class="mdl-textfield__input" type="number" name="text" id="cut_off" ng-model="quizVm.newQuiz.cut_off">
+              <label class="mdl-textfield__label" for="cut_off">Cut off</label>
+            </div>
+          </div>
+        </div>
         <div ng-if="quizVm.newQuiz.questions">
           <label class="bold">
             {{mainVm.objLen(quizVm.newQuiz.questions)}} Question<span ng-if="mainVm.objLen(quizVm.newQuiz.questions) > 1">s</span>, Total Score: {{quizVm.getTotalScore(quizVm.newQuiz.questions) | number: 2}}

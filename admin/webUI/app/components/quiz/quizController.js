@@ -95,6 +95,9 @@
       if (!inputs.questions) {
         return "Please add question to the quiz before submitting"
       }
+      if (inputs.cut_off >= getTotalScore(inputs.questions)) {
+        return "Cutoff should be less than the total possible score"
+      }
       return false
     }
 
@@ -156,6 +159,7 @@
       .then(function(data) {
         quizVm.newQuiz = data.root[0];
         quizVm.newQuiz.duration = parseInt(quizVm.newQuiz.duration)
+        quizVm.newQuiz.cut_off = parseFloat(quizVm.newQuiz.cut_off)
 
         editQuizVm.selectedQuestion = data.root[0]['quiz.question'];
         quizVm.newQuiz.newQuestions = [];

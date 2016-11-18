@@ -276,7 +276,7 @@ func ReportSummary(cid string) (Summary, ReportError) {
 	s.QuizName = c.Quiz[0].Name
 	perc, err := percentile(c.Quiz[0].Id, c.Id)
 	if err != nil {
-		return s, ReportError{"", "Error while calculating percentile", http.StatusInternalServerError}
+		return s, ReportError{err.Error(), "Error while calculating percentile", http.StatusInternalServerError}
 	}
 	s.Percentile = x.ToFixed(perc, 2)
 

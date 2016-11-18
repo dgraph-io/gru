@@ -14,6 +14,7 @@ type Quiz struct {
 	Uid       string
 	Name      string
 	Duration  int
+	Cutoff    float64    `json:"cut_off"`
 	Questions []Question `json:"questions`
 }
 
@@ -36,6 +37,7 @@ func Add(w http.ResponseWriter, r *http.Request) {
 	m.Set(`<root> <quiz> <_new_:quiz> .`)
 	// TODO - Error if Name is empty.
 	m.Set(`<_new_:quiz> <name> "` + q.Name + `" .`)
+	m.Set(`<_new_:quiz> <cut_off> "` + strconv.FormatFloat(q.Cutoff, 'g', -1, 64) + `" .`)
 	m.Set(`<_new_:quiz> <duration> "` + strconv.Itoa(q.Duration) + `" . `)
 	for _, q := range q.Questions {
 		m.Set(`<_new_:quiz> <quiz.question> <_uid_:` + q.Uid + `> .`)
@@ -76,6 +78,7 @@ func get(quizId string) string {
 		_uid_
 		name
 		duration
+		cut_off
 		quiz.question { _uid_ name text positive negative question.tag { _uid_ name } question.correct { _uid_ name}}
 	}
     }`
@@ -99,6 +102,7 @@ func edit(q Quiz) string {
 	// TODO - Validate these fields.
 	m.Set(`<_uid_:` + q.Uid + `> <name> "` + q.Name + `" .`)
 	m.Set(`<_uid_:` + q.Uid + `> <duration> "` + strconv.Itoa(q.Duration) + `" .`)
+	m.Set(`<_uid_:` + q.Uid + `> <cut_off> "` + strconv.FormatFloat(q.Cutoff, 'g', -1, 64) + `" .`)
 
 	// Create and associate Tags
 	for _, que := range q.Questions {

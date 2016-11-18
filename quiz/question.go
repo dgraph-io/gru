@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/dgraph-io/gru/admin/mail"
 	"github.com/dgraph-io/gru/admin/server"
 	"github.com/dgraph-io/gru/dgraph"
 	"github.com/dgraph-io/gru/x"
@@ -76,6 +77,9 @@ func QuestionHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		w.Write(b)
 		if !c.mailSent {
+			if c.score <= c.quizCutoff {
+				go mail.Reject(c.name, c.email)
+			}
 			go sendReport(userId)
 			c.mailSent = true
 			updateMap(userId, c)
