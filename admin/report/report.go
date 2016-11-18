@@ -2,6 +2,7 @@ package report
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"sort"
 	"strings"
@@ -59,7 +60,7 @@ type cq struct {
 
 type quiz struct {
 	Id       string `json:"_uid_"`
-	Duration string `json:"duration"`
+	Duration int    `json:"duration,string"`
 	Name     string `json:"name"`
 }
 
@@ -270,14 +271,7 @@ func ReportSummary(cid string) (Summary, ReportError) {
 		// Incase we didn't record the answered for the last qn, say his
 		// browser crashed or he didn't finish answering it.
 		dur := c.Quiz[0].Duration
-		// TODO - This is a hack because duration is stored as 0h50m0s,
-		// Ideally it should be 50m0s.
-		d, err := time.ParseDuration(dur)
-		if err != nil {
-			return s, ReportError{"", "Can't parse quiz duration.",
-				http.StatusInternalServerError}
-		}
-		s.TimeTaken = d.String()
+		s.TimeTaken = fmt.Sprintf("%vm", dur)
 	}
 	s.QuizName = c.Quiz[0].Name
 	perc, err := percentile(c.Quiz[0].Id, c.Id)
