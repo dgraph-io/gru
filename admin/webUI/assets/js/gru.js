@@ -106,6 +106,7 @@
     // General Function for Scroll to particular element
 
     function scrollTo(selector) {
+      if (!selector) return;
       $container = $(".mdl-layout__content")
 
       $container.scrollTop(

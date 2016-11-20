@@ -350,6 +350,10 @@ body.home {
 .mdl-select.select2-container .select2-search-choice-close {
   left: 3px;
   top: 53%;
+  -webkit-transform: translateY(-50%);
+  -moz-transform: translateY(-50%);
+  -ms-transform: translateY(-50%);
+  -o-transform: translateY(-50%);
   transform: translateY(-50%);
 }
 
@@ -493,6 +497,9 @@ body.home {
   width: 80%;
   top: 50%;
   left: 50%;
+  -webkit-transform: translate(-50%, -50%);
+  -moz-transform: translate(-50%, -50%);
+  -o-transform: translate(-50%, -50%);
   transform: translate(-50%, -50%);
 }
 
@@ -641,6 +648,10 @@ body.home {
   stroke-dasharray: 188;
   stroke-dashoffset: 0;
   stroke: rgba(128, 128, 128, 0.56);
+  -webkit-transform-origin: center;
+  -moz-transform-origin: center;
+  -ms-transform-origin: center;
+  -o-transform-origin: center;
   transform-origin: center;
 }
 
@@ -648,6 +659,10 @@ circle.path.prograss-circle {
   display: none;
   stroke: #009688;
   stroke-dashoffset: 184;
+  -webkit-transition: 2s;
+  -moz-transition: 2s;
+  -ms-transition: 2s;
+  -o-transition: 2s;
   transition: 2s;
 }
 
@@ -656,11 +671,23 @@ circle.path.prograss-circle {
   position: fixed;
   bottom: 0;
   right: 20px;
+  -webkit-transform: translateY(100%);
+  -moz-transform: translateY(100%);
+  -ms-transform: translateY(100%);
+  -o-transform: translateY(100%);
   transform: translateY(100%);
+  -webkit-transition: .2s;
+  -moz-transition: .2s;
+  -ms-transition: .2s;
+  -o-transition: .2s;
   transition: .2s;
 }
 
 .scroll-top.scrollTop-active {
+  -webkit-transform: translateY(-40px);
+  -moz-transform: translateY(-40px);
+  -ms-transform: translateY(-40px);
+  -o-transform: translateY(-40px);
   transform: translateY(-40px);
 }
 
