@@ -139,6 +139,7 @@
   }
 
   function addQuizController() {
+    quizVm.newQuiz = {};
     quizVm.getAllQuestions();
   }
 
@@ -206,8 +207,13 @@
         }
       }
 
+      // Only send data, that is required, delete everything else
+      var requestData = angular.copy(quizVm.newQuiz);
+      delete requestData.newQuestions;
+      delete requestData["quiz.question"];
+
       // API CALL
-      quizService.editQuiz(quizVm.newQuiz)
+      quizService.editQuiz(requestData)
         .then(function(data) {
           SNACKBAR({
             message: data.Message,
