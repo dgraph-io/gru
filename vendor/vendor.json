@@ -34,6 +34,24 @@
 			"revisionTime": "2016-09-20T23:08:13Z"
 		},
 		{
+			"checksumSHA1": "LOqBhL9Sc2QMob0uT1cwvexNzLQ=",
+			"path": "github.com/minio/minio-go",
+			"revision": "0cd90f4c44c5e86f4cf8faf865ae5388df2843fb",
+			"revisionTime": "2016-11-20T22:51:24Z"
+		},
+		{
+			"checksumSHA1": "neH34/65OXeKHM/MlV8MbhcdFBc=",
+			"path": "github.com/minio/minio-go/pkg/policy",
+			"revision": "0cd90f4c44c5e86f4cf8faf865ae5388df2843fb",
+			"revisionTime": "2016-11-20T22:51:24Z"
+		},
+		{
+			"checksumSHA1": "A8QOw1aWwc+RtjGozY0XeS5varo=",
+			"path": "github.com/minio/minio-go/pkg/set",
+			"revision": "0cd90f4c44c5e86f4cf8faf865ae5388df2843fb",
+			"revisionTime": "2016-11-20T22:51:24Z"
+		},
+		{
 			"checksumSHA1": "Hky3u+8Rqum+wB5BHMj0A8ZmT4g=",
 			"path": "github.com/pkg/errors",
 			"revision": "17b591df37844cde689f4d5813e5cea0927d8dd2",
