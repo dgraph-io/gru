@@ -24,6 +24,44 @@
       return MainService.get('/candidate/report/' + candidateID);
     }
 
+    services.getResume = function(candidateID) {
+      $http.defaults.headers.common['Authorization'] = 'Bearer ' + localStorage.getItem('token')
+      mainVm.showAjaxLoader = true;
+      $http({
+        method: 'GET',
+        url: mainVm.admin_url + '/candidate/resume/' + candidateID,
+        responseType: 'arraybuffer'
+      }).success(function(data, status, headers) {
+        mainVm.showAjaxLoader = false;
+        headers = headers();
+
+        // So much stuff to download the file.
+        var filename = headers['x-filename'];
+        var contentType = headers['content-type'];
+
+        var linkElement = document.createElement('a');
+        try {
+          var blob = new Blob([data], { type: contentType });
+          var url = window.URL.createObjectURL(blob);
+
+          linkElement.setAttribute('href', url);
+          linkElement.setAttribute("download", filename);
+
+          var clickEvent = new MouseEvent("click", {
+            "view": window,
+            "bubbles": true,
+            "cancelable": false
+          });
+          linkElement.dispatchEvent(clickEvent);
+        } catch (ex) {
+          console.log(ex);
+        }
+      }).error(function(data) {
+        mainVm.showAjaxLoader = true;
+        console.log(data);
+      });
+    }
+
     services.alreadyInvited = function(quizId, emails) {
       var deferred = $q.defer();
       // TODO - User filter on email after incorporating Dgraph schema.

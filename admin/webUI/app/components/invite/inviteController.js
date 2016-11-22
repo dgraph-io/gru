@@ -267,7 +267,7 @@
     }
   }
 
-  function candidatesController($scope, $rootScope, $stateParams, $state, $timeout, $templateCache, inviteService, moment) {
+  function candidatesController($scope, $rootScope, $stateParams, $state, $timeout, $templateCache, inviteService) {
     candidatesVm = this;
     candidatesVm.sortType = 'score';
     candidatesVm.sortReverse = true;
@@ -500,8 +500,9 @@
     cReportVm.candidateID = $stateParams.candidateID;
     cReportVm.idx = $stateParams.idx;
     cReportVm.total = $stateParams.total;
-    inviteVm.reportViewed = cReportVm.candidateID
-      // Function
+    cReportVm.resume = inviteService.getResume;
+    inviteVm.reportViewed = cReportVm.candidateID;
+    // Function
     cReportVm.initScoreCircle = initScoreCircle;
     cReportVm.isCorrect = isCorrect;
 

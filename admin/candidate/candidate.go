@@ -2,6 +2,8 @@ package candidate
 
 import (
 	"encoding/json"
+	"fmt"
+	"io"
 	"io/ioutil"
 	"math/rand"
 	"net/http"
@@ -10,7 +12,9 @@ import (
 	"github.com/dgraph-io/gru/admin/mail"
 	"github.com/dgraph-io/gru/admin/server"
 	"github.com/dgraph-io/gru/dgraph"
+	"github.com/dgraph-io/gru/quiz"
 	"github.com/gorilla/mux"
+	minio "github.com/minio/minio-go"
 )
 
 type Candidate struct {
@@ -258,4 +262,51 @@ func ResendInvite(w http.ResponseWriter, r *http.Request) {
 
 	go mail.Send(rr.Email, rr.Validity, cid+rr.Token)
 	sr.Write(w, "", "Invite has been resent.", http.StatusOK)
+}
+
+type candInfo struct {
+	Candidates []Candidate `json:"candidate"`
+}
+
+func candName(id string) string {
+	q := `query {
+                candidate(_uid_:` + id + `) {
+                        name
+                }
+        }`
+	var ci candInfo
+	if err := dgraph.QueryAndUnmarshal(q, &ci); err != nil {
+		return ""
+	}
+	if len(ci.Candidates) != 1 {
+		return ""
+	}
+	return ci.Candidates[0].Name
+}
+
+func Resume(w http.ResponseWriter, r *http.Request) {
+	sr := server.Response{}
+	vars := mux.Vars(r)
+	cid := vars["id"]
+
+	s3Client, err := minio.New("s3.amazonaws.com", *quiz.AwsKeyId, *quiz.AwsSecret, true)
+	if err != nil {
+		sr.Write(w, err.Error(), "", http.StatusInternalServerError)
+		return
+	}
+
+	object, err := s3Client.GetObject(*quiz.S3bucket, fmt.Sprintf("%v.pdf", cid))
+	if err != nil {
+		sr.Write(w, err.Error(), "", http.StatusInternalServerError)
+		return
+	}
+	defer object.Close()
+
+	w.Header().Set("Content-type", "application/octet-stream")
+	n := candName(cid)
+	w.Header().Set("x-filename", fmt.Sprintf("%v.pdf", n))
+	w.Header().Set("Content-disposition", fmt.Sprintf("attachment;filename=%v.pdf", cid))
+	if _, err := io.Copy(w, object); err != nil {
+		sr.Write(w, err.Error(), "", http.StatusInternalServerError)
+	}
 }

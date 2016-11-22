@@ -673,6 +673,10 @@ circle.path.prograss-circle {
   transform: translateY(-40px);
 }
 
+.report-header a {
+  color: blue;
+}
+
 
 /*TABLET + MOBILE SPECIFIC CSS*/
 

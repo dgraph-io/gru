@@ -30,8 +30,13 @@
       <div class="mdl-cell mdl-cell--1-col mdl-cell--1-col-tablet mdl-cell--1-col-phone">
         <i class="material-icons mdi-lg">account_box</i>
       </div>
-      <div class="mdl-cell mdl-cell--10-col mdl-cell--7-col-tablet mdl-cell--3-col-phone mdl-cell--middle uppercase">
+      <div class="mdl-cell mdl-cell--9-col mdl-cell--6-col-tablet mdl-cell--2-col-phone mdl-cell--middle uppercase">
         {{cReportVm.info.name}}
+      </div>
+      <div class="mdl-cell mdl-cell--1-col mdl-cell--middle" ng-if="cReportVm.info.Resume == true">
+        <a ng-click="cReportVm.resume(cReportVm.candidateID)" href="" target="_blank">
+          Resume
+        </a>
       </div>
     </div>
     <div class="mdl-grid mdl-chip-info no-pad mt-10">

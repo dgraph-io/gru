@@ -30,6 +30,23 @@
       return deferred.promise;
     }
 
+    services.addResume = function(files) {
+      var candidateToken = JSON.parse(localStorage.getItem('candidate_info'));
+      $http.defaults.headers.common['Authorization'] = 'Bearer ' + candidateToken.token;
+
+      var fd = new FormData();
+      // Take the first selected file
+      fd.append("resume", files[0]);
+      // mainVm.showAjaxLoader = true;
+      $http.post(mainVm.candidate_url + '/quiz/resume', fd, {
+        withCredentials: true,
+        headers: { 'Content-Type': undefined },
+        transformRequest: angular.identity
+      }).success(function(data) {}).error(function(err) {
+        console.log(err)
+      });
+    }
+
     return services;
   }
 

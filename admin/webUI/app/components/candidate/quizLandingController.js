@@ -1,6 +1,7 @@
 (function() {
 
-  function quizLandingController($scope, $state, $stateParams, $http, $interpolate, quizLandingService) {
+  function quizLandingController($scope, $state, $stateParams, $http, $interpolate,
+    quizLandingService) {
 
     // VARIABLE DECLARATION
     qlVm = this;
@@ -266,6 +267,7 @@
     // FUNCTION DECLARATION
     qlVm.validateQuiz = validateQuiz;
     qlVm.validate = validateInput;
+    qlVm.upload = quizLandingService.addResume;
 
     // FUNCTION DEFINITION
     qlVm.validateQuiz();

@@ -65,10 +65,12 @@ type quiz struct {
 }
 
 type candidates struct {
-	Id       string `json:"_uid_"`
-	Name     string
-	Email    string
-	Country  string
+	Id      string `json:"_uid_"`
+	Name    string
+	Email   string
+	Country string
+	// Whether the candidate uploaded his resume or not
+	Resume   bool `json:",string"`
 	Feedback string
 	// Used to calculate percentile, repesents number of candidates having score
 	// <= current candidate.
@@ -90,6 +92,7 @@ func reportQuery(id string) string {
                         _uid_
                         name
                         email
+                        resume
                         country
                         feedback
                         score
@@ -144,8 +147,9 @@ type question struct {
 
 type Summary struct {
 	Id         string
-	Name       string  `json:"name"`
-	Email      string  `json:"email"`
+	Name       string `json:"name"`
+	Email      string `json:"email"`
+	Resume     bool
 	Percentile float64 `json:"percentile"`
 	Country    string  `json:"country"`
 	QuizName   string
@@ -258,6 +262,7 @@ func ReportSummary(cid string) (Summary, ReportError) {
 	s.Email = c.Email
 	s.Country = c.Country
 	s.Feedback = c.Feedback
+	s.Resume = c.Resume
 	// TODO - Check how to obtain sorted results from Dgraph.
 	if len(c.CandidateQn) == 0 {
 		return s, ReportError{"", "Candidate hasn't started the test", http.StatusBadRequest}
