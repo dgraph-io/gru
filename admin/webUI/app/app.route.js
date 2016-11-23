@@ -27,7 +27,7 @@
   var candidateReportTemplate = 'app/components/invite/views/candidate-report.html?v=20161116-1';
 
   var candidateIndexTemplate = 'app/components/candidate/index.html';
-  var candidateLandingTemplate = 'app/components/candidate/views/landing.html';
+  var candidateLandingTemplate = 'app/components/candidate/views/landing.html?v=20161123-1';
   var candidateQuizTemplate = 'app/components/candidate/views/quiz.html?v=20161106-1';
 
   var quizLandingTemplate = 'app/components/candidate/views/quiz-landing.html';

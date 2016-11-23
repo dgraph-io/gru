@@ -37,7 +37,8 @@
       var fd = new FormData();
       // Take the first selected file
       fd.append("resume", files[0]);
-      // mainVm.showAjaxLoader = true;
+      files[0].name.length > 0 && fd.append("ext", files[0].name.split(".")[1])
+        // mainVm.showAjaxLoader = true;
       $http.post(mainVm.candidate_url + '/quiz/resume', fd, {
         withCredentials: true,
         headers: { 'Content-Type': undefined },

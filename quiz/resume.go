@@ -25,7 +25,7 @@ func Resume(w http.ResponseWriter, r *http.Request) {
 	}
 
 	r.ParseMultipartForm(32 << 20)
-	file, _, err := r.FormFile("resume")
+	file, header, err := r.FormFile("resume")
 	if err != nil {
 		sr.Write(w, err.Error(), "", http.StatusBadRequest)
 		return
@@ -38,7 +38,7 @@ func Resume(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = s3Client.PutObject(*S3bucket, fmt.Sprintf("%v.pdf", userId), file, "application/octet-stream")
+	_, err = s3Client.PutObject(*S3bucket, fmt.Sprintf("%v", userId), file, header.Header["Content-Type"][0])
 	if err != nil {
 		sr.Write(w, err.Error(), "", http.StatusInternalServerError)
 		return

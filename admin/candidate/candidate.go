@@ -6,6 +6,7 @@ import (
 	"io"
 	"io/ioutil"
 	"math/rand"
+	"mime"
 	"net/http"
 	"time"
 
@@ -295,17 +296,29 @@ func Resume(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	object, err := s3Client.GetObject(*quiz.S3bucket, fmt.Sprintf("%v.pdf", cid))
+	object, err := s3Client.GetObject(*quiz.S3bucket, fmt.Sprintf("%v", cid))
 	if err != nil {
 		sr.Write(w, err.Error(), "", http.StatusInternalServerError)
 		return
 	}
-	defer object.Close()
 
-	w.Header().Set("Content-type", "application/octet-stream")
+	defer object.Close()
+	stats, err := object.Stat()
+	if err != nil {
+		sr.Write(w, err.Error(), "", http.StatusInternalServerError)
+		return
+	}
+
+	ext, err := mime.ExtensionsByType(stats.ContentType)
+	if err != nil {
+		sr.Write(w, err.Error(), "", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-type", stats.ContentType)
 	n := candName(cid)
-	w.Header().Set("x-filename", fmt.Sprintf("%v.pdf", n))
-	w.Header().Set("Content-disposition", fmt.Sprintf("attachment;filename=%v.pdf", cid))
+	w.Header().Set("x-filename", fmt.Sprintf("%v%v", n, ext[0]))
+	w.Header().Set("Content-disposition", fmt.Sprintf("attachment;filename=%v%v", cid, ext[0]))
 	if _, err := io.Copy(w, object); err != nil {
 		sr.Write(w, err.Error(), "", http.StatusInternalServerError)
 	}
