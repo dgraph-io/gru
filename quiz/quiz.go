@@ -43,6 +43,7 @@ type Answer struct {
 	Text string `json:"name"`
 }
 
+// Question is marshalled to JSON and sent to the client.
 type Question struct {
 	Id string `json:"_uid_"`
 
@@ -58,25 +59,10 @@ type Question struct {
 	// Score of the candidate is sent as part of the questions API.
 	Score     float64 `json:"score"`
 	TimeTaken string  `json:"time_taken"`
-	// Score on last question.
-	LastScore float64 `json:"last_score"`
-	// Max score possible answering all the questions left.
-	ScoreLeft float64 `json:"score_left"`
-	Idx       int     `json:"idx"`
+	// Current question number.
+	Idx int `json:"idx"`
 	// Total number of questions.
 	NumQns int `json:"num_qns"`
-}
-
-type question struct {
-	Id      string   `json:"_uid_"`
-	Text    string   `json:"text"`
-	Options []Answer `json:"question.option"`
-	Correct []struct {
-		Id string `json:"_uid_"`
-	} `json:"question.correct"`
-	IsMultiple bool    `json:"multiple,string"`
-	Positive   float64 `json:"positive,string"`
-	Negative   float64 `json:"negative,string"`
 }
 
 // Candidate is used to keep track of the state of the quiz for a candidate.
@@ -93,18 +79,18 @@ type Candidate struct {
 	validity     time.Time
 	// number of questions left.
 	numQuestions int
-	qnIdx        int
-	// max score possible from questions left.
-	maxScoreLeft float64
-	// score on last question
-	lastScore float64
+	// current question index.
+	qnIdx int
 
 	// We use these so that we can show candidate the same question if he
-	// refreshes the page/recovers from a crash.
+	// refreshes the page.
 	lastQnUid  string
 	lastQnCuid string
-	lastQnTime time.Time
-	mailSent   bool
+	// To keep track of time spent on current question.
+	lastQnAsked time.Time
+
+	// To keep track of if we have already sent mail about a candidates report
+	mailSent bool
 }
 
 func updateMap(uid string, c Candidate) {
@@ -127,14 +113,14 @@ type quiz struct {
 	Id        string     `json:"_uid_"`
 	Duration  int        `json:"duration,string"`
 	CutOff    float64    `json:"cut_off,string"`
-	Questions []question `json:"quiz.question"`
+	Questions []Question `json:"quiz.question"`
 }
 
 type quizInfo struct {
 	Quizzes []quiz `json:"quiz"`
 }
 
-func quizQns(quizId string, qnsAsked []string) ([]Question, float64, error) {
+func quizQns(quizId string) ([]Question, error) {
 	q := `{
 		quiz(_uid_: ` + quizId + `) {
 			quiz.question {
@@ -142,9 +128,6 @@ func quizQns(quizId string, qnsAsked []string) ([]Question, float64, error) {
 				text
 				positive
 				negative
-				question.correct {
-					_uid_
-				}
 				question.option {
 					_uid_
 					name
@@ -156,32 +139,14 @@ func quizQns(quizId string, qnsAsked []string) ([]Question, float64, error) {
 
 	var resp quizInfo
 	if err := dgraph.QueryAndUnmarshal(q, &resp); err != nil {
-		return []Question{}, 0, err
+		return []Question{}, err
 	}
 	if len(resp.Quizzes) != 1 {
-		return []Question{}, 0, fmt.Errorf("Expected length of quizzes: %v. Got %v",
+		return []Question{}, fmt.Errorf("Expected length of quizzes: %v. Got %v",
 			1, len(resp.Quizzes))
 	}
 
-	allQns := resp.Quizzes[0].Questions
-	maxScore := 0.0
-	qns := make([]Question, 0, len(allQns))
-	for _, qn := range allQns {
-		if x.StringInSlice(qn.Id, qnsAsked) != -1 {
-			continue
-		}
-		que := Question{
-			Id:         qn.Id,
-			Text:       qn.Text,
-			Positive:   qn.Positive,
-			Negative:   qn.Negative,
-			IsMultiple: qn.IsMultiple,
-			Options:    qn.Options,
-		}
-		maxScore += qn.Positive * float64(len(qn.Correct))
-		qns = append(qns, que)
-	}
-	return qns, maxScore, nil
+	return resp.Quizzes[0].Questions, nil
 }
 
 // Used to fetch data about a candidate from Dgraph and populate Candidate struct.
@@ -192,12 +157,9 @@ type cand struct {
 	Token       string    `json:"token"`
 	Validity    string    `json:"validity"`
 	Complete    bool      `json:"complete,string"`
-	CompletedAt time.Time `json:"completed_at",string"`
+	CompletedAt time.Time `json:"completed_at,string"`
 	Quiz        []quiz    `json:"candidate.quiz"`
-	Questions   []qids    `json:"candidate.question"`
 	QuizStart   time.Time `json:"quiz_start"`
-	LastQnUid   string    `json:"candidate.lastqnuid"`
-	LastQnCuid  string    `json:"candidate.lastqncuid"`
 }
 
 type resp struct {
@@ -274,15 +236,6 @@ func candQuery(cid string) string {
                         duration
                         cut_off
                 }
-                candidate.question {
-                        question.uid {
-                                _uid_
-                        }
-                        question.answered
-                        candidate.score
-                }
-                candidate.lastqnuid
-                candidate.lastqncuid
           }
     }`
 }
@@ -319,12 +272,10 @@ func checkAndUpdate(uid string) (int, error) {
 	}
 
 	c := Candidate{
-		quizStart:  cand.QuizStart,
-		lastQnUid:  cand.LastQnUid,
-		lastQnCuid: cand.LastQnCuid,
-		name:       cand.Name,
-		token:      cand.Token,
-		email:      cand.Email,
+		name:      cand.Name,
+		token:     cand.Token,
+		email:     cand.Email,
+		quizStart: cand.QuizStart,
 	}
 	// TODO - Check how can we store this in appropriate format so that explicit parsing isn't
 	// required.
@@ -347,33 +298,15 @@ func checkAndUpdate(uid string) (int, error) {
 
 	c.quizCutoff = quiz.CutOff
 
-	var qa []string
-	if len(cand.Questions) > 0 {
-		// He has already been asked some questions. Lets figure out the
-		// ones he has answered.
-		qa = qnsAnswered(cand.Questions)
-	}
-
 	// Get quiz questions for the quiz id.
-	qnsUnanswered, ms, err := quizQns(quiz.Id, qa)
+	questions, err := quizQns(quiz.Id)
 	if err != nil {
 		return http.StatusInternalServerError, fmt.Errorf("Something went wrong.")
 	}
-	// TODO - Get num questions from length of questions in the quiz, so that we
-	// are safe from server crashes.
-	c.numQuestions = len(qnsUnanswered)
-	c.maxScoreLeft = ms
+	c.numQuestions = len(questions)
 
-	shuffleQuestions(qnsUnanswered)
-	// Lets bring the last question asked to the first place.
-	for idx, qn := range qnsUnanswered {
-		if qn.Id == cand.LastQnUid {
-			qnsUnanswered[0], qnsUnanswered[idx] = qnsUnanswered[idx], qnsUnanswered[0]
-			break
-		}
-	}
-	c.qns = qnsUnanswered
-	c.score = calcScore(cand.Questions)
+	shuffleQuestions(questions)
+	c.qns = questions
 	updateMap(uid, c)
 	return http.StatusOK, nil
 }
@@ -393,8 +326,6 @@ func sendMail(c Candidate, userId string) error {
 	m := new(dgraph.Mutation)
 	m.Set(`<_uid_:` + userId + `> <completed_at> "` + time.Now().Format(timeLayout) + `" .`)
 	m.Set(`<rejected> <candidate> <_uid_:` + userId + `> .`)
-	if _, err := dgraph.SendMutation(m.String()); err != nil {
-		return err
-	}
-	return nil
+	_, err := dgraph.SendMutation(m.String())
+	return err
 }

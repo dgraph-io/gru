@@ -17,7 +17,7 @@ type Quiz struct {
 	Name      string
 	Duration  int
 	Cutoff    float64    `json:"cut_off"`
-	Questions []Question `json:"questions`
+	Questions []Question `json:"questions"`
 }
 
 type Question struct {

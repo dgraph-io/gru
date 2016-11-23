@@ -190,7 +190,8 @@ func runHTTPServer(address string) {
 	adminRouter.HandleFunc("/candidate/invite/{id}", candidate.ResendInvite).Methods("POST", "OPTIONS")
 	adminRouter.HandleFunc("/candidates", candidate.Index).Methods("GET", "OPTIONS")
 
-	n := negroni.Classic()
+	n := negroni.New()
+	n.Use(negroni.NewLogger())
 	n.Use(negroni.HandlerFunc(options))
 	n.UseHandler(router)
 	fmt.Println("Server Running on 8000")

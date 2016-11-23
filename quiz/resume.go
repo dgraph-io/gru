@@ -18,6 +18,11 @@ var (
 
 func Resume(w http.ResponseWriter, r *http.Request) {
 	sr := server.Response{}
+	if *AwsKeyId == "" || *AwsSecret == "" || *S3bucket == "" {
+		sr.Write(w, "", "", http.StatusInternalServerError)
+		return
+	}
+
 	userId, err := validateToken(r)
 	if err != nil {
 		sr.Write(w, err.Error(), "Unauthorized", http.StatusUnauthorized)

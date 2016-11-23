@@ -87,7 +87,7 @@ func Validate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Check for duplicate session.
-	if !c.lastExchange.IsZero() && time.Now().Sub(c.lastExchange) < 5*time.Second {
+	if !c.lastExchange.IsZero() && time.Since(c.lastExchange) < 5*time.Second {
 		// We update lastExchange time in pings. If we got a ping within
 		// the last n second that means there is another active session.
 		sr.Write(w, "", "You have another active session. Please try after some time.",

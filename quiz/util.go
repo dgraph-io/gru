@@ -15,21 +15,3 @@ func shuffleOptions(opts []Answer) {
 		opts[i], opts[j] = opts[j], opts[i]
 	}
 }
-
-func qnsAnswered(qns []qids) []string {
-	var uids []string
-	for _, qn := range qns {
-		if qn.Answered != "" {
-			uids = append(uids, qn.QuestionUid[0].Id)
-		}
-	}
-	return uids
-}
-
-func calcScore(qns []qids) float64 {
-	score := 0.0
-	for _, qn := range qns {
-		score += qn.Score
-	}
-	return score
-}

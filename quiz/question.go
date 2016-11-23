@@ -19,11 +19,6 @@ func QuestionHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if status, err := checkAndUpdate(userId); err != nil {
-		sr.Write(w, "", err.Error(), status)
-		return
-	}
-
 	c, err := readMap(userId)
 	if err != nil {
 		sr.Write(w, "", "Candidate not found.", http.StatusBadRequest)
@@ -62,6 +57,7 @@ func QuestionHandler(w http.ResponseWriter, r *http.Request) {
 		// Lets store that the user successfully completed the test.
 		m := new(dgraph.Mutation)
 		m.Set(`<_uid_:` + userId + `> <complete> "true" .`)
+		// Completed at is used to reject candidates whose score is < cutoff
 		m.Set(`<_uid_:` + userId + `> <completed_at> "` + time.Now().Format(timeLayout) + `" .`)
 		m.Set(`<_uid_:` + userId + `> <score> "` + strconv.FormatFloat(x.ToFixed(c.score, 2), 'g', -1, 64) + `" .`)
 		_, err := dgraph.SendMutation(m.String())
@@ -84,12 +80,12 @@ func QuestionHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	qn := c.qns[0]
-	if c.lastQnTime.IsZero() {
+	if c.lastQnAsked.IsZero() {
 		qn.TimeTaken = "0s"
-		c.lastQnTime = time.Now().UTC()
+		c.lastQnAsked = time.Now().UTC()
 		updateMap(userId, c)
 	} else {
-		qn.TimeTaken = time.Now().UTC().Sub(c.lastQnTime).String()
+		qn.TimeTaken = time.Now().UTC().Sub(c.lastQnAsked).String()
 	}
 
 	qn.Score = x.ToFixed(c.score, 2)
@@ -97,8 +93,6 @@ func QuestionHandler(w http.ResponseWriter, r *http.Request) {
 
 	qn.NumQns = c.numQuestions
 	qn.Idx = c.qnIdx
-	qn.ScoreLeft = c.maxScoreLeft
-	qn.LastScore = c.lastScore
 	updateMap(userId, c)
 	if c.lastQnUid != "" && c.lastQnUid == qn.Id {
 		qn.Cid = c.lastQnCuid
@@ -124,14 +118,6 @@ func QuestionHandler(w http.ResponseWriter, r *http.Request) {
 
 	c.lastQnCuid = res.Uids["qn"]
 	qn.Cid = res.Uids["qn"]
-	m = new(dgraph.Mutation)
-	m.Set(`<_uid_:` + userId + `> <candidate.lastqncuid> "` + res.Uids["qn"] + `" .`)
-	res, err = dgraph.SendMutation(m.String())
-	if err != nil {
-		sr.Write(w, "", err.Error(), http.StatusInternalServerError)
-		return
-	}
-
 	c.lastQnUid = qn.Id
 	qn.Idx = c.qnIdx + 1
 	c.qnIdx += 1

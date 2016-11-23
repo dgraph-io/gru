@@ -216,7 +216,7 @@ func percentile(quizId string, cid string) (float64, error) {
 	candidates := res.Quiz[0].Candidates
 	i := 0
 	for _, cand := range candidates {
-		if cand.Complete == true {
+		if cand.Complete {
 			// Lets retain only the candidates who have completed the test
 			// for percentile calculation.
 			candidates[i] = cand

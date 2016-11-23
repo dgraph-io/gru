@@ -24,11 +24,6 @@ func PingHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if status, err := checkAndUpdate(userId); err != nil {
-		sr.Write(w, "", err.Error(), status)
-		return
-	}
-
 	c, err := readMap(userId)
 	if err != nil {
 		sr.Write(w, "", "Candidate not found.", http.StatusBadRequest)
