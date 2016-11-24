@@ -76,7 +76,7 @@ type queInfo struct {
 	} `json:"question"`
 }
 
-func checkAnswer(qid string, ansIds []string) (float64, error) {
+func checkAnswer(qid string, ansIds []string) (float64, bool, error) {
 	q := `{
 		question(_uid_: ` + qid + `) {
 			question.correct {
@@ -89,20 +89,91 @@ func checkAnswer(qid string, ansIds []string) (float64, error) {
 
 	var qi queInfo
 	if err := dgraph.QueryAndUnmarshal(q, &qi); err != nil {
-		return 0, err
+		return 0, false, err
 	}
 	if len(qi.Question) != 1 {
-		return 0, fmt.Errorf("There should be just one question returned")
+		return 0, false, fmt.Errorf("There should be just one question returned")
 	}
 
 	qn := qi.Question[0]
-	correct := []string{}
+	correctAids := []string{}
 	for _, answer := range qn.Correct {
-		correct = append(correct, answer.Uid)
+		correctAids = append(correctAids, answer.Uid)
 	}
 
-	score := getScore(ansIds, correct, qn.Positive, qn.Negative)
-	return score, nil
+	score := getScore(ansIds, correctAids, qn.Positive, qn.Negative)
+	correct := (score == float64(len(correctAids))*qn.Positive)
+	return score, correct, nil
+}
+
+const (
+	// Positive or negative streak at which we change the level for the candidate.
+	levelStreak = 3
+	// EASY, MEDIUM and HARD.
+	numLevels = 3
+)
+
+func (c *Candidate) updateStreak(correct bool) {
+	if correct {
+		if c.streak < 0 {
+			c.streak = 1
+		} else {
+			c.streak++
+		}
+	} else {
+		if c.streak > 0 {
+			c.streak = -1
+		} else {
+			c.streak--
+		}
+	}
+}
+
+func (c *Candidate) downgradeLevel() {
+	currentLevel := c.level
+	for i := 1; i < numLevels; i++ {
+		newLevel := currentLevel - difficulty(i)
+		if newLevel < 0 {
+			newLevel += numLevels
+		}
+		if len(c.qns[newLevel]) != 0 {
+			c.level = newLevel
+			// We are downgrading the level, lets reset the streak.
+			c.streak = 0
+			break
+		}
+
+	}
+}
+
+func (c *Candidate) upgradeLevel() {
+	// Lets check if we have questions available for the next level.
+	for i := 1; i < numLevels; i++ {
+		newLevel := difficulty((int(c.level) + i) % numLevels)
+		if len(c.qns[newLevel]) != 0 {
+			c.level = newLevel
+			// We are upgrading the level, lets reset the streak.
+			c.streak = 0
+			break
+		}
+	}
+}
+
+func calibrateLevel(c *Candidate, correct bool) {
+	c.updateStreak(correct)
+
+	// Lets delete the first question for this level, since the candidate
+	// has already answered it.
+	c.qns[c.level] = c.qns[c.level][1:]
+	// If user has a negative streak and his current level is not EASY, we
+	// downgrade his level.
+	if c.streak == -levelStreak && c.level != EASY {
+		c.downgradeLevel()
+		// If user has a positive streak or if we run out of questions for this
+		// level, we try to upgrade the level.
+	} else if (c.streak == levelStreak && c.level != HARD) || len(c.qns[c.level]) == 0 {
+		c.upgradeLevel()
+	}
 }
 
 func AnswerHandler(w http.ResponseWriter, r *http.Request) {
@@ -142,12 +213,12 @@ func AnswerHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Lets get information about the question to check if the answer is right
 	// and calculate scores.
-	s, err := checkAnswer(qid, ansIds)
+	s, correct, err := checkAnswer(qid, ansIds)
 	if err != nil {
 		sr.Write(w, err.Error(), "", http.StatusInternalServerError)
 	}
 	c.score = c.score + s
-	c.qns = c.qns[1:]
+	calibrateLevel(&c, correct)
 	c.lastQnAsked = time.Now().UTC()
 	updateMap(userId, c)
 

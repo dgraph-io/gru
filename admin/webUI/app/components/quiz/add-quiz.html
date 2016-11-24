@@ -25,8 +25,16 @@
         <div class="mdl-grid no-pad no-margin-lr">
           <div class="mdl-cell mdl-cell--12-col">
             <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label" ng-class="{'is-dirty': quizVm.newQuiz.cut_off}">
-              <input class="mdl-textfield__input" type="number" name="text" id="cut_off" ng-model="quizVm.newQuiz.cut_off">
+              <input class="mdl-textfield__input" type="number" name="text" id="cut_off" ng-model="quizVm.newQuiz.cut_off" step="0.01">
               <label class="mdl-textfield__label" for="cut_off">Cut off</label>
+            </div>
+          </div>
+        </div>
+        <div class="mdl-grid no-pad no-margin-lr">
+          <div class="mdl-cell mdl-cell--12-col">
+            <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label" ng-class="{'is-dirty': quizVm.newQuiz.threshold}">
+              <input class="mdl-textfield__input" type="number" name="text" id="threshold" ng-model="quizVm.newQuiz.threshold" step="0.01">
+              <label class="mdl-textfield__label" for="threshold">Threshold</label>
             </div>
           </div>
         </div>

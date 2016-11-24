@@ -16,8 +16,8 @@
   var editQuestionTemplate = 'app/components/question/views/edit-question.html?v=20161027-1';
 
   var quizTemplate = 'app/components/quiz/index.html';
-  var addQuizTemplate = 'app/components/quiz/add-quiz.html';
-  var editQuizTemplate = 'app/components/quiz/edit-quiz.html';
+  var addQuizTemplate = 'app/components/quiz/add-quiz.html?v=20161124-1';
+  var editQuizTemplate = 'app/components/quiz/edit-quiz.html?v=20161124-1';
   var allQuizTemplate = 'app/components/quiz/all-quiz.html?v=20161113-1';
 
   var inviteTemplate = 'app/components/invite/index.html?v=20161105-1';

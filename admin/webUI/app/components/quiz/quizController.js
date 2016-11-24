@@ -95,6 +95,9 @@
       if (!inputs.questions) {
         return "Please add question to the quiz before submitting"
       }
+      if (inputs.threshold == undefined) {
+        return "Please enter valid threshold"
+      }
       if (inputs.cut_off >= getTotalScore(inputs.questions)) {
         return "Cutoff should be less than the total possible score"
       }
@@ -160,6 +163,7 @@
         quizVm.newQuiz = data.root[0];
         quizVm.newQuiz.duration = parseInt(quizVm.newQuiz.duration)
         quizVm.newQuiz.cut_off = parseFloat(quizVm.newQuiz.cut_off)
+        quizVm.newQuiz.threshold = parseFloat(quizVm.newQuiz.threshold)
 
         editQuizVm.selectedQuestion = data.root[0]['quiz.question'];
         quizVm.newQuiz.newQuestions = [];

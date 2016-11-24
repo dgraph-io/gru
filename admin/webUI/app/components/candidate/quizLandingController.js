@@ -320,6 +320,7 @@
           "Once you start the quiz, the timer would not stop, irrespective of any client side issues.",
           "Questions can have single or multiple correct answers. They will be shown accordingly.",
           "Your total score and the time left at any point in the quiz would be displayed on the top.",
+          "We may end the quiz in between if your score is less than a certain negative threshold."
         ],
         Score: [
           "There is NEGATIVE scoring for wrong answers. So, please DO NOT GUESS.",

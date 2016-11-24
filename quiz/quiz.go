@@ -27,7 +27,12 @@ var (
 	throttle chan time.Time
 )
 
+type difficulty int
+
 const (
+	EASY difficulty = iota
+	MEDIUM
+	HARD
 	rate       = time.Second
 	timeLayout = "2006-01-02T15:04:05Z07:00"
 )
@@ -43,40 +48,19 @@ type Answer struct {
 	Text string `json:"name"`
 }
 
-// Question is marshalled to JSON and sent to the client.
-type Question struct {
-	Id string `json:"_uid_"`
-
-	// cuid represents the uid of the question asked to the candidate, it is linked
-	// to the original question _uid_.
-	Cid     string   `json:"cuid"`
-	Text    string   `json:"text"`
-	Options []Answer `json:"question.option"`
-	// TODO - Remove the ,string after we incorporate Dgraph schema here.
-	IsMultiple bool    `json:"multiple,string"`
-	Positive   float64 `json:"positive,string"`
-	Negative   float64 `json:"negative,string"`
-	// Score of the candidate is sent as part of the questions API.
-	Score     float64 `json:"score"`
-	TimeTaken string  `json:"time_taken"`
-	// Current question number.
-	Idx int `json:"idx"`
-	// Total number of questions.
-	NumQns int `json:"num_qns"`
-}
-
 // Candidate is used to keep track of the state of the quiz for a candidate.
 type Candidate struct {
-	name         string
-	email        string
-	token        string
-	score        float64
-	qns          []Question
-	lastExchange time.Time
-	quizDuration time.Duration
-	quizCutoff   float64
-	quizStart    time.Time
-	validity     time.Time
+	name          string
+	email         string
+	token         string
+	score         float64
+	qns           map[difficulty][]Question
+	lastExchange  time.Time
+	quizDuration  time.Duration
+	quizCutoff    float64
+	quizThreshold float64
+	quizStart     time.Time
+	validity      time.Time
 	// number of questions left.
 	numQuestions int
 	// current question index.
@@ -91,6 +75,11 @@ type Candidate struct {
 
 	// To keep track of if we have already sent mail about a candidates report
 	mailSent bool
+
+	// Difficulty level of questions being asked.
+	level difficulty
+	// No. of consecutive questions correct or wrong. Used to switch the level.
+	streak int
 }
 
 func updateMap(uid string, c Candidate) {
@@ -113,40 +102,8 @@ type quiz struct {
 	Id        string     `json:"_uid_"`
 	Duration  int        `json:"duration,string"`
 	CutOff    float64    `json:"cut_off,string"`
+	Threshold float64    `json:"threshold,string"`
 	Questions []Question `json:"quiz.question"`
-}
-
-type quizInfo struct {
-	Quizzes []quiz `json:"quiz"`
-}
-
-func quizQns(quizId string) ([]Question, error) {
-	q := `{
-		quiz(_uid_: ` + quizId + `) {
-			quiz.question {
-				_uid_
-				text
-				positive
-				negative
-				question.option {
-					_uid_
-					name
-				}
-				multiple
-			}
-		}
-	}`
-
-	var resp quizInfo
-	if err := dgraph.QueryAndUnmarshal(q, &resp); err != nil {
-		return []Question{}, err
-	}
-	if len(resp.Quizzes) != 1 {
-		return []Question{}, fmt.Errorf("Expected length of quizzes: %v. Got %v",
-			1, len(resp.Quizzes))
-	}
-
-	return resp.Quizzes[0].Questions, nil
 }
 
 // Used to fetch data about a candidate from Dgraph and populate Candidate struct.
@@ -222,95 +179,7 @@ func sendReport(cid string) {
 	mail.SendReport(s.Name, s.QuizName, s.TotalScore, s.MaxScore, buf.String())
 }
 
-func candQuery(cid string) string {
-	return `{
-        quiz.candidate(_uid_:` + cid + `) {
-                name
-                email
-                token
-                validity
-                complete
-                quiz_start
-                candidate.quiz {
-                        _uid_
-                        duration
-                        cut_off
-                }
-          }
-    }`
-}
-
-// Checks for candidate in cache, if we find it then we return. Else we load up
-// information from the Database into the cache.
-func checkAndUpdate(uid string) (int, error) {
-	if _, err := readMap(uid); err == nil {
-		// Got candidate information in Cache, return.
-		return http.StatusOK, nil
-	}
-
-	// Candidate doesn't exist in the map. So we get candidate info from database
-	// and insert it into map.
-	q := candQuery(uid)
-	var resp resp
-	if err := dgraph.QueryAndUnmarshal(q, &resp); err != nil {
-		return http.StatusInternalServerError, fmt.Errorf("Something went wrong.")
-	}
-
-	if len(resp.Cand) != 1 || len(resp.Cand[0].Quiz) != 1 {
-		// No candidiate found with given uid
-		return http.StatusUnauthorized, fmt.Errorf("Invalid token.")
-	}
-
-	cand := resp.Cand[0]
-	quiz := cand.Quiz[0]
-	if cand.Complete {
-		return http.StatusUnauthorized, fmt.Errorf("You have already completed the quiz.")
-	}
-	if quiz.Id == "" {
-		return http.StatusUnauthorized, fmt.Errorf("Invalid token.")
-
-	}
-
-	c := Candidate{
-		name:      cand.Name,
-		token:     cand.Token,
-		email:     cand.Email,
-		quizStart: cand.QuizStart,
-	}
-	// TODO - Check how can we store this in appropriate format so that explicit parsing isn't
-	// required.
-	var err error
-	if c.validity, err = time.Parse("2006-01-02 15:04:05 +0000 UTC", cand.Validity); err != nil {
-		return http.StatusInternalServerError, fmt.Errorf("Something went wrong.")
-	}
-	if c.validity.Before(time.Now()) {
-		return http.StatusUnauthorized,
-			fmt.Errorf("Your token has already expired. Please mail us at contact@dgraph.io.")
-	}
-
-	// We check that quiz duration hasn't elapsed in case the candidate tries
-	// to validate again say after a browser crash.
-	c.quizDuration = time.Minute * time.Duration(quiz.Duration)
-
-	if timeLeft(c.quizStart, c.quizDuration) < 0 {
-		return http.StatusUnauthorized, fmt.Errorf("Your token is no longer valid.")
-	}
-
-	c.quizCutoff = quiz.CutOff
-
-	// Get quiz questions for the quiz id.
-	questions, err := quizQns(quiz.Id)
-	if err != nil {
-		return http.StatusInternalServerError, fmt.Errorf("Something went wrong.")
-	}
-	c.numQuestions = len(questions)
-
-	shuffleQuestions(questions)
-	c.qns = questions
-	updateMap(uid, c)
-	return http.StatusOK, nil
-}
-
+// Used to send mail about the candidate when his test ends.
 func sendMail(c Candidate, userId string) error {
 	if c.mailSent {
 		return nil

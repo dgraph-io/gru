@@ -11,6 +11,33 @@ import (
 	"github.com/dgraph-io/gru/x"
 )
 
+type Tag struct {
+	Name string `json:"name"`
+}
+
+// Question is marshalled to JSON and sent to the client.
+type Question struct {
+	Id string `json:"_uid_"`
+
+	// cuid represents the uid of the question asked to the candidate, it is linked
+	// to the original question _uid_.
+	Cid     string   `json:"cuid"`
+	Text    string   `json:"text"`
+	Options []Answer `json:"question.option"`
+	Tags    []Tag    `json:"question.tag"`
+	// TODO - Remove the ,string after we incorporate Dgraph schema here.
+	IsMultiple bool    `json:"multiple,string"`
+	Positive   float64 `json:"positive,string"`
+	Negative   float64 `json:"negative,string"`
+	// Score of the candidate is sent as part of the questions API.
+	Score     float64 `json:"score"`
+	TimeTaken string  `json:"time_taken"`
+	// Current question number.
+	Idx int `json:"idx"`
+	// Total number of questions.
+	NumQns int `json:"num_qns"`
+}
+
 func QuestionHandler(w http.ResponseWriter, r *http.Request) {
 	sr := server.Response{}
 	userId, err := validateToken(r)
@@ -47,8 +74,9 @@ func QuestionHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	if len(c.qns) == 0 {
-		// No more questions to ask. Client ends quiz when question id is END.
+	if len(c.qns[c.level]) == 0 || c.score <= c.quizThreshold {
+		// No more questions to ask or score is less than threshold.
+		// Client ends quiz when question id is END.
 		q := Question{
 			Id:    "END",
 			Score: x.ToFixed(c.score, 2),
@@ -79,7 +107,7 @@ func QuestionHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	qn := c.qns[0]
+	qn := c.qns[c.level][0]
 	if c.lastQnAsked.IsZero() {
 		qn.TimeTaken = "0s"
 		c.lastQnAsked = time.Now().UTC()
