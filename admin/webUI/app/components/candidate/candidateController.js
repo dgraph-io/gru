@@ -272,7 +272,7 @@
             }
           }
         }, function(err) {
-          var message = err.status == 0 ? "You internet seems to be offline, connecting..." : false;
+          var message = err.status == 0 ? "You internet seems to be offline, try refreshing the page after its back up..." : false;
           mainVm.initNotification(message);
         })
     }
