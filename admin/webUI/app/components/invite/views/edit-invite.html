@@ -1,0 +1,33 @@
+<div class="mdl-grid container" ng-controller="editInviteController as editInviteVm">
+  <div class="mdl-cell mdl-cell--6-col mdl-cell--6-col-tablet mdl-cell--3-offset-desktop mdl-cell--1-offset-tablet">
+    <h4>Update Invite</h4>
+    <form ng-submit="editInviteVm.editInvite()">
+      <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label mt-20" ng-class="{'is-dirty': editInviteVm.candidate.email}">
+        <input class="mdl-textfield__input" type="email" id="email" ng-model="editInviteVm.candidate.email">
+        <label class="mdl-textfield__label" for="email">Enter Email</label>
+        <span class="mdl-textfield__error">Should be valid email</span>
+      </div>
+      <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label mt-20" ng-class="{'is-dirty': editInviteVm.candidate.dates}">
+        <input class="mdl-textfield__input" type="date" id="datePicker" ng-model="editInviteVm.candidate.dates">
+        <label class="mdl-textfield__label" for="datePicker">Enter validity</label>
+        <span class="mdl-textfield__error">Should be valid date</span>
+      </div>
+      <ui-select theme="select2" ng-model="editInviteVm.candidate.quiz" class="mdl-select" on-select="editInviteVm.onQuizChange($item, $model)">
+        <ui-select-match placeholder="Enter tags">
+          <span ng-bind="$select.selected.name"></span>
+        </ui-select-match>
+        <ui-select-choices repeat="quiz in (inviteVm.allQuizes | filter: $select.search) track by $index">
+          <span ng-bind="quiz.name"></span>
+        </ui-select-choices>
+      </ui-select>
+      <div class="mt-20">
+        <button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mt-20 action-btn" ng-disabled="!editInviteVm.candidate.quiz">
+          Update Invite
+        </button>
+        <button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mt-20 ml-20" type="reset" ng-click="editInviteVm.goToDashboard()">
+          Cancel
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

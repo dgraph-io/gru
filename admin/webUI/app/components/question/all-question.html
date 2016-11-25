@@ -1,0 +1,144 @@
+<div ng-controller="allQuestionController as allQVm" class="question-listing" id="question-listing">
+  <div class="" ng-if="mainVm.allQuestions.length">
+    <div class="mdl-grid mdl-grid--no-spacing b-border">
+      <div class="mdl-cell mdl-cell--2-col mdl-cell--4-col-tablet pl-5 mdl-cell--middle">
+        <div class="pv-10">
+          {{filteredQues.length}} QUESTION<span ng-if="filteredQues.length > 1">S</span>
+          <br>
+          <form action="#">
+            <div class="mdl-textfield mdl-js-textfield">
+              <input class="mdl-textfield__input" type="text" id="search" ng-model="allQVm.searchText">
+              <label class="mdl-textfield__label" for="search">Search by name</label>
+            </div>
+          </form>
+        </div>
+      </div>
+      <div class="mdl-cell mdl-cell--9-col mdl-cell--4-col-tablet pl-5 mdl-cell--middle">
+        <div class="mt-10 pb-5">
+          <div class="tag-wrapper">
+            <div class="inline-block" ng-repeat="tag in questionVm.allTags track by tag._uid_">
+              <div class="tag-filter capitalize" ng-click="allQVm.toggleFilter(tag, 'tag')" ng-class="{'selected-filter': mainVm.indexOfObject(allQVm.filter.tag, tag) > -1}">
+                {{tag.name}}
+              </div>
+            </div>
+            <div class="tag-filter capitalize option-filter" ng-click="allQVm.toggleFilter('multiple')" ng-class="{'selected-filter': allQVm.filter.multiple}">
+              Multiple
+            </div>
+            <div class="tag-filter capitalize option-filter" ng-click="allQVm.toggleFilter('single')" ng-class="{'selected-filter': allQVm.filter.single}">
+              Single
+            </div>
+            <div class="inline-block">
+              <span class="text-red clickable" ng-click="allQVm.removeAllFilter()" ng-show="allQVm.filter.tag.length > 1 || (allQVm.filter.tag.length && (allQVm.filter.multiple || allQVm.filter.single))">
+                Clear All
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="mdl-cell mdl-cell--1-col mdl-cell--4-col-tablet ">
+        <button class="mdl-button btn-succes bg-green pull-right mt-10 " ng-click="mainVm.goTo( 'question.add') ">Add New</button>
+      </div>
+    </div>
+    <div class="mdl-tabs vertical-mdl-tabs mdl-js-tabs mdl-js-ripple-effect mt-10 ">
+      <div class="mdl-grid mdl-grid--no-spacing qn-index ">
+        <div class="mdl-cell mdl-cell--2-col r-border ">
+          <div class="qn-nav">
+            <div class="side-tabs pv-5 " ng-repeat="question in filteredQues = (mainVm.allQuestions | filter: allQVm.filterBy)" ng-class="{ 'is-active': allQVm.question._uid_==question._uid_} " ng-click="allQVm.getQuestion(question._uid_)">
+              {{question.name}}
+            </div>
+            <div class="pt-20 text-center text-red no-item " ng-show="allQVm.noItemFound ">
+              <div>No more questions available</div>
+            </div>
+            <div class="text-red text-center pt-20" ng-show="!filteredQues.length">
+              No questions matched the given criteria.
+            </div>
+          </div>
+        </div>
+        <div class="mdl-cell mdl-cell--10-col pl-30 qn-desc " ng-show="filteredQues.length">
+          <div class="mdl-tabs__panel is-active " id="tab{{allQVm.questionIndex}}-panel ">
+            <div class="mdl-grid no-pad ">
+              <div class="mdl-cell mdl-cell--2-col mdl-cell--middle ">
+                <span class="bold ">NAME</span>
+              </div>
+              <div class="mdl-cell mdl-cell--10-col ">
+                {{allQVm.question.name}}
+              </div>
+            </div>
+            <div class="mdl-grid no-pad ">
+              <div class="mdl-cell mdl-cell--2-col mdl-cell--middle ">
+                <span class="bold ">SCORING</span>
+              </div>
+              <div class="mdl-cell mdl-cell--10-col ">
+                <span class="mdl-chip mdl-chip--contact ">
+                  <span class="mdl-chip__contact mdl-color--teal mdl-color-text--white ">
+                    Positive Score
+                  </span>
+                <span class="mdl-chip__text bold text-center "> {{allQVm.question.positive}}</span>
+                </span>
+                <span class="mdl-chip mdl-chip--contact ">
+                  <span class="mdl-chip__contact mdl-color--teal mdl-color-text--white ">
+                    Negative Score
+                  </span>
+                <span class="mdl-chip__text bold text-center "> {{allQVm.question.negative}}</span>
+                </span>
+              </div>
+            </div>
+            <div class="mdl-grid no-pad " ng-show="allQVm.question[ 'question.tag'] ">
+              <div class="mdl-cell mdl-cell--2-col mdl-cell--middle ">
+                <span ng-show="!editQuestion " class="bold ">TAGS</span>
+              </div>
+              <div class="mdl-cell mdl-cell--10-col ">
+                <span ng-repeat="tag in allQVm.question[ 'question.tag'] track by $index ">
+                  <span class="mdl-chip clickable" ng-click="allQVm.toggleFilter(tag, 'tag')" ng-class="{'selected-filter': mainVm.indexOfObject(allQVm.filter.tag, tag) > -1}">
+                    <span class="mdl-chip__text ">{{tag.name}}</span>
+                </span>
+                </span>
+              </div>
+            </div>
+            <div class="mt-10 pl-10 ">
+              <strong>QUESTION CONTENT</strong>
+              <pre class="ph-20 pv-5 full-border code-block " ng-bind-html="questionVm.markDownFormat(mainVm.unescapeText(allQVm.question.text)) "></pre>
+            </div>
+            <div class="mdl-grid no-pad mt-5 " ng-repeat="option in allQVm.question[ 'question.option'] track by $index ">
+              <div class="mdl-cell mdl-cell--2-col mdl-cell--middle ">
+                <span class="bold " ng-class="{ 'text-green': questionVm.isCorrect(option, allQVm.question[ 'question.correct'])} ">
+                  OPTIONS {{$index + 1}}
+                  <i class="material-icons mdi-sm " ng-show="questionVm.isCorrect(option, allQVm.question[ 'question.correct']) ">check_circle</i>
+
+                </span>
+              </div>
+              <div class="mdl-cell mdl-cell--10-col full-border option ">
+                <div class="ph-10 position-relative ">
+                  <pre ng-bind-html="questionVm.markDownFormat(mainVm.unescapeText(option.name)) " class="code-block "></pre>
+                </div>
+              </div>
+            </div>
+            <div class="mdl-grid no-pad " ng-if="allQVm.question.notes ">
+              <div class="mdl-cell mdl-cell--2-col mdl-cell--middle ">
+                <span class="bold ">NOTE</span>
+              </div>
+              <div class="mdl-cell mdl-cell--10-col ">
+                {{allQVm.question.notes}}
+              </div>
+            </div>
+            <div class="mdl-grid no-pad " ng-show="allQVm.question[ 'question.tag'] ">
+              <div class="mdl-cell mdl-cell--12-col ">
+                <a ui-sref="question.edit({quesID: allQVm.question._uid_}) " class="mdl-button question-action mr-10 ">
+                  EDIT
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="lazy-loader text-center " ng-show="allQVm.showLazyLoader ">
+    <div class="mdl-spinner mdl-js-spinner is-active "></div>
+  </div>
+  <div class="text-center " ng-if="!mainVm.allQuestions.length ">
+    <h4 class="text-center ">
+      Could not find any question.
+    </h4> Go to <a ui-sref="question.add ">Add Question</a> page to add some.
+  </div>
+</div>

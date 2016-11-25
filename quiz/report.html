@@ -1,0 +1,51 @@
+<head>
+<style>
+table
+{
+border-collapse: collapse;
+border-spacing: 0px;
+}
+table, th, td
+{
+padding: 5px;
+border: 1px solid black;
+}
+</style>
+</head>
+
+<body>
+  <table>
+    <tr>
+      <th>Name</th>
+      <th>Email</th>
+      <th>Time Taken</th>
+      <th>Score</th>
+    </tr>
+    <tr>
+      <td>{{.Name}}</td>
+      <td>{{.Email}}</td>
+      <td>{{.TimeTaken}}</td>
+      <td>{{.TotalScore}}</td>
+    </tr>
+  </table>
+  <br>
+  <br>
+
+  <table>
+    <tr>
+      <th>Question</th>
+      <th>Time Taken</th>
+      <th>Score</th>
+    </tr>
+  {{range .Questions}}
+    <tr>
+      <td>{{.Name}}</td>
+      <td>{{.TimeTaken}}</td>
+      <td>{{.Score}}</td>
+    </tr>
+  {{end}}
+  </table>
+  <br>
+  <br>
+  You can view the full report at {{.Ip}}/#/admin/invite/candidate-report/{{.Id}}
+</body>

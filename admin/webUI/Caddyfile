@@ -1,0 +1,7 @@
+localhost:2020
+gzip
+
+log /var/log/gru/access.log
+
+proxy /api http://localhost:8000
+

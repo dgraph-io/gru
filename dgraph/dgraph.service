@@ -1,0 +1,16 @@
+# Unit file for running Dgraph server. This file should be symlinked to /etc/systemd/system/dgraph.service.
+# Then you can start Dgraph like - sudo systemctl status dgraph.service.
+# To view the logs run - sudo journalctl -u dgraph
+
+[Unit]
+Description=Dgraph server
+
+[Service]
+TimeoutStartSec=0
+# The path of the dgraph binary.
+ExecStart=/home/ubuntu/dgraph
+# Restart the service on crashes.
+Restart=always
+[Install]
+WantedBy=multi-user.target
+

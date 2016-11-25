@@ -1,0 +1,10 @@
+<div class="modal-overlay ng-cloak" ng-show="mainVm.showModal"></div>
+<div class=" ng-cloak">
+  <div class="{{mainVm.modal.class}} modal-wrapper" ng-show="mainVm.modal.template">
+    <div data-ng-include="mainVm.modal.template" ng-if="!mainVm.modal.isString"></div>
+    <div ng-bind-html="mainVm.modal.template" ng-if="mainVm.modal.isString" class="modal-content"></div>
+    <div class="modal-actions text-right pt-20" ng-hide="mainVm.modal.hideClose">
+      <button class="mdl-button" ng-click="mainVm.hideModal()">Cancel</button>
+    </div>
+  </div>
+</div>

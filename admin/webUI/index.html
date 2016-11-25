@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en" data-ng-app="GruiRoutes" data-ng-class="{ 'noscroll' : is_mobile_filter}">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="fragment" content="!">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Gru is an open source adaptive test system for screening candidates for software engineering roles. It helps us identify and recruit the right minions.">
+  <meta name="author" content="Dgraph Labs">
+  <title ng-bind="SEO.title">Gru</title>
+  <link rel="stylesheet" href="assets/lib/css/material.indigo-pink.min.css">
+  <link href='https://fonts.googleapis.com/css?family=Montserrat' rel='stylesheet' type='text/css'>
+  <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Tangerine">
+  <link rel="stylesheet" href="assets/lib/css/select2.css?v=20161102">
+  <link rel="stylesheet" href="assets/css/main.css?v=20161115-1">
+</head>
+
+<body ng-controller="MainController as mainVm" class="position-relative {{mainVm.pageName}} ng-clo" autoscroll="" ng-class="{'admin-panel': mainVm.isLoggedIn()}">
+  <div class="web-layout-transparent mdl-layout mdl-js-layout mdl-layout--fixed-header  ng-cloak">
+    <header class="mdl-layout__header mdl-shadow--2dp {{mainVm.notification.class}} reduce-height" ng-class="{'notification-header' : mainVm.showNotification}">
+      <div class="mdl-layout__header-row">
+        <!-- Title -->
+        <a ui-sref="root" ng-if="mainVm.isLoggedIn()" class="ng-cloak">
+          <span class="mdl-layout-title font-tangerine">
+            GRU-Admin
+          </span>
+        </a>
+        <span class="mdl-layout-title font-tangerine ng-cloak" ng-if="!mainVm.isLoggedIn()">
+          GRU - Dgraph Screening Quiz
+        </span>
+        <div class="mdl-layout-spacer"></div>
+        <!-- Navigation -->
+        <nav class="mdl-navigation ng-cloak mdl-cell--hide-phone" ng-if="mainVm.isLoggedIn()">
+          <div class="dropdown-wrapper mdl-cell--hide-tablet">
+            <div class="dropdown-link mdl-navigation__link">
+              QUESTION
+              <i class="material-icons">arrow_drop_down</i>
+            </div>
+            <div class="dropdown-content mdl-shadow--2dp">
+              <a class="dropdown-item reload-same-url" ui-sref="question.add">
+                  Add New
+                </a>
+              <a class="dropdown-item" ui-sref="question.all">
+                  Show All
+                </a>
+            </div>
+          </div>
+          <div class="dropdown-wrapper">
+            <div class="dropdown-link mdl-navigation__link">
+              QUIZ
+              <i class="material-icons">arrow_drop_down</i>
+            </div>
+            <div class="dropdown-content mdl-shadow--2dp">
+              <a class="dropdown-item" ui-sref="quiz.add">
+                  Add New
+                </a>
+              <a class="dropdown-item" ui-sref="quiz.all">
+                  Show All
+                </a>
+            </div>
+          </div>
+          <div class="dropdown-wrapper">
+            <div class="dropdown-link mdl-navigation__link text-center">
+              <i class="material-icons mdl-list__item-icon">person</i>
+            </div>
+            <div class="dropdown-content mdl-shadow--2dp">
+              <a class="dropdown-item clickable" ng-click="mainVm.logout()">
+                  LOGOUT
+                </a>
+            </div>
+          </div>
+        </nav>
+      </div>
+      <div class="notification-wrapper ng-cloak ng-hide" ng-show="mainVm.showNotification">
+        <div class="notification-message">
+          {{mainVm.notification.message}}
+        </div>
+        <div class="mdl-spinner mdl-spinner--single-color mdl-js-spinner is-active" ng-show="mainVm.notification.class == 'notification-error'">
+        </div>
+      </div>
+    </header>
+    <div class="mdl-layout__drawer">
+      <span class="mdl-layout-title">GRU<span ng-if="mainVm.isLoggedIn()">-Admin</span></span>
+      <nav class="mdl-navigation" ng-if="mainVm.isLoggedIn()">
+        <a class="mdl-navigation__link" ui-sref="quiz.all">Quizzes</a>
+        <hr>
+        <a class="mdl-navigation__link" href="" ng-click="mainVm.logout()">
+          <i class="material-icons">exit_to_app</i> Logout
+        </a>
+      </nav>
+    </div>
+    <main data-ui-view="" class="mdl-layout__content">
+    </main>
+    <!-- <div data-ng-include data-src="'app/shared/_footer.html'"></div> -->
+  </div>
+  <div id="snackbar-container" class="mdl-js-snackbar mdl-snackbar mb-20">
+    <div class="mdl-snackbar__text center-aligned"></div>
+    <button class="mdl-snackbar__action" type="button" aria-hidden="true"></button>
+  </div>
+  <div class="loader ng-cloak" ng-show="mainVm.showAjaxLoader">
+    <div class="show-overlay overlay"></div>
+    <div class="mdl-spinner mdl-js-spinner is-active"></div>
+  </div>
+  <!-- <div class="modal-overlay ng-cloak" ng-show="mainVm.showModal"></div>
+  <div class=" ng-cloak">
+    <div class="{{mainVm.modal.class}} modal-wrapper" ng-show="mainVm.modal.template">
+      <div data-ng-include="mainVm.modal.template" ng-if="!mainVm.modal.isString"></div>
+      <div ng-bind-html="mainVm.modal.template" ng-if="mainVm.modal.isString" class="modal-content"></div>
+      <div class="modal-actions text-right pt-20">
+        <button class="mdl-button" ng-click="mainVm.hideModal()" ng-hide="mainVm.modal.hideClose">Cancel</button>
+        <button class="mdl-button submit" ng-if="mainVm.modal.showYes">Yes</button>
+      </div>
+    </div>
+  </div> -->
+  <!-- Javascript Loading, Asynchronously -->
+  <script>
+  [
+    '/assets/lib/js/angular.min.js',
+    '/assets/lib/js/angular-sanitize.min.js',
+    'assets/lib/js/angular-route.min.js?v=20161018-1',
+    'assets/lib/js/angular-ui-router.min.js',
+    'assets/lib/js/angular-css.min.js',
+    'assets/lib/js/angular-select.min.js',
+    'assets/lib/js/ui-codemirror.min.js',
+    'assets/lib/js/jquery-2.1.1.min.js',
+    'assets/lib/js/material.min.js',
+    'assets/lib/js/ocLazyLoad.min.js',
+    'assets/lib/js/duration.js',
+    'app/app.module.js?v=20161105-1',
+    'app/app.route.js?v=20161105-1',
+    'assets/js/gru.js?v=20161113-1'
+  ].forEach(function(src) {
+    var script = document.createElement('script');
+    script.src = src;
+    script.async = false;
+    document.head.appendChild(script);
+  });
+  </script>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+</body>
+
+</html>

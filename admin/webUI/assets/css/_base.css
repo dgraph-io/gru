@@ -1,0 +1,50 @@
+body, html, *{
+	font-family: 'Montserrat', sans-serif;
+}
+
+body, html {
+	height: 100%;
+}
+a {
+	text-decoration: none;
+	color: #F44336;
+}
+
+a:hover {
+    color: #E91E63;
+}
+
+table {
+	width: 100%;
+}
+
+th {
+	text-transform: uppercase;
+}
+
+pre p {
+  white-space: pre-line;
+}
+pre {
+	margin: 0;
+  white-space: inherit;
+}
+
+pre * {
+	font-family:  'Helvetica Neue', 'Helvetica', 'Montserrat', sans-serif;
+}
+
+pre h1,
+pre h2,
+pre h3,
+pre h4,
+pre h5 {
+	margin: 0;
+}
+pre h1 {
+	line-height: 45px;
+}
+
+code {
+	white-space: pre-wrap;
+}

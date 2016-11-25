@@ -1,0 +1,10 @@
+<div class="mdl-grid container candidate ph-0" ng-controller="candidateController as candidateVm">
+  <div class="mdl-cell--12-col margin-center">
+    <div ng-if="candidateVm.isValidUser">
+      <ui-view></ui-view>
+    </div>
+    <div class="text-center" ng-if="!candidateVm.isValidUser">
+      <div data-ng-include data-src="'app/shared/_not_authorized.html'"></div>
+    </div>
+  </div>
+</div>

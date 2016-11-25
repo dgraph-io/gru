@@ -1,0 +1,149 @@
+<div class="mdl-grid container overflow-auto" ng-controller="candidatesController as candidatesVm">
+  <div class="mdl-cell--12-col">
+    <div class="mdl-grid">
+      <div class="mdl-cell mdl-cell--6-col mdl-cell--5-col-tablet mdl-cell--3-col-phone mdl-cell--middle">
+        <h5>Candidate List for Quiz</h5>
+      </div>
+      <div class="mdl-cell mdl-cell--6-col mdl-cell--3-col-tablet mdl-cell--1-col-phone text-right mdl-cell--middle">
+        <button class="mdl-button btn-succes bg-green" ng-click="mainVm.goTo('invite.add', {quizID: candidatesVm.quizID})">Invite</button>
+      </div>
+    </div>
+    <div class="mdl-tabs mdl-js-tabs mdl-js-ripple-effect">
+      <div class="mdl-tabs__tab-bar">
+        <a href="#completed" class="mdl-tabs__tab is-active">Completed</a>
+        <a href="#not-taken" class="mdl-tabs__tab">Not Completed</a>
+      </div>
+      <div class="mdl-tabs__panel is-active" id="completed">
+        <div class="mdl-grid">
+          <div class="mdl-cell mdl-cell--12-col">
+            <form action="#">
+              <div class="mdl-textfield mdl-js-textfield">
+                <input class="mdl-textfield__input" type="text" ng-model="searchCand">
+                <label class="mdl-textfield__label" for="sample1">Search candidate by Name/Email</label>
+              </div>
+            </form>
+            <table class="mdl-data-table mdl-shadow--2dp">
+              <thead>
+                <tr>
+                  <th class="mdl-data-table__cell--non-numeric">Name</th>
+                  <th class="mdl-data-table__cell--non-numeric">Email</th>
+                  <th class="mdl-data-table__cell--non-numeric">
+                    <a href="" ng-click="candidatesVm.sortType = 'score'; candidatesVm.sortReverse = !candidatesVm.sortReverse">
+                    Score
+                    <i ng-show="candidatesVm.sortType == 'score' && !candidatesVm.sortReverse" class="material-icons">arrow_drop_up</i>
+                    <i ng-show="candidatesVm.sortType == 'score' && candidatesVm.sortReverse" class="material-icons">arrow_drop_down</i>
+                  </a>
+                  </th>
+                  <th class="mdl-data-table__cell--non-numeric">Percentile</th>
+                  <th class="mdl-data-table__cell--non-numeric">
+                    <a href="" ng-click="candidatesVm.sortType = 'quiz_start'; candidatesVm.sortReverse = !candidatesVm.sortReverse">
+                    Quiz Start
+                    <i ng-show="candidatesVm.sortType == 'quiz_start' && !candidatesVm.sortReverse" class="material-icons">arrow_drop_up</i>
+                    <i ng-show="candidatesVm.sortType == 'quiz_start' && candidatesVm.sortReverse" class="material-icons">arrow_drop_down</i>
+                  </a>
+                  </th>
+                  <th class="mdl-data-table__cell--non-numeric">Actions</th>
+                </tr>
+              </thead>
+              <tbody ng-repeat="candidate in candidatesVm.completed | orderBy:candidatesVm.sortType:candidatesVm.sortReverse | filter:searchCand" on-finish-render="ngRepeatFinished" ng-class="{'report-viewed': candidate._uid_ == inviteVm.reportViewed}">
+                <tr ng-show="candidate.deleted != 'true'">
+                  <td class="mdl-data-table__cell--non-numeric">{{candidate.name.split(' ')[0]}}</td>
+                  <td class="mdl-data-table__cell--non-numeric">{{candidate.email}}</td>
+                  <td class="mdl-data-table__cell--non-numeric">{{candidate.score | number: 2}}</td>
+                  <!-- <td class="mdl-data-table__cell--non-numeric">{{candidate.idx | number: 2}}</td> -->
+                  <td class="mdl-data-table__cell--non-numeric">{{candidatesVm.percentile(candidatesVm.completedLen, candidate.idx) | number: 0}}</td>
+                  <td class="mdl-data-table__cell--non-numeric">{{candidate.quiz_start | date : 'MMM dd, yyyy'}}</td>
+                  <td class="mdl-data-table__cell--non-numeric">
+                    <a ui-sref="invite.report({candidateID: candidate._uid_})">VIEW REPORT</a> &nbsp;|&nbsp;
+                    <!-- <a ng-click="candidatesVm.delete(candidate._uid_)" href="">DELETE</a> -->
+                    <a ng-click="candidatesVm.showDeleteModal(candidate)" href="">DELETE</a>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div class="mdl-tabs__panel" id="not-taken">
+        <div class="mdl-grid">
+          <div class="mdl-cell mdl-cell--12-col">
+            <form action="#">
+              <div class="mdl-textfield mdl-js-textfield">
+                <input class="mdl-textfield__input" type="text" id="search-cand" ng-model="searchCand">
+                <label class="mdl-textfield__label" for="search-cand">Search candidate by Name/Email</label>
+              </div>
+            </form>
+            <table class="mdl-data-table mdl-shadow--2dp">
+              <thead>
+                <tr>
+                  <th class="mdl-data-table__cell--non-numeric">Email</th>
+                  <th class="mdl-data-table__cell--non-numeric">
+                    <a href="" ng-click="candidatesVm.sortType = 'invite_sent'; candidatesVm.sortReverse = !candidatesVm.sortReverse">
+                    Invited
+                    <i ng-show="candidatesVm.sortType == 'invite_sent' && !candidatesVm.sortReverse" class="material-icons">arrow_drop_up</i>
+                    <i ng-show="candidatesVm.sortType == 'invite_sent' && candidatesVm.sortReverse" class="material-icons">arrow_drop_down</i>
+                  </a>
+                  </th>
+                  <th class="mdl-data-table__cell--non-numeric">
+                    <a href="" ng-click="candidatesVm.sortType = 'validity'; candidatesVm.sortReverse = !candidatesVm.sortReverse">
+                    Expires (days)
+                    <i ng-show="candidatesVm.sortType == 'validity' && !candidatesVm.sortReverse" class="material-icons">arrow_drop_up</i>
+                    <i ng-show="candidatesVm.sortType == 'validity' && candidatesVm.sortReverse" class="material-icons">arrow_drop_down</i>
+                  </a>
+                  </th>
+                  <th class="mdl-data-table__cell--non-numeric">Actions</th>
+                </tr>
+              </thead>
+              <tbody ng-repeat="candidate in candidatesVm.notCompleted | orderBy:candidatesVm.sortType:candidatesVm.sortReverse | filter:searchCand">
+                <tr>
+                  <td class="mdl-data-table__cell--non-numeric">{{candidate.email}}</td>
+                  <td class="mdl-data-table__cell--non-numeric">{{candidate.invite_sent | date : 'MMM dd, yyyy'}}</td>
+                  <td class="mdl-data-table__cell--non-numeric">{{candidatesVm.expires(candidate.validity)}}</td>
+                  <td class="mdl-data-table__cell--non-numeric">
+                    <a ui-sref="invite.edit({quizID: candidatesVm.quizID, candidateID: candidate._uid_})">EDIT</a> &nbsp;|&nbsp;
+                    <a ng-click="candidatesVm.resend(candidate)" href="">RESEND</a> &nbsp;|&nbsp;
+                    <a ng-click="candidatesVm.showCancelModal(candidate)" href="">CANCEL</a>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- CANCEL MODAL TEMPLATE -->
+    <script type="text/ng-template" id="cancel-modal-template">
+      <div class="cancel-invite-template">
+        <h5 class="mdl-dialog__title">Cancel Invite</h5>
+        <div class="mdl-dialog__content pb-0">
+          <p>
+            Are you sure that you wan't to cancel the invite sent to <strong>{{candidatesVm.currentCancel.email}}?</strong>
+          </p>
+          <div class="text-right pt-5">
+            <button class="mdl-button mr-20" ng-click="mainVm.hideModal()">Cancel</button>
+            <button class="mdl-button" ng-click="candidatesVm.initiateCancel()">Yes</button>
+          </div>
+        </div>
+      </div>
+    </script>
+    <!-- Delete MODAL TEMPLATE -->
+    <script type="text/ng-template" id="delete-candidate-template">
+      <form class="deleteForm">
+        <div class="delete-candidate-template">
+          <h5 class="mdl-dialog__title">Delete Candidate</h5>
+          <div class="mdl-dialog__content pb-0">
+            <p>
+              Are you sure that you wan't to delete the report for <strong>{{candidatesVm.currentDeleteName}}</strong>?
+            </p>
+            <div class="text-right pt-5">
+              <button class="mdl-button mr-20" ng-click="mainVm.hideModal()">Cancel</button>
+              <button type="submit" class="mdl-button" ng-click="candidatesVm.initiateDelete()">Yes</button>
+            </div>
+          </div>
+        </div>
+      </form>
+    </script>
+    <!-- MODAL WRAPPER -->
+    <div data-ng-include data-src="'app/shared/_modal_template.html'"></div>
+  </div>
+</div>
