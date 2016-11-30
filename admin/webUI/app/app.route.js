@@ -144,7 +144,7 @@
         authenticate: true,
       })
       .state('invite.report', {
-        url: '^/admin/report/:candidateID',
+        url: '^/r/:candidateID',
         parent: 'invite',
         css: [githubCSS],
         templateUrl: candidateReportTemplate,
