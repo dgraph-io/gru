@@ -1,0 +1,23 @@
+<div class="mdl-grid container mt-20 ng-cloak" ng-controller="editProfileController as editProfileVm">
+  <div class="mdl-cell mdl-cell--6-col mdl-cell--6-col-tablet mdl-cell--3-offset-desktop mdl-cell--1-offset-tablet">
+    <h4>Edit Company Profile</h4>
+    <form ng-submit="editProfileVm.update()">
+      <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label mt-20" ng-class="{'is-dirty': editProfileVm.info.name}">
+        <input class="mdl-textfield__input" type="text" id="name" ng-model="editProfileVm.info.name">
+        <label class="mdl-textfield__label" for="name">Company Name</label>
+        <span class="mdl-textfield__error">Should not be empty</span>
+      </div>
+      <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label mt-20" ng-class="{'is-dirty': editProfileVm.info.email}">
+        <input class="mdl-textfield__input" type="email" id="email" ng-model="editProfileVm.info.email">
+        <label class="mdl-textfield__label" for="email">Company Email</label>
+        <span class="mdl-textfield__error">Should be a valid email</span>
+      </div>
+      <div class="mt-20">
+        <button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mt-20 action-btn">
+          Update
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
