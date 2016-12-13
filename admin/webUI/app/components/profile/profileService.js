@@ -10,6 +10,8 @@
                   info(_xid_: root) {\
                           company.name \
                           company.email \
+                          company.invite_email \
+                          company.reject_email \
                   }\
           }"
 
@@ -28,6 +30,8 @@
     set {\n\
       <root> <company.name> \"" + data.name + "\" . \n\
       <root> <company.email> \"" + data.email + "\" . \n\
+      <root> <company.invite_email> \"" + data.invite_email + "\" . \n\
+      <root> <company.reject_email> \"" + data.reject_email + "\" . \n\
       }\n\
     }"
 

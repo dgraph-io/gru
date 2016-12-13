@@ -16,6 +16,8 @@
       editProfileVm.info = {}
       editProfileVm.info.name = data['info'][0]["company.name"]
       editProfileVm.info.email = data['info'][0]["company.email"]
+      editProfileVm.info.invite_email = unescape(data['info'][0]["company.invite_email"])
+      editProfileVm.info.reject_email = unescape(data['info'][0]["company.reject_email"])
     }, function (err) {
       console.log(err)
     });
@@ -26,6 +28,9 @@
       }
       if (!input.name) {
         return "Name shouldn't be empty.";
+      }
+      if (!input.invite_email) {
+        return "Invite email can't be empty.";
       }
       return true
     }
@@ -40,6 +45,8 @@
         return
       }
 
+      editProfileVm.info.invite_email = escape(editProfileVm.info.invite_email)
+      editProfileVm.info.reject_email = escape(editProfileVm.info.reject_email)
       var requestData = angular.copy(editProfileVm.info);
 
         profileService.updateProfile(requestData)

@@ -1,5 +1,5 @@
 <div class="mdl-grid container mt-20 ng-cloak" ng-controller="editProfileController as editProfileVm">
-  <div class="mdl-cell mdl-cell--6-col mdl-cell--6-col-tablet mdl-cell--3-offset-desktop mdl-cell--1-offset-tablet">
+  <div class="mdl-cell mdl-cell--8-col mdl-cell--6-col-tablet mdl-cell--2-offset-desktop mdl-cell--1-offset-tablet">
     <h4>Edit Company Profile</h4>
     <form ng-submit="editProfileVm.update()">
       <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label mt-20" ng-class="{'is-dirty': editProfileVm.info.name}">
@@ -12,6 +12,17 @@
         <label class="mdl-textfield__label" for="email">Company Email</label>
         <span class="mdl-textfield__error">Should be a valid email</span>
       </div>
+
+      <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label mt-20" ng-class="{'is-dirty': editProfileVm.info.invite_email}">
+        <textarea class="mdl-textfield__input" type="text" rows= "10" ng-model="editProfileVm.info.invite_email" id="invite_email" ></textarea>
+        <label class="mdl-textfield__label" for="email">Invite email</label>
+      </div>
+
+      <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label mt-20" ng-class="{'is-dirty': editProfileVm.info.reject_email}">
+        <textarea ng-model="editProfileVm.info.reject_email" class="mdl-textfield__input" type="text" rows= "10" id="reject_email" ></textarea>
+        <label class="mdl-textfield__label" for="email">Rejection email</label>
+      </div>
+
       <div class="mt-20">
         <button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mt-20 action-btn">
           Update
