@@ -75,6 +75,9 @@
 
        MainService.proxy(query).then(function(data) {
         var candidates = data.quiz[0]["quiz.candidate"];
+        if (candidates === undefined) {
+          return deferred.resolve("")
+        }
         for (var j = 0; j < emails.length; j++) {
           email = emails[j]
           for (var i = 0; i < candidates.length; i++) {

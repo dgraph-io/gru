@@ -103,7 +103,7 @@ func add(quizId, email string, validity time.Time) server.Response {
 	// mutation applied successfully, lets send a mail to the candidate.
 	uid, ok := mr.Uids["c"]
 	if !ok {
-		sr.Message = "Uid not returned for newly created candidate by Dgraph."
+		sr.Message = "Uid not returned for newly created candidate."
 		return sr
 	}
 
@@ -195,7 +195,7 @@ func Edit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if res.Code != "ErrorOk" {
-		sr.Write(w, res.Message, "Mutation couldn't be applied by Dgraph.",
+		sr.Write(w, res.Message, "Mutation couldn't be applied.",
 			http.StatusInternalServerError)
 		return
 	}

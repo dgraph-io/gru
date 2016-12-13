@@ -3,7 +3,7 @@
     <div class="mdl-grid" ng-class="{'quiz-ended mdl-shadow--2dp pv-20': cqVm.quizEnded, 'b-border quiz-stats': !cqVm.quizEnded }">
       <div class="mdl-cell mdl-cell--3-col mdl-cell--8-col-tablet mdl-cell--middle resp-center" ng-if="cqVm.quizEnded">
         <h5 ng-if="cqVm.quizEnded" class="bold">Hi, {{candidateVm.info.Name}}. </h5>
-        <h5 class="bold mt-5 mb-5">Dgraph quiz <span ng-if="cqVm.quizEnded">ended</span></h5>
+        <h5 class="bold mt-5 mb-5">Quiz <span ng-if="cqVm.quizEnded">ended</span></h5>
       </div>
       <div class="mdl-cell mdl-cell--4-col mdl-cell--8-col-tablet mdl-cell--middle big-font time-stats" ng-if="!cqVm.quizEnded">
         <span class="mdl-chip mdl-chip--contact mr-20" ng-if="!cqVm.quizEnded">

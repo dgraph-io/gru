@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 
+	"github.com/dgraph-io/gru/admin/company"
 	"github.com/dgraph-io/gru/x"
 	sendgrid "github.com/sendgrid/sendgrid-go"
 	"github.com/sendgrid/sendgrid-go/helpers/mail"
@@ -20,8 +21,15 @@ func Send(email, validity, token string) {
 		fmt.Println(*Ip + "/#/quiz/" + token)
 		return
 	}
-	from := mail.NewEmail("Dgraph", "join@dgraph.io")
-	subject := "Invitation for screening quiz from Dgraph"
+
+	c, err := company.Info()
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	from := mail.NewEmail(c.Name, c.Email)
+	subject := fmt.Sprintf("Invitation for screening quiz from %v", c.Name)
 	to := mail.NewEmail("", email)
 	// TODO - Move this to a template.
 	url := fmt.Sprintf("%v/#/quiz/%v", *Ip, token)
@@ -33,7 +41,7 @@ func Send(email, validity, token string) {
 <body>
 Hello!
 <br/><br/>
-You have been invited to take the screening quiz by Dgraph.
+You have been invited to take the screening quiz by ` + c.Name + `.
 <br/>
 You can take the quiz anytime till ` + validity + ` by visiting <a href="` + url + `" target="_blank">` + url + `</a>.
 <br/>
@@ -45,15 +53,12 @@ You can take the quiz anytime till ` + validity + ` by visiting <a href="` + url
 	request := sendgrid.GetRequest(*SENDGRID_API_KEY, "/v3/mail/send", "https://api.sendgrid.com")
 	request.Method = "POST"
 	request.Body = mail.GetRequestBody(m)
-	response, err := sendgrid.API(request)
+	_, err = sendgrid.API(request)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 	x.Debug("Mail sent")
-	x.Debug(response.StatusCode)
-	x.Debug(response.Body)
-	x.Debug(response.Headers)
 }
 
 func SendReport(name string, quiz string, score, maxScore float64, body string) {
@@ -61,24 +66,27 @@ func SendReport(name string, quiz string, score, maxScore float64, body string) 
 		return
 	}
 
-	from := mail.NewEmail("Gru", "join@dgraph.io")
+	c, err := company.Info()
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	from := mail.NewEmail("Gru", c.Email)
 	subject := fmt.Sprintf("%v scored %.2f/%.2f in the %v quiz", name,
 		score, maxScore, quiz)
-	to := mail.NewEmail("Dgraph", *reportMail)
+	to := mail.NewEmail(c.Name, c.Email)
 
 	content := mail.NewContent("text/html", body)
 	m := mail.NewV3MailInit(from, subject, to, content)
 	request := sendgrid.GetRequest(*SENDGRID_API_KEY, "/v3/mail/send", "https://api.sendgrid.com")
 	request.Method = "POST"
 	request.Body = mail.GetRequestBody(m)
-	response, err := sendgrid.API(request)
+	_, err = sendgrid.API(request)
 	if err != nil {
 		fmt.Println(err)
 	}
 	x.Debug("Mail sent")
-	x.Debug(response.StatusCode)
-	x.Debug(response.Body)
-	x.Debug(response.Headers)
 }
 
 func Reject(name, email string) {
