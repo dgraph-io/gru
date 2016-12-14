@@ -7,8 +7,11 @@ import (
 )
 
 type Company struct {
-	Name  string `json:"company.name"`
-	Email string `json:"company.email"`
+	Name        string `json:"company.name"`
+	Email       string `json:"company.email"`
+	Invite      string `json:"company.invite_email"`
+	RejectEmail string `json:"company.reject_email"`
+	Reject      bool   `json:"company.reject,string"`
 }
 
 type info struct {
@@ -24,6 +27,9 @@ func Info() (Company, error) {
 	    info(_xid_: root) {
             company.name
             company.email
+            company.reject
+            company.invite_email
+            company.reject_email
         }
     }`
 
@@ -37,8 +43,5 @@ func Info() (Company, error) {
 	}
 
 	com := companies.Companies[0]
-	return Company{
-		Name:  com.Name,
-		Email: com.Email,
-	}, nil
+	return com, nil
 }

@@ -12,6 +12,7 @@
                           company.email \
                           company.invite_email \
                           company.reject_email \
+                          company.reject \
                   }\
           }"
 
@@ -32,6 +33,8 @@
       <root> <company.email> \"" + data.email + "\" . \n\
       <root> <company.invite_email> \"" + data.invite_email + "\" . \n\
       <root> <company.reject_email> \"" + data.reject_email + "\" . \n\
+      <root> <company.reject> \"" + (data.reject === true ? "true" : "false") +
+        "\" . \n\
       }\n\
     }"
 

@@ -1,34 +1,77 @@
 <div class="mdl-grid container mt-20 ng-cloak" ng-controller="editProfileController as editProfileVm">
-  <div class="mdl-cell mdl-cell--8-col mdl-cell--6-col-tablet mdl-cell--2-offset-desktop mdl-cell--1-offset-tablet">
+  <div class="mdl-cell mdl-cell--12-col mdl-cell--6-col-tablet mdl-cell--1-offset-tablet">
     <h4>Edit Company Profile</h4>
     <form ng-submit="editProfileVm.update()">
-      <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label mt-20" ng-class="{'is-dirty': editProfileVm.info.name}">
-        <input class="mdl-textfield__input" type="text" id="name" ng-model="editProfileVm.info.name">
-        <label class="mdl-textfield__label" for="name">Company Name</label>
-        <span class="mdl-textfield__error">Should not be empty</span>
+      <div class="mdl-cell mdl-cell--12-col">
+        <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label mt-20" ng-class="{'is-dirty': editProfileVm.info.name}">
+          <input class="mdl-textfield__input" type="text" id="name" ng-model="editProfileVm.info.name">
+          <label class="mdl-textfield__label" for="name">Company Name</label>
+          <span class="mdl-textfield__error">Should not be empty</span>
+        </div>
       </div>
-      <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label mt-20" ng-class="{'is-dirty': editProfileVm.info.email}">
-        <input class="mdl-textfield__input" type="email" id="email" ng-model="editProfileVm.info.email">
-        <label class="mdl-textfield__label" for="email">Company Email</label>
-        <span class="mdl-textfield__error">Should be a valid email</span>
+      <div class="mdl-cell mdl-cell--12-col">
+        <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label mt-20" ng-class="{'is-dirty': editProfileVm.info.email}">
+          <input class="mdl-textfield__input" type="email" id="email" ng-model="editProfileVm.info.email">
+          <label class="mdl-textfield__label" for="email">Company Email</label>
+          <span class="mdl-textfield__error">Should be a valid email</span>
+        </div>
       </div>
+      <div class="mdl-grid">
+        <div class="mdl-cell mdl-cell--6-col">
+          <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label mt-20" ng-class="{'is-dirty': editProfileVm.info.invite_email}">
+            <textarea class="mdl-textfield__input" type="text" rows="15" ng-model="editProfileVm.info.invite_email" id="invite_email"></textarea>
+            <label class="mdl-textfield__label" for="email">Invite email</label>
+          </div>
+        </div>
+        <div class="mdl-cell mdl-cell--6-col">
+          <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label mt-20">
+            <pre>
+            <textarea class="mdl-textfield__input" type="text" rows="15" readonly>
+Hello!
 
-      <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label mt-20" ng-class="{'is-dirty': editProfileVm.info.invite_email}">
-        <textarea class="mdl-textfield__input" type="text" rows= "10" ng-model="editProfileVm.info.invite_email" id="invite_email" ></textarea>
-        <label class="mdl-textfield__label" for="email">Invite email</label>
-      </div>
+You have been invited to take the screening quiz by {{editProfileVm.info.name}}.
 
-      <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label mt-20" ng-class="{'is-dirty': editProfileVm.info.reject_email}">
-        <textarea ng-model="editProfileVm.info.reject_email" class="mdl-textfield__input" type="text" rows= "10" id="reject_email" ></textarea>
-        <label class="mdl-textfield__label" for="email">Rejection email</label>
-      </div>
+You can take the quiz anytime till Wed Dec 21 00:00:00 UTC 2016 by visiting url.
 
-      <div class="mt-20">
-        <button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mt-20 action-btn">
+{{editProfileVm.info.invite_email}}
+            </textarea>
+            </pre>
+            <label class="mdl-textfield__label" for="email">Invite Preview</label>
+          </div>
+        </div>
+      </div>
+      <div class="mdl-cell mdl-cell--12-col">
+        <label class=" mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect" for="reject">
+          <input type="checkbox" id="reject" ng-model="editProfileVm.info.reject" class="mdl-checkbox__input">
+          <span class="mdl-checkbox__label">Send Rejection emails <br/><br/>
+          Candidates will be sent a rejection mail automatically after 2 hours if their score is less than the cut-off score that you set for the quiz.</span>
+        </label>
+      </div>
+      <div class="mdl-grid" ng-show="editProfileVm.info.reject == true">
+        <div class="mdl-cell mdl-cell--6-col">
+          <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label mt-20" ng-class="{ 'is-dirty': editProfileVm.info.reject_email}">
+            <textarea ng-model="editProfileVm.info.reject_email" class="mdl-textfield__input" type="text" rows="15 " id="reject_email"></textarea>
+            <label class="mdl-textfield__label" for="email">Rejection email</label>
+          </div>
+        </div>
+        <div class="mdl-cell mdl-cell--6-col">
+          <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label mt-20">
+            <pre>
+            <textarea class="mdl-textfield__input" type="text" rows="15" readonly>
+Hello Candidate!
+
+{{editProfileVm.info.reject_email}}
+            </textarea>
+            </pre>
+            <label class="mdl-textfield__label" for="email">Reject Preview</label>
+          </div>
+        </div>
+      </div>
+      <div class="mt-20 ">
+        <button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mt-20 action-btn ">
           Update
         </button>
       </div>
     </form>
   </div>
 </div>
-

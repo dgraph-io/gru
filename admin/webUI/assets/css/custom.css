@@ -677,6 +677,13 @@ circle.path.prograss-circle {
   color: blue;
 }
 
+/* Company profile edit page */
+
+textarea[readonly]
+{
+    background-color:#EBEBE4;
+}
+
 
 /*TABLET + MOBILE SPECIFIC CSS*/
 

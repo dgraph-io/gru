@@ -1,6 +1,6 @@
 (function() {
 
-  function profileController($scope, $rootScope,profileService) {
+  function profileController($scope, $rootScope, profileService) {
 
     // VARIABLE DECLARATION
     profileVm = this;
@@ -12,15 +12,16 @@
     editProfileVm.update = updateProfile;
 
     profileService.getProfile()
-    .then(function(data) {
-      editProfileVm.info = {}
-      editProfileVm.info.name = data['info'][0]["company.name"]
-      editProfileVm.info.email = data['info'][0]["company.email"]
-      editProfileVm.info.invite_email = unescape(data['info'][0]["company.invite_email"])
-      editProfileVm.info.reject_email = unescape(data['info'][0]["company.reject_email"])
-    }, function (err) {
-      console.log(err)
-    });
+      .then(function(data) {
+        editProfileVm.info = {}
+        editProfileVm.info.name = data['info'][0]["company.name"]
+        editProfileVm.info.email = data['info'][0]["company.email"]
+        editProfileVm.info.invite_email = decodeURI(data['info'][0]["company.invite_email"])
+        editProfileVm.info.reject_email = decodeURI(data['info'][0]["company.reject_email"])
+        editProfileVm.info.reject = data['info'][0].reject === "true"
+      }, function(err) {
+        console.log(err)
+      });
 
     function valid(input) {
       if (!isValidEmail(input.email)) {
@@ -45,21 +46,21 @@
         return
       }
 
-      editProfileVm.info.invite_email = escape(editProfileVm.info.invite_email)
-      editProfileVm.info.reject_email = escape(editProfileVm.info.reject_email)
+      editProfileVm.info.invite_email = encodeURI(editProfileVm.info.invite_email)
+      editProfileVm.info.reject_email = encodeURI(editProfileVm.info.reject_email)
       var requestData = angular.copy(editProfileVm.info);
 
-        profileService.updateProfile(requestData)
-          .then(function(data) {
-            console.log(data)
-            SNACKBAR({
-              message: "Profile updated successfully.",
-              messageType: "success",
-            })
-            $state.transitionTo("root")
-          }, function(err) {
-            console.log(err)
+      profileService.updateProfile(requestData)
+        .then(function(data) {
+          console.log(data)
+          SNACKBAR({
+            message: "Profile updated successfully.",
+            messageType: "success",
           })
+          $state.transitionTo("root")
+        }, function(err) {
+          console.log(err)
+        })
     }
   }
 
