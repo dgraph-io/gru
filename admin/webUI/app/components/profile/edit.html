@@ -34,7 +34,7 @@
         </div>
       </div>
       <div class="mdl-cell mdl-cell--12-col">
-        <label class=" mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect" for="reject">
+        <label class=" mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect" for="reject" ng-class="{'is-checked': editProfileVm.info.reject}">
           <input type="checkbox" id="reject" ng-model="editProfileVm.info.reject" class="mdl-checkbox__input" ng-click="profileVm.initCodeMirror()">
           <span class="mdl-checkbox__label">Send Rejection emails <br/><br/>
           Candidates will be sent a rejection mail automatically after 2 hours if their score is less than the cut-off score that you set for the quiz.</span>
