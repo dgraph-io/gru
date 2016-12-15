@@ -13,6 +13,8 @@
                           company.invite_email \
                           company.reject_email \
                           company.reject \
+                          backup \
+                          backup_days \
                   }\
           }"
 
@@ -31,6 +33,8 @@
     set {\n\
       <root> <company.name> \"" + data.name + "\" . \n\
       <root> <company.email> \"" + data.email + "\" . \n\
+      <root> <backup> \"" + data.backup + "\" . \n\
+      <root> <backup_days> \"" + data.backup_days + "\" . \n\
       <root> <company.invite_email> \"" + data.invite_email + "\" . \n\
       <root> <company.reject_email> \"" + data.reject_email + "\" . \n\
       <root> <company.reject> \"" + (data.reject === true ? "true" : "false") +

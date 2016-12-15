@@ -16,6 +16,20 @@
           <span class="mdl-textfield__error">Should be a valid email</span>
         </div>
       </div>
+      <div class="mdl-cell mdl-cell--12-col">
+        <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label mt-20" ng-class="{'is-dirty': editProfileVm.info.backup}">
+          <input class="mdl-textfield__input" type="number" min="0" id="backup" ng-model="editProfileVm.info.backup">
+          <label class="mdl-textfield__label" for="backup">Backups every (in mins)</label>
+          <span class="mdl-textfield__error">Value should be > 0.</span>
+        </div>
+      </div>
+      <div class="mdl-cell mdl-cell--12-col">
+        <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label mt-20" ng-class="{'is-dirty': editProfileVm.info.backup_days}">
+          <input class="mdl-textfield__input" type="number" min="1" max="30" id="backup_days" ng-model="editProfileVm.info.backup_days">
+          <label class="mdl-textfield__label" for="backup_days">No. of days to keep backup for</label>
+          <span class="mdl-textfield__error">Value should be between 1 and 30.</span>
+        </div>
+      </div>
       <div class="mdl-grid">
         <div class="mdl-cell mdl-cell--6-col">
           <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label mt-20" ng-class="{'is-dirty': editProfileVm.info.invite_email}">

@@ -58,6 +58,10 @@
         editProfileVm.info.reject_email = decodeURI(data['info'][0]["company.reject_email"])
         editProfileVm.info.reject_email = editProfileVm.info.reject_email === "undefined" ? "" : editProfileVm.info.reject_email
         editProfileVm.info.reject = data['info'][0]["company.reject"] === "true"
+        editProfileVm.info.backup = parseInt(data['info'][0]["backup"])
+        editProfileVm.info.backup_days = parseInt(data['info'][0]["backup_days"])
+        editProfileVm.info.backup = editProfileVm.info.backup === undefined ? 60 : editProfileVm.info.backup
+        editProfileVm.info.backup_days = editProfileVm.info.backup_days === undefined ? 5 : editProfileVm.info.backup_days
       }, function(err) {
         console.log(err)
       });

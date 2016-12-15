@@ -36,6 +36,7 @@ import (
 	"github.com/dgraph-io/gru/auth"
 	"github.com/dgraph-io/gru/dgraph"
 	"github.com/dgraph-io/gru/quiz"
+	"github.com/dgraph-io/gru/x"
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/mux"
 	"github.com/urfave/negroni"
@@ -203,5 +204,7 @@ func main() {
 	flag.Parse()
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 	go quiz.Reject()
+	go x.Backup()
+	go x.DeleteOldBackups()
 	runHTTPServer(*port)
 }

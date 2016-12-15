@@ -9,6 +9,8 @@ import (
 type Company struct {
 	Name        string `json:"company.name"`
 	Email       string `json:"company.email"`
+	Backup      int    `json:"backup,string"`
+	BackupDays  int    `json:"backup_days,string"`
 	Invite      string `json:"company.invite_email"`
 	RejectEmail string `json:"company.reject_email"`
 	Reject      bool   `json:"company.reject,string"`
@@ -26,6 +28,8 @@ func Info() (Company, error) {
             company.reject
             company.invite_email
             company.reject_email
+            backup
+            backup_days
         }
     }`
 
