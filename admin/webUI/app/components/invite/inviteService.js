@@ -73,8 +73,11 @@
                   }\
           }"
 
-      services.proxy(query).then(function(data) {
+       MainService.proxy(query).then(function(data) {
         var candidates = data.quiz[0]["quiz.candidate"];
+        if (candidates === undefined) {
+          return deferred.resolve("")
+        }
         for (var j = 0; j < emails.length; j++) {
           email = emails[j]
           for (var i = 0; i < candidates.length; i++) {
@@ -105,7 +108,7 @@
             }\n\
           }"
 
-      services.proxy(mutation).then(function(res) {
+      MainService.proxy(mutation).then(function(res) {
         if (res.code != "ErrorOk") {
           return deferred.resolve({
             success: false,
@@ -146,7 +149,7 @@
       <_uid_:" + quizId + "> <quiz.candidate> <_uid_:" + candidate._uid_ + "> .\n\
       }\n\
     }"
-      services.proxy(mutation).then(function(data) {
+      MainService.proxy(mutation).then(function(data) {
         if (data.code == "ErrorOk") {
           return deferred.resolve(true);
         }
@@ -165,7 +168,7 @@
       <_uid_:" + candidateId + "> <deleted> \"true\" . \n\
     }\n\
       }"
-      services.proxy(mutation).then(function(data) {
+      MainService.proxy(mutation).then(function(data) {
         if (data.code == "ErrorOk") {
           return deferred.resolve(true);
         }
@@ -173,12 +176,6 @@
         return deferred.resolve(false);
       });
       return deferred.promise;
-    }
-
-
-    // TODO - Move to a location where other services can access this.
-    services.proxy = function(data) {
-      return MainService.post('/proxy', data);
     }
 
     return services;

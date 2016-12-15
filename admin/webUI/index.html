@@ -26,7 +26,7 @@
           </span>
         </a>
         <span class="mdl-layout-title font-tangerine ng-cloak" ng-if="!mainVm.isLoggedIn()">
-          GRU - Dgraph Screening Quiz
+          GRU - Screening Quiz
         </span>
         <div class="mdl-layout-spacer"></div>
         <!-- Navigation -->
@@ -64,9 +64,12 @@
               <i class="material-icons mdl-list__item-icon">person</i>
             </div>
             <div class="dropdown-content mdl-shadow--2dp">
+              <a class="dropdown-item clickable" ui-sref="profile.edit">
+                  Edit Profile
+              </a>
               <a class="dropdown-item clickable" ng-click="mainVm.logout()">
-                  LOGOUT
-                </a>
+                  Logout
+              </a>
             </div>
           </div>
         </nav>
@@ -126,9 +129,9 @@
     'assets/lib/js/material.min.js',
     'assets/lib/js/ocLazyLoad.min.js',
     'assets/lib/js/duration.js',
-    'app/app.module.js?v=20161105-1',
-    'app/app.route.js?v=20161105-1',
-    'assets/js/gru.js?v=20161113-1'
+    'app/app.module.js?v=20161215-1',
+    'app/app.route.js?v=20161215-1',
+    'assets/js/gru.js?v=20161215-1'
   ].forEach(function(src) {
     var script = document.createElement('script');
     script.src = src;

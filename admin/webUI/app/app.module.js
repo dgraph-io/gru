@@ -104,18 +104,20 @@ angular.module('GruiApp').constant('APP_REQUIRES', {
   // jQuery based/Cusomt/standalone scripts
   scripts: {
     'homeController': ['app/components/home/homeController.js'],
-    'loginController': ['app/components/login/loginController.js'],
+    'loginController': ['app/components/login/loginController.js?v=20161215-1'],
     'loginService': ['app/components/login/loginService.js'],
-    'questionController': ['app/components/question/questionController.js?v=20161107-1'],
+    'questionController': ['app/components/question/questionController.js?v=20161215-1'],
     'questionServices': ['app/components/question/questionServices.js'],
-    'quizController': ['app/components/quiz/quizController.js?v=20161124-1'],
+    'quizController': ['app/components/quiz/quizController.js?v=20161215-1'],
     'quizServices': ['app/components/quiz/quizServices.js'],
     'inviteController': ['app/components/invite/inviteController.js?v=20161122-1'],
-    'inviteService': ['app/components/invite/inviteService.js?v=20161117-1'],
+    'inviteService': ['app/components/invite/inviteService.js?v=20161215-1'],
     'quizLandingController': ['app/components/candidate/quizLandingController.js?v=20161124-1'],
     'quizLandingService': ['app/components/candidate/quizLandingService.js?v=20161027-1'],
     'candidateController': ['app/components/candidate/candidateController.js?v=20161125-1'],
     'candidateService': ['app/components/candidate/candidateService.js'],
+    'profileController': ['app/components/profile/profileController.js?v=20161215-1'],
+    'profileService': ['app/components/profile/profileService.js?v=20161215-1'],
     'angular-select': ['assets/lib/js/angular-select.min.js'],
     'codeMirror': ['assets/lib/js/codemirror.js'],
     'javascript': ['assets/lib/js/javascript.js'],
@@ -415,6 +417,7 @@ angular.module('GruiApp').provider('RouteHelpers', ['APP_REQUIRES', function(app
     services.post = post;
     services.get = get;
     services.put = put;
+    services.proxy = proxy;
 
     function post(url, data, hideLoader) {
       var deferred = $q.defer();
@@ -453,7 +456,9 @@ angular.module('GruiApp').provider('RouteHelpers', ['APP_REQUIRES', function(app
             if (!hideLoader) {
               mainVm.showAjaxLoader = false;
             }
-            redirectIfUnautorized(response);
+            // TODO - Remove this dirty edge case handling for login. We have it because otherwise if you login
+            // with incorrect creds, it show You must login and then shows the actual error.
+            url !== "/login" && redirectIfUnautorized(response);
             deferred.reject(response);
           }
         );
@@ -517,6 +522,10 @@ angular.module('GruiApp').provider('RouteHelpers', ['APP_REQUIRES', function(app
         );
 
       return deferred.promise;
+    }
+
+    function proxy(data) {
+      return post('/proxy', data);
     }
 
     // PRIVATE FUNCTIONS

@@ -474,6 +474,14 @@ body.home {
   padding-top: 10px;
 }
 
+.profile .CodeMirror {
+  border: 1px solid gray;
+}
+
+.profile .preview {
+  border: 1px solid gray;
+}
+
 
 /*QUIZ TAKING */
 
@@ -675,6 +683,13 @@ circle.path.prograss-circle {
 
 .report-header a {
   color: blue;
+}
+
+
+/* Company profile edit page */
+
+textarea[readonly] {
+  background-color: #EBEBE4;
 }
 
 

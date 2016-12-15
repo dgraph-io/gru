@@ -95,8 +95,8 @@
       if (!inputs.questions) {
         return "Please add question to the quiz before submitting"
       }
-      if (inputs.threshold == undefined) {
-        return "Please enter valid threshold"
+      if (inputs.threshold >=0) {
+        return "Threshold should be less than 0"
       }
       if (inputs.cut_off >= getTotalScore(inputs.questions)) {
         return "Cutoff should be less than the total possible score"

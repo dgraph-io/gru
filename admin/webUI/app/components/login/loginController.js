@@ -33,7 +33,7 @@
           }
         }, function(err) {
           SNACKBAR({
-            message: "Something went wrong",
+            message: err.data.Message,
             messageType: "error",
           })
         })

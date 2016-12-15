@@ -1,4 +1,4 @@
-//Angular Routes defined here.
+- //Angular Routes defined here.
 
 // Setting Module
 (function() {
@@ -28,9 +28,12 @@
 
   var candidateIndexTemplate = 'app/components/candidate/index.html';
   var candidateLandingTemplate = 'app/components/candidate/views/landing.html?v=20161123-1';
-  var candidateQuizTemplate = 'app/components/candidate/views/quiz.html?v=20161106-1';
+  var candidateQuizTemplate = 'app/components/candidate/views/quiz.html?v=20161215-1';
 
   var quizLandingTemplate = 'app/components/candidate/views/quiz-landing.html';
+
+  var profileIndexTemplate = 'app/components/profile/index.html';
+  var editProfileTemplate = 'app/components/profile/edit.html';
 
   // CSS for View/Directives
   var angularSelectCSS = "assets/lib/css/angular-select.min.css";
@@ -173,7 +176,19 @@
         css: [githubCSS],
         templateUrl: candidateQuizTemplate,
       })
-
+      .state('profile', {
+        url: '/admin/profile',
+        abstract: true,
+        templateUrl: profileIndexTemplate,
+        resolve: helper.resolveFor('profileController', 'profileService', 'codeMirror', 'marked'),
+      })
+      .state('profile.edit', {
+        url: '/edit',
+        authenticate: true,
+        parent: 'profile',
+        css: [codeMirrorCSS, githubCSS],
+        templateUrl: editProfileTemplate,
+      })
   }
 
   // Dependency and rout function array

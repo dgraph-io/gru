@@ -109,7 +109,7 @@
       $container = $(".mdl-layout__content")
 
       $container.scrollTop(
-        $(selector).offset().top - $container.offset().top + $container.scrollTop()
+        $(selector).offset() && $(selector).offset().top - $container.offset().top + $container.scrollTop()
       );
     }
 
