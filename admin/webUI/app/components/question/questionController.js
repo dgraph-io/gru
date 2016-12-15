@@ -292,7 +292,6 @@
     allQVm.searchText = "";
 
     // INITITIALIZERS
-    console.log($stateParams);
     allQVm.getAllQuestions();
     questionVm.getAllTags();
 

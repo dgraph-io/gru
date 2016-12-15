@@ -4,10 +4,10 @@ import (
 	"flag"
 	"fmt"
 	"net/url"
-	"strings"
 
 	"github.com/dgraph-io/gru/admin/company"
 	"github.com/dgraph-io/gru/x"
+	"github.com/russross/blackfriday"
 	sendgrid "github.com/sendgrid/sendgrid-go"
 	"github.com/sendgrid/sendgrid-go/helpers/mail"
 )
@@ -35,12 +35,18 @@ func Send(email, validity, token string) {
 	to := mail.NewEmail("", email)
 	// TODO - Move this to a template.
 	URL := fmt.Sprintf("%v/#/quiz/%v", *Ip, token)
+	// Lets unescape it first.
 	invite, err := url.QueryUnescape(c.Invite)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
-	invite = strings.Replace(invite, "\n", "<br>", -1)
+
+	hr := blackfriday.HtmlRenderer(0, "", "")
+	o := blackfriday.Options{}
+	o.Extensions = blackfriday.EXTENSION_HARD_LINE_BREAK
+	invite = string(blackfriday.MarkdownOptions([]byte(invite), hr, o))
+
 	body := `
 <html>
 <head>
@@ -123,7 +129,11 @@ func Reject(name, email string) {
 		fmt.Println(err)
 		return
 	}
-	reject = strings.Replace(reject, "\n", "<br>", -1)
+
+	hr := blackfriday.HtmlRenderer(0, "", "")
+	o := blackfriday.Options{}
+	o.Extensions = blackfriday.EXTENSION_HARD_LINE_BREAK
+	reject = string(blackfriday.MarkdownOptions([]byte(reject), hr, o))
 	body := `
 <html>
 <head>

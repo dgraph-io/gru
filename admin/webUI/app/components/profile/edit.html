@@ -1,4 +1,4 @@
-<div class="mdl-grid container mt-20 ng-cloak" ng-controller="editProfileController as editProfileVm">
+<div class="mdl-grid container mt-20 ng-cloak profile" ng-controller="editProfileController as editProfileVm">
   <div class="mdl-cell mdl-cell--12-col mdl-cell--6-col-tablet mdl-cell--1-offset-tablet">
     <h4>Edit Company Profile</h4>
     <form ng-submit="editProfileVm.update()">
@@ -19,52 +19,40 @@
       <div class="mdl-grid">
         <div class="mdl-cell mdl-cell--6-col">
           <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label mt-20" ng-class="{'is-dirty': editProfileVm.info.invite_email}">
-            <textarea class="mdl-textfield__input" type="text" rows="15" ng-model="editProfileVm.info.invite_email" id="invite_email"></textarea>
+            <textarea rows="15" ng-model="editProfileVm.info.invite_email" id="invite_email" ui-codemirror="cmOption" class="hide"></textarea>
             <label class="mdl-textfield__label" for="email">Invite email</label>
           </div>
         </div>
-        <div class="mdl-cell mdl-cell--6-col">
-          <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label mt-20">
-            <pre>
-            <textarea class="mdl-textfield__input" type="text" rows="15" readonly>
-Hello!
-
-You have been invited to take the screening quiz by {{editProfileVm.info.name}}.
-
-You can take the quiz anytime till Wed Dec 21 00:00:00 UTC 2016 by visiting url.
-
-{{editProfileVm.info.invite_email}}
-            </textarea>
-            </pre>
-            <label class="mdl-textfield__label" for="email">Invite Preview</label>
-          </div>
+        <div class="mdl-cell mdl-cell--6-col pl-10 preview">
+          <h5>Preview</h5>
+          <pre>
+          <p>Hello!</p>
+          <p>You have been invited to take the screening quiz by {{editProfileVm.info.name}}.</p>
+          <p>You can take the quiz anytime till Wed Dec 21 00:00:00 UTC 2016 by visiting <a href="#">url</a>.</p>
+          </pre>
+          <pre ng-bind-html="mainVm.markDownFormat(editProfileVm.info.invite_email)" class="code-block"></pre>
         </div>
       </div>
       <div class="mdl-cell mdl-cell--12-col">
         <label class=" mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect" for="reject">
-          <input type="checkbox" id="reject" ng-model="editProfileVm.info.reject" class="mdl-checkbox__input">
+          <input type="checkbox" id="reject" ng-model="editProfileVm.info.reject" class="mdl-checkbox__input" ng-click="profileVm.initCodeMirror()">
           <span class="mdl-checkbox__label">Send Rejection emails <br/><br/>
           Candidates will be sent a rejection mail automatically after 2 hours if their score is less than the cut-off score that you set for the quiz.</span>
         </label>
       </div>
-      <div class="mdl-grid" ng-show="editProfileVm.info.reject == true">
+      <div class="mdl-grid" ng-hide="editProfileVm.info.reject != true">
         <div class="mdl-cell mdl-cell--6-col">
           <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label mt-20" ng-class="{ 'is-dirty': editProfileVm.info.reject_email}">
-            <textarea ng-model="editProfileVm.info.reject_email" class="mdl-textfield__input" type="text" rows="15 " id="reject_email"></textarea>
+            <textarea rows="15" ng-model="editProfileVm.info.reject_email" id="reject_email" ui-codemirror="cmOption2" class="hide" ng-focus="editProfileVm.info.reject == true"></textarea>
             <label class="mdl-textfield__label" for="email">Rejection email</label>
           </div>
         </div>
-        <div class="mdl-cell mdl-cell--6-col">
-          <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label mt-20">
-            <pre>
-            <textarea class="mdl-textfield__input" type="text" rows="15" readonly>
-Hello Candidate!
-
-{{editProfileVm.info.reject_email}}
-            </textarea>
-            </pre>
-            <label class="mdl-textfield__label" for="email">Reject Preview</label>
-          </div>
+        <div class="mdl-cell mdl-cell--6-col pl-10 preview">
+          <h5>Preview</h5>
+          <pre>
+          <p>Hello Candidate!</p>
+          </pre>
+          <pre ng-bind-html="mainVm.markDownFormat(editProfileVm.info.reject_email)" class="code-block"></pre>
         </div>
       </div>
       <div class="mt-20 ">

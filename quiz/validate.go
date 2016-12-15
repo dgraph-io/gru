@@ -201,7 +201,6 @@ func checkAndUpdate(uid string) (int, error) {
 	shuffleQuestions(questions)
 	c.numQuestions = len(questions)
 	c.qns = filter(questions)
-	fmt.Printf("%+v\n", c.qns)
 	updateMap(uid, c)
 	return http.StatusOK, nil
 }

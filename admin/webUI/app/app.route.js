@@ -1,4 +1,4 @@
--//Angular Routes defined here.
+- //Angular Routes defined here.
 
 // Setting Module
 (function() {
@@ -180,12 +180,13 @@
         url: '/admin/profile',
         abstract: true,
         templateUrl: profileIndexTemplate,
-        resolve: helper.resolveFor('profileController','profileService'),
+        resolve: helper.resolveFor('profileController', 'profileService', 'codeMirror', 'marked'),
       })
       .state('profile.edit', {
         url: '/edit',
         authenticate: true,
         parent: 'profile',
+        css: [codeMirrorCSS, githubCSS],
         templateUrl: editProfileTemplate,
       })
   }

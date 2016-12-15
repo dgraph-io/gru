@@ -5,11 +5,48 @@
     // VARIABLE DECLARATION
     profileVm = this;
     mainVm.pageName = "profile-page"
+
+    marked.setOptions({
+      renderer: new marked.Renderer(),
+      gfm: true,
+      tables: true,
+      breaks: false,
+      pedantic: false,
+      sanitize: false, // if false -> allow plain old HTML ;)
+      smartLists: true,
+      smartypants: false,
+      highlight: function(code, lang) {
+        // in case, there is code without language specified
+        if (lang) {
+          return hljs.highlight(lang, code).value;
+        } else {
+          return hljs.highlightAuto(code).value;
+        }
+      }
+    });
+
+    profileVm.editorSetting = {
+      lineWrapping: true
+    };
+
+    profileVm.initCodeMirror = initCodeMirror;
+
+    function initCodeMirror() {
+      $scope.cmOption = {}
+      $scope.cmOption2 = {}
+      setTimeout(function() {
+        $scope.cmOption = profileVm.editorSetting;
+        $scope.cmOption2 = profileVm.editorSetting;
+        // To refresh the reject mail editor which is hidden initially.
+        $(".CodeMirror").length > 0 && $(".CodeMirror")[1].CodeMirror.refresh()
+      }, 500);
+    }
   }
 
   function editProfileController($scope, $rootScope, $state, profileService) {
     editProfileVm = this;
     editProfileVm.update = updateProfile;
+    editProfileVm.info = {};
 
     profileService.getProfile()
       .then(function(data) {
@@ -18,7 +55,7 @@
         editProfileVm.info.email = data['info'][0]["company.email"]
         editProfileVm.info.invite_email = decodeURI(data['info'][0]["company.invite_email"])
         editProfileVm.info.reject_email = decodeURI(data['info'][0]["company.reject_email"])
-        editProfileVm.info.reject = data['info'][0].reject === "true"
+        editProfileVm.info.reject = data['info'][0]["company.reject"] === "true"
       }, function(err) {
         console.log(err)
       });
@@ -62,6 +99,12 @@
           console.log(err)
         })
     }
+
+    $rootScope.$on('$viewContentLoaded', function() {
+      profileVm.initCodeMirror();
+    });
+
+    profileVm.initCodeMirror();
   }
 
   var profileDependency = [
