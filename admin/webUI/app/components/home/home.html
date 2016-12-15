@@ -1,42 +1,55 @@
-<div class="mdl-grid container home-grid" ng-controller="homeController as homeVm">
-  <div class="mdl-layout-spacer"></div>
-  <div class="mdl-cell mdl-cell--5-col mdl-cell--4-col-tablet">
-    <!-- Wide card with share menu button -->
-    <div class="panel-card mdl-card mdl-shadow--2dp mdl-cell--hide-phone">
-      <div class="mdl-card__title question-cover">
-        <h2 class="mdl-card__title-text"></h2>
-      </div>
-      <div class="mdl-card__supporting-text text-center text-black text-darkBlue">
-        QUESTION PANEL
-      </div>
-      <div class="mdl-card__actions mdl-card--border">
-        <button class="mdl-button mdl-js-button mdl-js-ripple-effect" ng-click="mainVm.goTo('question.add')">
-          ADD NEW
+<div ng-controller="homeController as homeVm">
+  <div class="mdl-grid">
+    <div class="mdl-cell mdl-cell--2-col clickable">
+      <form name="form">
+        <div class="button bg-white pv-20 ph-20" ngf-select ng-model="homeVm.file" name="file" ngf-pattern=" 'image/*' " ngf-accept=" 'image/*' " ngf-max-size="20MB " ngf-min-height="100" ngf-resize="{width: 100, height: 100} ">Select File</div>
+        <div class="text-green mv-20">{{homeVm.file.$ngfName}}</div>
+        <button class="mdl-button mdl-js-button mdl-js-ripple-effect" type="submit" ng-click="submit()">
+          Upload
         </button>
-        <button class="mdl-button mdl-js-button mdl-js-ripple-effect" ng-click="mainVm.goTo('question.all')">
-          SHOW ALL
-        </button>
-      </div>
+      </form>
     </div>
   </div>
-  <div class="mdl-cell mdl-cell--5-col mdl-cell--4-col-tablet">
-    <!-- Wide card with share menu button -->
-    <div class="panel-card mdl-card mdl-shadow--2dp">
-      <div class="mdl-card__title quiz-cover">
-        <h2 class="mdl-card__title-text"></h2>
-      </div>
-      <div class="mdl-card__supporting-text text-center text-black text-darkBlue">
-        QUIZ PANEL
-      </div>
-      <div class="mdl-card__actions mdl-card--border">
-        <button class="mdl-button mdl-js-button mdl-js-ripple-effect" ng-click="mainVm.goTo('quiz.add')">
-          ADD NEW
-        </button>
-        <button class="mdl-button mdl-js-button mdl-js-ripple-effect" ng-click="mainVm.goTo('quiz.all')">
-          SHOW ALL
-        </button>
+  <div class="mdl-grid container home-grid">
+    <div class="mdl-layout-spacer "></div>
+    <div class="mdl-cell mdl-cell--5-col mdl-cell--4-col-tablet ">
+      <!-- Wide card with share menu button -->
+      <div class="panel-card mdl-card mdl-shadow--2dp mdl-cell--hide-phone ">
+        <div class="mdl-card__title question-cover ">
+          <h2 class="mdl-card__title-text "></h2>
+        </div>
+        <div class="mdl-card__supporting-text text-center text-black text-darkBlue ">
+          QUESTION PANEL
+        </div>
+        <div class="mdl-card__actions mdl-card--border ">
+          <button class="mdl-button mdl-js-button mdl-js-ripple-effect " ng-click="mainVm.goTo( 'question.add') ">
+            ADD NEW
+          </button>
+          <button class="mdl-button mdl-js-button mdl-js-ripple-effect " ng-click="mainVm.goTo( 'question.all') ">
+            SHOW ALL
+          </button>
+        </div>
       </div>
     </div>
+    <div class="mdl-cell mdl-cell--5-col mdl-cell--4-col-tablet ">
+      <!-- Wide card with share menu button -->
+      <div class="panel-card mdl-card mdl-shadow--2dp ">
+        <div class="mdl-card__title quiz-cover ">
+          <h2 class="mdl-card__title-text "></h2>
+        </div>
+        <div class="mdl-card__supporting-text text-center text-black text-darkBlue ">
+          QUIZ PANEL
+        </div>
+        <div class="mdl-card__actions mdl-card--border ">
+          <button class="mdl-button mdl-js-button mdl-js-ripple-effect " ng-click="mainVm.goTo( 'quiz.add') ">
+            ADD NEW
+          </button>
+          <button class="mdl-button mdl-js-button mdl-js-ripple-effect " ng-click="mainVm.goTo( 'quiz.all') ">
+            SHOW ALL
+          </button>
+        </div>
+      </div>
+    </div>
+    <div class="mdl-layout-spacer "></div>
   </div>
-  <div class="mdl-layout-spacer"></div>
 </div>
