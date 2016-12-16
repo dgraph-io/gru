@@ -95,7 +95,7 @@
       if (!inputs.questions) {
         return "Please add question to the quiz before submitting"
       }
-      if (inputs.threshold >=0) {
+      if (inputs.threshold >= 0) {
         return "Threshold should be less than 0"
       }
       if (inputs.cut_off >= getTotalScore(inputs.questions)) {
@@ -131,9 +131,11 @@
   function allQuizController(quizService, questionService) {
     quizVm.newQuiz = {};
 
+    quizVm.allQuizes = [];
+
     quizService.getAllQuizes().then(function(data) {
       var data = data;
-      quizVm.allQuizes = data.debug[0].quiz;
+      quizVm.allQuizes = data.debug[0].quiz || [];
     }, function(err) {
       console.log(err);
     })

@@ -34,10 +34,16 @@
       <root> <company.name> \"" + data.name + "\" . \n\
       <root> <company.email> \"" + data.email + "\" . \n\
       <root> <backup> \"" + data.backup + "\" . \n\
-      <root> <backup_days> \"" + data.backup_days + "\" . \n\
-      <root> <company.invite_email> \"" + data.invite_email + "\" . \n\
-      <root> <company.reject_email> \"" + data.reject_email + "\" . \n\
-      <root> <company.reject> \"" + (data.reject === true ? "true" : "false") +
+      <root> <backup_days> \"" + data.backup_days + "\" . \n"
+
+      if (data.invite_email != "") {
+        mutation += "<root> <company.invite_email> \"" + data.invite_email + "\" . \n"
+      }
+      if (data.reject_email != "") {
+        mutation += "< root > < company.reject_email > \"" + data.reject_email + "\" . \n"
+      }
+
+      mutation += "<root> <company.reject> \"" + (data.reject === true ? "true" : "false") +
         "\" . \n\
       }\n\
     }"
@@ -46,6 +52,7 @@
         if (data.code == "ErrorOk") {
           return deferred.resolve(true);
         }
+        console.log(data)
         return deferred.resolve(false);
       });
       return deferred.promise;

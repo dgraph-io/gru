@@ -60,21 +60,21 @@
         editProfileVm.info.reject = data['info'][0]["company.reject"] === "true"
         editProfileVm.info.backup = parseInt(data['info'][0]["backup"])
         editProfileVm.info.backup_days = parseInt(data['info'][0]["backup_days"])
-        editProfileVm.info.backup = editProfileVm.info.backup === undefined ? 60 : editProfileVm.info.backup
-        editProfileVm.info.backup_days = editProfileVm.info.backup_days === undefined ? 5 : editProfileVm.info.backup_days
+        editProfileVm.info.backup = isNaN(editProfileVm.info.backup) ? 1 : editProfileVm.info.backup
+        editProfileVm.info.backup_days = isNaN(editProfileVm.info.backup_days) ? 5 : editProfileVm.info.backup_days
       }, function(err) {
         console.log(err)
       });
 
     function valid(input) {
-      if (!isValidEmail(input.email)) {
-        return input.email + " isn't a valid email."
-      }
       if (!input.name) {
         return "Name shouldn't be empty.";
       }
-      if (!input.invite_email) {
-        return "Invite email can't be empty.";
+      if (!isValidEmail(input.email)) {
+        return "Please enter a valid email."
+      }
+      if (input.reject && !input.reject_email) {
+        return "Rejection email can't be empty.";
       }
       return true
     }
