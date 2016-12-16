@@ -18,16 +18,16 @@
       </div>
       <div class="mdl-cell mdl-cell--12-col">
         <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label mt-20" ng-class="{'is-dirty': editProfileVm.info.backup}">
-          <input class="mdl-textfield__input" type="number" min="0" id="backup" ng-model="editProfileVm.info.backup">
-          <label class="mdl-textfield__label" for="backup">Backups every (in mins)</label>
-          <span class="mdl-textfield__error">Value should be > 0.</span>
+          <input class="mdl-textfield__input" type="number" min="1" max="24" id="backup" ng-model="editProfileVm.info.backup">
+          <label class="mdl-textfield__label" for="backup">Backups every (in hours)</label>
+          <span class="mdl-textfield__error">Value should between 1 and 24.</span>
         </div>
       </div>
       <div class="mdl-cell mdl-cell--12-col">
         <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label mt-20" ng-class="{'is-dirty': editProfileVm.info.backup_days}">
-          <input class="mdl-textfield__input" type="number" min="1" max="30" id="backup_days" ng-model="editProfileVm.info.backup_days">
+          <input class="mdl-textfield__input" type="number" min="1" max="60" id="backup_days" ng-model="editProfileVm.info.backup_days">
           <label class="mdl-textfield__label" for="backup_days">No. of days to keep backup for</label>
-          <span class="mdl-textfield__error">Value should be between 1 and 30.</span>
+          <span class="mdl-textfield__error">Value should be between 1 and 60.</span>
         </div>
       </div>
       <div class="mdl-grid">
@@ -42,7 +42,7 @@
           <pre>
           <p>Hello!</p>
           <p>You have been invited to take the screening quiz by {{editProfileVm.info.name}}.</p>
-          <p>You can take the quiz anytime till Wed Dec 21 00:00:00 UTC 2016 by visiting <a href="#">url</a>.</p>
+          <p>You can take the quiz anytime till Wed Dec 21 2016 <a href="#">by visiting url</a>.</p>
           </pre>
           <pre ng-bind-html="mainVm.markDownFormat(editProfileVm.info.invite_email)" class="code-block"></pre>
         </div>

@@ -108,8 +108,7 @@ func add(quizId, email string, validity time.Time) server.Response {
 	}
 
 	// Token sent in mail is uid + the random string.
-	go mail.Send(email, validity.Format("Mon Jan 2 15:04:05 MST 2006"),
-		uid+token)
+	go mail.Send(email, validity.Format("Mon Jan 2 2006"), uid+token)
 	return sr
 }
 
@@ -261,7 +260,13 @@ func ResendInvite(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	go mail.Send(rr.Email, rr.Validity, cid+rr.Token)
+	var t time.Time
+	if t, err = time.Parse("2006-01-02 15:04:05 +0000 MST", rr.Validity); err != nil {
+		sr.Write(w, err.Error(), "Couldn't parse the validity", http.StatusBadRequest)
+		return
+	}
+
+	go mail.Send(rr.Email, t.Format("Mon Jan 2 2006"), cid+rr.Token)
 	sr.Write(w, "", "Invite has been resent.", http.StatusOK)
 }
 

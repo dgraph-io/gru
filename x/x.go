@@ -64,7 +64,7 @@ func Backup() {
 		return
 	}
 
-	ticker := time.NewTicker(time.Minute * time.Duration(d))
+	ticker := time.NewTicker(time.Hour * time.Duration(d))
 	for range ticker.C {
 		dur, err := backupDuration()
 		if err != nil {
@@ -73,7 +73,7 @@ func Backup() {
 		}
 
 		if d != dur {
-			ticker = time.NewTicker(time.Minute * time.Duration(d))
+			ticker = time.NewTicker(time.Hour * time.Duration(d))
 		}
 
 		res, err := http.Get(fmt.Sprintf("%v/admin/backup", *dgraph.Server))
