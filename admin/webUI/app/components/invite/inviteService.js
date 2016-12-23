@@ -73,7 +73,7 @@
                   }\
           }"
 
-       MainService.proxy(query).then(function(data) {
+      MainService.proxy(query).then(function(data) {
         var candidates = data.quiz[0]["quiz.candidate"];
         if (candidates === undefined) {
           return deferred.resolve("")
@@ -99,6 +99,13 @@
       var date = new_validity.getDate(),
         month = new_validity.getMonth() + 1,
         year = new_validity.getFullYear();
+
+      if (date < 10) {
+        date = '0' + date
+      }
+      if (month < 10) {
+        month = '0' + month
+      }
 
       var val = year + "-" + month + "-" + date + " 00:00:00 +0000 UTC";
 
