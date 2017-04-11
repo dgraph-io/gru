@@ -48,7 +48,7 @@
           '" . \n';
       }
       if (data.reject_email != "") {
-        mutation += '< root > < company.reject_email > "' +
+        mutation += '<root> <company.reject_email> "' +
           data.reject_email +
           '" . \n';
       }
@@ -60,11 +60,10 @@
     }';
 
       MainService.proxy(mutation).then(function(data) {
-        if (data.code == "Success") {
-          return deferred.resolve(true);
+        if (data.code != "Success") {
+          return deferred.resolve(false);
         }
-        console.log(data);
-        return deferred.resolve(false);
+        return deferred.resolve(true);
       });
       return deferred.promise;
     };

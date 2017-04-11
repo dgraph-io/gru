@@ -61,7 +61,6 @@ func SendMutation(m string) (MutationRes, error) {
 
 	var mr MutationRes
 	json.NewDecoder(res.Body).Decode(&mr)
-	fmt.Printf("%+v\n", mr)
 	if mr.Code != Success {
 		return MutationRes{}, fmt.Errorf(mr.Message)
 	}
