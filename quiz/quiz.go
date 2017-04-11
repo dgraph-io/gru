@@ -100,7 +100,7 @@ func readMap(uid string) (Candidate, error) {
 
 type quiz struct {
 	Id        string     `json:"_uid_"`
-	Duration  int        `json:"duration,string"`
+	Duration  int        `json:"duration"`
 	CutOff    float64    `json:"cut_off,string"`
 	Threshold float64    `json:"threshold,string"`
 	Questions []Question `json:"quiz.question"`
@@ -113,7 +113,7 @@ type cand struct {
 	Email       string
 	Token       string    `json:"token"`
 	Validity    string    `json:"validity"`
-	Complete    bool      `json:"complete,string"`
+	Complete    bool      `json:"complete"`
 	CompletedAt time.Time `json:"completed_at,string"`
 	Quiz        []quiz    `json:"candidate.quiz"`
 	QuizStart   time.Time `json:"quiz_start"`
@@ -129,7 +129,7 @@ type uid struct {
 
 type qids struct {
 	QuestionUid []uid   `json:"question.uid"`
-	Score       float64 `json:"candidate.score,string"`
+	Score       float64 `json:"candidate.score"`
 	Answered    string  `json:"question.answered"`
 }
 
@@ -193,8 +193,8 @@ func sendMail(c Candidate, userId string) error {
 	}
 
 	m := new(dgraph.Mutation)
-	m.Set(`<_uid_:` + userId + `> <completed_at> "` + time.Now().Format(timeLayout) + `" .`)
-	m.Set(`<rejected> <candidate> <_uid_:` + userId + `> .`)
+	m.Set(`<` + userId + `> <completed_at> "` + time.Now().Format(timeLayout) + `" .`)
+	m.Set(`<rejected> <candidate> <` + userId + `> .`)
 	_, err := dgraph.SendMutation(m.String())
 	return err
 }

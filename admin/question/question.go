@@ -144,17 +144,9 @@ func Index(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var query string
-	var after string
-	if q.Id == "" {
-		after = "0"
-	} else {
-		after = q.Id
-	}
-
-	query = `{
+	query := `{
 		debug(id: root) {
-			question (after:` + after + `, first: 20) {
+			question {
 				_uid_
 				name
 				text
@@ -166,9 +158,11 @@ func Index(w http.ResponseWriter, r *http.Request) {
 					name
 				}
 				question.option {
+					_uid_
 					name
 				}
 				question.correct {
+					_uid_
 					name
 				}
 			}

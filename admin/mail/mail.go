@@ -13,7 +13,7 @@ import (
 )
 
 var SENDGRID_API_KEY = flag.String("sendgrid", "", "Sendgrid API Key")
-var reportMail = flag.String("report", "join@dgraph.io", "Email on which to send the reports.")
+var reportMail = flag.String("report", "pawan@dgraph.io", "Email on which to send the reports.")
 
 // TODO - Later just have one IP address with port info.
 var Ip = flag.String("ip", "http://localhost:2020", "Public IP address of server")

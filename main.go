@@ -108,7 +108,7 @@ func health(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res, err := dgraph.Query("{ \n me(_xid_:alice) { \n name \n } \n }")
+	res, err := dgraph.Query("{ \n me(id:alice) { \n name \n } \n }")
 	if err != nil || string(res) != `{"me":[{"name":"Alice"}]}` {
 		hc.Services = "server"
 		json.NewEncoder(w).Encode(hc)

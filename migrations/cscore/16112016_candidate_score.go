@@ -28,7 +28,7 @@ type Quiz struct {
 
 func candidates() string {
 	return `{
-        quiz(_uid_: ` + *quiz + `) {
+        quiz(id: ` + *quiz + `) {
                 quiz.candidate {
                         _uid_
                         complete
@@ -62,7 +62,7 @@ func main() {
 		}
 		c.Score = x.ToFixed(score, 2)
 		m := new(dgraph.Mutation)
-		m.Set(`<_uid_:` + c.Id + `> <score> "` + strconv.FormatFloat(c.Score, 'g', -1, 64) + `" .`)
+		m.Set(`<` + c.Id + `> <score> "` + strconv.FormatFloat(c.Score, 'g', -1, 64) + `" .`)
 		if _, err := dgraph.SendMutation(m.String()); err != nil {
 			log.Fatalf("Error: %v for candidate with uid: %v", err, c.Id)
 		}

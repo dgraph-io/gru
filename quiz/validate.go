@@ -56,7 +56,7 @@ type quizInfo struct {
 
 func quizQns(quizId string) ([]Question, error) {
 	q := `{
-		quiz(_uid_: ` + quizId + `) {
+		quiz(id: ` + quizId + `) {
 			quiz.question {
 				_uid_
 				text
@@ -88,7 +88,7 @@ func quizQns(quizId string) ([]Question, error) {
 
 func candQuery(cid string) string {
 	return `{
-        quiz.candidate(_uid_:` + cid + `) {
+        quiz.candidate(id:` + cid + `) {
                 name
                 email
                 token

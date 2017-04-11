@@ -37,14 +37,14 @@ func Add(w http.ResponseWriter, r *http.Request) {
 	}
 
 	m := new(dgraph.Mutation)
-	m.Set(`<root> <quiz> <_new_:quiz> .`)
+	m.Set(`<root> <quiz> <_:quiz> .`)
 	// TODO - Error if Name is empty.
-	m.Set(`<_new_:quiz> <name> "` + q.Name + `" .`)
-	m.Set(`<_new_:quiz> <threshold> "` + strconv.FormatFloat(q.Threshold, 'g', -1, 64) + `" .`)
-	m.Set(`<_new_:quiz> <cut_off> "` + strconv.FormatFloat(q.Cutoff, 'g', -1, 64) + `" .`)
-	m.Set(`<_new_:quiz> <duration> "` + strconv.Itoa(q.Duration) + `" . `)
+	m.Set(`<_:quiz> <name> "` + q.Name + `" .`)
+	m.Set(`<_:quiz> <threshold> "` + strconv.FormatFloat(q.Threshold, 'g', -1, 64) + `" .`)
+	m.Set(`<_:quiz> <cut_off> "` + strconv.FormatFloat(q.Cutoff, 'g', -1, 64) + `" .`)
+	m.Set(`<_:quiz> <duration> "` + strconv.Itoa(q.Duration) + `" . `)
 	for _, q := range q.Questions {
-		m.Set(`<_new_:quiz> <quiz.question> <` + q.Uid + `> .`)
+		m.Set(`<_:quiz> <quiz.question> <` + q.Uid + `> .`)
 	}
 
 	mr, err := dgraph.SendMutation(m.String())
@@ -63,7 +63,19 @@ func Add(w http.ResponseWriter, r *http.Request) {
 }
 
 func Index(w http.ResponseWriter, r *http.Request) {
-	q := "{debug(id: root) { quiz { _uid_ name duration quiz.question { text }  }  }}"
+	q := `{
+		debug(id: root) {
+			quiz {
+				_uid_
+				name
+				duration
+				quiz.question {
+					_uid_
+					text
+				}
+			}
+		}
+	}`
 	res, err := dgraph.Query(q)
 	if err != nil {
 		sr := server.Response{}

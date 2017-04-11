@@ -18,6 +18,7 @@ func Index(w http.ResponseWriter, r *http.Request) {
 	q := `{
 		debug(id: root) {
 			question {
+				_uid_
 				question.tag {
 					name
 					_uid_

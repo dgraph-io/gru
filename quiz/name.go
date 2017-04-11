@@ -36,8 +36,8 @@ func CandidateName(w http.ResponseWriter, r *http.Request) {
 	c.name = n
 	updateMap(userId, c)
 	m := new(dgraph.Mutation)
-	m.Set(`<_uid_:` + userId + `> <name> "` + n + `" .`)
-	m.Set(`<_uid_:` + userId + `> <country> "` + country + `" .`)
+	m.Set(`<` + userId + `> <name> "` + n + `" .`)
+	m.Set(`<` + userId + `> <country> "` + country + `" .`)
 	_, err = dgraph.SendMutation(m.String())
 	if err != nil {
 		sr.Write(w, "", err.Error(), http.StatusInternalServerError)

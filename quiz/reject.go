@@ -17,14 +17,14 @@ type rejectRes struct {
 func reject() error {
 	q := `
         {
-                root(_xid_:rejected) {
-                        candidate {
-                                _uid_
-                                name
-                                email
-                                completed_at
-                        }
+            root(id:rejected) {
+                candidate {
+                        _uid_
+                        name
+                        email
+                        completed_at
                 }
+            }
         }`
 
 	var resp rejectRes
@@ -47,7 +47,7 @@ func reject() error {
 		mail.Reject(c.Name, c.Email)
 		// Lets delete this node now.
 		m := new(dgraph.Mutation)
-		m.Del(`<rejected> <candidate> <_uid_:` + c.Id + `> .`)
+		m.Del(`<rejected> <candidate> <` + c.Id + `> .`)
 		if _, err := dgraph.SendMutation(m.String()); err != nil {
 			return err
 		}
