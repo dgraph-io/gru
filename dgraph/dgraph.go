@@ -19,6 +19,8 @@ var (
 	endpoint      = strings.Join([]string{*Server, "query"}, "/")
 )
 
+const Success = "Success"
+
 type MutationRes struct {
 	Code    string            `json:"code"`
 	Message string            `json:"message"`
@@ -59,7 +61,7 @@ func SendMutation(m string) (MutationRes, error) {
 
 	var mr MutationRes
 	json.NewDecoder(res.Body).Decode(&mr)
-	if mr.Code != "ErrorOk" {
+	if mr.Code != Success {
 		return MutationRes{}, fmt.Errorf(mr.Message)
 	}
 	return mr, nil

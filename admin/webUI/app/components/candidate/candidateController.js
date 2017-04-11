@@ -1,7 +1,5 @@
 (function() {
-
   function candidateController($state) {
-
     // VARIABLE DECLARATION
     candidateVm = this;
     mainVm.pageName = "candidate-page";
@@ -35,28 +33,34 @@
 
     // Check if user is authorized
     function checkValidity() {
-      var candToken = localStorage.getItem("candidate_info")
-        // If the candidate directly came to /quiz url to resume the quiz, then token might be null
-        // in incognito window. So we show him an error.
+      var candToken = localStorage.getItem("candidate_info");
+      // If the candidate directly came to /quiz url to resume the quiz, then token might be null
+      // in incognito window. So we show him an error.
       if (candToken == null) {
-        mainVm.errorMessage = "Please use the link sent to your mail to resume the quiz."
-        return false
+        mainVm.errorMessage = "Please use the link sent to your mail to resume the quiz.";
+        return false;
       }
       var ctoken = JSON.parse(candToken);
 
       if (ctoken.token) {
         candidateVm.info = ctoken;
-        return true
+        return true;
       } else {
-        return false
+        return false;
       }
     }
   }
 
-  function candidateQuizController($scope, $rootScope, $state, $interval, candidateService) {
+  function candidateQuizController(
+    $scope,
+    $rootScope,
+    $state,
+    $interval,
+    candidateService
+  ) {
     // VARIABLE DECLARATION
     cqVm = this;
-    cqVm.total_score = 0
+    cqVm.total_score = 0;
     candidateVm.isValidUser = candidateVm.checkValidity();
     mainVm.pageName = "candidate-quiz-page";
     cqVm.timerObj = {};
@@ -79,24 +83,25 @@
       cqVm.stopQuiz();
       cqVm.apiError = data.message;
       mainVm.hideNotification(true);
-    })
+    });
 
     // FUNCTION DEFINITION
 
     // Get Question
     function getQuestion() {
-
-      candidateService.getQuestion()
-        .then(function(data) {
+      candidateService.getQuestion().then(
+        function(data) {
           cqVm.question = data;
 
-          if (data._uid_ == "END") { //END QUIZ
+          if (data._uid_ == "END") {
+            //END QUIZ
             cqVm.stopQuiz();
             cqVm.total_score = data.score;
-          } else { //INIT DATA AND TIMERS
+          } else {
+            //INIT DATA AND TIMERS
 
-            var seconds = Duration.parse(data.time_taken).seconds()
-            $timeTakenElem = document.querySelector('#time-taken');
+            var seconds = Duration.parse(data.time_taken).seconds();
+            $timeTakenElem = document.querySelector("#time-taken");
             // So that we call getTime() when question is fetched the first time and update
             // time.
             cqVm.getTime();
@@ -109,22 +114,27 @@
             }
           }
 
-          setTimeout(function() {
-            componentHandler.upgradeAllRegistered();
-          }, 10);
+          setTimeout(
+            function() {
+              componentHandler.upgradeAllRegistered();
+            },
+            10
+          );
 
           scrollTo($(".candidate"));
-        }, function(err) {
+        },
+        function(err) {
           if (err.status != 0) {
             if (err.data.Message) {
               cqVm.apiError = err.data.Message;
               SNACKBAR({
                 message: err.data.Message,
-                messageType: "error",
-              })
+                messageType: "error"
+              });
             }
           }
-        })
+        }
+      );
     }
 
     function stopQuiz() {
@@ -141,22 +151,25 @@
 
     function submitAnswer(skip) {
       cqVm.retry = true;
-      if (!skip && (!cqVm.answer || angular.equals({}, cqVm.answer) || cqVm.answer == "")) {
+      if (
+        !skip &&
+        (!cqVm.answer || angular.equals({}, cqVm.answer) || cqVm.answer == "")
+      ) {
         SNACKBAR({
           message: "Please select answer or Skip the question",
-          messageType: "error",
-        })
-        return
+          messageType: "error"
+        });
+        return;
       }
       var requestData = {
         qid: cqVm.question._uid_,
-        cuid: cqVm.question.cuid,
-      }
+        cuid: cqVm.question.cuid
+      };
 
       if (!skip) {
         // If multiple Answer
         if (mainVm.isObject(cqVm.answer)) {
-          requestData.aid = ""
+          requestData.aid = "";
           for (var key in cqVm.answer) {
             if (cqVm.answer.hasOwnProperty(key)) {
               requestData.aid += key + ",";
@@ -169,8 +182,8 @@
       } else {
         requestData.aid = "skip";
       }
-      candidateService.submitAnswer(requestData)
-        .then(function(data) {
+      candidateService.submitAnswer(requestData).then(
+        function(data) {
           cqVm.retry = false;
           cqVm.answer = "";
           if (data.status == 200) {
@@ -178,32 +191,36 @@
           } else {
             clearAllTimers();
           }
-        }, function(err) {
+        },
+        function(err) {
           mainVm.showAjaxLoader = true;
-          cqVm.clearUnwatch = $scope.$watch(angular.bind(mainVm, function() {
-            return mainVm.showNotification;
-          }), function(newValue, oldValue) {
-            //If showNotification is false, it means server connecte, and RETRY is true
-            if (newValue == false && cqVm.retry) {
-              cqVm.submitAnswer(skip);
+          cqVm.clearUnwatch = $scope.$watch(
+            angular.bind(mainVm, function() {
+              return mainVm.showNotification;
+            }),
+            function(newValue, oldValue) {
+              //If showNotification is false, it means server connecte, and RETRY is true
+              if (newValue == false && cqVm.retry) {
+                cqVm.submitAnswer(skip);
+              }
             }
-          });
+          );
           if (err.status == 400) {
-
           }
-        })
+        }
+      );
     }
 
     function manipulateTime(timer, display, isTimeLeft) {
       hours = Math.floor(timer / 3600);
-      minutes = hours * 60 + parseInt((timer / 60) % 60, 10);
+      minutes = hours * 60 + parseInt(timer / 60 % 60, 10);
       seconds = parseInt(timer % 60, 10);
 
       if (isTimeLeft) {
         cqVm.finalTimeLeft = {
           minutes: minutes,
-          seconds: seconds,
-        }
+          seconds: seconds
+        };
       }
 
       minutes = minutes < 10 ? "0" + minutes : minutes;
@@ -213,22 +230,27 @@
     }
 
     function startTimer(duration, display, isReverse) {
-      var timer = duration,
-        hours, minutes, seconds;
+      var timer = duration, hours, minutes, seconds;
 
       if (isReverse) {
         $interval.cancel(cqVm.timerObj.time_taken);
-        cqVm.timerObj.time_taken = $interval(function foo() {
-          manipulateTime(timer, display);
-          cqVm.timerObj.time_elapsed = timer++;
-        }, 1000);
+        cqVm.timerObj.time_taken = $interval(
+          function foo() {
+            manipulateTime(timer, display);
+            cqVm.timerObj.time_elapsed = timer++;
+          },
+          1000
+        );
       } else {
-        cqVm.timerObj.time_left = $interval(function() {
-          manipulateTime(timer, display, true);
-          if (--timer < 0) {
-            stopTimer();
-          }
-        }, 1000);
+        cqVm.timerObj.time_left = $interval(
+          function() {
+            manipulateTime(timer, display, true);
+            if (--timer < 0) {
+              stopTimer();
+            }
+          },
+          1000
+        );
       }
 
       if (cqVm.quizEnded) {
@@ -241,72 +263,84 @@
     }
 
     function initTimer(totalTime) {
-      var duration = Duration.parse(totalTime)
-      display = document.querySelector('#time');
+      var duration = Duration.parse(totalTime);
+      display = document.querySelector("#time");
 
       stopTimer(); //Reset Time left interval
       if (display) {
         startTimer(duration.seconds(), display);
       }
-    };
-
+    }
 
     function getTime() {
       // Hit the PING api
-      candidateService.getTime()
-        .then(function(data) {
-          mainVm.consecutiveError = 0
+      candidateService.getTime().then(
+        function(data) {
+          mainVm.consecutiveError = 0;
           if (data.time_left != "-1") {
             if (mainVm.showNotification) {
               mainVm.hideNotification();
             }
             isPositve = Duration.parse(data.time_left)._nanoseconds > 0;
             if (isPositve) {
-              cqVm.initTimer(data.time_left)
+              cqVm.initTimer(data.time_left);
             } else {
               cqVm.finalTimeLeft = {
                 minutes: 0,
-                seconds: 0,
-              }
+                seconds: 0
+              };
               cqVm.stopQuiz();
             }
           }
-        }, function(err) {
-          var message = err.status == 0 ? "You internet seems to be offline, try refreshing the page after its back up..." : false;
+        },
+        function(err) {
+          var message = err.status == 0
+            ? "You internet seems to be offline, try refreshing the page after its back up..."
+            : false;
           mainVm.initNotification(message);
-        })
+        }
+      );
     }
 
-    cqVm.timerObj.getTime = $interval(function() {
-      cqVm.getTime();
-    }, 3000);
+    cqVm.timerObj.getTime = $interval(
+      function() {
+        cqVm.getTime();
+      },
+      3000
+    );
 
     function calcTimeTaken() {
       if (!cqVm.finalTimeLeft) {
-        return
+        return;
       }
-      var quizTime = JSON.parse(localStorage.getItem("candidate_info")).duration;
+      var quizTime = JSON.parse(
+        localStorage.getItem("candidate_info")
+      ).duration;
       var minutes = quizTime.minutes - cqVm.finalTimeLeft.minutes;
       var seconds = quizTime.seconds - cqVm.finalTimeLeft.seconds;
 
       timeTakenSec = minutes * 60 + seconds;
 
       var timeTaken = {
-        minutes: parseInt((timeTakenSec / 60) % 60, 10),
-        seconds: parseInt(timeTakenSec % 60, 10),
-      }
+        minutes: parseInt(timeTakenSec / 60 % 60, 10),
+        seconds: parseInt(timeTakenSec % 60, 10)
+      };
 
       // Adding prefix
-      minutes = timeTaken.minutes < 10 ? "0" + timeTaken.minutes : timeTaken.minutes;
-      seconds = timeTaken.seconds < 10 ? "0" + timeTaken.seconds : timeTaken.seconds;
+      minutes = timeTaken.minutes < 10
+        ? "0" + timeTaken.minutes
+        : timeTaken.minutes;
+      seconds = timeTaken.seconds < 10
+        ? "0" + timeTaken.seconds
+        : timeTaken.seconds;
 
       var text = minutes + ":" + seconds;
       $("#time-taken").text(text);
 
       if (cqVm.finalTimeLeft.minutes + cqVm.finalTimeLeft.seconds == 0) {
-        var elem = document.querySelector('#time');
+        var elem = document.querySelector("#time");
         if (elem) {
-          manipulateTime(0, elem)
+          manipulateTime(0, elem);
         }
       }
     }
@@ -315,20 +349,22 @@
       if (!cqVm.feedback) {
         SNACKBAR({
           message: "Please write your feedback",
-          messageType: "error",
-        })
-        return
+          messageType: "error"
+        });
+        return;
       }
 
       var requestData = {
-        feedback: escape(cqVm.feedback),
+        feedback: escape(cqVm.feedback)
       };
-      candidateService.sendFeedback(requestData)
-        .then(function(data) {
+      candidateService.sendFeedback(requestData).then(
+        function(data) {
           cqVm.feedbackSubmitted = true;
-        }, function(err) {
+        },
+        function(err) {
           console.log(err);
-        });
+        }
+      );
     }
 
     $scope.$on("$destroy", function() {
@@ -336,7 +372,6 @@
         $interval.cancel(cqVm.timerObj.getTime);
       }
     });
-
   }
 
   // CANDIDATE QUIZ
@@ -348,13 +383,13 @@
     "candidateService",
     candidateQuizController
   ];
-  angular.module('GruiApp').controller('candidateQuizController', candidateQuizDependency);
+  angular
+    .module("GruiApp")
+    .controller("candidateQuizController", candidateQuizDependency);
 
   // MAIN CANDIDATE CONTROLLER
-  var candidateDependency = [
-    "$state",
-    candidateController
-  ];
-  angular.module('GruiApp').controller('candidateController', candidateDependency);
-
+  var candidateDependency = ["$state", candidateController];
+  angular
+    .module("GruiApp")
+    .controller("candidateController", candidateDependency);
 })();

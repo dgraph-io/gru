@@ -13,7 +13,7 @@ import (
 )
 
 var SENDGRID_API_KEY = flag.String("sendgrid", "", "Sendgrid API Key")
-var reportMail = flag.String("report", "join@dgraph.io", "Email on which to send the reports.")
+var rejectCC = flag.String("cc", "terri@dgraph.io", "Rejection mails are cced to this email.")
 
 // TODO - Later just have one IP address with port info.
 var Ip = flag.String("ip", "http://localhost:2020", "Public IP address of server")
@@ -123,7 +123,11 @@ func Reject(name, email string) {
 
 	from := mail.NewEmail(c.Name, c.Email)
 	subject := fmt.Sprintf("%v <> Quiz", c.Name)
+	p := mail.NewPersonalization()
 	to := mail.NewEmail(name, email)
+	p.AddTos(to)
+	cc := mail.NewEmail("Terri Lee", *rejectCC)
+	p.AddCCs(cc)
 	reject, err := url.QueryUnescape(c.RejectEmail)
 	if err != nil {
 		fmt.Println(err)
@@ -149,6 +153,7 @@ Hi ` + name + `,
 `
 	content := mail.NewContent("text/html", body)
 	m := mail.NewV3MailInit(from, subject, to, content)
+	m.AddPersonalizations(p)
 	request := sendgrid.GetRequest(*SENDGRID_API_KEY, "/v3/mail/send", "https://api.sendgrid.com")
 	request.Method = "POST"
 	request.Body = mail.GetRequestBody(m)

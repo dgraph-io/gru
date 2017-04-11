@@ -26,9 +26,9 @@ type Question struct {
 	Options []Answer `json:"question.option"`
 	Tags    []Tag    `json:"question.tag"`
 	// TODO - Remove the ,string after we incorporate Dgraph schema here.
-	IsMultiple bool    `json:"multiple,string"`
-	Positive   float64 `json:"positive,string"`
-	Negative   float64 `json:"negative,string"`
+	IsMultiple bool    `json:"multiple"`
+	Positive   float64 `json:"negative"`
+	Negative   float64 `json:"positive"`
 	// Score of the candidate is sent as part of the questions API.
 	Score     float64 `json:"score"`
 	TimeTaken string  `json:"time_taken"`
@@ -66,7 +66,7 @@ func QuestionHandler(w http.ResponseWriter, r *http.Request) {
 		c.quizStart = time.Now().UTC()
 		updateMap(userId, c)
 		m := new(dgraph.Mutation)
-		m.Set(`<_uid_:` + userId + `> <quiz_start> "` + c.quizStart.Format(timeLayout) + `" .`)
+		m.Set(`<` + userId + `> <quiz_start> "` + c.quizStart.Format(timeLayout) + `" .`)
 		_, err := dgraph.SendMutation(m.String())
 		if err != nil {
 			sr.Write(w, "", err.Error(), http.StatusInternalServerError)
@@ -84,10 +84,10 @@ func QuestionHandler(w http.ResponseWriter, r *http.Request) {
 
 		// Lets store that the user successfully completed the test.
 		m := new(dgraph.Mutation)
-		m.Set(`<_uid_:` + userId + `> <complete> "true" .`)
+		m.Set(`<` + userId + `> <complete> "true" .`)
 		// Completed at is used to reject candidates whose score is < cutoff
-		m.Set(`<_uid_:` + userId + `> <completed_at> "` + time.Now().Format(timeLayout) + `" .`)
-		m.Set(`<_uid_:` + userId + `> <score> "` + strconv.FormatFloat(x.ToFixed(c.score, 2), 'g', -1, 64) + `" .`)
+		m.Set(`<` + userId + `> <completed_at> "` + time.Now().Format(timeLayout) + `" .`)
+		m.Set(`<` + userId + `> <score> "` + strconv.FormatFloat(x.ToFixed(c.score, 2), 'g', -1, 64) + `" .`)
 		_, err := dgraph.SendMutation(m.String())
 		if err != nil {
 			sr.Write(w, "", err.Error(), http.StatusInternalServerError)
@@ -129,11 +129,11 @@ func QuestionHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	m := new(dgraph.Mutation)
-	m.Set(`<_uid_:` + userId + `> <candidate.question> <_new_:qn> .`)
-	m.Set(`<_new_:qn> <question.uid> <_uid_:` + qn.Id + `> .`)
-	m.Set(`<_uid_:` + qn.Id + `> <question.candidate> <_uid_:` + userId + `> .`)
-	m.Set(`<_new_:qn> <question.asked> "` + time.Now().Format("2006-01-02T15:04:05Z07:00") + `" .`)
-	m.Set(`<_uid_:` + userId + `> <candidate.lastqnuid> "` + qn.Id + `" .`)
+	m.Set(`<` + userId + `> <candidate.question> <_:qn> .`)
+	m.Set(`<_:qn> <question.uid> <` + qn.Id + `> .`)
+	m.Set(`<` + qn.Id + `> <question.candidate> <` + userId + `> .`)
+	m.Set(`<_:qn> <question.asked> "` + time.Now().Format("2006-01-02T15:04:05Z07:00") + `" .`)
+	m.Set(`<` + userId + `> <candidate.lastqnuid> "` + qn.Id + `" .`)
 	res, err := dgraph.SendMutation(m.String())
 	if err != nil {
 		sr.Write(w, "", err.Error(), http.StatusInternalServerError)

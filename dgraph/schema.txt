@@ -1,0 +1,14 @@
+name: string @index(exact, term) .
+
+quiz_start: datetime @index .
+duration: int .
+score: float @index .
+
+multiple: bool .
+question.score: float .
+positive: float .
+negative: float .
+question.asked: datetime .
+question.answered: datetime .
+candidate.score: float .
+complete: bool .

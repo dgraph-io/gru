@@ -25,10 +25,10 @@ type uid struct {
 }
 
 type que struct {
-	Uid      string  `json:"_uid_"`
-	Multiple bool    `json:"multiple,string"`
-	Negative float64 `json:"negative,string"`
-	Positive float64 `json:"positive,string"`
+	Uid      string `json:"_uid_"`
+	Multiple bool
+	Negative float64
+	Positive float64
 	Text     string
 	Name     string
 	Tags     []option `json:"question.tag"`
@@ -52,16 +52,16 @@ func (q questions) Swap(i, j int) {
 
 type cq struct {
 	Answer   string    `json:"candidate.answer"`
-	Score    float64   `json:"candidate.score,string"`
-	Asked    time.Time `json:"question.asked,string"`
-	Answered time.Time `json:"question.answered,string"`
+	Score    float64   `json:"candidate.score"`
+	Asked    time.Time `json:"question.asked"`
+	Answered time.Time `json:"question.answered"`
 	Question []que     `json:"question.uid"`
 }
 
 type quiz struct {
 	Id       string `json:"_uid_"`
-	Duration int    `json:"duration,string"`
-	Name     string `json:"name"`
+	Duration int
+	Name     string
 }
 
 type candidates struct {
@@ -75,10 +75,10 @@ type candidates struct {
 	// Used to calculate percentile, repesents number of candidates having score
 	// <= current candidate.
 	Idx         int
-	Score       float64 `json:",string"`
-	CandidateQn []cq    `json:"candidate.question"`
-	Complete    bool    `json:"complete,string"`
-	Quiz        []quiz  `json:"candidate.quiz"`
+	Score       float64
+	CandidateQn []cq `json:"candidate.question"`
+	Complete    bool
+	Quiz        []quiz `json:"candidate.quiz"`
 	TotalScore  float64
 }
 
@@ -88,7 +88,7 @@ type report struct {
 
 func reportQuery(id string) string {
 	return `query {
-                candidate(_uid_:` + id + `) {
+                candidate(id:` + id + `) {
                         _uid_
                         name
                         email
@@ -199,7 +199,7 @@ func (a ByScore) Less(i, j int) bool { return a[i].Score > a[j].Score }
 
 func percentile(quizId string, cid string) (float64, error) {
 	q := `{
-	quiz(_uid_: ` + quizId + `) {
+	quiz(id: ` + quizId + `) {
 		quiz.candidate {
 			_uid_
 			complete

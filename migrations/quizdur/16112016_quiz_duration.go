@@ -23,7 +23,7 @@ type res struct {
 
 func quizzes() string {
 	return `{
-        root(_xid_: root) {
+        root(id: root) {
                 quiz {
                         _uid_
                         duration
@@ -46,7 +46,7 @@ func main() {
 				quiz.Duration, err)
 		}
 		m := new(dgraph.Mutation)
-		m.Set(`<_uid_:` + quiz.Id + `> <duration> "` + strconv.FormatFloat(t.Minutes(), 'g', -1, 64) + `" .`)
+		m.Set(`<` + quiz.Id + `> <duration> "` + strconv.FormatFloat(t.Minutes(), 'g', -1, 64) + `" .`)
 		if _, err := dgraph.SendMutation(m.String()); err != nil {
 			log.Fatalf("Error: %v while performing mutation for quiz with uid: %v", err, quiz.Id)
 		}

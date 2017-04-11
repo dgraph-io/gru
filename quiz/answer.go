@@ -20,17 +20,17 @@ type questionAnswer struct {
 // Queries Dgraph and checks if the candidate has already answered the question.
 func alreadyAnswered(cuid string) (int, error) {
 	q := `{
-                candidate.question(_uid_:` + cuid + `) {
-                        question.answered
-                }
-        }`
+        candidate.question(id:` + cuid + `) {
+            question.answered
+        }
+    }`
 
 	var ca questionAnswer
 	if err := dgraph.QueryAndUnmarshal(q, &ca); err != nil {
 		return http.StatusInternalServerError, err
 	}
 
-	if len(ca.Question) != 1 || ca.Question[0].Answered != "" {
+	if len(ca.Question) > 0 && ca.Question[0].Answered != "" {
 		return http.StatusBadRequest, fmt.Errorf("You have already answered this question.")
 
 	}
@@ -68,8 +68,8 @@ func getScore(selected []string, actual []string, pos, neg float64) float64 {
 
 type queInfo struct {
 	Question []struct {
-		Negative float64 `json:"negative,string"`
-		Positive float64 `json:"positive,string"`
+		Negative float64 `json:"negative"`
+		Positive float64 `json:"positive"`
 		Correct  []struct {
 			Uid string `json:"_uid_"`
 		} `json:"question.correct"`
@@ -78,7 +78,7 @@ type queInfo struct {
 
 func checkAnswer(qid string, ansIds []string) (float64, bool, error) {
 	q := `{
-		question(_uid_: ` + qid + `) {
+		question(id: ` + qid + `) {
 			question.correct {
 				_uid_
 			}
@@ -224,9 +224,10 @@ func AnswerHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Lets store some information about this question.
 	m := new(dgraph.Mutation)
-	m.Set(`<_uid_:` + cuid + `> <candidate.answer> "` + aid + `" .`)
-	m.Set(`<_uid_:` + cuid + `> <candidate.score> "` + strconv.FormatFloat(s, 'g', -1, 64) + `" .`)
-	m.Set(`<_uid_:` + cuid + `> <question.answered> "` + time.Now().Format(timeLayout) + `" .`)
+	m.Set(`<` + cuid + `> <candidate.answer> "` + aid + `" .`)
+	m.Set(`<` + cuid + `> <candidate.score> "` + strconv.FormatFloat(s, 'g', -1, 64) + `" .`)
+	m.Set(`<` + cuid + `> <question.answered> "` + time.Now().Format(timeLayout) + `" .`)
+
 	if _, err = dgraph.SendMutation(m.String()); err != nil {
 		sr.Write(w, "", err.Error(), http.StatusInternalServerError)
 		return

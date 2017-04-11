@@ -50,7 +50,7 @@ func Resume(w http.ResponseWriter, r *http.Request) {
 	}
 
 	m := new(dgraph.Mutation)
-	m.Set(`<_uid_:` + userId + `> <resume> "true" .`)
+	m.Set(`<` + userId + `> <resume> "true" .`)
 	if _, err = dgraph.SendMutation(m.String()); err != nil {
 		sr.Write(w, "", err.Error(), http.StatusInternalServerError)
 		return

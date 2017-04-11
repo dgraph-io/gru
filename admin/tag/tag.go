@@ -14,9 +14,19 @@ type Tag struct {
 }
 
 // fetch all the tags
-// TODO - Clean this up.
 func Index(w http.ResponseWriter, r *http.Request) {
-	q := "{debug(_xid_: root) { question { question.tag { name _uid_} }}}"
+	q := `{
+		debug(id: root) {
+			question {
+				_uid_
+				question.tag {
+					name
+					_uid_
+				}
+			}
+		}
+	}`
+
 	res, err := dgraph.Query(q)
 	if err != nil {
 		sr := server.Response{}

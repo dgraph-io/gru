@@ -49,9 +49,9 @@ func PingHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Time left is <=0, that means quiz should end now. Lets store this information.
 	m := new(dgraph.Mutation)
-	m.Set(`<_uid_:` + userId + `> <complete> "true" .`)
-	m.Set(`<_uid_:` + userId + `> <completed_at> "` + time.Now().Format(timeLayout) + `" .`)
-	m.Set(`<_uid_:` + userId + `> <score> "` + strconv.FormatFloat(x.ToFixed(c.score, 2), 'g', -1, 64) + `" .`)
+	m.Set(`<` + userId + `> <complete> "true" .`)
+	m.Set(`<` + userId + `> <completed_at> "` + time.Now().Format(timeLayout) + `" .`)
+	m.Set(`<` + userId + `> <score> "` + strconv.FormatFloat(x.ToFixed(c.score, 2), 'g', -1, 64) + `" .`)
 	_, err = dgraph.SendMutation(m.String())
 	if err != nil {
 		sr.Write(w, "", err.Error(), http.StatusInternalServerError)
