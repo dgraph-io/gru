@@ -44,7 +44,7 @@ func Add(w http.ResponseWriter, r *http.Request) {
 	m.Set(`<_new_:quiz> <cut_off> "` + strconv.FormatFloat(q.Cutoff, 'g', -1, 64) + `" .`)
 	m.Set(`<_new_:quiz> <duration> "` + strconv.Itoa(q.Duration) + `" . `)
 	for _, q := range q.Questions {
-		m.Set(`<_new_:quiz> <quiz.question> <_uid_:` + q.Uid + `> .`)
+		m.Set(`<_new_:quiz> <quiz.question> <` + q.Uid + `> .`)
 	}
 
 	mr, err := dgraph.SendMutation(m.String())
@@ -52,7 +52,7 @@ func Add(w http.ResponseWriter, r *http.Request) {
 		sr.Write(w, "", err.Error(), http.StatusInternalServerError)
 		return
 	}
-	if mr.Code != "ErrorOk" {
+	if mr.Code != dgraph.Success {
 		sr.Write(w, mr.Message, "", http.StatusInternalServerError)
 		return
 	}
@@ -63,7 +63,7 @@ func Add(w http.ResponseWriter, r *http.Request) {
 }
 
 func Index(w http.ResponseWriter, r *http.Request) {
-	q := "{debug(_xid_: root) { quiz { _uid_ name duration quiz.question { text }  }  }}"
+	q := "{debug(id: root) { quiz { _uid_ name duration quiz.question { text }  }  }}"
 	res, err := dgraph.Query(q)
 	if err != nil {
 		sr := server.Response{}
@@ -78,7 +78,7 @@ func Index(w http.ResponseWriter, r *http.Request) {
 func get(quizId string) string {
 	return `
     {
-	root(_uid_:` + quizId + `) {
+	root(id:` + quizId + `) {
 		_uid_
 		name
 		duration
@@ -105,17 +105,17 @@ func Get(w http.ResponseWriter, r *http.Request) {
 func edit(q Quiz) string {
 	m := new(dgraph.Mutation)
 	// TODO - Validate these fields.
-	m.Set(`<_uid_:` + q.Uid + `> <name> "` + q.Name + `" .`)
-	m.Set(`<_uid_:` + q.Uid + `> <duration> "` + strconv.Itoa(q.Duration) + `" .`)
-	m.Set(`<_uid_:` + q.Uid + `> <threshold> "` + strconv.FormatFloat(q.Threshold, 'g', -1, 64) + `" .`)
-	m.Set(`<_uid_:` + q.Uid + `> <cut_off> "` + strconv.FormatFloat(q.Cutoff, 'g', -1, 64) + `" .`)
+	m.Set(`<` + q.Uid + `> <name> "` + q.Name + `" .`)
+	m.Set(`<` + q.Uid + `> <duration> "` + strconv.Itoa(q.Duration) + `" .`)
+	m.Set(`<` + q.Uid + `> <threshold> "` + strconv.FormatFloat(q.Threshold, 'g', -1, 64) + `" .`)
+	m.Set(`<` + q.Uid + `> <cut_off> "` + strconv.FormatFloat(q.Cutoff, 'g', -1, 64) + `" .`)
 
 	// Create and associate Tags
 	for _, que := range q.Questions {
 		if que.Is_delete {
-			m.Del(`<_uid_:` + q.Uid + `> <quiz.question> <_uid_:` + que.Uid + `> .`)
+			m.Del(`<` + q.Uid + `> <quiz.question> <` + que.Uid + `> .`)
 		} else if que.Uid != "" {
-			m.Set(`<_uid_:` + q.Uid + `> <quiz.question> <_uid_:` + que.Uid + `> . `)
+			m.Set(`<` + q.Uid + `> <quiz.question> <` + que.Uid + `> . `)
 		}
 	}
 	return m.String()

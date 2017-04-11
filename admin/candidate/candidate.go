@@ -45,7 +45,7 @@ func randStringBytes(n int) string {
 func index(quizId string) string {
 	return `
 	{
-	quiz(_uid_: ` + quizId + `) {
+	quiz(id: ` + quizId + `) {
 		quiz.candidate {
 			_uid_
 			name
@@ -85,13 +85,13 @@ func Index(w http.ResponseWriter, r *http.Request) {
 func add(quizId, email string, validity time.Time) server.Response {
 	m := new(dgraph.Mutation)
 	token := randStringBytes(33)
-	m.Set(`<_uid_:` + quizId + `> <quiz.candidate> <_new_:c> .`)
-	m.Set(`<_new_:c> <candidate.quiz> <_uid_:` + quizId + `> .`)
-	m.Set(`<_new_:c> <email> "` + email + `" .`)
-	m.Set(`<_new_:c> <token> "` + token + `" .`)
-	m.Set(`<_new_:c> <validity> "` + validity.String() + `" .`)
-	m.Set(`<_new_:c> <invite_sent> "` + time.Now().UTC().String() + `" .`)
-	m.Set(`<_new_:c> <complete> "false" .`)
+	m.Set(`<` + quizId + `> <quiz.candidate> <_:c> .`)
+	m.Set(`<_:c> <candidate.quiz> <` + quizId + `> .`)
+	m.Set(`<_:c> <email> "` + email + `" .`)
+	m.Set(`<_:c> <token> "` + token + `" .`)
+	m.Set(`<_:c> <validity> "` + validity.String() + `" .`)
+	m.Set(`<_:c> <invite_sent> "` + time.Now().UTC().String() + `" .`)
+	m.Set(`<_:c> <complete> "false" .`)
 
 	sr := server.Response{}
 	mr, err := dgraph.SendMutation(m.String())
@@ -146,18 +146,18 @@ func Add(w http.ResponseWriter, r *http.Request) {
 
 func edit(c Candidate) string {
 	m := new(dgraph.Mutation)
-	m.Set(`<_uid_:` + c.Uid + `> <email> "` + c.Email + `" . `)
-	m.Set(`<_uid_:` + c.Uid + `> <validity> "` + c.Validity + `" . `)
+	m.Set(`<` + c.Uid + `> <email> "` + c.Email + `" . `)
+	m.Set(`<` + c.Uid + `> <validity> "` + c.Validity + `" . `)
 
 	// When the quiz for which candidate is invited is changed, we get both OldQuizId
 	// and new QuizId.
 	if c.QuizId != "" {
-		m.Set(`<_uid_:` + c.QuizId + `> <quiz.candidate> <_uid_:` + c.Uid + `> .`)
-		m.Set(`<_uid_:` + c.Uid + `> <candidate.quiz> <_uid_:` + c.QuizId + `> .`)
+		m.Set(`<` + c.QuizId + `> <quiz.candidate> <` + c.Uid + `> .`)
+		m.Set(`<` + c.Uid + `> <candidate.quiz> <` + c.QuizId + `> .`)
 	}
 	if c.OldQuizId != "" {
-		m.Del(`<_uid_:` + c.OldQuizId + `> <quiz.candidate> <_uid_:` + c.Uid + `> .`)
-		m.Del(`<_uid_:` + c.Uid + `> <candidate.quiz> <_uid_:` + c.OldQuizId + `> .`)
+		m.Del(`<` + c.OldQuizId + `> <quiz.candidate> <` + c.Uid + `> .`)
+		m.Del(`<` + c.Uid + `> <candidate.quiz> <` + c.OldQuizId + `> .`)
 	}
 
 	return m.String()
@@ -193,7 +193,7 @@ func Edit(w http.ResponseWriter, r *http.Request) {
 		sr.Write(w, "", err.Error(), http.StatusInternalServerError)
 		return
 	}
-	if res.Code != "ErrorOk" {
+	if res.Code != dgraph.Success {
 		sr.Write(w, res.Message, "Mutation couldn't be applied.",
 			http.StatusInternalServerError)
 		return
@@ -206,7 +206,7 @@ func Edit(w http.ResponseWriter, r *http.Request) {
 func get(candidateId string) string {
 	return `
     {
-	quiz.candidate(_uid_:` + candidateId + `) {
+	quiz.candidate(id:` + candidateId + `) {
 		name
 		email
 		token
@@ -276,7 +276,7 @@ type candInfo struct {
 
 func candName(id string) string {
 	q := `query {
-                candidate(_uid_:` + id + `) {
+                candidate(id:` + id + `) {
                         name
                 }
         }`

@@ -88,7 +88,7 @@ type report struct {
 
 func reportQuery(id string) string {
 	return `query {
-                candidate(_uid_:` + id + `) {
+                candidate(id:` + id + `) {
                         _uid_
                         name
                         email
@@ -199,7 +199,7 @@ func (a ByScore) Less(i, j int) bool { return a[i].Score > a[j].Score }
 
 func percentile(quizId string, cid string) (float64, error) {
 	q := `{
-	quiz(_uid_: ` + quizId + `) {
+	quiz(id: ` + quizId + `) {
 		quiz.candidate {
 			_uid_
 			complete

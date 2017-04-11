@@ -32,22 +32,22 @@ type Option struct {
 
 func add(q Question) string {
 	m := new(dgraph.Mutation)
-	m.Set(`<root> <question> <_new_:qn> .`)
-	m.Set(`<_new_:qn> <name> "` + q.Name + `" .`)
-	m.Set(`<_new_:qn> <text> "` + q.Text + `" .`)
+	m.Set(`<root> <question> <_:qn> .`)
+	m.Set(`<_:qn> <name> "` + q.Name + `" .`)
+	m.Set(`<_:qn> <text> "` + q.Text + `" .`)
 	if q.Notes != "" {
-		m.Set(`<_new_:qn> <notes> "` + q.Notes + `" .`)
+		m.Set(`<_:qn> <notes> "` + q.Notes + `" .`)
 	}
-	m.Set(`<_new_:qn> <positive> "` + strconv.FormatFloat(q.Positive, 'g', -1, 64) + `" .`)
-	m.Set(`<_new_:qn> <negative> "` + strconv.FormatFloat(q.Negative, 'g', -1, 64) + `" .`)
+	m.Set(`<_:qn> <positive> "` + strconv.FormatFloat(q.Positive, 'g', -1, 64) + `" .`)
+	m.Set(`<_:qn> <negative> "` + strconv.FormatFloat(q.Negative, 'g', -1, 64) + `" .`)
 
 	correct := 0
 	for i, opt := range q.Options {
 		idx := strconv.Itoa(i)
-		m.Set(`<_new_:qn> <question.option> <_new_:o` + idx + `> .`)
-		m.Set(`<_new_:o` + idx + `> <name> "` + opt.Text + `" .`)
+		m.Set(`<_:qn> <question.option> <_:o` + idx + `> .`)
+		m.Set(`<_:o` + idx + `> <name> "` + opt.Text + `" .`)
 		if opt.IsCorrect {
-			m.Set(`<_new_:qn> <question.correct> <_new_:o` + idx + `> .`)
+			m.Set(`<_:qn> <question.correct> <_:o` + idx + `> .`)
 			correct++
 		}
 	}
@@ -55,19 +55,19 @@ func add(q Question) string {
 	for i, t := range q.Tags {
 		idx := strconv.Itoa(i)
 		if t.Uid != "" {
-			m.Set(`<_new_:qn> <question.tag> <_uid_:` + t.Uid + `> .`)
-			m.Set(`<_uid_:` + t.Uid + `> <tag.question> <_new_:qn> . `)
+			m.Set(`<_:qn> <question.tag> <` + t.Uid + `> .`)
+			m.Set(`<` + t.Uid + `> <tag.question> <_:qn> . `)
 		} else {
-			m.Set(`<_new_:t` + idx + `> <name> "` + t.Name + `" .`)
-			m.Set(`<_new_:qn> <question.tag> <_new_:t` + idx + `> .`)
-			m.Set(`<_new_:t` + idx + `> <tag.question> <_new_:qn> .`)
+			m.Set(`<_:t` + idx + `> <name> "` + t.Name + `" .`)
+			m.Set(`<_:qn> <question.tag> <_:t` + idx + `> .`)
+			m.Set(`<_:t` + idx + `> <tag.question> <_:qn> .`)
 		}
 	}
 
 	if correct > 1 {
-		m.Set(`<_new_:qn> <multiple> "true" . `)
+		m.Set(`<_:qn> <multiple> "true" . `)
 	} else {
-		m.Set(`<_new_:qn> <multiple> "false" . `)
+		m.Set(`<_:qn> <multiple> "false" . `)
 	}
 	return m.String()
 }
@@ -121,7 +121,7 @@ func Add(w http.ResponseWriter, r *http.Request) {
 		sr.Write(w, "", err.Error(), http.StatusInternalServerError)
 		return
 	}
-	if res.Code != "ErrorOk" {
+	if res.Code != dgraph.Success {
 		sr.Write(w, res.Message, "", http.StatusInternalServerError)
 		return
 	}
@@ -145,12 +145,35 @@ func Index(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var query string
-	// TODO - Maybe dont call with debug, and request appropriate fields.
-	if q.Id != "" {
-		query = "{debug(_xid_: root) { question (after: " + q.Id + ", first: 20) { _uid_ name text negative positive notes question.tag { name } question.option { name } question.correct { name } }  } }"
+	var after string
+	if q.Id == "" {
+		after = "0"
 	} else {
-		query = "{debug(_xid_: root) { question { _uid_ name text negative positive notes question.tag { name } question.option { name } question.correct { name } }  } }"
+		after = q.Id
 	}
+
+	query = `{
+		debug(id: root) {
+			question (after:` + after + `, first: 20) {
+				_uid_
+				name
+				text
+				negative
+				positive
+				notes
+				question.tag {
+					_uid_
+					name
+				}
+				question.option {
+					name
+				}
+				question.correct {
+					name
+				}
+			}
+		}
+	}`
 
 	b, err := dgraph.Query(query)
 	if err != nil {
@@ -164,7 +187,7 @@ func Index(w http.ResponseWriter, r *http.Request) {
 func get(questionId string) string {
 	return `
 	{
-		root(_uid_:` + questionId + `) {
+		root(id:` + questionId + `) {
 			_uid_
 			name
 			text
@@ -207,17 +230,17 @@ func edit(q Question) (string, error) {
 	if q.Name == "" || q.Text == "" {
 		return "", fmt.Errorf("Question name/text can't be empty.")
 	}
-	m.Set(`<_uid_:` + q.Uid + `> <name> "` + q.Name + `" .`)
-	m.Set(`<_uid_:` + q.Uid + `> <text> "` + q.Text + `" .`)
+	m.Set(`<` + q.Uid + `> <name> "` + q.Name + `" .`)
+	m.Set(`<` + q.Uid + `> <text> "` + q.Text + `" .`)
 	if q.Notes != "" {
-		m.Set(`<_uid_:` + q.Uid + `> <notes> "` + q.Notes + `" .`)
+		m.Set(`<` + q.Uid + `> <notes> "` + q.Notes + `" .`)
 	}
 
 	if q.Positive == 0 || q.Negative == 0 {
 		return "", fmt.Errorf("Positive/Negative score can't be zero.")
 	}
-	m.Set(`<_uid_:` + q.Uid + `> <positive> "` + strconv.FormatFloat(q.Positive, 'g', -1, 64) + `" .`)
-	m.Set(`<_uid_:` + q.Uid + `> <negative> "` + strconv.FormatFloat(q.Negative, 'g', -1, 64) + `" .`)
+	m.Set(`<` + q.Uid + `> <positive> "` + strconv.FormatFloat(q.Positive, 'g', -1, 64) + `" .`)
+	m.Set(`<` + q.Uid + `> <negative> "` + strconv.FormatFloat(q.Negative, 'g', -1, 64) + `" .`)
 
 	correct := 0
 	if len(q.Options) == 0 {
@@ -227,34 +250,34 @@ func edit(q Question) (string, error) {
 		if opt.Text == "" {
 			return "", fmt.Errorf("Option text can't be empty.")
 		}
-		m.Set(`<_uid_:` + opt.Uid + `> <name> "` + opt.Text + `" .`)
-		m.Set(`<_uid_:` + q.Uid + `> <question.option> <_uid_:` + opt.Uid + `> . `)
+		m.Set(`<` + opt.Uid + `> <name> "` + opt.Text + `" .`)
+		m.Set(`<` + q.Uid + `> <question.option> <` + opt.Uid + `> . `)
 		if opt.IsCorrect {
 			correct++
-			m.Set(`<_uid_:` + q.Uid + `> <question.correct> <_uid_:` + opt.Uid + `> .`)
+			m.Set(`<` + q.Uid + `> <question.correct> <` + opt.Uid + `> .`)
 		} else {
-			m.Del(`<_uid_:` + q.Uid + `> <question.correct> <_uid_:` + opt.Uid + `> .`)
+			m.Del(`<` + q.Uid + `> <question.correct> <` + opt.Uid + `> .`)
 		}
 	}
 
 	// Create and associate Tags
 	for i, t := range q.Tags {
 		if t.Uid != "" && t.Is_delete {
-			m.Del(`<_uid_:` + q.Uid + `> <question.tag> <_uid_:` + t.Uid + `> .`)
-			m.Del(`<_uid_:` + t.Uid + `> <tag.question> <_uid_:` + q.Uid + `> . `)
+			m.Del(`<` + q.Uid + `> <question.tag> <` + t.Uid + `> .`)
+			m.Del(`<` + t.Uid + `> <tag.question> <` + q.Uid + `> . `)
 
 		} else if t.Uid != "" {
-			m.Set(`<_uid_:` + q.Uid + `> <question.tag> <_uid_:` + t.Uid + `> .`)
-			m.Set(`<_uid_:` + t.Uid + `> <tag.question> <_uid_:` + q.Uid + `> . `)
+			m.Set(`<` + q.Uid + `> <question.tag> <` + t.Uid + `> .`)
+			m.Set(`<` + t.Uid + `> <tag.question> <` + q.Uid + `> . `)
 
 		} else if t.Uid == "" {
 			if t.Name == "" {
 				return "", fmt.Errorf("Tag name can't be empty.")
 			}
 			idx := strconv.Itoa(i)
-			m.Set(`<_new_:tag` + idx + `> <name> "` + t.Name + `" .`)
-			m.Set(`<_uid_:` + q.Uid + `> <question.tag> <_new_:tag` + idx + `> .`)
-			m.Set(`<_new_:tag` + idx + `> <tag.question> <_uid_:` + q.Uid + `> . `)
+			m.Set(`<_:tag` + idx + `> <name> "` + t.Name + `" .`)
+			m.Set(`<` + q.Uid + `> <question.tag> <_:tag` + idx + `> .`)
+			m.Set(`<_:tag` + idx + `> <tag.question> <` + q.Uid + `> . `)
 		}
 	}
 	// TODO - There should be atleast one tag associated with a question.
@@ -262,9 +285,9 @@ func edit(q Question) (string, error) {
 	if correct == 0 {
 		return "", fmt.Errorf("Atleast one option should be correct.")
 	} else if correct > 1 {
-		m.Set(`<_uid_:` + q.Uid + `> <multiple> "true" . `)
+		m.Set(`<` + q.Uid + `> <multiple> "true" . `)
 	} else {
-		m.Set(`<_uid_:` + q.Uid + `> <multiple> "false" . `)
+		m.Set(`<` + q.Uid + `> <multiple> "false" . `)
 	}
 	return m.String(), nil
 }
@@ -292,7 +315,7 @@ func Edit(w http.ResponseWriter, r *http.Request) {
 		sr.Write(w, "", err.Error(), http.StatusInternalServerError)
 		return
 	}
-	if mr.Code != "ErrorOk" {
+	if mr.Code != dgraph.Success {
 		sr.Write(w, mr.Message, "", http.StatusInternalServerError)
 		return
 	}
