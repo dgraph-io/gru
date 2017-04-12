@@ -70,11 +70,11 @@
                   quiz(id: " +
         quizId +
         ") {\
-                          quiz.candidate {\
-                                  email\
-                          }\
-                  }\
-          }";
+            quiz.candidate {\
+              email\
+            }\
+          }\
+        }";
 
       MainService.proxy(query).then(function(data) {
         var candidates = data.quiz[0]["quiz.candidate"];

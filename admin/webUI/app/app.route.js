@@ -1,205 +1,240 @@
-- //Angular Routes defined here.
+-//Angular Routes defined here.
 
 // Setting Module
 (function() {
-  angular.module('GruiRoutes', ['GruiApp', ]);
+  angular.module("GruiRoutes", ["GruiApp"]);
 
   // Template, dirctives, js/css urls
 
-  var homeTemplate = 'app/components/home/home.html?v=20161113-1';
-  var indexTemplate = 'app/index.html';
-  var loginTemplate = 'app/components/login/index.html';
+  var homeTemplate = "app/components/home/home.html?v=20161113-1";
+  var indexTemplate = "app/index.html";
+  var loginTemplate = "app/components/login/index.html";
 
-  var questionTemplate = 'app/components/question/index.html';
-  var allQuestionTemplate = 'app/components/question/all-question.html?v=20161007-1';
-  var addQuestionTemplate = 'app/components/question/add-question.html?v=20161027-1';
-  var editQuestionTemplate = 'app/components/question/views/edit-question.html?v=20161027-1';
+  var questionTemplate = "app/components/question/index.html";
+  var allQuestionTemplate = "app/components/question/all-question.html?v=20161007-1";
+  var addQuestionTemplate = "app/components/question/add-question.html?v=20161027-1";
+  var editQuestionTemplate = "app/components/question/views/edit-question.html?v=20161027-1";
 
-  var quizTemplate = 'app/components/quiz/index.html';
-  var addQuizTemplate = 'app/components/quiz/add-quiz.html?v=20161124-1';
-  var editQuizTemplate = 'app/components/quiz/edit-quiz.html?v=20161124-1';
-  var allQuizTemplate = 'app/components/quiz/all-quiz.html?v=20161113-1';
+  var quizTemplate = "app/components/quiz/index.html";
+  var addQuizTemplate = "app/components/quiz/add-quiz.html?v=20161124-1";
+  var editQuizTemplate = "app/components/quiz/edit-quiz.html?v=20161124-1";
+  var allQuizTemplate = "app/components/quiz/all-quiz.html?v=20161113-1";
 
-  var inviteTemplate = 'app/components/invite/index.html?v=20161105-1';
-  var inviteDashboardTemplate = 'app/components/invite/views/invite-dashboard.html?v=20161113-1';
-  var inviteUserTemplate = 'app/components/invite/views/invite-user.html?v=20161116-1';
-  var editInviteTemplate = 'app/components/invite/views/edit-invite.html?v=20161113-1';
-  var candidateReportTemplate = 'app/components/invite/views/candidate-report.html?v=20161116-1';
+  var inviteTemplate = "app/components/invite/index.html?v=20161105-1";
+  var inviteDashboardTemplate = "app/components/invite/views/invite-dashboard.html?v=20170412-1";
+  var inviteUserTemplate = "app/components/invite/views/invite-user.html?v=20161116-1";
+  var editInviteTemplate = "app/components/invite/views/edit-invite.html?v=20161113-1";
+  var candidateReportTemplate = "app/components/invite/views/candidate-report.html?v=20161116-1";
 
-  var candidateIndexTemplate = 'app/components/candidate/index.html';
-  var candidateLandingTemplate = 'app/components/candidate/views/landing.html?v=20161123-1';
-  var candidateQuizTemplate = 'app/components/candidate/views/quiz.html?v=20161215-1';
+  var candidateIndexTemplate = "app/components/candidate/index.html";
+  var candidateLandingTemplate = "app/components/candidate/views/landing.html?v=20161123-1";
+  var candidateQuizTemplate = "app/components/candidate/views/quiz.html?v=20170412-1";
 
-  var quizLandingTemplate = 'app/components/candidate/views/quiz-landing.html';
+  var quizLandingTemplate = "app/components/candidate/views/quiz-landing.html";
 
-  var profileIndexTemplate = 'app/components/profile/index.html';
-  var editProfileTemplate = 'app/components/profile/edit.html';
+  var profileIndexTemplate = "app/components/profile/index.html";
+  var editProfileTemplate = "app/components/profile/edit.html";
 
   // CSS for View/Directives
   var angularSelectCSS = "assets/lib/css/angular-select.min.css";
   var codeMirrorCSS = "assets/lib/css/codemirror.css";
   var githubCSS = "assets/lib/css/github.css";
 
-  function MainRoutes($stateProvider, $locationProvider, $urlRouterProvider, helper) {
-    'use strict';
-
+  function MainRoutes(
+    $stateProvider,
+    $locationProvider,
+    $urlRouterProvider,
+    helper
+  ) {
+    "use strict";
     // Set the following to true to enable the HTML5 Mode
     // You may have to set <base> tag in index and a routing configuration in your server
     $locationProvider.html5Mode(false);
     // $locationProvider.hashPrefix('!');
 
     // default route
-    $urlRouterProvider.otherwise('/login');
+    $urlRouterProvider.otherwise("/login");
 
     // --------------Application Routes---------------
     $stateProvider
-      .state('root', {
-        url: '/admin',
+      .state("root", {
+        url: "/admin",
         templateUrl: homeTemplate,
-        resolve: helper.resolveFor('homeController'),
-        authenticate: true,
+        resolve: helper.resolveFor("homeController"),
+        authenticate: true
       })
-      .state('login', {
-        url: '/login',
+      .state("login", {
+        url: "/login",
         templateUrl: loginTemplate,
-        resolve: helper.resolveFor('loginController', 'loginService'),
+        resolve: helper.resolveFor("loginController", "loginService")
       })
-      .state('question', {
-        url: '/admin/question',
+      .state("question", {
+        url: "/admin/question",
         abstract: true,
         templateUrl: questionTemplate,
         css: [angularSelectCSS, githubCSS],
-        resolve: helper.resolveFor('questionController', 'questionServices', 'angular-select', 'codeMirror', 'javascript', 'marked', 'highlight'),
+        resolve: helper.resolveFor(
+          "questionController",
+          "questionServices",
+          "angular-select",
+          "codeMirror",
+          "javascript",
+          "marked",
+          "highlight"
+        )
       })
-      .state('question.all', {
-        url: '/all-questions',
-        parent: 'question',
+      .state("question.all", {
+        url: "/all-questions",
+        parent: "question",
         templateUrl: allQuestionTemplate,
         css: [angularSelectCSS, githubCSS],
         params: { quesID: null },
-        authenticate: true,
+        authenticate: true
       })
-      .state('question.add', {
-        url: '/add-question',
-        parent: 'question',
+      .state("question.add", {
+        url: "/add-question",
+        parent: "question",
         templateUrl: addQuestionTemplate,
         css: [angularSelectCSS, codeMirrorCSS, githubCSS],
-        authenticate: true,
+        authenticate: true
       })
-      .state('question.edit', {
-        url: '/edit-question/:quesID',
-        parent: 'question',
+      .state("question.edit", {
+        url: "/edit-question/:quesID",
+        parent: "question",
         templateUrl: editQuestionTemplate,
         css: [angularSelectCSS, codeMirrorCSS, githubCSS],
-        authenticate: true,
+        authenticate: true
       })
-      .state('quiz', {
-        url: '/admin/quiz',
+      .state("quiz", {
+        url: "/admin/quiz",
         abstract: true,
         templateUrl: quizTemplate,
-        resolve: helper.resolveFor('quizController', 'quizServices', 'questionServices'),
+        resolve: helper.resolveFor(
+          "quizController",
+          "quizServices",
+          "questionServices"
+        )
       })
-      .state('quiz.all', {
-        url: '/all-quiz',
-        parent: 'quiz',
+      .state("quiz.all", {
+        url: "/all-quiz",
+        parent: "quiz",
         templateUrl: allQuizTemplate,
-        authenticate: true,
+        authenticate: true
       })
-      .state('quiz.add', {
-        url: '/add-quiz?:index?:qid',
-        parent: 'quiz',
+      .state("quiz.add", {
+        url: "/add-quiz?:index?:qid",
+        parent: "quiz",
         templateUrl: addQuizTemplate,
-        authenticate: true,
+        authenticate: true
       })
-      .state('quiz.edit', {
-        url: '/edit-quiz/:quizID',
-        parent: 'quiz',
+      .state("quiz.edit", {
+        url: "/edit-quiz/:quizID",
+        parent: "quiz",
         templateUrl: editQuizTemplate,
-        authenticate: true,
+        authenticate: true
       })
-      .state('invite', {
-        url: '/admin/invite',
+      .state("invite", {
+        url: "/admin/invite",
         abstract: true,
         templateUrl: inviteTemplate,
-        resolve: helper.resolveFor('inviteController', 'quizServices', 'inviteService', 'marked', 'highlight'),
+        resolve: helper.resolveFor(
+          "inviteController",
+          "quizServices",
+          "inviteService",
+          "marked",
+          "highlight"
+        )
       })
-      .state('invite.dashboard', {
-        url: '/dashboard/:quizID',
-        parent: 'invite',
+      .state("invite.dashboard", {
+        url: "/dashboard/:quizID",
+        parent: "invite",
         templateUrl: inviteDashboardTemplate,
-        authenticate: true,
+        authenticate: true
       })
-      .state('invite.add', {
-        url: '/invite-user',
-        parent: 'invite',
+      .state("invite.add", {
+        url: "/invite-user",
+        parent: "invite",
         css: [angularSelectCSS],
         templateUrl: inviteUserTemplate,
         params: {
           quizID: null
         },
-        authenticate: true,
+        authenticate: true
       })
-      .state('invite.edit', {
-        url: '/edit-invite/:quizID/:candidateID',
-        parent: 'invite',
+      .state("invite.edit", {
+        url: "/edit-invite/:quizID/:candidateID",
+        parent: "invite",
         css: [angularSelectCSS],
         templateUrl: editInviteTemplate,
-        authenticate: true,
+        authenticate: true
       })
-      .state('invite.report', {
-        url: '/candidate-report/:candidateID',
-        parent: 'invite',
+      .state("invite.report", {
+        url: "/candidate-report/:candidateID",
+        parent: "invite",
         css: [githubCSS],
         templateUrl: candidateReportTemplate,
-        authenticate: true,
+        authenticate: true
       })
-      .state('quiz-landing', {
-        url: '/quiz/:quiz_token',
+      .state("quiz-landing", {
+        url: "/quiz/:quiz_token",
         css: [angularSelectCSS],
         templateUrl: quizLandingTemplate,
-        resolve: helper.resolveFor('quizLandingController', 'quizLandingService'),
+        resolve: helper.resolveFor(
+          "quizLandingController",
+          "quizLandingService"
+        )
       })
-      .state('candidate', {
-        url: '/candidate',
+      .state("candidate", {
+        url: "/candidate",
         abstract: true,
         templateUrl: candidateIndexTemplate,
-        resolve: helper.resolveFor('candidateController', 'candidateService', 'marked', 'highlight'),
+        resolve: helper.resolveFor(
+          "candidateController",
+          "candidateService",
+          "marked",
+          "highlight"
+        )
       })
-      .state('candidate.landing', {
-        url: '/home',
-        parent: 'candidate',
-        templateUrl: candidateLandingTemplate,
+      .state("candidate.landing", {
+        url: "/home",
+        parent: "candidate",
+        templateUrl: candidateLandingTemplate
       })
-      .state('candidate.quiz', {
-        url: '/quiz/:quiz_token',
-        parent: 'candidate',
+      .state("candidate.quiz", {
+        url: "/quiz/:quiz_token",
+        parent: "candidate",
         css: [githubCSS],
-        templateUrl: candidateQuizTemplate,
+        templateUrl: candidateQuizTemplate
       })
-      .state('profile', {
-        url: '/admin/profile',
+      .state("profile", {
+        url: "/admin/profile",
         abstract: true,
         templateUrl: profileIndexTemplate,
-        resolve: helper.resolveFor('profileController', 'profileService', 'codeMirror', 'marked'),
+        resolve: helper.resolveFor(
+          "profileController",
+          "profileService",
+          "codeMirror",
+          "marked"
+        )
       })
-      .state('profile.edit', {
-        url: '/edit',
+      .state("profile.edit", {
+        url: "/edit",
         authenticate: true,
-        parent: 'profile',
+        parent: "profile",
         css: [codeMirrorCSS, githubCSS],
-        templateUrl: editProfileTemplate,
-      })
+        templateUrl: editProfileTemplate
+      });
   }
 
   // Dependency and rout function array
   var GruiRoutes = [
-    '$stateProvider',
-    '$locationProvider',
-    '$urlRouterProvider',
-    'RouteHelpersProvider',
-    MainRoutes,
-  ]
+    "$stateProvider",
+    "$locationProvider",
+    "$urlRouterProvider",
+    "RouteHelpersProvider",
+    MainRoutes
+  ];
 
   // Getting module and setting routes
-  angular.module('GruiRoutes').config(GruiRoutes);
+  angular.module("GruiRoutes").config(GruiRoutes);
 })();
