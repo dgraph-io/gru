@@ -82,34 +82,33 @@ func Index(w http.ResponseWriter, r *http.Request) {
 	w.Write(res)
 }
 
-func add(quizId, email string, validity time.Time) server.Response {
+func AddCand(quizId, name, email string, validity time.Time) (string, error) {
 	m := new(dgraph.Mutation)
 	token := randStringBytes(33)
 	m.Set(`<` + quizId + `> <quiz.candidate> <_:c> .`)
 	m.Set(`<_:c> <candidate.quiz> <` + quizId + `> .`)
 	m.Set(`<_:c> <email> "` + email + `" .`)
+	m.Set(`<_:c> <name> "` + name + `" .`)
 	m.Set(`<_:c> <token> "` + token + `" .`)
 	m.Set(`<_:c> <validity> "` + validity.String() + `" .`)
 	m.Set(`<_:c> <invite_sent> "` + time.Now().UTC().String() + `" .`)
 	m.Set(`<_:c> <complete> "false" .`)
 
-	sr := server.Response{}
 	mr, err := dgraph.SendMutation(m.String())
 	if err != nil {
-		sr.Error = err.Error()
-		return sr
+		return "", err
 	}
 
 	// mutation applied successfully, lets send a mail to the candidate.
 	uid, ok := mr.Uids["c"]
 	if !ok {
-		sr.Message = "Uid not returned for newly created candidate."
-		return sr
+		return "", fmt.Errorf("Uid not returned for newly created candidate.")
+
 	}
 
 	// Token sent in mail is uid + the random string.
 	go mail.Send(email, validity.Format("Mon Jan 2 2006"), uid+token)
-	return sr
+	return uid, nil
 }
 
 type addCand struct {
@@ -134,8 +133,8 @@ func Add(w http.ResponseWriter, r *http.Request) {
 	}
 
 	for _, email := range c.Emails {
-		if r := add(c.QuizId, email, t); r.Message != "" || r.Error != "" {
-			sr.Write(w, r.Error, r.Message, http.StatusInternalServerError)
+		if _, err := AddCand(c.QuizId, "", email, t); err != nil {
+			sr.Write(w, err.Error(), "", http.StatusInternalServerError)
 			return
 		}
 	}

@@ -28,6 +28,7 @@ import (
 
 	jwtmiddleware "github.com/auth0/go-jwt-middleware"
 	"github.com/dgraph-io/gru/admin/candidate"
+	"github.com/dgraph-io/gru/admin/greenhouse"
 	"github.com/dgraph-io/gru/admin/question"
 	quiza "github.com/dgraph-io/gru/admin/quiz"
 	"github.com/dgraph-io/gru/admin/report"
@@ -149,6 +150,12 @@ func runHTTPServer(address string) {
 	router.HandleFunc("/api/admin/login", login).Methods("POST", "OPTIONS")
 	router.HandleFunc("/api/healthcheck", health).Methods("GET")
 	router.HandleFunc("/api/validate/{id}", quiz.Validate).Methods("POST", "OPTIONS")
+
+	greenHouse := router.PathPrefix("/api").Subrouter()
+	greenHouse.HandleFunc("/list_tests", greenhouse.Tests).Methods("GET", "OPTIONS")
+	greenHouse.HandleFunc("/send_test", greenhouse.SendTest).Methods("POST", "OPTIONS")
+	greenHouse.HandleFunc("/test_status", greenhouse.TestStatus).Methods("GET", "OPTIONS")
+	greenHouse.HandleFunc("/request_errors", greenhouse.RequestErrors).Methods("POST", "OPTIONS")
 
 	quizRouter := router.PathPrefix("/api/quiz").Subrouter()
 	quizRouter.HandleFunc("/question", quiz.QuestionHandler).Methods("POST", "OPTIONS")
