@@ -248,5 +248,5 @@ func RequestErrors(w http.ResponseWriter, r *http.Request) {
 
 	// TODO - Integrate with sentry.
 	fmt.Printf("Error: %+v\n", re)
-	w.WriteHeader(http.StatusOk)
+	w.WriteHeader(http.StatusOK)
 }

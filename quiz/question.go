@@ -132,7 +132,7 @@ func QuestionHandler(w http.ResponseWriter, r *http.Request) {
 	m.Set(`<` + userId + `> <candidate.question> <_:qn> .`)
 	m.Set(`<_:qn> <question.uid> <` + qn.Id + `> .`)
 	m.Set(`<` + qn.Id + `> <question.candidate> <` + userId + `> .`)
-	m.Set(`<_:qn> <question.asked> "` + time.Now().Format("2006-01-02T15:04:05Z07:00") + `" .`)
+	m.Set(`<_:qn> <question.asked> "` + time.Now().UTC().Format("2006-01-02T15:04:05Z07:00") + `" .`)
 	m.Set(`<` + userId + `> <candidate.lastqnuid> "` + qn.Id + `" .`)
 	res, err := dgraph.SendMutation(m.String())
 	if err != nil {

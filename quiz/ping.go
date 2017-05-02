@@ -30,7 +30,7 @@ func PingHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	c.lastExchange = time.Now()
+	c.lastExchange = time.Now().UTC()
 	updateMap(userId, c)
 	pr := &pingRes{TimeLeft: "-1"}
 	// If quiz hasn't started yet, we return time_left as -1.
@@ -50,7 +50,7 @@ func PingHandler(w http.ResponseWriter, r *http.Request) {
 	// Time left is <=0, that means quiz should end now. Lets store this information.
 	m := new(dgraph.Mutation)
 	m.Set(`<` + userId + `> <complete> "true" .`)
-	m.Set(`<` + userId + `> <completed_at> "` + time.Now().Format(timeLayout) + `" .`)
+	m.Set(`<` + userId + `> <completed_at> "` + time.Now().UTC().Format(timeLayout) + `" .`)
 	m.Set(`<` + userId + `> <score> "` + strconv.FormatFloat(x.ToFixed(c.score, 2), 'g', -1, 64) + `" .`)
 	_, err = dgraph.SendMutation(m.String())
 	if err != nil {

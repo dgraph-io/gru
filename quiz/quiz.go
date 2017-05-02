@@ -193,8 +193,7 @@ func sendMail(c Candidate, userId string) error {
 	}
 
 	m := new(dgraph.Mutation)
-	m.Set(`<` + userId + `> <completed_at> "` + time.Now().Format(timeLayout) + `" .`)
-	m.Set(`<rejected> <candidate> <` + userId + `> .`)
+	m.Set(`<` + userId + `> <completed_at> "` + time.Now().UTC().Format(timeLayout) + `" .`)
 	_, err := dgraph.SendMutation(m.String())
 	return err
 }

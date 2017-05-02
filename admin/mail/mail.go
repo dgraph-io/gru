@@ -13,7 +13,6 @@ import (
 )
 
 var SENDGRID_API_KEY = flag.String("sendgrid", "", "Sendgrid API Key")
-var rejectCC = flag.String("cc", "terri@dgraph.io", "Rejection mails are cced to this email.")
 
 // TODO - Later just have one IP address with port info.
 var Ip = flag.String("ip", "http://localhost:2020", "Public IP address of server")
@@ -102,64 +101,4 @@ func SendReport(name string, quiz string, score, maxScore float64, body string) 
 		fmt.Println(err)
 	}
 	x.Debug("Mail sent")
-}
-
-func Reject(name, email string) {
-	if *SENDGRID_API_KEY == "" {
-		fmt.Printf("Sending rejection mail to %v\n", name)
-		return
-	}
-
-	c, err := company.Info()
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-
-	if !c.Reject {
-		fmt.Println("Not rejecting because rejection is turned off.")
-		return
-	}
-
-	from := mail.NewEmail(c.Name, c.Email)
-	subject := fmt.Sprintf("%v <> Quiz", c.Name)
-	p := mail.NewPersonalization()
-	to := mail.NewEmail(name, email)
-	p.AddTos(to)
-	cc := mail.NewEmail("Terri Lee", *rejectCC)
-	p.AddCCs(cc)
-	reject, err := url.QueryUnescape(c.RejectEmail)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-
-	hr := blackfriday.HtmlRenderer(0, "", "")
-	o := blackfriday.Options{}
-	o.Extensions = blackfriday.EXTENSION_HARD_LINE_BREAK
-	reject = string(blackfriday.MarkdownOptions([]byte(reject), hr, o))
-	body := `
-<html>
-<head>
-    <title></title>
-</head>
-<body>
-Hi ` + name + `,
-<br/><br/>
-` + reject + `
-<br/>
-</body>
-</html>
-`
-	content := mail.NewContent("text/html", body)
-	m := mail.NewV3MailInit(from, subject, to, content)
-	m.AddPersonalizations(p)
-	request := sendgrid.GetRequest(*SENDGRID_API_KEY, "/v3/mail/send", "https://api.sendgrid.com")
-	request.Method = "POST"
-	request.Body = mail.GetRequestBody(m)
-	_, err = sendgrid.API(request)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
 }
