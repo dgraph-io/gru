@@ -184,7 +184,6 @@ func TestStatus(w http.ResponseWriter, r *http.Request) {
 
 	q := `{
     	  me(id: ` + interviewId + `) {
-    	    _uid_
 	    complete
 	    score
 	    quiz_start
@@ -195,6 +194,7 @@ func TestStatus(w http.ResponseWriter, r *http.Request) {
 
 	var resp candQuizResp
 	if err := dgraph.QueryAndUnmarshal(q, &resp); err != nil {
+		fmt.Println(err)
 		sr.Write(w, "", err.Error(), http.StatusInternalServerError)
 		return
 	}
