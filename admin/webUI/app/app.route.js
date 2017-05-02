@@ -30,7 +30,7 @@
   var candidateLandingTemplate = "app/components/candidate/views/landing.html?v=20161123-1";
   var candidateQuizTemplate = "app/components/candidate/views/quiz.html?v=20170412-1";
 
-  var quizLandingTemplate = "app/components/candidate/views/quiz-landing.html";
+  var quizLandingTemplate = "app/components/candidate/views/quiz-landing.html?v-20170502-1";
 
   var profileIndexTemplate = "app/components/profile/index.html";
   var editProfileTemplate = "app/components/profile/edit.html";
