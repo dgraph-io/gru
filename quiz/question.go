@@ -86,7 +86,7 @@ func QuestionHandler(w http.ResponseWriter, r *http.Request) {
 		m := new(dgraph.Mutation)
 		m.Set(`<` + userId + `> <complete> "true" .`)
 		// Completed at is used to reject candidates whose score is < cutoff
-		m.Set(`<` + userId + `> <completed_at> "` + time.Now().Format(timeLayout) + `" .`)
+		m.Set(`<` + userId + `> <completed_at> "` + time.Now().UTC().Format(timeLayout) + `" .`)
 		m.Set(`<` + userId + `> <score> "` + strconv.FormatFloat(x.ToFixed(c.score, 2), 'g', -1, 64) + `" .`)
 		_, err := dgraph.SendMutation(m.String())
 		if err != nil {

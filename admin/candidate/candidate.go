@@ -3,19 +3,15 @@ package candidate
 import (
 	"encoding/json"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"math/rand"
-	"mime"
 	"net/http"
 	"time"
 
 	"github.com/dgraph-io/gru/admin/mail"
 	"github.com/dgraph-io/gru/admin/server"
 	"github.com/dgraph-io/gru/dgraph"
-	"github.com/dgraph-io/gru/quiz"
 	"github.com/gorilla/mux"
-	minio "github.com/minio/minio-go"
 )
 
 type Candidate struct {
@@ -90,7 +86,7 @@ func AddCand(quizId, name, email string, validity time.Time) (string, error) {
 	m.Set(`<_:c> <email> "` + email + `" .`)
 	m.Set(`<_:c> <name> "` + name + `" .`)
 	m.Set(`<_:c> <token> "` + token + `" .`)
-	m.Set(`<_:c> <validity> "` + validity.String() + `" .`)
+	m.Set(`<_:c> <validity> "` + validity.UTC().String() + `" .`)
 	m.Set(`<_:c> <invite_sent> "` + time.Now().UTC().String() + `" .`)
 	m.Set(`<_:c> <complete> "false" .`)
 
@@ -287,43 +283,4 @@ func candName(id string) string {
 		return ""
 	}
 	return ci.Candidates[0].Name
-}
-
-func Resume(w http.ResponseWriter, r *http.Request) {
-	sr := server.Response{}
-	vars := mux.Vars(r)
-	cid := vars["id"]
-
-	s3Client, err := minio.New("s3.amazonaws.com", *quiz.AwsKeyId, *quiz.AwsSecret, true)
-	if err != nil {
-		sr.Write(w, err.Error(), "", http.StatusInternalServerError)
-		return
-	}
-
-	object, err := s3Client.GetObject(*quiz.S3bucket, fmt.Sprintf("%v", cid))
-	if err != nil {
-		sr.Write(w, err.Error(), "", http.StatusInternalServerError)
-		return
-	}
-
-	defer object.Close()
-	stats, err := object.Stat()
-	if err != nil {
-		sr.Write(w, err.Error(), "", http.StatusInternalServerError)
-		return
-	}
-
-	ext, err := mime.ExtensionsByType(stats.ContentType)
-	if err != nil {
-		sr.Write(w, err.Error(), "", http.StatusInternalServerError)
-		return
-	}
-
-	w.Header().Set("Content-type", stats.ContentType)
-	n := candName(cid)
-	w.Header().Set("x-filename", fmt.Sprintf("%v%v", n, ext[0]))
-	w.Header().Set("Content-disposition", fmt.Sprintf("attachment;filename=%v%v", cid, ext[0]))
-	if _, err := io.Copy(w, object); err != nil {
-		sr.Write(w, err.Error(), "", http.StatusInternalServerError)
-	}
 }

@@ -2,6 +2,7 @@ package greenhouse
 
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
 	"net/http"
 	"strings"
@@ -16,6 +17,10 @@ const (
 	baseUrl    = "https://gru.dgraph.io"
 	dateFormat = "Jan 2 15:04:05 2006"
 	week       = 7 * 24 * time.Hour
+)
+
+var (
+	ghKey = flag.String("gh", "", "Api key sent as username in basic auth by Greenhouse")
 )
 
 type outgoingQuiz struct {
@@ -36,9 +41,26 @@ type allTests struct {
 	Me []meValue `json:"me"`
 }
 
+func validAuth(r *http.Request) bool {
+	username, _, ok := r.BasicAuth()
+	if !ok {
+		return false
+	}
+
+	if username != *ghKey {
+		return false
+	}
+	return true
+}
+
 // TODO - Delete name test from Gru prod
 func Tests(w http.ResponseWriter, r *http.Request) {
 	sr := server.Response{}
+	if valid := validAuth(r); !valid {
+		sr.Write(w, "Authorization header is incorrect", "", http.StatusUnauthorized)
+		return
+	}
+
 	q := `{
     	  me(id: root) {
             quiz {
@@ -56,10 +78,12 @@ func Tests(w http.ResponseWriter, r *http.Request) {
 	}
 	if len(at.Me) == 0 {
 		sr.Write(w, "", "Expected atleast one quiz, got zero", http.StatusInternalServerError)
+		return
 	}
 	quizzes := at.Me[0].Quizzes
 	if len(quizzes) == 0 {
 		sr.Write(w, "", "Expected atleast one quiz, got zero", http.StatusInternalServerError)
+		return
 	}
 
 	oq := make([]outgoingQuiz, 0, len(quizzes))
@@ -89,12 +113,18 @@ type sendTestRes struct {
 }
 
 func SendTest(w http.ResponseWriter, r *http.Request) {
-	decoder := json.NewDecoder(r.Body)
 	sr := server.Response{}
+	if valid := validAuth(r); !valid {
+		sr.Write(w, "Authorization header is incorrect", "", http.StatusUnauthorized)
+		return
+	}
+
+	decoder := json.NewDecoder(r.Body)
 	var st sendTest
 	err := decoder.Decode(&st)
 	if err != nil {
-		sr.Write(w, "", err.Error(), http.StatusInternalServerError)
+		sr.Write(w, "", err.Error(), http.StatusBadRequest)
+		return
 	}
 
 	candQuizId, err := candidate.AddCand(st.QuizId, strings.Join([]string{st.Candidate.FirstName, st.Candidate.LastName}, " "),
@@ -139,10 +169,14 @@ func reportUrl(interviewId string) string {
 	return fmt.Sprintf("%s/#/admin/invite/candidate-report/%s", baseUrl, interviewId)
 }
 
-// TODO - Change error status code to something that greenhouse understands.
 func TestStatus(w http.ResponseWriter, r *http.Request) {
-	interviewId := r.URL.Query().Get("partner_interview_id")
 	sr := server.Response{}
+	if valid := validAuth(r); !valid {
+		sr.Write(w, "Authorization header is incorrect", "", http.StatusUnauthorized)
+		return
+	}
+
+	interviewId := r.URL.Query().Get("partner_interview_id")
 	if interviewId == "" {
 		sr.Write(w, "partner_interview_id can't be empty", "", http.StatusBadRequest)
 		return
@@ -167,6 +201,7 @@ func TestStatus(w http.ResponseWriter, r *http.Request) {
 
 	if len(resp.Candidates) == 0 {
 		sr.Write(w, "No quiz found with given id, "+interviewId, "", http.StatusBadRequest)
+		return
 	}
 
 	cand := resp.Candidates[0]
@@ -186,7 +221,32 @@ func TestStatus(w http.ResponseWriter, r *http.Request) {
 		CompletedAt: cand.QuizEnd.Format(dateFormat),
 	}
 	server.MarshalAndWrite(w, &ts)
-	return
 }
 
-func RequestErrors(w http.ResponseWriter, r *http.Request) {}
+type requestError struct {
+	ApiCall            string   `json:"api_call"`
+	Errors             []string `json:"errors"`
+	PartnerTestId      string   `json:"partner_test_id"`
+	PartnerTestName    string   `json:"partner_test_name"`
+	PartnerInterviewId string   `json:"partner_interview_id"`
+	CandEmail          string   `json:"candidate_email"`
+}
+
+func RequestErrors(w http.ResponseWriter, r *http.Request) {
+	sr := server.Response{}
+	if valid := validAuth(r); !valid {
+		sr.Write(w, "Authorization header is incorrect", "", http.StatusUnauthorized)
+		return
+	}
+
+	decoder := json.NewDecoder(r.Body)
+	var re requestError
+	err := decoder.Decode(&re)
+	if err != nil {
+		sr.Write(w, "", err.Error(), http.StatusBadRequest)
+	}
+
+	// TODO - Integrate with sentry.
+	fmt.Printf("Error: %+v\n", re)
+	w.WriteHeader(http.StatusOk)
+}

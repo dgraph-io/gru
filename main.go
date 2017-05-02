@@ -162,8 +162,6 @@ func runHTTPServer(address string) {
 	quizRouter.HandleFunc("/answer", quiz.AnswerHandler).Methods("POST", "OPTIONS")
 	quizRouter.HandleFunc("/ping", quiz.PingHandler).Methods("POST", "OPTIONS")
 	quizRouter.HandleFunc("/feedback", quiz.Feedback).Methods("POST", "OPTIONS")
-	quizRouter.HandleFunc("/name", quiz.CandidateName).Methods("POST", "OPTIONS")
-	quizRouter.HandleFunc("/resume", quiz.Resume).Methods("POST", "OPTIONS")
 
 	admin := mux.NewRouter()
 	router.PathPrefix("/api/admin").Handler(negroni.New(
@@ -193,7 +191,6 @@ func runHTTPServer(address string) {
 	adminRouter.HandleFunc("/candidate", candidate.Add).Methods("POST", "OPTIONS")
 	adminRouter.HandleFunc("/candidate/{id}", candidate.Edit).Methods("PUT", "OPTIONS")
 	adminRouter.HandleFunc("/candidate/{id}", candidate.Get).Methods("GET", "OPTIONS")
-	adminRouter.HandleFunc("/candidate/resume/{id}", candidate.Resume).Methods("GET", "OPTIONS")
 	adminRouter.HandleFunc("/candidate/report/{id}", report.Report).Methods("GET", "OPTIONS")
 	adminRouter.HandleFunc("/candidate/invite/{id}", candidate.ResendInvite).Methods("POST", "OPTIONS")
 	adminRouter.HandleFunc("/candidates", candidate.Index).Methods("GET", "OPTIONS")
