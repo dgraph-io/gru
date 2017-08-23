@@ -1,9 +1,15 @@
 (function() {
-
-  function questionController($scope, $rootScope, $http, $q, $state, $stateParams, questionService) {
-
+  function questionController(
+    $scope,
+    $rootScope,
+    $http,
+    $q,
+    $state,
+    $stateParams,
+    questionService
+  ) {
     // VARIABLE DECLARATION
-    mainVm.pageName = "question"
+    mainVm.pageName = "question";
     questionVm = this;
     questionVm.optionsCount = 4;
 
@@ -29,7 +35,7 @@
     questionVm.editorSetting = {
       lineNumbers: true,
       lineWrapping: true,
-      indentWithTabs: true,
+      indentWithTabs: true
     };
 
     // FUNCTION DECLARATION
@@ -48,7 +54,7 @@
     // FUNCTION DEFINITION
 
     function initCodeMirror() {
-      $scope.cmOption = {}
+      $scope.cmOption = {};
       setTimeout(function() {
         $scope.cmOption = questionVm.editorSetting;
       }, 500);
@@ -62,7 +68,7 @@
       return setting;
     }
 
-    $rootScope.$on('$viewContentLoaded', function() {
+    $rootScope.$on("$viewContentLoaded", function() {
       // questionVm.initCodeMirror();
     });
 
@@ -72,23 +78,30 @@
 
     // Get all Tags
     function getAllTags() {
-      mainVm.getAllTags().then(function(data) {
-        questionVm.allTags = getUniqueTags(data.debug[0].question);
-      }, function(err) {
-        console.log(err);
-      })
+      mainVm.getAllTags().then(
+        function(data) {
+          if (Object.keys(data).length == 0) {
+            questionVm.allTags = [];
+            return;
+          }
+          questionVm.allTags = getUniqueTags(data.debug[0].question);
+        },
+        function(err) {
+          console.log(err);
+        }
+      );
     }
 
     function addNewTag(new_tag) {
       return {
-        "id": "",
+        id: "",
         name: new_tag
-      }
+      };
     }
 
     function getUniqueTags(allTags) {
       if (!allTags) {
-        return []
+        return [];
       }
       var allUniqueTags = [];
       for (var i = 0; i < allTags.length; i++) {
@@ -107,19 +120,19 @@
 
     function validateInput(inputs) {
       if (!inputs.name) {
-        return "Please enter valid question name"
+        return "Please enter valid question name";
       }
       if (!inputs.text) {
-        return "Please enter valid question text"
+        return "Please enter valid question text";
       }
       if (inputs.positive == null || isNaN(inputs.positive)) {
-        return "Please enter valid positve marks"
+        return "Please enter valid positve marks";
       }
       if (inputs.negative == null || isNaN(inputs.negative)) {
-        return "Please enter valid negative marks"
+        return "Please enter valid negative marks";
       }
       if (Object.keys(inputs.options).length != questionVm.optionsCount) {
-        return "Please enter all the options"
+        return "Please enter all the options";
       }
 
       hasCorrectAnswer = false;
@@ -128,24 +141,24 @@
       angular.forEach(inputs.options, function(value, key) {
         if (value.is_correct) {
           hasCorrectAnswer = true;
-          correct++
+          correct++;
         }
         if (!value.name) {
           hasEmptyName = true;
         }
       });
       if (hasEmptyName) {
-        return "Please enter option name correctly"
+        return "Please enter option name correctly";
       }
       if (!hasCorrectAnswer) {
-        return "Please mark atleast one correct answer"
+        return "Please mark atleast one correct answer";
       }
 
       if (!inputs.tags.length) {
-        return "Minimum one tag is required"
+        return "Minimum one tag is required";
       }
       if (correct > 1 && inputs.negative < inputs.positive) {
-        return "For questions with multiple correct answers, negative score should be more than positive."
+        return "For questions with multiple correct answers, negative score should be more than positive.";
       }
 
       return false;
@@ -154,17 +167,17 @@
     function isCorrect(option, correct_options) {
       var uid = option._uid_;
       if (!correct_options) {
-        return false
+        return false;
       }
       var optLength = correct_options.length;
 
       for (var i = 0; i < optLength; i++) {
         if (correct_options[i]._uid_ == uid) {
-          option.is_correct = true
-          return true
+          option.is_correct = true;
+          return true;
         }
       }
-      return false
+      return false;
     }
 
     function onTagSelect(item, model, isEdit) {
@@ -184,15 +197,22 @@
       }
     }
 
-
     function transitionToQuestion(questionId) {
       $state.transitionTo("question.all", {
-        quesID: questionId,
-      })
+        quesID: questionId
+      });
     }
   }
 
-  function addQuestionController($scope, $rootScope, $http, $q, $state, $stateParams, questionService) {
+  function addQuestionController(
+    $scope,
+    $rootScope,
+    $http,
+    $q,
+    $state,
+    $stateParams,
+    questionService
+  ) {
     // See if update
     addQueVm = this;
     addQueVm.newQuestion = {};
@@ -203,7 +223,7 @@
       addQueVm.editor = questionVm.initOptionEditor();
     }, 500);
 
-    $scope.$watch('addQueVm.cmModel', function(current, original) {
+    $scope.$watch("addQueVm.cmModel", function(current, original) {
       addQueVm.outputMarked = marked(current);
     });
 
@@ -213,8 +233,8 @@
 
     // Check if user is authorized
     function addQuestionForm() {
-      var options = []
-      var newOptions = angular.copy(addQueVm.newQuestion.optionsBak)
+      var options = [];
+      var newOptions = angular.copy(addQueVm.newQuestion.optionsBak);
       angular.forEach(newOptions, function(value, key) {
         if (!value.is_correct) {
           value.is_correct = false;
@@ -228,38 +248,40 @@
       if (areInValidateInput) {
         SNACKBAR({
           message: areInValidateInput,
-          messageType: "error",
-        })
-        return
+          messageType: "error"
+        });
+        return;
       }
 
       var requestData = angular.copy(addQueVm.newQuestion);
       requestData.notes = requestData.notes;
 
       // Hit the API
-      questionService.saveQuestion(JSON.stringify(requestData))
-        .then(function(data) {
+      questionService.saveQuestion(JSON.stringify(requestData)).then(
+        function(data) {
           addQueVm.newQuestion = {};
           addQueVm.cmModel = "";
 
           if (data.code == "Error") {
             SNACKBAR({
               message: data.message,
-              messageType: "error",
-            })
+              messageType: "error"
+            });
           }
           if (data.Success) {
             SNACKBAR({
-              message: data.Message,
-            })
+              message: data.Message
+            });
           }
-          $state.transitionTo("question.all")
-        }, function(err) {
+          $state.transitionTo("question.all");
+        },
+        function(err) {
           console.log(err);
-        })
+        }
+      );
     }
 
-    $rootScope.$on('$viewContentLoaded', function() {
+    $rootScope.$on("$viewContentLoaded", function() {
       questionVm.initCodeMirror();
     });
 
@@ -273,7 +295,15 @@
     }
   }
 
-  function allQuestionController($scope, $rootScope, $http, $q, $state, $stateParams, questionService) {
+  function allQuestionController(
+    $scope,
+    $rootScope,
+    $http,
+    $q,
+    $state,
+    $stateParams,
+    questionService
+  ) {
     // VARIABLE DECLARATION
     allQVm = this;
     allQVm.showLazyLoader = false;
@@ -298,11 +328,11 @@
     // FUNCTION DEFINITIONS
     function getAllQuestions(questionID) {
       if (questionID && !allQVm.lazyStatus && allQVm.noItemFound) {
-        return
+        return;
       }
       // API HIT
       var data = {
-        "id": questionID || "",
+        id: questionID || ""
       };
       var hideLoader = questionID ? true : false;
 
@@ -311,64 +341,70 @@
       // first question because we anyway refetch the questions from the server
       // on click. In the meta call, fetch tags and multiple status too so that
       // we can do filtering based on that.
-      questionService.getAllQuestions(data, hideLoader).then(function(data) {
-        if (data.code == "ErrorInvalidRequest" || !data.debug[0].question) {
-          allQVm.noItemFound = true;
-          allQVm.showLazyLoader = false;
-          return
-        }
-
-        var dataArray = data.debug[0].question;
-        if (data.debug && dataArray) {
-          if (mainVm.allQuestions && mainVm.allQuestions.length) {
-            dataArrayLength = dataArray.length;
-            for (var i = 0; i < dataArrayLength; i++) {
-              mainVm.allQuestions.push(dataArray[i]);
-            }
-          } else {
-            mainVm.allQuestions = data.debug[0].question;
-
-            if ($stateParams.quesID) {
-              var length = mainVm.allQuestions.length;
-              var gotQuestion = false;
-              for (var i = 0; i < length; i++) {
-                if (mainVm.allQuestions[i]._uid_ == $stateParams.quesID) {
-                  var gotQuestion = true;
-                  allQVm.question = mainVm.allQuestions[i];
-                  break;
-                }
-              }
-              if (!gotQuestion) {
-                allQVm.setQuestion(mainVm.allQuestions[0], 0);
-              }
-            } else {
-              allQVm.setQuestion(mainVm.allQuestions[0], 0);
-            }
+      questionService.getAllQuestions(data, hideLoader).then(
+        function(data) {
+          if (
+            Object.keys(data).length == 0 ||
+            data.code == "ErrorInvalidRequest" ||
+            !data.debug[0].question
+          ) {
+            allQVm.noItemFound = true;
+            allQVm.showLazyLoader = false;
+            return;
           }
 
-          mainVm.allQuestionsBak = angular.copy(mainVm.allQuestions);
-          allQVm.lastQuestion = mainVm.allQuestions[mainVm.allQuestions.length - 1]._uid_;
-        }
+          var dataArray = data.debug[0].question;
+          if (data.debug && dataArray) {
+            if (mainVm.allQuestions && mainVm.allQuestions.length) {
+              dataArrayLength = dataArray.length;
+              for (var i = 0; i < dataArrayLength; i++) {
+                mainVm.allQuestions.push(dataArray[i]);
+              }
+            } else {
+              mainVm.allQuestions = data.debug[0].question;
 
-        allQVm.lazyStatus = true;
-        allQVm.showLazyLoader = false;
-      }, function(err) {
-        allQVm.showLazyLoader = false;
-        console.log(err)
-      });
+              if ($stateParams.quesID) {
+                var length = mainVm.allQuestions.length;
+                var gotQuestion = false;
+                for (var i = 0; i < length; i++) {
+                  if (mainVm.allQuestions[i]._uid_ == $stateParams.quesID) {
+                    var gotQuestion = true;
+                    allQVm.question = mainVm.allQuestions[i];
+                    break;
+                  }
+                }
+                if (!gotQuestion) {
+                  allQVm.setQuestion(mainVm.allQuestions[0], 0);
+                }
+              } else {
+                allQVm.setQuestion(mainVm.allQuestions[0], 0);
+              }
+            }
+
+            mainVm.allQuestionsBak = angular.copy(mainVm.allQuestions);
+            allQVm.lastQuestion =
+              mainVm.allQuestions[mainVm.allQuestions.length - 1]._uid_;
+          }
+
+          allQVm.lazyStatus = true;
+          allQVm.showLazyLoader = false;
+        },
+        function(err) {
+          allQVm.showLazyLoader = false;
+          console.log(err);
+        }
+      );
     }
 
     function getQuestion(questionId) {
-      // When questionis clicked on the side nav bar, we fetch its 
+      // When questionis clicked on the side nav bar, we fetch its
       // information from backend and refresh it.
       questionService.getQuestion(questionId).then(function(data) {
         allQVm.question = data.root[0];
-      })
-
+      });
     }
 
     $(document).ready(function() {
-
       // CODE FOR PAGINATION
       // $(window).unbind('scroll');
       // setTimeout(function() {
@@ -383,7 +419,6 @@
       //     }
       //   }, true);
       // }, 100);
-
     });
 
     function setQuestion(question, index) {
@@ -393,8 +428,8 @@
 
     function toggleFilter(filter_value, key) {
       allQVm.filter = allQVm.filter || {};
-      if (key == 'tag') {
-        allQVm.filter.tag || (allQVm.filter.tag = [])
+      if (key == "tag") {
+        allQVm.filter.tag || (allQVm.filter.tag = []);
         var tagIndex = mainVm.indexOfObject(allQVm.filter.tag, filter_value);
         // If tag is already there in our array, then we remove it.
         if (tagIndex > -1) {
@@ -405,10 +440,12 @@
       }
 
       if (!key) {
-        allQVm.filter[filter_value] = allQVm.filter[filter_value] ? false : true;
-        if (filter_value == 'multiple') {
+        allQVm.filter[filter_value] = allQVm.filter[filter_value]
+          ? false
+          : true;
+        if (filter_value == "multiple") {
           allQVm.filter.single = false;
-        } else if (filter_value == 'single') {
+        } else if (filter_value == "single") {
           allQVm.filter.multiple = false;
         }
       }
@@ -418,27 +455,38 @@
 
     // TODO : Write modular code Filtering
     function filterBy(question) {
-      textFilterMatch = question.name.toUpperCase().indexOf(allQVm.searchText.toUpperCase()) != -1
+      textFilterMatch =
+        question.name.toUpperCase().indexOf(allQVm.searchText.toUpperCase()) !=
+        -1;
 
       if (allQVm.filter && allQVm.filter.tag && allQVm.filter.tag.length) {
         var found = false;
         var tagFound = true;
         var tagsLen = allQVm.filter.tag.length;
         for (var i = 0; i < tagsLen; i++) {
-          var tagIndex = mainVm.indexOfObject(question['question.tag'], allQVm.filter.tag[i]);
+          var tagIndex = mainVm.indexOfObject(
+            question["question.tag"],
+            allQVm.filter.tag[i]
+          );
           if (tagIndex == -1) {
             tagFound = false;
             break;
           }
-          if (tagIndex > -1 && (allQVm.filter.multiple && question['question.correct'].length == 1)) {
+          if (
+            tagIndex > -1 &&
+            (allQVm.filter.multiple && question["question.correct"].length == 1)
+          ) {
             tagFound = false;
           }
-          if (tagIndex > -1 && (allQVm.filter.single && question['question.correct'].length > 1)) {
+          if (
+            tagIndex > -1 &&
+            (allQVm.filter.single && question["question.correct"].length > 1)
+          ) {
             tagFound = false;
           }
           if (!tagFound) break;
         }
-        return textFilterMatch && tagFound
+        return textFilterMatch && tagFound;
       } else if (allQVm.filter && allQVm.filter.multiple) {
         if (question["question.correct"].length > 1) {
           return textFilterMatch && true;
@@ -447,7 +495,7 @@
         }
       } else if (allQVm.filter && allQVm.filter.single) {
         if (question["question.correct"].length == 1) {
-          return textFilterMatch && true
+          return textFilterMatch && true;
         } else {
           return textFilterMatch && false;
         }
@@ -469,10 +517,15 @@
         }
       }, 300);
     }
-
   } // AllQuestionController
 
-  function editQuestionController($scope, $rootScope, $state, $stateParams, questionService) {
+  function editQuestionController(
+    $scope,
+    $rootScope,
+    $state,
+    $stateParams,
+    questionService
+  ) {
     editQuesVm = this;
     editQuesVm.newQuestion = {};
 
@@ -489,13 +542,17 @@
 
     questionVm.getAllTags();
 
-    questionService.getQuestion($stateParams.quesID)
-      .then(function(data) {
+    questionService.getQuestion($stateParams.quesID).then(
+      function(data) {
         editQuesVm.newQuestion = data.root[0];
         editQuesVm.cmModel = unescape(editQuesVm.newQuestion.text);
-        editQuesVm.newQuestion.optionsBak = angular.copy(data.root[0]['question.option']);
+        editQuesVm.newQuestion.optionsBak = angular.copy(
+          data.root[0]["question.option"]
+        );
         for (var i = 0; i < editQuesVm.newQuestion.optionsBak.length; i++) {
-          editQuesVm.newQuestion.optionsBak[i].name = unescape(editQuesVm.newQuestion.optionsBak[i].name)
+          editQuesVm.newQuestion.optionsBak[i].name = unescape(
+            editQuesVm.newQuestion.optionsBak[i].name
+          );
         }
         editQuesVm.newQuestion.positive = parseFloat(data.root[0].positive);
         editQuesVm.newQuestion.negative = parseFloat(data.root[0].negative);
@@ -503,29 +560,37 @@
         editQuesVm.originalQuestion = angular.copy(editQuesVm.newQuestion);
 
         editQuesVm.initMarkeDownPreview();
-      }, function(err) {
+      },
+      function(err) {
         console.log(err);
-      })
+      }
+    );
 
     $rootScope.$on("onSelect", function(e, data) {
       if (data.model.is_delete) {
-        var idx = mainVm.indexOfObject(editQuesVm.newQuestion.deletedTag, data.model);
+        var idx = mainVm.indexOfObject(
+          editQuesVm.newQuestion.deletedTag,
+          data.model
+        );
         if (idx >= 0) {
-          editQuesVm.newQuestion.deletedTag.splice(idx, 1)
+          editQuesVm.newQuestion.deletedTag.splice(idx, 1);
         }
-        data.model.is_delete = false
+        data.model.is_delete = false;
       }
-    })
+    });
 
     function updateQuestionForm() {
-
       if (editQuesVm.newQuestion.deletedTag) {
-        editQuesVm.newQuestion.tags = editQuesVm.newQuestion["question.tag"].concat(editQuesVm.newQuestion.deletedTag);
+        editQuesVm.newQuestion.tags = editQuesVm.newQuestion[
+          "question.tag"
+        ].concat(editQuesVm.newQuestion.deletedTag);
       } else {
         editQuesVm.newQuestion.tags = editQuesVm.newQuestion["question.tag"];
       }
 
-      editQuesVm.newQuestion.options = angular.copy(editQuesVm.newQuestion.optionsBak);
+      editQuesVm.newQuestion.options = angular.copy(
+        editQuesVm.newQuestion.optionsBak
+      );
       editQuesVm.newQuestion.text = escape(editQuesVm.cmModel);
 
       angular.forEach(editQuesVm.newQuestion.options, function(value, key) {
@@ -535,9 +600,9 @@
       if (areInValidateInput) {
         SNACKBAR({
           message: areInValidateInput,
-          messageType: "error",
-        })
-        return
+          messageType: "error"
+        });
+        return;
       }
 
       var deletedAllTags = true;
@@ -552,23 +617,26 @@
       if (deletedAllTags) {
         SNACKBAR({
           message: "Please enter at least one tag",
-          messageType: "error",
-        })
-        return
+          messageType: "error"
+        });
+        return;
       }
 
       var requestData = angular.copy(editQuesVm.newQuestion);
       requestData.notes = requestData.notes;
-      questionService.editQuestion(requestData).then(function(data) {
-        SNACKBAR({
-          message: data.Message,
-        });
-        $state.transitionTo("question.all", {
-          quesID: $stateParams.quesID,
-        })
-      }, function(err) {
-        console.log(err);
-      })
+      questionService.editQuestion(requestData).then(
+        function(data) {
+          SNACKBAR({
+            message: data.Message
+          });
+          $state.transitionTo("question.all", {
+            quesID: $stateParams.quesID
+          });
+        },
+        function(err) {
+          console.log(err);
+        }
+      );
     }
 
     function resetQuestion(index) {
@@ -586,7 +654,7 @@
     }
 
     function initMarkeDownPreview() {
-      $scope.$watch('editQuesVm.cmModel', function(current, original) {
+      $scope.$watch("editQuesVm.cmModel", function(current, original) {
         editQuesVm.outputMarked = marked(current, {
           gfm: true
         });
@@ -602,7 +670,9 @@
     "questionService",
     editQuestionController
   ];
-  angular.module('GruiApp').controller('editQuestionController', editQuestionDependency);
+  angular
+    .module("GruiApp")
+    .controller("editQuestionController", editQuestionDependency);
 
   var allQuestionDependency = [
     "$scope",
@@ -614,7 +684,9 @@
     "questionService",
     allQuestionController
   ];
-  angular.module('GruiApp').controller('allQuestionController', allQuestionDependency);
+  angular
+    .module("GruiApp")
+    .controller("allQuestionController", allQuestionDependency);
 
   var addQuestionDependency = [
     "$scope",
@@ -626,7 +698,9 @@
     "questionService",
     addQuestionController
   ];
-  angular.module('GruiApp').controller('addQuestionController', addQuestionDependency);
+  angular
+    .module("GruiApp")
+    .controller("addQuestionController", addQuestionDependency);
 
   var questionDependency = [
     "$scope",
@@ -638,6 +712,7 @@
     "questionService",
     questionController
   ];
-  angular.module('GruiApp').controller('questionController', questionDependency);
-
+  angular
+    .module("GruiApp")
+    .controller("questionController", questionDependency);
 })();
