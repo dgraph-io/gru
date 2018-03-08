@@ -23,8 +23,8 @@
     };
 
     services.getResume = function(candidateID) {
-      $http.defaults.headers.common["Authorization"] = "Bearer " +
-        localStorage.getItem("token");
+      $http.defaults.headers.common["Authorization"] =
+        "Bearer " + localStorage.getItem("token");
       mainVm.showAjaxLoader = true;
       $http({
         method: "GET",
@@ -66,7 +66,8 @@
     services.alreadyInvited = function(quizId, emails) {
       var deferred = $q.defer();
       // TODO - User filter on email after incorporating Dgraph schema.
-      var query = "{\
+      var query =
+        "{\
                   quiz(id: " +
         quizId +
         ") {\
@@ -77,6 +78,9 @@
         }";
 
       MainService.proxy(query).then(function(data) {
+        if (Object.keys(data).length == 0) {
+          return deferred.resolve("");
+        }
         var candidates = data.quiz[0]["quiz.candidate"];
         if (candidates === undefined) {
           return deferred.resolve("");
@@ -112,7 +116,8 @@
 
       var val = year + "-" + month + "-" + date + " 00:00:00 +0000 UTC";
 
-      var mutation = "mutation {\n\
+      var mutation =
+        "mutation {\n\
             set {\n\
               <" +
         candidate._uid_ +
@@ -155,7 +160,8 @@
 
       // TODO - Abstract this out into a library so that its easier to add mutations
       // and values are escaped easily.
-      var mutation = "mutation {\n\
+      var mutation =
+        "mutation {\n\
     delete {\n\
       <" +
         candidate._uid_ +
@@ -208,7 +214,8 @@
 
       // TODO - Abstract this out into a library so that its easier to add mutations
       // and values are escaped easily.
-      var mutation = "mutation {\n\
+      var mutation =
+        "mutation {\n\
     set {\n\
       <" +
         candidateId +
