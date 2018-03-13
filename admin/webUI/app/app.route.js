@@ -11,9 +11,12 @@
   var loginTemplate = "app/components/login/index.html";
 
   var questionTemplate = "app/components/question/index.html";
-  var allQuestionTemplate = "app/components/question/all-question.html?v=20161007-1";
-  var addQuestionTemplate = "app/components/question/add-question.html?v=20161027-1";
-  var editQuestionTemplate = "app/components/question/views/edit-question.html?v=20161027-1";
+  var allQuestionTemplate =
+    "app/components/question/all-question.html?v=20161007-1";
+  var addQuestionTemplate =
+    "app/components/question/add-question.html?v=20161027-1";
+  var editQuestionTemplate =
+    "app/components/question/views/edit-question.html?v=20161027-1";
 
   var quizTemplate = "app/components/quiz/index.html";
   var addQuizTemplate = "app/components/quiz/add-quiz.html?v=20161124-1";
@@ -21,16 +24,23 @@
   var allQuizTemplate = "app/components/quiz/all-quiz.html?v=20161113-1";
 
   var inviteTemplate = "app/components/invite/index.html?v=20161105-1";
-  var inviteDashboardTemplate = "app/components/invite/views/invite-dashboard.html?v=20170412-1";
-  var inviteUserTemplate = "app/components/invite/views/invite-user.html?v=20161116-1";
-  var editInviteTemplate = "app/components/invite/views/edit-invite.html?v=20161113-1";
-  var candidateReportTemplate = "app/components/invite/views/candidate-report.html?v=20161116-1";
+  var inviteDashboardTemplate =
+    "app/components/invite/views/invite-dashboard.html?v=20170412-1";
+  var inviteUserTemplate =
+    "app/components/invite/views/invite-user.html?v=20161116-1";
+  var editInviteTemplate =
+    "app/components/invite/views/edit-invite.html?v=20161113-1";
+  var candidateReportTemplate =
+    "app/components/invite/views/candidate-report.html?v=20161116-1";
 
   var candidateIndexTemplate = "app/components/candidate/index.html";
-  var candidateLandingTemplate = "app/components/candidate/views/landing.html?v=20161123-1";
-  var candidateQuizTemplate = "app/components/candidate/views/quiz.html?v=20170412-1";
+  var candidateLandingTemplate =
+    "app/components/candidate/views/landing.html?v=20161123-1";
+  var candidateQuizTemplate =
+    "app/components/candidate/views/quiz.html?v=20170412-1";
 
-  var quizLandingTemplate = "app/components/candidate/views/quiz-landing.html?v-20170502-1";
+  var quizLandingTemplate =
+    "app/components/candidate/views/quiz-landing.html?v-20181403-1";
 
   var profileIndexTemplate = "app/components/profile/index.html";
   var editProfileTemplate = "app/components/profile/edit.html";

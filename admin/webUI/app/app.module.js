@@ -36,27 +36,25 @@ angular
     //Run After view has been loaded
     $rootScope.$on("$viewContentLoaded", function() {
       componentHandler.upgradeAllRegistered();
-      $timeout(
-        function() {
-          componentHandler.upgradeAllRegistered();
-          componentHandler.upgradeDom();
-        },
-        1000
-      );
+      $timeout(function() {
+        componentHandler.upgradeAllRegistered();
+        componentHandler.upgradeDom();
+      }, 1000);
     });
 
-    $rootScope.$on(
-      "$locationChangeStart",
-      function(e, currentLocation, previousLocation) {
-        // window.currentLocation = currentLocation;
-        // window.previousLocation = previousLocation;
-        // $rootScope.is_direct_url = (currentLocation == previousLocation);
-        // isAuthenticated = window.localStorage.getItem("username");
-        // if($rootScope.is_direct_url) {
-        //     // console.log("Hola!");
-        // }
-      }
-    );
+    $rootScope.$on("$locationChangeStart", function(
+      e,
+      currentLocation,
+      previousLocation
+    ) {
+      // window.currentLocation = currentLocation;
+      // window.previousLocation = previousLocation;
+      // $rootScope.is_direct_url = (currentLocation == previousLocation);
+      // isAuthenticated = window.localStorage.getItem("username");
+      // if($rootScope.is_direct_url) {
+      //     // console.log("Hola!");
+      // }
+    });
 
     var stateChangeStartHandler = function(
       e,
@@ -79,31 +77,25 @@ angular
         e.preventDefault();
       }
       (function() {
-        setTimeout(
-          function() {
-            $mdl_input = $(".mdl-textfield__input");
-            for (var i = 0; i < $mdl_input.length; i++) {
-              var this_field = $($mdl_input[i]);
-              this_field.removeClass("is-invalid");
+        setTimeout(function() {
+          $mdl_input = $(".mdl-textfield__input");
+          for (var i = 0; i < $mdl_input.length; i++) {
+            var this_field = $($mdl_input[i]);
+            this_field.removeClass("is-invalid");
 
-              if (this_field.attr("type") == "date") {
-                this_field.parent().addClass("is-focused");
-              }
+            if (this_field.attr("type") == "date") {
+              this_field.parent().addClass("is-focused");
             }
-          },
-          700
-        );
+          }
+        }, 700);
       })();
     };
     $rootScope.$on("$stateChangeStart", stateChangeStartHandler);
 
     $rootScope.updgradeMDL = function() {
-      $timeout(
-        function() {
-          componentHandler.upgradeAllRegistered();
-        },
-        1000
-      );
+      $timeout(function() {
+        componentHandler.upgradeAllRegistered();
+      }, 1000);
     };
 
     //Run After ng-include has been loaded
@@ -149,10 +141,10 @@ angular.module("GruiApp").constant("APP_REQUIRES", {
     ],
     inviteService: ["app/components/invite/inviteService.js?v=20170412-1"],
     quizLandingController: [
-      "app/components/candidate/quizLandingController.js?v=20170502-1"
+      "app/components/candidate/quizLandingController.js?v=20181403-1"
     ],
     quizLandingService: [
-      "app/components/candidate/quizLandingService.js?v=20170502-1"
+      "app/components/candidate/quizLandingService.js?v=20181403-1"
     ],
     candidateController: [
       "app/components/candidate/candidateController.js?v=20170412-1"
@@ -383,8 +375,10 @@ angular.module("GruiApp").provider("RouteHelpers", [
     }
 
     function timeoutModal() {
-      var modalContent = "Sorry to inform you but we are facing some severe problems.";
-      modalContent += "<div>Please send us a email on - contact@dgraph.io</div>";
+      var modalContent =
+        "Sorry to inform you but we are facing some severe problems.";
+      modalContent +=
+        "<div>Please send us a email on - contact@dgraph.io</div>";
       mainVm.openModal({
         // template: "./app/shared/_server_crash.html",
         template: modalContent,
@@ -436,8 +430,8 @@ angular.module("GruiApp").provider("RouteHelpers", [
       var totalSec = duration.seconds();
 
       return {
-        minutes: Math.floor(totalSec / 3600) * 60 +
-          parseInt(totalSec / 60 % 60, 10),
+        minutes:
+          Math.floor(totalSec / 3600) * 60 + parseInt((totalSec / 60) % 60, 10),
         seconds: parseInt(totalSec % 60, 10)
       };
     }
@@ -460,7 +454,8 @@ angular.module("GruiApp").provider("RouteHelpers", [
         mainVm.notification.message = message;
         mainVm.consecutiveError = 1;
       } else {
-        mainVm.notification.message = "Can't connect to the server. We will be back up in a bit...";
+        mainVm.notification.message =
+          "Can't connect to the server. We will be back up in a bit...";
       }
     }
 
@@ -470,14 +465,11 @@ angular.module("GruiApp").provider("RouteHelpers", [
         mainVm.notification.message = "Connected to Server";
       }
       mainVm.consecutiveError = 0;
-      setTimeout(
-        function() {
-          mainVm.showNotification = false;
-          mainVm.notification.class = "";
-          $scope.$apply();
-        },
-        2000
-      );
+      setTimeout(function() {
+        mainVm.showNotification = false;
+        mainVm.notification.class = "";
+        $scope.$apply();
+      }, 2000);
     }
   }
 
@@ -501,8 +493,8 @@ angular.module("GruiApp").provider("RouteHelpers", [
       };
 
       if (url == "/login") {
-        $http.defaults.headers.common["Authorization"] = "Basic " +
-          btoa(data.user + ":" + data.password);
+        $http.defaults.headers.common["Authorization"] =
+          "Basic " + btoa(data.user + ":" + data.password);
         delete req.data;
       } else {
         // req.url = mainVm.candidate_url + url;
