@@ -141,7 +141,7 @@ angular.module("GruiApp").constant("APP_REQUIRES", {
     ],
     inviteService: ["app/components/invite/inviteService.js?v=20170412-1"],
     quizLandingController: [
-      "app/components/candidate/quizLandingController.js?v=20181403-1"
+      "app/components/candidate/quizLandingController.js?v=20182103-1"
     ],
     quizLandingService: [
       "app/components/candidate/quizLandingService.js?v=20181403-1"
