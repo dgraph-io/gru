@@ -40,7 +40,7 @@ Dgraph runs on port 8080 by default.
 ### Caddy
 
 Note, you should modify the the address on the first line of the admin/webUI/Caddyfile and also the
-value of `hostname` in `admin/webUI/app/app.module.js` to either `localhost:2020` for the purposes
+value of `hostname` in `admin/webUI/app/app.module.js` to either `http://localhost:2020` for the purposes
 of local development or to the address of your production server before running Caddy web server.
 
 ```
