@@ -1,4 +1,4 @@
-localhost:2020
+https://gru.dgraph.io
 gzip
 
 log /var/log/gru/access.log

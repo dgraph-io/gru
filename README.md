@@ -4,24 +4,53 @@ Gru is an open source adaptive test system for screening candidates for software
 
 You can read more about why we built Gru on our [blog](https://open.dgraph.io/post/gru/). Gru uses Dgraph as the database.
 
-## Instructions
+## Running
 
-1. Get the Gru code and checkout the develop branch.
-  - go get github.com/dgraph-io/gru
-  - cd $GOPATH/src/github.com/dgraph-io/gru
-  - git checkout develop
-2. Start Dgraph on port 8080. Note we are currently building and using Dgraph from the master right now.
-So you can build Dgraph from source or ask us for the Dgraph binary for Linux/Mac.
-3. Start the admin backend from gru directory like `go build . && ./gru -user=admin -pass=pass -secret=0a45e5eGseF41o0719PJ39KljMK4F4v2`.
-Note we use sendgrid for sending invite mails to the candidates. That won't work without the sendgrid
+Gru has three components, Gru server, Dgraph(v0.7.5) as the database and Caddy as a web server.
+
+### Gru server
+
+```
+  # Make sure you have Go installed on the server (https://golang.org/doc/install).
+  go get github.com/dgraph-io/gru
+  cd $GOPATH/src/github.com/dgraph-io/gru
+  go build .
+  ./gru --user=<gru_ui_username> --pass=<gru_ui_password> --secret="<long_secret_to_sign_jwt_token>" --sendgrid="<sendgrid_api_key>" --gh '<greenhouse_api_key>' -ip "https://gru.dgraph.io" -debug=true 2>&1 | tee -a gru.log
+```
+
+* Note we use sendgrid for sending invite mails to the candidates. That won't work without the sendgrid
 key. For development purposes when the `--sendgrid` flag is empty, we just print out the invite link for taking
 the quiz to the console.
-4. We use [Caddy](https://caddyserver.com/) as the Web server and run it on port 2020 locally. You can install
-caddy and then run it from inside admin/webUI using `caddy` command.
-You can checkout the Caddyfile in the folder for config for Caddy. The easiest method to install caddy is using
-https://getcaddy.com/.
+* Gru also has an integration with Greenhouse and the api key can be supplied using the `gh` flag.
+* The `-ip` flag is used to specify the ip address of the Gru server.
 
-After this Gru should be up and running for you. You can visit http://localhost:2020 and use
-`admin` as username and `pass` as password for logging in. Go ahead and add some questions, create some quizzes and invite some candidates.
+
+### Dgraph
+
+```
+  wget https://github.com/dgraph-io/dgraph/releases/download/v0.7.5/dgraph-linux-amd64-v0.7.5.tar.gz
+  tar -xzvf dgraph-linux-amd64-v0.7.5.tar.gz
+  ./dgraph/dgraph
+
+```
+In case you are reloading data into Dgraph from an export, you can use dgraphloader to load the `rdf.gz` exported file.
+
+Dgraph runs on port 8080 by default.
+
+### Caddy
+
+Note, you should modify the the address on the first line of the admin/webUI/Caddyfile and also the
+value of `hostname` in `admin/webUI/app/app.module.js` to either `localhost:2020` for the purposes
+of local development or to the address of your production server before running Caddy web server.
+
+```
+  mkdir caddy
+  wget https://github.com/mholt/caddy/releases/download/v0.10.8/caddy_v0.10.8_linux_amd64.tar.gz
+  tar -xzvf caddy_v0.10.8_linux_amd64.tar.gz
+  ./caddy --conf ../admin/webUI/Caddyfile
+```
+
+After this Gru should be up and running for you. You can visit http://localhost:2020 (if running
+locally) and login. Go ahead and add some questions, create some quizzes and invite some candidates.
 
 # [![Coverage Status](https://coveralls.io/repos/github/dgraph-io/gru/badge.svg?branch=develop)](https://coveralls.io/github/dgraph-io/gru?branch=develop)
