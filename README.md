@@ -31,7 +31,6 @@ the quiz to the console.
   wget https://github.com/dgraph-io/dgraph/releases/download/v0.7.5/dgraph-linux-amd64-v0.7.5.tar.gz
   tar -xzvf dgraph-linux-amd64-v0.7.5.tar.gz
   ./dgraph/dgraph
-
 ```
 In case you are reloading data into Dgraph from an export, you can use dgraphloader to load the `rdf.gz` exported file.
 
@@ -39,7 +38,7 @@ Dgraph runs on port 8080 by default.
 
 ### Caddy
 
-Note, you should modify the the address on the first line of the admin/webUI/Caddyfile and also the
+Note, you should modify the the address on the first line of the `admin/webUI/Caddyfile` and also the
 value of `hostname` in `admin/webUI/app/app.module.js` to either `http://localhost:2020` for the purposes
 of local development or to the address of your production server before running Caddy web server.
 
