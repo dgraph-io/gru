@@ -112,7 +112,7 @@ func check(file os.FileInfo) {
 	}
 
 	if time.Now().After(t.Add(time.Duration(c.BackupDays) * 24 * time.Hour)) {
-		if err := os.Remove(fmt.Sprintf("backup/%v", file.Name())); err != nil {
+		if err := os.Remove(file.Name()); err != nil {
 			fmt.Println("While removing file with name: ", err)
 		}
 		fmt.Println("Deleted old backup file: ", fname)
