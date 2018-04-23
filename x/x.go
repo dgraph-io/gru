@@ -7,6 +7,7 @@ import (
 	"math"
 	"net/http"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/dgraph-io/gru/admin/company"
@@ -112,7 +113,7 @@ func check(file os.FileInfo) {
 	}
 
 	if time.Now().After(t.Add(time.Duration(c.BackupDays) * 24 * time.Hour)) {
-		if err := os.Remove(file.Name()); err != nil {
+		if err := os.Remove(filepath.Join(*backup, file.Name())); err != nil {
 			fmt.Println("While removing file with name: ", err)
 		}
 		fmt.Println("Deleted old backup file: ", fname)
