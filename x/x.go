@@ -112,6 +112,7 @@ func check(file os.FileInfo) {
 		if err := os.Remove(fmt.Sprintf("backup/%v", file.Name())); err != nil {
 			fmt.Println("While removing file with name: ", err)
 		}
+		fmt.Println("Deleted old backup file: ", fname)
 	}
 }
 
