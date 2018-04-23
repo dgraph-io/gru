@@ -14,7 +14,10 @@ import (
 	jwt "github.com/dgrijalva/jwt-go"
 )
 
-var debug = flag.Bool("debug", false, "Whether to print debug info")
+var (
+	debug  = flag.Bool("debug", false, "Whether to print debug info")
+	backup = flag.String("backup", "", "Dgraph backup directory path")
+)
 
 func Debug(log interface{}) {
 	if *debug {
@@ -117,7 +120,7 @@ func check(file os.FileInfo) {
 }
 
 func deleteOldBackups() {
-	files, err := ioutil.ReadDir("backup")
+	files, err := ioutil.ReadDir(*backup)
 	if err != nil {
 		fmt.Println("While reading backup directory: ", err)
 		return
