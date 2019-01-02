@@ -1,14 +1,38 @@
-name: string @index(exact, term) .
-
-quiz_start: datetime @index .
-duration: int .
-score: float @index .
-
-multiple: bool .
-question.score: float .
-positive: float .
-negative: float .
-question.asked: datetime .
-question.answered: datetime .
-candidate.score: float .
-complete: bool .
+<candidate.quiz>: uid .
+<candidate.score>: float .
+<complete>: bool .
+<completed_at>: default .
+<country>: default .
+<cut_off>: default .
+<dgraph.group.acl>: string .
+<dgraph.password>: password .
+<dgraph.user.group>: uid @reverse .
+<dgraph.xid>: string @index(exact) .
+<duration>: int .
+<email>: default .
+<feedback>: default .
+<invite_sent>: default .
+<is_question>: string .
+<is_quiz>: string .
+<is_tag>: string .
+<multiple>: bool .
+<name>: string @index(exact, term) .
+<negative>: float .
+<notes>: default .
+<positive>: float .
+<question.answered>: datetime .
+<question.asked>: datetime .
+<question.correct>: uid .
+<question.option>: uid .
+<question.score>: float .
+<question.tag>: uid .
+<quiz.candidate>: uid .
+<quiz.question>: uid .
+<quiz_start>: datetime @index(hour) .
+<score>: float @index(float) .
+<tag.question>: uid .
+<testo>: default .
+<text>: default .
+<threshold>: default .
+<token>: default .
+<validity>: default .
