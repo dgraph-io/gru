@@ -15,7 +15,7 @@ import (
 )
 
 type Candidate struct {
-	Uid       string
+	Uid       string `json:"uid"`
 	Name      string `json:"name"`
 	Email     string `json:"email"`
 	Token     string `json:"token"`
@@ -41,9 +41,9 @@ func randStringBytes(n int) string {
 func index(quizId string) string {
 	return `
 	{
-	quiz(id: ` + quizId + `) {
+	quiz(func: uid(` + quizId + `)) {
 		quiz.candidate {
-			_uid_
+			uid
 			name
 			email
 			score
@@ -81,16 +81,17 @@ func Index(w http.ResponseWriter, r *http.Request) {
 func AddCand(quizId, name, email string, validity time.Time) (string, error) {
 	m := new(dgraph.Mutation)
 	token := randStringBytes(33)
-	m.Set(`<` + quizId + `> <quiz.candidate> <_:c> .`)
-	m.Set(`<_:c> <candidate.quiz> <` + quizId + `> .`)
-	m.Set(`<_:c> <email> "` + email + `" .`)
-	m.Set(`<_:c> <name> "` + name + `" .`)
-	m.Set(`<_:c> <token> "` + token + `" .`)
-	m.Set(`<_:c> <validity> "` + validity.UTC().String() + `" .`)
-	m.Set(`<_:c> <invite_sent> "` + time.Now().UTC().String() + `" .`)
-	m.Set(`<_:c> <complete> "false" .`)
+	// TODO: Use reverse predicate for quiz.candidate & candidate.quiz
+	m.SetLink(quizId, "quiz.candidate", "_:c")
+	m.SetLink("_:c", "candidate.quiz", quizId)
+	m.SetString("_:c", "email", email)
+	m.SetString("_:c", "name", name)
+	m.SetString("_:c", "token", token)
+	m.SetString("_:c", "validity", validity.UTC().String())
+	m.SetString("_:c", "invite_sent", time.Now().UTC().String())
+	m.SetString("_:c", "complete", "false")
 
-	mr, err := dgraph.SendMutation(m.String())
+	mr, err := dgraph.SendMutation(m)
 	if err != nil {
 		return "", err
 	}
@@ -139,23 +140,23 @@ func Add(w http.ResponseWriter, r *http.Request) {
 	w.Write(server.MarshalResponse(sr))
 }
 
-func edit(c Candidate) string {
+func edit(c Candidate) *dgraph.Mutation {
 	m := new(dgraph.Mutation)
-	m.Set(`<` + c.Uid + `> <email> "` + c.Email + `" . `)
-	m.Set(`<` + c.Uid + `> <validity> "` + c.Validity + `" . `)
+	m.SetString(c.Uid, "email", c.Email)
+	m.SetString(c.Uid, "validity", c.Validity)
 
 	// When the quiz for which candidate is invited is changed, we get both OldQuizId
 	// and new QuizId.
 	if c.QuizId != "" {
-		m.Set(`<` + c.QuizId + `> <quiz.candidate> <` + c.Uid + `> .`)
-		m.Set(`<` + c.Uid + `> <candidate.quiz> <` + c.QuizId + `> .`)
+		m.SetLink(c.QuizId, "quiz.candidate", c.Uid)
+		m.SetLink(c.Uid, "candidate.quiz", c.QuizId)
 	}
 	if c.OldQuizId != "" {
-		m.Del(`<` + c.OldQuizId + `> <quiz.candidate> <` + c.Uid + `> .`)
-		m.Del(`<` + c.Uid + `> <candidate.quiz> <` + c.OldQuizId + `> .`)
+		m.DelLink(c.OldQuizId, "quiz.candidate", c.Uid)
+		m.DelLink(c.Uid, "candidate.quiz", c.OldQuizId)
 	}
 
-	return m.String()
+	return m
 }
 
 // TODO - Changing the quiz for a candidate doesn't work right now. Fix it.
@@ -199,27 +200,24 @@ func Edit(w http.ResponseWriter, r *http.Request) {
 }
 
 func get(candidateId string) string {
-	return `
-    {
-	quiz.candidate(id:` + candidateId + `) {
-		name
-		email
-		token
-		validity
-		complete
-		candidate.quiz {
-			_uid_
-			duration
-		}
+	return `{
+		quiz.candidate(func: uid(` + candidateId + `)) {
+			name
+			email
+			token
+			validity
+			complete
+			candidate.quiz {
+				uid
+				duration
+			}
 	  }
-    }`
+  }`
 }
 
 func Get(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	cid := vars["id"]
-	q := get(cid)
-	res, err := dgraph.Query(q)
+	res, err := dgraph.Query(get(vars["id"]))
 	if err != nil {
 		sr := server.Response{}
 		sr.Write(w, "", err.Error(), http.StatusInternalServerError)
@@ -271,7 +269,7 @@ type candInfo struct {
 
 func candName(id string) string {
 	q := `query {
-                candidate(id:` + id + `) {
+                candidate(func: uid(` + id + `) {
                         name
                 }
         }`

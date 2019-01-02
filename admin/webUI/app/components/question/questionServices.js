@@ -9,15 +9,22 @@
     }
 
     services.editQuestion = function(data) {
-      return MainService.put('/question/' + data._uid_, data);
+      return MainService.put('/question/' + data.uid, data);
     }
 
-    services.getAllQuestions = function(requestData, hideLoader) {
-      return MainService.post('/get-all-questions', requestData, hideLoader);
+    services.getAllQuestions = function(hideLoader) {
+      return MainService.post('/get-all-questions', hideLoader)
+        .then(function(data) {
+          return data && data.data && data.data.questions ? data.data.questions : [];
+        })
     }
 
-    services.getQuestion = function(questionID) {
-      return MainService.get('/question/' + questionID);
+    services.getQuestion = function(questionId) {
+      return MainService.get('/question/' + questionId)
+        .then(function(data) {
+          console.log('received question', data);
+          return data.data.question[0];
+        })
     }
 
     return services;

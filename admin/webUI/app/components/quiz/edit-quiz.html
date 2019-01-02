@@ -44,7 +44,7 @@
         </div>
         <div class="mt-20" ng-if="quizVm.newQuiz['quiz.question']">
           <div class="bold pb-10">
-            {{editQuizVm.getQuestionCount()}} Question<span ng-if="mainVm.objLen(quizVm.newQuiz['quiz.question']) > 1">s</span>, Total Score: {{quizVm.getTotalScore(quizVm.newQuiz['quiz.question']) | number: 2}}
+            {{ editQuizVm.getQuestionCount() }} Question<span ng-if="mainVm.objLen(quizVm.newQuiz['quiz.question']) != 1">s</span>, Total Score: {{quizVm.getTotalScore(quizVm.newQuiz['quiz.question']) | number: 2}}
           </div>
           <!-- <div ng-repeat="(key, question) in quizVm.newQuiz['quiz.question']" ng-if="question.text">
             <span class="mdl-chip mdl-chip--deletable" ng-if="!question.is_delete">

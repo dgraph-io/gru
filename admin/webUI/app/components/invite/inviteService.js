@@ -1,4 +1,8 @@
-(function() {
+angular.module("GruiApp").service("inviteService", [
+  "$q",
+  "$http",
+  "$rootScope",
+  "MainService",
   function inviteService($q, $http, $rootScope, MainService) {
     var services = {}; //Object to return
 
@@ -64,38 +68,36 @@
     };
 
     services.alreadyInvited = function(quizId, emails) {
-      var deferred = $q.defer();
       // TODO - User filter on email after incorporating Dgraph schema.
       var query =
         "{\
-                  quiz(id: " +
-        quizId +
-        ") {\
+          quiz(func: uid(" + quizId + ")) {\
+            uid \
             quiz.candidate {\
               email\
             }\
           }\
         }";
 
-      MainService.proxy(query).then(function(data) {
-        if (Object.keys(data).length == 0) {
-          return deferred.resolve("");
+      return MainService.proxy(query).then(function(data) {
+        if (!data || !data.data) {
+          return "";
         }
-        var candidates = data.quiz[0]["quiz.candidate"];
+        console.log("got proxied ", data);
+        var candidates = data.data.quiz[0]["quiz.candidate"];
         if (candidates === undefined) {
-          return deferred.resolve("");
+          return "";
         }
         for (var j = 0; j < emails.length; j++) {
           email = emails[j];
           for (var i = 0; i < candidates.length; i++) {
             if (candidates[i].email === email) {
-              return deferred.resolve(email);
+              return email;
             }
           }
         }
-        return deferred.resolve("");
+        return "";
       });
-      return deferred.promise;
     };
 
     services.resendInvite = function(candidate) {
@@ -120,7 +122,7 @@
         "mutation {\n\
             set {\n\
               <" +
-        candidate._uid_ +
+        candidate.uid +
         '> <validity> "' +
         val +
         '" .\n\
@@ -144,7 +146,7 @@
       };
 
       MainService.post(
-        "/candidate/invite/" + candidate._uid_,
+        "/candidate/invite/" + candidate.uid,
         payload
       ).then(function(data) {
         return deferred.resolve({
@@ -164,39 +166,39 @@
         "mutation {\n\
     delete {\n\
       <" +
-        candidate._uid_ +
+        candidate.uid +
         '> <email> "' +
         candidate.email +
         '" . \n\
       <' +
-        candidate._uid_ +
+        candidate.uid +
         '> <invite_sent> "' +
         candidate.invite_sent +
         '" . \n\
       <' +
-        candidate._uid_ +
+        candidate.uid +
         '> <token> "' +
         candidate.token +
         '" . \n\
       <' +
-        candidate._uid_ +
+        candidate.uid +
         '> <validity> "' +
         candidate.validity +
         '" . \n\
       <' +
-        candidate._uid_ +
+        candidate.uid +
         '> <complete> "' +
         candidate.complete +
         '" . \n\
       <' +
-        candidate._uid_ +
+        candidate.uid +
         "> <candidate.quiz> <" +
         quizId +
         "> . \n\
       <" +
         quizId +
         "> <quiz.candidate> <" +
-        candidate._uid_ +
+        candidate.uid +
         "> .\n\
       }\n\
     }";
@@ -234,14 +236,4 @@
 
     return services;
   }
-
-  var inviteServiceArray = [
-    "$q",
-    "$http",
-    "$rootScope",
-    "MainService",
-    inviteService
-  ];
-
-  angular.module("GruiApp").service("inviteService", inviteServiceArray);
-})();
+]);

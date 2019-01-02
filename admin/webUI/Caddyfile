@@ -1,7 +1,0 @@
-https://gru.dgraph.io
-gzip
-
-log /var/log/gru/access.log
-
-proxy /api http://localhost:8000
-

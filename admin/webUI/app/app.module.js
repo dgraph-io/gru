@@ -27,7 +27,8 @@ angular.module("GruiApp").config(function(uiSelectConfig) {
   uiSelectConfig.theme = "select2";
 });
 
-var hostname = "https://gru.dgraph.io";
+// var hostname = "https://gru.dgraph.io";
+var hostname = "http://127.0.0.1";
 
 //Run After view has been loaded
 angular
@@ -92,7 +93,7 @@ angular
     };
     $rootScope.$on("$stateChangeStart", stateChangeStartHandler);
 
-    $rootScope.updgradeMDL = function() {
+    $rootScope.upgradeMDL = function() {
       $timeout(function() {
         componentHandler.upgradeAllRegistered();
       }, 1000);
@@ -116,7 +117,7 @@ angular.module("GruiApp").config([
 
     // Lazy Load modules configuration
     $ocLazyLoadProvider.config({
-      debug: false,
+      debug: true,
       events: true,
       modules: APP_REQUIRES.modules
     });
@@ -128,32 +129,32 @@ angular.module("GruiApp").constant("APP_REQUIRES", {
   // jQuery based/Cusomt/standalone scripts
   scripts: {
     homeController: ["app/components/home/homeController.js"],
-    loginController: ["app/components/login/loginController.js?v=20161215-1"],
+    loginController: ["app/components/login/loginController.js"],
     loginService: ["app/components/login/loginService.js"],
     questionController: [
-      "app/components/question/questionController.js?v=20161215-1"
+      "app/components/question/questionController.js"
     ],
     questionServices: ["app/components/question/questionServices.js"],
-    quizController: ["app/components/quiz/quizController.js?v=20161215-1"],
+    quizController: ["app/components/quiz/quizController.js"],
     quizServices: ["app/components/quiz/quizServices.js"],
     inviteController: [
-      "app/components/invite/inviteController.js?v=20170412-1"
+      "app/components/invite/inviteController.js"
     ],
-    inviteService: ["app/components/invite/inviteService.js?v=20170412-1"],
+    inviteService: ["app/components/invite/inviteService.js"],
     quizLandingController: [
-      "app/components/candidate/quizLandingController.js?v=20182103-1"
+      "app/components/candidate/quizLandingController.js"
     ],
     quizLandingService: [
-      "app/components/candidate/quizLandingService.js?v=20181403-1"
+      "app/components/candidate/quizLandingService.js"
     ],
     candidateController: [
-      "app/components/candidate/candidateController.js?v=20170412-1"
+      "app/components/candidate/candidateController.js"
     ],
     candidateService: ["app/components/candidate/candidateService.js"],
     profileController: [
-      "app/components/profile/profileController.js?v=20161215-1"
+      "app/components/profile/profileController.js"
     ],
-    profileService: ["app/components/profile/profileService.js?v=20170412-1"],
+    profileService: ["app/components/profile/profileService.js"],
     "angular-select": ["assets/lib/js/angular-select.min.js"],
     codeMirror: ["assets/lib/js/codemirror.js"],
     javascript: ["assets/lib/js/javascript.js"],

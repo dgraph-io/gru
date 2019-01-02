@@ -45,7 +45,6 @@
     questionVm.initOptionEditor = initOptionEditor;
     questionVm.isCorrect = isCorrect;
     questionVm.getAllTags = getAllTags;
-    questionVm.getUniqueTags = getUniqueTags;
     questionVm.onTagSelect = onTagSelect;
     questionVm.markDownFormat = markDownFormat;
     questionVm.transitionToQuestion = transitionToQuestion;
@@ -80,11 +79,11 @@
     function getAllTags() {
       mainVm.getAllTags().then(
         function(data) {
-          if (Object.keys(data).length == 0) {
+          if (!data || !data.data || !data.data.tags) {
             questionVm.allTags = [];
             return;
           }
-          questionVm.allTags = getUniqueTags(data.debug[0].question);
+          questionVm.allTags = data.data.tags;
         },
         function(err) {
           console.log(err);
@@ -97,25 +96,6 @@
         id: "",
         name: new_tag
       };
-    }
-
-    function getUniqueTags(allTags) {
-      if (!allTags) {
-        return [];
-      }
-      var allUniqueTags = [];
-      for (var i = 0; i < allTags.length; i++) {
-        var tagsArr = allTags[i]["question.tag"];
-        if (tagsArr) {
-          for (var j = 0; j < tagsArr.length; j++) {
-            isUnique = mainVm.indexOfObject(allUniqueTags, tagsArr[j]) == -1;
-            if (isUnique) {
-              allUniqueTags.push(tagsArr[j]);
-            }
-          }
-        }
-      }
-      return allUniqueTags;
     }
 
     function validateInput(inputs) {
@@ -151,7 +131,7 @@
         return "Please enter option name correctly";
       }
       if (!hasCorrectAnswer) {
-        return "Please mark atleast one correct answer";
+        return "Please mark at least one correct answer";
       }
 
       if (!inputs.tags.length) {
@@ -165,14 +145,14 @@
     }
 
     function isCorrect(option, correct_options) {
-      var uid = option._uid_;
+      var uid = option.uid;
       if (!correct_options) {
         return false;
       }
       var optLength = correct_options.length;
 
       for (var i = 0; i < optLength; i++) {
-        if (correct_options[i]._uid_ == uid) {
+        if (correct_options[i].uid == uid) {
           option.is_correct = true;
           return true;
         }
@@ -182,10 +162,10 @@
 
     function onTagSelect(item, model, isEdit) {
       for (var i = 0; i < questionVm.allTags.length; i++) {
-        if (item.name == questionVm.allTags[i].name && !item._uid_) {
+        if (item.name == questionVm.allTags[i].name && !item.uid) {
           delete model.id;
           delete model.isTag;
-          model._uid_ = questionVm.allTags[i]._uid_;
+          model.uid = questionVm.allTags[i].uid;
         }
       }
 
@@ -244,10 +224,10 @@
       });
       addQueVm.newQuestion.options = options;
       addQueVm.newQuestion.text = escape(addQueVm.cmModel);
-      var areInValidateInput = questionVm.validateInput(addQueVm.newQuestion);
-      if (areInValidateInput) {
+      var validataionError = questionVm.validateInput(addQueVm.newQuestion);
+      if (validataionError) {
         SNACKBAR({
-          message: areInValidateInput,
+          message: validataionError,
           messageType: "error"
         });
         return;
@@ -307,7 +287,6 @@
     // VARIABLE DECLARATION
     allQVm = this;
     allQVm.showLazyLoader = false;
-    allQVm.lazyStatus = true;
     allQVm.noItemFound = false;
     mainVm.allQuestions = [];
 
@@ -326,68 +305,44 @@
     questionVm.getAllTags();
 
     // FUNCTION DEFINITIONS
-    function getAllQuestions(questionID) {
-      if (questionID && !allQVm.lazyStatus && allQVm.noItemFound) {
-        return;
-      }
-      // API HIT
-      var data = {
-        id: questionID || ""
-      };
-      var hideLoader = questionID ? true : false;
-
+    function getAllQuestions() {
       allQVm.showLazyLoader = true;
       // TODO - Fetch only meta for all questions, and details for just the
       // first question because we anyway refetch the questions from the server
       // on click. In the meta call, fetch tags and multiple status too so that
       // we can do filtering based on that.
-      questionService.getAllQuestions(data, hideLoader).then(
-        function(data) {
-          if (
-            Object.keys(data).length == 0 ||
-            data.code == "ErrorInvalidRequest" ||
-            !data.debug[0].question
-          ) {
+      questionService.getAllQuestions(false).then(
+        function(questions) {
+          allQVm.showLazyLoader = false;
+
+          if (!questions) {
             allQVm.noItemFound = true;
-            allQVm.showLazyLoader = false;
             return;
           }
 
-          var dataArray = data.debug[0].question;
-          if (data.debug && dataArray) {
+          if (questions) {
             if (mainVm.allQuestions && mainVm.allQuestions.length) {
-              dataArrayLength = dataArray.length;
-              for (var i = 0; i < dataArrayLength; i++) {
-                mainVm.allQuestions.push(dataArray[i]);
+              for (var i = 0; i < questions.length; i++) {
+                mainVm.allQuestions.push(questions[i]);
               }
             } else {
-              mainVm.allQuestions = data.debug[0].question;
-
-              if ($stateParams.quesID) {
-                var length = mainVm.allQuestions.length;
-                var gotQuestion = false;
-                for (var i = 0; i < length; i++) {
-                  if (mainVm.allQuestions[i]._uid_ == $stateParams.quesID) {
-                    var gotQuestion = true;
-                    allQVm.question = mainVm.allQuestions[i];
-                    break;
-                  }
-                }
-                if (!gotQuestion) {
-                  allQVm.setQuestion(mainVm.allQuestions[0], 0);
-                }
-              } else {
-                allQVm.setQuestion(mainVm.allQuestions[0], 0);
-              }
+              mainVm.allQuestions = questions;
             }
-
-            mainVm.allQuestionsBak = angular.copy(mainVm.allQuestions);
-            allQVm.lastQuestion =
-              mainVm.allQuestions[mainVm.allQuestions.length - 1]._uid_;
+            var questionIndex = -1;
+            if ($stateParams.quesID) {
+              questionIndex = mainVm.allQuestions.findIndex(function(q) {
+                return q.uid == $stateParams.quesID;
+              });
+            }
+            questionIndex = Math.max(questionIndex, 0)
+            allQVm.setQuestion(
+              mainVm.allQuestions[questionIndex],
+              questionIndex,
+            );
           }
 
-          allQVm.lazyStatus = true;
-          allQVm.showLazyLoader = false;
+          allQVm.lastQuestion =
+            mainVm.allQuestions[mainVm.allQuestions.length - 1].uid;
         },
         function(err) {
           allQVm.showLazyLoader = false;
@@ -397,29 +352,12 @@
     }
 
     function getQuestion(questionId) {
-      // When questionis clicked on the side nav bar, we fetch its
+      // When question is clicked on the side nav bar, we fetch its
       // information from backend and refresh it.
-      questionService.getQuestion(questionId).then(function(data) {
-        allQVm.question = data.root[0];
+      questionService.getQuestion(questionId).then(function(question) {
+        allQVm.question = question;
       });
     }
-
-    $(document).ready(function() {
-      // CODE FOR PAGINATION
-      // $(window).unbind('scroll');
-      // setTimeout(function() {
-      //   window.addEventListener('scroll', function() {
-      //     if ($("#question-listing").length) {
-      //       var contentLen = $('.mdl-layout__content').scrollTop() + $('.mdl-layout__content').height();
-      //       var docHeight = getDocHeight("question-listing");
-      //       if (contentLen >= docHeight && allQVm.lazyStatus && mainVm.allQuestions && mainVm.allQuestions.length) {
-      //         allQVm.getAllQuestions(allQVm.lastQuestion);
-      //         allQVm.lazyStatus = false;
-      //       }
-      //     }
-      //   }, true);
-      // }, 100);
-    });
 
     function setQuestion(question, index) {
       allQVm.question = question;
@@ -543,19 +481,17 @@
     questionVm.getAllTags();
 
     questionService.getQuestion($stateParams.quesID).then(
-      function(data) {
-        editQuesVm.newQuestion = data.root[0];
+      function(question) {
+        editQuesVm.newQuestion = question;
         editQuesVm.cmModel = unescape(editQuesVm.newQuestion.text);
-        editQuesVm.newQuestion.optionsBak = angular.copy(
-          data.root[0]["question.option"]
+        question.optionsBak = angular.copy(
+          question["question.option"]
         );
-        for (var i = 0; i < editQuesVm.newQuestion.optionsBak.length; i++) {
-          editQuesVm.newQuestion.optionsBak[i].name = unescape(
-            editQuesVm.newQuestion.optionsBak[i].name
-          );
+        for (var i = 0; i < question.optionsBak.length; i++) {
+          question.optionsBak[i].name = unescape(question.optionsBak[i].name);
         }
-        editQuesVm.newQuestion.positive = parseFloat(data.root[0].positive);
-        editQuesVm.newQuestion.negative = parseFloat(data.root[0].negative);
+        editQuesVm.newQuestion.positive = parseFloat(question.positive);
+        editQuesVm.newQuestion.negative = parseFloat(question.negative);
 
         editQuesVm.originalQuestion = angular.copy(editQuesVm.newQuestion);
 
@@ -596,10 +532,10 @@
       angular.forEach(editQuesVm.newQuestion.options, function(value, key) {
         editQuesVm.newQuestion.options[key].name = escape(value.name);
       });
-      var areInValidateInput = questionVm.validateInput(editQuesVm.newQuestion);
-      if (areInValidateInput) {
+      var validataionError = questionVm.validateInput(editQuesVm.newQuestion);
+      if (validataionError) {
         SNACKBAR({
-          message: areInValidateInput,
+          message: validataionError,
           messageType: "error"
         });
         return;
@@ -642,11 +578,11 @@
     function resetQuestion(index) {
       editQuesVm.newQuestion = angular.copy(editQuesVm.originalQuestion);
 
-      $rootScope.updgradeMDL();
+      $rootScope.upgradeMDL();
     }
 
     function onRemoveTag(tag, model, question) {
-      if (tag._uid_) {
+      if (tag.uid) {
         tag.is_delete = true;
         question.deletedTag = question.deletedTag || [];
         question.deletedTag.push(tag);

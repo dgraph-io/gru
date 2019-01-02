@@ -1,0 +1,47 @@
+version: "3.2"
+services:
+  gru-zero:
+    image: dgraph/dgraph:v1.0.11
+    volumes:
+      - type: volume
+        source: gru-dgraph
+        target: /dgraph
+        volume:
+          nocopy: true
+    ports:
+      - 5080:5080
+      - 6080:6080
+    restart: on-failure
+    command: dgraph zero --my=gru-zero:5080
+  gru-alpha:
+    image: dgraph/dgraph:v1.0.11
+    volumes:
+      - type: volume
+        source: gru-dgraph
+        target: /dgraph
+        volume:
+          nocopy: true
+    ports:
+      - 8080:8080
+      - 9080:9080
+    restart: on-failure
+    command: dgraph alpha --my=gru-alpha:8080 --lru_mb=2048 --zero=gru-zero:5080
+  ratel:
+    image: dgraph/dgraph:v1.0.11
+    volumes:
+      - type: volume
+        source: gru-dgraph
+        target: /dgraph
+        volume:
+          nocopy: true
+    ports:
+      - 8800:8000
+    command: dgraph-ratel
+
+volumes:
+  gru-dgraph:
+    external:
+      name: vol-gru-dgraph
+  gru-serverdata:
+      external:
+        name: vol-gru-serverdata

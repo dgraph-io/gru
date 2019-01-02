@@ -52,7 +52,7 @@ func PingHandler(w http.ResponseWriter, r *http.Request) {
 	m.Set(`<` + userId + `> <complete> "true" .`)
 	m.Set(`<` + userId + `> <completed_at> "` + time.Now().UTC().Format(timeLayout) + `" .`)
 	m.Set(`<` + userId + `> <score> "` + strconv.FormatFloat(x.ToFixed(c.score, 2), 'g', -1, 64) + `" .`)
-	_, err = dgraph.SendMutation(m.String())
+	_, err = dgraph.SendMutation(m)
 	if err != nil {
 		sr.Write(w, "", err.Error(), http.StatusInternalServerError)
 		return

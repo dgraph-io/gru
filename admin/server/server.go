@@ -26,16 +26,14 @@ func AddCorsHeaders(w http.ResponseWriter) {
 }
 
 func MarshalResponse(r Response) []byte {
-	fallbackMsg := "Something went wrong"
-
 	if r.Message == "" {
-		r.Message = fallbackMsg
+		r.Message = "Unknown error"
 	}
 	b, err := json.Marshal(r)
 	if err != nil {
 		b, _ = json.Marshal(Response{
 			Success: false,
-			Message: fallbackMsg,
+			Message: "Failed to serialize response",
 			Error:   err.Error(),
 		})
 	}

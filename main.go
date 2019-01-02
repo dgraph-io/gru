@@ -28,9 +28,8 @@ import (
 
 	jwtmiddleware "github.com/auth0/go-jwt-middleware"
 	"github.com/dgraph-io/gru/admin/candidate"
-	"github.com/dgraph-io/gru/admin/greenhouse"
 	"github.com/dgraph-io/gru/admin/question"
-	quiza "github.com/dgraph-io/gru/admin/quiz"
+	quizzes "github.com/dgraph-io/gru/admin/quiz"
 	"github.com/dgraph-io/gru/admin/report"
 	"github.com/dgraph-io/gru/admin/server"
 	"github.com/dgraph-io/gru/admin/tag"
@@ -102,7 +101,7 @@ func health(w http.ResponseWriter, r *http.Request) {
 	// Check Dgraph, send a mutation, do a query.
 	m := new(dgraph.Mutation)
 	m.Set(`<alice> <name> "Alice" .`)
-	_, err := dgraph.SendMutation(m.String())
+	_, err := dgraph.SendMutation(m)
 	if err != nil {
 		hc.Services = "server"
 		json.NewEncoder(w).Encode(hc)
@@ -151,12 +150,6 @@ func runHTTPServer(address string) {
 	router.HandleFunc("/api/healthcheck", health).Methods("GET")
 	router.HandleFunc("/api/validate/{id}", quiz.Validate).Methods("POST", "OPTIONS")
 
-	greenHouse := router.PathPrefix("/api").Subrouter()
-	greenHouse.HandleFunc("/list_tests", greenhouse.Tests).Methods("GET", "OPTIONS")
-	greenHouse.HandleFunc("/send_test", greenhouse.SendTest).Methods("POST", "OPTIONS")
-	greenHouse.HandleFunc("/test_status", greenhouse.TestStatus).Methods("GET", "OPTIONS")
-	greenHouse.HandleFunc("/request_errors", greenhouse.RequestErrors).Methods("POST", "OPTIONS")
-
 	quizRouter := router.PathPrefix("/api/quiz").Subrouter()
 	quizRouter.HandleFunc("/question", quiz.QuestionHandler).Methods("POST", "OPTIONS")
 	quizRouter.HandleFunc("/answer", quiz.AnswerHandler).Methods("POST", "OPTIONS")
@@ -181,11 +174,11 @@ func runHTTPServer(address string) {
 	adminRouter.HandleFunc("/question/{id}", question.Get).Methods("GET", "OPTIONS")
 	adminRouter.HandleFunc("/question/{id}", question.Edit).Methods("PUT", "OPTIONS")
 
-	adminRouter.HandleFunc("/add-quiz", quiza.Add).Methods("POST", "OPTIONS")
+	adminRouter.HandleFunc("/add-quiz", quizzes.Add).Methods("POST", "OPTIONS")
 	// TODO - Change to PUT.
-	adminRouter.HandleFunc("/get-all-quizes", quiza.Index).Methods("GET", "OPTIONS")
-	adminRouter.HandleFunc("/quiz/{id}", quiza.Get).Methods("GET", "OPTIONS")
-	adminRouter.HandleFunc("/quiz/{id}", quiza.Edit).Methods("PUT", "OPTIONS")
+	adminRouter.HandleFunc("/get-all-quizzes", quizzes.Index).Methods("GET", "OPTIONS")
+	adminRouter.HandleFunc("/quiz/{id}", quizzes.Get).Methods("GET", "OPTIONS")
+	adminRouter.HandleFunc("/quiz/{id}", quizzes.Edit).Methods("PUT", "OPTIONS")
 
 	adminRouter.HandleFunc("/get-all-tags", tag.Index).Methods("GET", "OPTIONS")
 

@@ -38,7 +38,7 @@ func CandidateName(w http.ResponseWriter, r *http.Request) {
 	m := new(dgraph.Mutation)
 	m.Set(`<` + userId + `> <name> "` + n + `" .`)
 	m.Set(`<` + userId + `> <country> "` + country + `" .`)
-	_, err = dgraph.SendMutation(m.String())
+	_, err = dgraph.SendMutation(m)
 	if err != nil {
 		sr.Write(w, "", err.Error(), http.StatusInternalServerError)
 		return

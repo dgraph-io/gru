@@ -44,7 +44,7 @@ func init() {
 }
 
 type Answer struct {
-	Id   string `json:"_uid_"`
+	Uid   string `json:"uid"`
 	Text string `json:"name"`
 }
 
@@ -99,7 +99,7 @@ func readMap(uid string) (Candidate, error) {
 }
 
 type quiz struct {
-	Id        string     `json:"_uid_"`
+	Uid        string     `json:"uid"`
 	Duration  int        `json:"duration"`
 	CutOff    float64    `json:"cut_off,string"`
 	Threshold float64    `json:"threshold,string"`
@@ -108,7 +108,7 @@ type quiz struct {
 
 // Used to fetch data about a candidate from Dgraph and populate Candidate struct.
 type cand struct {
-	Id          string `json:"_uid_"`
+	Uid         string `json:"uid"`
 	Name        string
 	Email       string
 	Token       string    `json:"token"`
@@ -123,8 +123,12 @@ type resp struct {
 	Cand []cand `json:"quiz.candidate"`
 }
 
+type QuizCandidatesResp struct {
+	Data resp `json:"data"`
+}
+
 type uid struct {
-	Id string `json:"_uid_"`
+	Uid string `json:"uid"`
 }
 
 type qids struct {
@@ -194,6 +198,6 @@ func sendMail(c Candidate, userId string) error {
 
 	m := new(dgraph.Mutation)
 	m.Set(`<` + userId + `> <completed_at> "` + time.Now().UTC().Format(timeLayout) + `" .`)
-	_, err := dgraph.SendMutation(m.String())
+	_, err := dgraph.SendMutation(m)
 	return err
 }

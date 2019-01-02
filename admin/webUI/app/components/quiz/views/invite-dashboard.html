@@ -18,8 +18,8 @@
           <td class="mdl-data-table__cell--non-numeric">{{candidate.email}}</td>
           <td class="mdl-data-table__cell--non-numeric">{{candidate.validity}}</td>
           <td class="mdl-data-table__cell--non-numeric">
-            <a href="" ng-click="inviteVm.resendEmail(candidate._uid_)">RESEND EMAIL</a> &nbsp;|&nbsp;
-            <a ui-sref="quiz.edit-invite({candidateID: candidate._uid_, index: $index})">EDIT</a> &nbsp;|&nbsp;
+            <a href="" ng-click="inviteVm.resendEmail(candidate.uid)">RESEND EMAIL</a> &nbsp;|&nbsp;
+            <a ui-sref="quiz.edit-invite({candidateID: candidate.uid, index: $index})">EDIT</a> &nbsp;|&nbsp;
             <a href="">DELETE</a>
           </td>
         </tr>

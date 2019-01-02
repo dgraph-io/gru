@@ -13,40 +13,40 @@
     mainVm.pageName = "invite-page";
 
     // FUNCTION DECLARATION
-    inviteVm.getAllQuizes = getAllQuizes;
+    inviteVm.getAllQuizzes = getAllQuizzes;
     inviteVm.inviteCandidate = inviteCandidate;
     inviteVm.removeSelectedQuiz = removeSelectedQuiz;
     inviteVm.setMinDate = setMinDate;
     inviteVm.resetForm = resetForm;
     inviteVm.invalidateInput = invalidateInput;
-    inviteVm.preSeleteQuiz = preSeleteQuiz;
+    inviteVm.preSelectQuiz = preSelectQuiz;
 
-    function getAllQuizes(quizID) {
+    function getAllQuizzes(quizID) {
       if (!inviteVm.allQuizes) {
-        quizService.getAllQuizes().then(
-          function(data) {
-            inviteVm.allQuizes = data.debug[0].quiz;
-
-            preSeleteQuiz(quizID);
+        quizService.getAllQuizzes().then(
+          function(quizzes) {
+            inviteVm.allQuizes = quizzes;
+            preSelectQuiz(quizID);
           },
           function(err) {
             console.log(err);
           }
         );
       } else {
-        preSeleteQuiz(quizID);
+        preSelectQuiz(quizID);
       }
     }
 
-    function preSeleteQuiz(quizID) {
-      if (quizID) {
-        var qLen = inviteVm.allQuizes.length;
-        for (var i = 0; i < qLen; i++) {
-          if (inviteVm.allQuizes[i]._uid_ == quizID) {
-            inviteVm.newInvite.quiz = inviteVm.allQuizes[i];
-            break;
-          }
-        }
+    function preSelectQuiz(quizID) {
+      if (!quizID) {
+        return;
+      }
+      var qLen = inviteVm.allQuizes.length;
+      var q = inviteVm.allQuizes.find(function(quizz) {
+        return quizz.uid == quizID;
+      })
+      if (q) {
+        inviteVm.newInvite.quiz = q;
       }
     }
 
@@ -80,7 +80,7 @@
       }
 
       var dateTime = formatDate(inviteVm.newInvite.dates);
-      inviteVm.newInvite.quiz_id = inviteVm.newInvite.quiz._uid_;
+      inviteVm.newInvite.quiz_id = inviteVm.newInvite.quiz.uid;
       inviteVm.newInvite.validity = dateTime;
 
       inviteService
@@ -145,7 +145,7 @@
     var quizID = $state.params.quizID;
 
     inviteVm.setMinDate();
-    inviteVm.getAllQuizes(quizID);
+    inviteVm.getAllQuizzes(quizID);
   }
 
   function editInviteController(
@@ -167,7 +167,7 @@
     editInviteVm.goToDashboard = goToDashboard;
 
     inviteVm.setMinDate();
-    inviteVm.getAllQuizes();
+    inviteVm.getAllQuizzes();
 
     if (!candidateUID) {
       SNACKBAR({
@@ -221,7 +221,7 @@
       }
 
       if (editInviteVm.candidate["candidate.quiz"][0].is_delete) {
-        editInviteVm.candidate.quiz_id = editInviteVm.candidate.quiz._uid_;
+        editInviteVm.candidate.quiz_id = editInviteVm.candidate.quiz.uid;
         editInviteVm.candidate.old_quiz_id = editInviteVm.quizID;
       }
 
@@ -248,11 +248,11 @@
       // shouldn't be already invited to this quiz.
       if (
         editInviteVm.candidateBak.email != editInviteVm.candidate.email ||
-        editInviteVm.candidate.quiz._uid_ !=
-          editInviteVm.candidateBak["candidate.quiz"][0]._uid_
+        editInviteVm.candidate.quiz.uid !=
+          editInviteVm.candidateBak["candidate.quiz"][0].uid
       ) {
         inviteService
-          .alreadyInvited(editInviteVm.candidate.quiz._uid_, [
+          .alreadyInvited(editInviteVm.candidate.quiz.uid, [
             editInviteVm.candidate.email
           ])
           .then(function(email) {
@@ -277,7 +277,7 @@
       setTimeout(
         function() {
           editInviteVm.allQuizes = angular.copy(inviteVm.allQuizes);
-          $rootScope.updgradeMDL();
+          $rootScope.upgradeMDL();
           editInviteVm.selectedQuiz();
         },
         100
@@ -289,7 +289,7 @@
       var quizLen = editInviteVm.allQuizes.length;
       for (var i = 0; i < quizLen; i++) {
         var quiz = editInviteVm.allQuizes[i];
-        if (oldQuiz._uid_ == quiz._uid_) {
+        if (oldQuiz.uid == quiz.uid) {
           editInviteVm.candidate.quiz = quiz;
           break;
         }
@@ -298,7 +298,7 @@
 
     function onQuizChange(item, model) {
       var oldQuiz = editInviteVm.candidate["candidate.quiz"][0];
-      var isOld = oldQuiz._uid_ == model._uid_;
+      var isOld = oldQuiz.uid == model.uid;
 
       oldQuiz.is_delete = isOld ? false : true;
     }
@@ -345,7 +345,7 @@
     }
     inviteService.getInvitedCandidates(candidatesVm.quizID).then(
       function(data) {
-        var quizCandidates = data.quiz[0]["quiz.candidate"];
+        var quizCandidates = data.data.quiz[0]["quiz.candidate"];
 
         if (!quizCandidates) {
           SNACKBAR({
@@ -359,7 +359,7 @@
           completed = [];
           notCompleted = [];
           for (var j = 0; j < quizCandidates.length; j++) {
-            if (quizCandidates[j].complete == false) {
+            if (quizCandidates[j].complete == "false") {
               quizCandidates[j].invite_sent = new Date(
                 Date.parse(quizCandidates[j].invite_sent)
               );
@@ -427,7 +427,7 @@
 
     function showDeleteModal(candidate) {
       candidatesVm.currentDeleteName = candidate.name;
-      candidatesVm.currentDelete = candidate._uid_;
+      candidatesVm.currentDelete = candidate.uid;
       $timeout(
         function() {
           mainVm.openModal({
@@ -461,7 +461,7 @@
     function deleteFromArray(candidateID, array) {
       var idx = -1;
       for (var i = 0; i < array.length; i++) {
-        if (array[i]._uid_ == candidateID) {
+        if (array[i].uid == candidateID) {
           idx = i;
           break;
         }
@@ -485,7 +485,7 @@
           SNACKBAR({
             message: "Invite cancelled successfully."
           });
-          deleteFromArray(candidate._uid_, candidatesVm.notCompleted);
+          deleteFromArray(candidate.uid, candidatesVm.notCompleted);
           $state.transitionTo("invite.dashboard", {
             quizID: candidatesVm.quizID
           });
@@ -638,7 +638,7 @@
           qn.answerArray = [];
           for (var j = 0; j < qn.answers.length; j++) {
             var answerObj = {
-              _uid_: qn.answers[j]
+              uid: qn.answers[j]
             };
             answerObj.is_correct = qn.correct.indexOf(qn.answers[j]) > -1;
             qn.answerArray.push(answerObj);
@@ -751,7 +751,7 @@
     }
 
     function isCorrect(option, correct_options) {
-      var uid = option._uid_;
+      var uid = option.uid;
       if (!correct_options) {
         return false;
       }

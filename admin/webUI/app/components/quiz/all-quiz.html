@@ -28,11 +28,11 @@
             <td class="mdl-data-table__cell--non-numeric">{{quiz.name}}</td>
             <td class="mdl-data-table__cell--non-numeric">{{quiz.duration}}</td>
             <td class="mdl-data-table__cell--non-numeric">
-              <a ui-sref="quiz.edit({quizID: quiz._uid_})">EDIT</a> &nbsp;|&nbsp;
-              <a ui-sref="invite.dashboard({quizID: quiz._uid_})">
+              <a ui-sref="quiz.edit({quizID: quiz.uid})">EDIT</a> &nbsp;|&nbsp;
+              <a ui-sref="invite.dashboard({quizID: quiz.uid})">
                 CANDIDATES            
               </a> &nbsp;|&nbsp;
-              <a ui-sref="invite.add({quizID: quiz._uid_})" class="">
+              <a ui-sref="invite.add({quizID: quiz.uid})" class="">
                 INVITE
               </a>
             </td>

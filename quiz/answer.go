@@ -20,7 +20,7 @@ type questionAnswer struct {
 // Queries Dgraph and checks if the candidate has already answered the question.
 func alreadyAnswered(cuid string) (int, error) {
 	q := `{
-        candidate.question(id:` + cuid + `) {
+        candidate.question(func: uid(` + cuid + `) {
             question.answered
         }
     }`
@@ -71,16 +71,16 @@ type queInfo struct {
 		Negative float64 `json:"negative"`
 		Positive float64 `json:"positive"`
 		Correct  []struct {
-			Uid string `json:"_uid_"`
+			Uid string `json:"uid"`
 		} `json:"question.correct"`
 	} `json:"question"`
 }
 
 func checkAnswer(qid string, ansIds []string) (float64, bool, error) {
 	q := `{
-		question(id: ` + qid + `) {
+		question(func: uid(` + qid + `)) {
 			question.correct {
-				_uid_
+				uid
 			}
 			positive
 			negative
@@ -228,7 +228,7 @@ func AnswerHandler(w http.ResponseWriter, r *http.Request) {
 	m.Set(`<` + cuid + `> <candidate.score> "` + strconv.FormatFloat(s, 'g', -1, 64) + `" .`)
 	m.Set(`<` + cuid + `> <question.answered> "` + time.Now().UTC().Format(timeLayout) + `" .`)
 
-	if _, err = dgraph.SendMutation(m.String()); err != nil {
+	if _, err = dgraph.SendMutation(m); err != nil {
 		sr.Write(w, "", err.Error(), http.StatusInternalServerError)
 		return
 	}

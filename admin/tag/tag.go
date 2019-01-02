@@ -8,7 +8,7 @@ import (
 )
 
 type Tag struct {
-	Uid       string `json:"_uid_"`
+	Uid       string `json:"uid"`
 	Name      string `json:"name"`
 	Is_delete bool
 }
@@ -16,14 +16,9 @@ type Tag struct {
 // fetch all the tags
 func Index(w http.ResponseWriter, r *http.Request) {
 	q := `{
-		debug(id: root) {
-			question {
-				_uid_
-				question.tag {
-					name
-					_uid_
-				}
-			}
+		tags(func: has(is_tag)) {
+			name
+			uid
 		}
 	}`
 

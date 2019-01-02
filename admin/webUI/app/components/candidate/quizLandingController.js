@@ -330,7 +330,7 @@
         ],
         Score: [
           "There is NEGATIVE scoring for wrong answers. So, please DO NOT GUESS.",
-          "You can skip a question only after spending atleast 1 minute on it.",
+          "You can skip a question only after spending at least 1 minute on it.",
           "If you skip a question, the score awarded is always ZERO.",
           "If you skip a question, you can't go back and answer it again.",
           "Scoring for a question would be clearly marked on the right hand side box.",

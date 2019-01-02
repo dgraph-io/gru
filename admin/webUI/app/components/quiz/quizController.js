@@ -1,13 +1,16 @@
-(function() {
-
+angular.module('GruiApp').controller('quizController', [
+  "$scope",
+  "$rootScope",
+  "$stateParams",
+  "$http",
+  "$state",
+  "quizService",
+  "questionService",
   function quizController($scope, $rootScope, $stateParams, $http, $state, quizService, questionService) {
-
-    // VARIABLE DECLARATION
     mainVm.pageName = "quiz";
     quizVm = this;
     quizVm.newQuiz = {};
 
-    // FUNCTION DECLARATION
     quizVm.removeSelectedQuestion = removeSelectedQuestion;
     quizVm.removeCheckedQuestion = removeCheckedQuestion;
     quizVm.addQuizForm = addQuizForm;
@@ -16,22 +19,15 @@
     quizVm.getTotalScore = getTotalScore;
     quizVm.resetForm = resetForm;
 
-    // FUNCTION DEFINITION
-
     // Function for fetching next question
-
     function getAllQuestions() {
-      quesRequest = {
-        id: ""
-      };
-      questionService.getAllQuestions(quesRequest).then(function(data) {
-        var data = data;
-        mainVm.allQuestions = data.debug[0].question;
+      questionService.getAllQuestions().then(function(questions) {
+        mainVm.allQuestions = questions;
       }, function(err) {
         console.log(err)
       });
 
-      $rootScope.updgradeMDL();
+      $rootScope.upgradeMDL();
     }
 
     function removeSelectedQuestion(key) {
@@ -53,10 +49,10 @@
       var requestData = {};
       requestData = angular.copy(quizVm.newQuiz);
 
-      areInValidateInput = quizVm.validateInput(requestData);
-      if (areInValidateInput) {
+      validataionError = quizVm.validateInput(requestData);
+      if (validataionError) {
         SNACKBAR({
-          message: areInValidateInput,
+          message: validataionError,
           messageType: "error",
         })
         return
@@ -65,7 +61,7 @@
       angular.forEach(qustionsClone, function(value, key) {
         if (qustionsClone[key]) {
           questions.push({
-            _uid_: value._uid_
+            uid: value.uid
           });
         }
       });
@@ -127,26 +123,34 @@
       quizVm.newQuiz = {};
     }
   }
+]);
 
+angular.module('GruiApp').controller('allQuizController', [
+  "quizService",
+  "questionService",
   function allQuizController(quizService, questionService) {
-    quizVm.newQuiz = {};
-
     quizVm.allQuizes = [];
 
-    quizService.getAllQuizes().then(function(data) {
-      var data = data;
-      quizVm.allQuizes = data.debug[0].quiz || [];
+    quizService.getAllQuizzes().then(function(quizzes) {
+      quizVm.allQuizes = quizzes;
     }, function(err) {
       console.log(err);
-    })
-
+    });
     quizVm.getAllQuestions();
   }
+]);
 
+angular.module('GruiApp').controller('addQuizController', [
   function addQuizController() {
     quizVm.getAllQuestions();
   }
+]);
 
+angular.module('GruiApp').controller('editQuizController', [
+  "$rootScope",
+  "$stateParams",
+  "$state",
+  "quizService",
   function editQuizController($rootScope, $stateParams, $state, quizService) {
     editQuizVm = this;
     quizVm.newQuiz = {};
@@ -154,20 +158,18 @@
 
     mainVm.allQuestions = [];
 
-    // Function Declaration
     editQuizVm.editQuiz = editQuiz;
     editQuizVm.addNewQuestion = addNewQuestion;
-    editQuizVm.getQuestionCount = getQuestionCount;
     editQuizVm.isExisting = isExisting;
 
     quizService.getQuiz($stateParams.quizID)
-      .then(function(data) {
-        quizVm.newQuiz = data.root[0];
+      .then(function(quiz) {
+        quizVm.newQuiz = quiz;
         quizVm.newQuiz.duration = parseInt(quizVm.newQuiz.duration)
         quizVm.newQuiz.cut_off = parseFloat(quizVm.newQuiz.cut_off)
         quizVm.newQuiz.threshold = parseFloat(quizVm.newQuiz.threshold)
 
-        editQuizVm.selectedQuestion = data.root[0]['quiz.question'];
+        editQuizVm.selectedQuestion = quiz['quiz.question'];
         quizVm.newQuiz.newQuestions = [];
 
         quizVm.getAllQuestions();
@@ -177,10 +179,10 @@
 
     function editQuiz() {
       quizVm.newQuiz.questions = angular.copy(quizVm.newQuiz['quiz.question']);
-      areInValidateInput = quizVm.validateInput(quizVm.newQuiz);
-      if (areInValidateInput) {
+      validataionError = quizVm.validateInput(quizVm.newQuiz);
+      if (validataionError) {
         SNACKBAR({
-          message: areInValidateInput,
+          message: validataionError,
           messageType: "error",
         })
         return
@@ -206,7 +208,7 @@
       if (newQues) {
         for (var i = 0; i < newQues.length; i++) {
           quizVm.newQuiz.questions.push({
-            _uid_: newQues[i]._uid_,
+            uid: newQues[i].uid,
             text: newQues[i].text,
           });
         }
@@ -224,7 +226,6 @@
         }, function(err) {
           console.log(err);
         })
-
     }
 
     function addNewQuestion(question, index) {
@@ -233,7 +234,7 @@
       if (question.is_checked) {
         for (var i = 0; i < questionLength; i++) {
           var currentQues = editQuizVm.selectedQuestion[i];
-          if (currentQues._uid_ == question._uid_) {
+          if (currentQues.uid == question.uid) {
             if (currentQues.is_delete === true) {
               currentQues.is_delete = false;
               return;
@@ -252,7 +253,7 @@
       } else {
         for (var i = 0; i < questionLength; i++) {
           var currentQues = editQuizVm.selectedQuestion[i];
-          if (currentQues._uid_ == question._uid_) {
+          if (currentQues.uid == question.uid) {
             if (!currentQues.is_delete) {
               currentQues.is_delete = true;
               return;
@@ -266,25 +267,22 @@
       }
     }
 
-    function getQuestionCount() {
-      var totatQuestion = 0;
+    editQuizVm.getQuestionCount = function getQuestionCount() {
+      var existingCount = 0;
       var existingQues = quizVm.newQuiz['quiz.question'];
-      var newQuestions = quizVm.newQuiz.newQuestions;
       for (var i = 0; i < existingQues.length; i++) {
         if (!existingQues[i].is_delete) {
-          totatQuestion += 1;
+          existingCount += 1;
         }
       }
-      totatQuestion += newQuestions.length;
-
-      return totatQuestion;
+      return existingCount + quizVm.newQuiz.newQuestions.length;
     }
 
     function isExisting(question) {
       var existingQues = editQuizVm.selectedQuestion;
       var existingQuesLen = existingQues.length;
       for (var i = 0; i < existingQuesLen; i++) {
-        if (!existingQues[i].is_delete && existingQues[i]._uid_ == question._uid_) {
+        if (!existingQues[i].is_delete && existingQues[i].uid == question.uid) {
           question.is_checked = true;
           return;
         }
@@ -292,38 +290,4 @@
       return false;
     }
   }
-
-  var addQuizDependency = [
-    addQuizController
-  ];
-  angular.module('GruiApp').controller('addQuizController', addQuizDependency);
-
-  var editQuizDependency = [
-    "$rootScope",
-    "$stateParams",
-    "$state",
-    "quizService",
-    editQuizController
-  ];
-  angular.module('GruiApp').controller('editQuizController', editQuizDependency);
-
-  var allQuizDependency = [
-    "quizService",
-    "questionService",
-    allQuizController
-  ];
-  angular.module('GruiApp').controller('allQuizController', allQuizDependency);
-
-  var quizDependency = [
-    "$scope",
-    "$rootScope",
-    "$stateParams",
-    "$http",
-    "$state",
-    "quizService",
-    "questionService",
-    quizController
-  ];
-  angular.module('GruiApp').controller('quizController', quizDependency);
-
-})();
+]);

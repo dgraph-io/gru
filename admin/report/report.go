@@ -16,16 +16,16 @@ import (
 )
 
 type option struct {
-	Id   string `json:"_uid_"`
+	Uid   string `json:"uid"`
 	Name string `json:"name"`
 }
 
 type uid struct {
-	Id string `json:"_uid_"`
+	Uid string `json:"uid"`
 }
 
 type que struct {
-	Uid      string `json:"_uid_"`
+	Uid      string `json:"uid"`
 	Multiple bool
 	Negative float64
 	Positive float64
@@ -59,13 +59,13 @@ type cq struct {
 }
 
 type quiz struct {
-	Id       string `json:"_uid_"`
+	Uid       string `json:"uid"`
 	Duration int
 	Name     string
 }
 
 type candidates struct {
-	Id      string `json:"_uid_"`
+	Uid      string `json:"uid"`
 	Name    string
 	Email   string
 	Country string
@@ -87,48 +87,48 @@ type report struct {
 }
 
 func reportQuery(id string) string {
-	return `query {
-                candidate(id:` + id + `) {
-                        _uid_
-                        name
-                        email
-                        resume
-                        country
-                        feedback
-                        score
-                        complete
-                        candidate.quiz {
-                                _uid_
-                                name
-                                duration
-                        }
-                        candidate.question {
-                                question.uid {
-                                        _uid_
-                                        text
-                                        name
-                                        positive
-                                        negative
-                                        question.tag {
-                                                _uid_
-                                                name
-                                        }
-                                        question.option {
-                                                _uid_
-                                                name
-                                        }
-                                        question.correct {
-                                                _uid_
-                                        }
-                                        multiple
-                                }
-                                question.asked
-                                question.answered
-                                candidate.answer
-                                candidate.score
-                        }
-                }
-        }`
+	return `{
+    candidate(func: uid(` + id + `)) {
+      uid
+      name
+      email
+      resume
+      country
+      feedback
+      score
+      complete
+      candidate.quiz {
+        uid
+        name
+        duration
+      }
+      candidate.question {
+        question.uid {
+          uid
+          text
+          name
+          positive
+          negative
+          question.tag {
+            uid
+            name
+          }
+          question.option {
+            uid
+            name
+          }
+          question.correct {
+            uid
+          }
+          multiple
+        }
+        question.asked
+        question.answered
+        candidate.answer
+        candidate.score
+      }
+    }
+  }`
 }
 
 type question struct {
@@ -164,7 +164,7 @@ type Summary struct {
 func uids(opts []option) []string {
 	var ids []string
 	for _, opt := range opts {
-		ids = append(ids, opt.Id)
+		ids = append(ids, opt.Uid)
 	}
 	return ids
 }
@@ -199,15 +199,14 @@ func (a ByScore) Less(i, j int) bool { return a[i].Score > a[j].Score }
 
 func percentile(quizId string, cid string) (float64, error) {
 	q := `{
-	quiz(id: ` + quizId + `) {
-		quiz.candidate {
-			_uid_
-			complete
-			score
+		quiz(func: uid(` + quizId + `)) {
+			quiz.candidate {
+				uid
+				complete
+				score
+			}
 		}
-	}
-}
-`
+	}`
 	var res quizRes
 	if err := dgraph.QueryAndUnmarshal(q, &res); err != nil {
 		return 0.0, err
@@ -236,7 +235,7 @@ func percentile(quizId string, cid string) (float64, error) {
 		} else {
 			cand.Idx = lastIdx
 		}
-		if cand.Id == cid {
+		if cand.Uid == cid {
 			return float64(cand.Idx) / float64(len(candidates)) * 100, nil
 		}
 	}
@@ -252,10 +251,10 @@ func ReportSummary(cid string) (Summary, ReportError) {
 		return s, ReportError{err.Error(), "", http.StatusInternalServerError}
 	}
 
-	if len(rep.Candidates) != 1 || rep.Candidates[0].Id == "" || len(rep.Candidates[0].Quiz) != 1 {
+	if len(rep.Candidates) != 1 || rep.Candidates[0].Uid == "" || len(rep.Candidates[0].Quiz) != 1 {
 		return s, ReportError{"", "Candidate not found.", http.StatusBadRequest}
 	}
-	s.Id = rep.Candidates[0].Id
+	s.Id = rep.Candidates[0].Uid
 
 	c := rep.Candidates[0]
 	s.Name = c.Name
@@ -279,7 +278,7 @@ func ReportSummary(cid string) (Summary, ReportError) {
 		s.TimeTaken = fmt.Sprintf("%vm", dur)
 	}
 	s.QuizName = c.Quiz[0].Name
-	perc, err := percentile(c.Quiz[0].Id, c.Id)
+	perc, err := percentile(c.Quiz[0].Uid, c.Uid)
 	if err != nil {
 		return s, ReportError{err.Error(), "Error while calculating percentile", http.StatusInternalServerError}
 	}

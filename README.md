@@ -15,13 +15,12 @@ Gru has three components, Gru server, Dgraph(v0.7.5) as the database and Caddy a
   go get github.com/dgraph-io/gru
   cd $GOPATH/src/github.com/dgraph-io/gru
   go build .
-  ./gru --user=<gru_ui_username> --pass=<gru_ui_password> --secret="<long_secret_to_sign_jwt_token>" --sendgrid="<sendgrid_api_key>" --gh '<greenhouse_api_key>' -ip "https://gru.dgraph.io" -debug=true 2>&1 | tee -a gru.log
+  ./gru --user=<gru_ui_username> --pass=<gru_ui_password> --secret="<long_secret_to_sign_jwt_token>" --sendgrid="<sendgrid_api_key>" -ip "https://gru.dgraph.io" -debug=true 2>&1 | tee -a gru.log
 ```
 
 * Note we use sendgrid for sending invite mails to the candidates. That won't work without the sendgrid
 key. For development purposes when the `--sendgrid` flag is empty, we just print out the invite link for taking
 the quiz to the console.
-* Gru also has an integration with Greenhouse and the api key can be supplied using the `gh` flag.
 * The `-ip` flag is used to specify the ip address of the Gru server.
 
 

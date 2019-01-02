@@ -22,7 +22,7 @@ type info struct {
 
 func Info() (Company, error) {
 	q := `{
-	    info(id: root) {
+	    info(func: has(company_root)) {
             company.name
             company.email
             company.reject

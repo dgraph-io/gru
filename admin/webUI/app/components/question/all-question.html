@@ -16,7 +16,7 @@
       <div class="mdl-cell mdl-cell--9-col mdl-cell--4-col-tablet pl-5 mdl-cell--middle">
         <div class="mt-10 pb-5">
           <div class="tag-wrapper">
-            <div class="inline-block" ng-repeat="tag in questionVm.allTags track by tag._uid_">
+            <div class="inline-block" ng-repeat="tag in questionVm.allTags track by tag.uid">
               <div class="tag-filter capitalize" ng-click="allQVm.toggleFilter(tag, 'tag')" ng-class="{'selected-filter': mainVm.indexOfObject(allQVm.filter.tag, tag) > -1}">
                 {{tag.name}}
               </div>
@@ -43,7 +43,11 @@
       <div class="mdl-grid mdl-grid--no-spacing qn-index ">
         <div class="mdl-cell mdl-cell--2-col r-border ">
           <div class="qn-nav">
-            <div class="side-tabs pv-5 " ng-repeat="question in filteredQues = (mainVm.allQuestions | filter: allQVm.filterBy)" ng-class="{ 'is-active': allQVm.question._uid_==question._uid_} " ng-click="allQVm.getQuestion(question._uid_)">
+            <div class="side-tabs pv-5"
+                ng-repeat="question in filteredQues = (mainVm.allQuestions | filter: allQVm.filterBy)"
+                ng-class="{ 'is-active': allQVm.question.uid==question.uid}"
+                ng-click="allQVm.getQuestion(question.uid)"
+            >
               {{question.name}}
             </div>
             <div class="pt-20 text-center text-red no-item " ng-show="allQVm.noItemFound ">
@@ -123,7 +127,7 @@
             </div>
             <div class="mdl-grid no-pad " ng-show="allQVm.question[ 'question.tag'] ">
               <div class="mdl-cell mdl-cell--12-col ">
-                <a ui-sref="question.edit({quesID: allQVm.question._uid_}) " class="mdl-button question-action mr-10 ">
+                <a ui-sref="question.edit({quesID: allQVm.question.uid}) " class="mdl-button question-action mr-10 ">
                   EDIT
                 </a>
               </div>
@@ -138,7 +142,7 @@
   </div>
   <div class="text-center " ng-if="!mainVm.allQuestions.length ">
     <h4 class="text-center ">
-      Could not find any question.
+      Could not find any questions.
     </h4> Go to <a ui-sref="question.add ">Add Question</a> page to add some.
   </div>
 </div>

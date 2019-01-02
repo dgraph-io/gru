@@ -45,7 +45,7 @@
                   <th class="mdl-data-table__cell--non-numeric">Actions</th>
                 </tr>
               </thead>
-              <tbody ng-repeat="candidate in candidatesVm.completed | orderBy:candidatesVm.sortType:candidatesVm.sortReverse | filter:searchCand" on-finish-render="ngRepeatFinished" ng-class="{'report-viewed': candidate._uid_ == inviteVm.reportViewed}">
+              <tbody ng-repeat="candidate in candidatesVm.completed | orderBy:candidatesVm.sortType:candidatesVm.sortReverse | filter:searchCand" on-finish-render="ngRepeatFinished" ng-class="{'report-viewed': candidate.uid == inviteVm.reportViewed}">
                 <tr ng-show="candidate.deleted != 'true'">
                   <td class="mdl-data-table__cell--non-numeric">{{candidate.name.split(' ')[0]}}</td>
                   <td class="mdl-data-table__cell--non-numeric">{{candidate.email}}</td>
@@ -54,8 +54,8 @@
                   <td class="mdl-data-table__cell--non-numeric">{{candidatesVm.percentile(candidatesVm.completedLen, candidate.idx) | number: 0}}</td>
                   <td class="mdl-data-table__cell--non-numeric">{{candidate.quiz_start | date : 'MMM dd, yyyy'}}</td>
                   <td class="mdl-data-table__cell--non-numeric">
-                    <a ui-sref="invite.report({candidateID: candidate._uid_})">VIEW REPORT</a> &nbsp;|&nbsp;
-                    <!-- <a ng-click="candidatesVm.delete(candidate._uid_)" href="">DELETE</a> -->
+                    <a ui-sref="invite.report({candidateID: candidate.uid})">VIEW REPORT</a> &nbsp;|&nbsp;
+                    <!-- <a ng-click="candidatesVm.delete(candidate.uid)" href="">DELETE</a> -->
                     <a ng-click="candidatesVm.showDeleteModal(candidate)" href="">DELETE</a>
                   </td>
                 </tr>
@@ -100,7 +100,7 @@
                   <td class="mdl-data-table__cell--non-numeric">{{candidate.invite_sent | date : 'MMM dd, yyyy'}}</td>
                   <td class="mdl-data-table__cell--non-numeric">{{candidatesVm.expires(candidate.validity)}}</td>
                   <td class="mdl-data-table__cell--non-numeric">
-                    <a ui-sref="invite.edit({quizID: candidatesVm.quizID, candidateID: candidate._uid_})">EDIT</a> &nbsp;|&nbsp;
+                    <a ui-sref="invite.edit({quizID: candidatesVm.quizID, candidateID: candidate.uid})">EDIT</a> &nbsp;|&nbsp;
                     <a ng-click="candidatesVm.resend(candidate)" href="">RESEND</a> &nbsp;|&nbsp;
                     <a ng-click="candidatesVm.showCancelModal(candidate)" href="">CANCEL</a>
                   </td>

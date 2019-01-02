@@ -1,36 +1,29 @@
-(function() {
-
+angular.module('GruiApp').service('quizService', [
+  "$q",
+  "$http",
+  "$rootScope",
+  "MainService",
   function quizService($q, $http, $rootScope, MainService) {
+    return {
+      getAllQuizzes: function() {
+        return MainService.get('/get-all-quizzes').then(function(data) {
+          return data.data.quizzes || [];
+        })
+      },
 
-    var services = {}; //Object to return
+      saveQuiz: function(data) {
+        return MainService.post('/add-quiz', data);
+      },
 
-    services.getAllQuizes = function() {
-      return MainService.get('/get-all-quizes');
-    }
+      editQuiz: function(data) {
+        return MainService.put('/quiz/' + data.uid, data);
+      },
 
-    services.saveQuiz = function(data) {
-      return MainService.post('/add-quiz', data);
-    }
-
-    services.editQuiz = function(data) {
-      return MainService.put('/quiz/' + data._uid_, data);
-    }
-
-    services.getQuiz = function(data) {
-      return MainService.get('/quiz/' + data);
-    }
-
-    return services;
-  }
-
-  var quizServiceArray = [
-    "$q",
-    "$http",
-    "$rootScope",
-    "MainService",
-    quizService,
-  ];
-
-  angular.module('GruiApp').service('quizService', quizServiceArray);
-
-})();
+      getQuiz: function(data) {
+        return MainService.get('/quiz/' + data).then(function(data) {
+          return data.data.quiz[0];
+        });
+      },
+    };
+  },
+]);

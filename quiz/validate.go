@@ -56,14 +56,14 @@ type quizInfo struct {
 
 func quizQns(quizId string) ([]Question, error) {
 	q := `{
-		quiz(id: ` + quizId + `) {
+		quiz(func: uid(` + quizId + `)) {
 			quiz.question {
-				_uid_
+				uid
 				text
 				positive
 				negative
 				question.option {
-					_uid_
+					uid
 					name
 				}
 				question.tag {
@@ -88,21 +88,21 @@ func quizQns(quizId string) ([]Question, error) {
 
 func candQuery(cid string) string {
 	return `{
-        quiz.candidate(id:` + cid + `) {
-                name
-                email
-                token
-                validity
-                complete
-                quiz_start
-                candidate.quiz {
-                        _uid_
-                        duration
-                        cut_off
-                        threshold
-                }
-          }
-    }`
+    quiz.candidate(func: uid(` + cid + `)) {
+      name
+      email
+      token
+      validity
+      complete
+      quiz_start
+      candidate.quiz {
+        uid
+        duration
+        cut_off
+        threshold
+      }
+    }
+	}`
 }
 
 func filter(qns []Question) map[difficulty][]Question {
@@ -143,23 +143,23 @@ func checkAndUpdate(uid string) (int, error) {
 
 	// Candidate doesn't exist in the map. So we get candidate info from database
 	// and insert it into map.
-	q := candQuery(uid)
-	var resp resp
-	if err := dgraph.QueryAndUnmarshal(q, &resp); err != nil {
+	var resp QuizCandidatesResp
+	if err := dgraph.QueryAndUnmarshal(candQuery(uid), &resp); err != nil {
+		fmt.Println("bad unmarshal", err, candQuery(uid))
 		return http.StatusInternalServerError, fmt.Errorf("Something went wrong.")
 	}
 
-	if len(resp.Cand) != 1 || len(resp.Cand[0].Quiz) != 1 {
+	if len(resp.Data.Cand) != 1 || len(resp.Data.Cand[0].Quiz) != 1 {
 		// No candidiate found with given uid
 		return http.StatusUnauthorized, fmt.Errorf("Invalid token.")
 	}
 
-	cand := resp.Cand[0]
+	cand := resp.Data.Cand[0]
 	quiz := cand.Quiz[0]
 	if cand.Complete {
 		return http.StatusUnauthorized, fmt.Errorf("You have already completed the quiz.")
 	}
-	if quiz.Id == "" {
+	if quiz.Uid == "" {
 		return http.StatusUnauthorized, fmt.Errorf("Invalid token.")
 
 	}
@@ -194,7 +194,7 @@ func checkAndUpdate(uid string) (int, error) {
 	c.quizThreshold = quiz.Threshold
 
 	// Get quiz questions for the quiz id.
-	questions, err := quizQns(quiz.Id)
+	questions, err := quizQns(quiz.Uid)
 	if err != nil {
 		return http.StatusInternalServerError, fmt.Errorf("Something went wrong.")
 	}

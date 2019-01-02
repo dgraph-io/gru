@@ -93,7 +93,7 @@
         function(data) {
           cqVm.question = data;
 
-          if (data._uid_ == "END") {
+          if (data.uid == "END") {
             //END QUIZ
             cqVm.stopQuiz();
             cqVm.total_score = data.score;
@@ -162,7 +162,7 @@
         return;
       }
       var requestData = {
-        qid: cqVm.question._uid_,
+        qid: cqVm.question.uid,
         cuid: cqVm.question.cuid
       };
 

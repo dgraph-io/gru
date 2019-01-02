@@ -1,25 +1,42 @@
 package dgraph
 
 import (
+	"context"
 	"encoding/json"
 	"flag"
-	"fmt"
+	"log"
 	"io/ioutil"
 	"net/http"
 	"strings"
 
+	"github.com/dgraph-io/dgo"
+	"github.com/dgraph-io/dgo/protos/api"
+  "google.golang.org/grpc"
 	"github.com/dgraph-io/gru/admin/server"
 	"github.com/pkg/errors"
 )
 
 var (
-	Server = flag.String("dgraph", "http://127.0.0.1:8080", "Dgraph server address")
-	// TODO - Remove this later.
-	QueryEndpoint = strings.Join([]string{*Server, "query"}, "/")
-	endpoint      = strings.Join([]string{*Server, "query"}, "/")
+	Server = flag.String("dgraph", "127.0.0.1:9080", "Dgraph server address")
+	// TODO switch to 100% dgo & grpc
+	HttpServer = flag.String("httpdgraph", "http://127.0.0.1:8080", "Dgraph HTTP address")
+	endpoint = strings.Join([]string{*HttpServer, "query"}, "/")
 )
 
 const Success = "Success"
+
+func newClient() *dgo.Dgraph {
+	d, err := grpc.Dial(*Server, grpc.WithInsecure())
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return dgo.NewDgraphClient(
+		api.NewDgraphClient(d),
+	)
+}
+
+var dgClient = newClient()
 
 type MutationRes struct {
 	Code    string            `json:"code"`
@@ -36,33 +53,40 @@ func (m *Mutation) Set(set string) {
 	m.set = strings.Join([]string{m.set, set}, "\n")
 }
 
+func (m *Mutation) SetString(l string, p string, val string) {
+	m.Set(`<` + l + `> <` + p + `> "` + val + `" .`)
+}
+
+func (m *Mutation) SetLink(l string, p string, val string) {
+	m.Set(`<` + l + `> <` + p + `> <` + val + `> .`)
+}
+
+func (m *Mutation) DelLink(l string, p string, val string) {
+	m.Del(`<` + l + `> <` + p + `> <` + val + `> .`)
+}
+
 func (m *Mutation) Del(del string) {
 	m.del = strings.Join([]string{m.del, del}, "\n")
 }
 
-func (m *Mutation) String() string {
-	var mutation string
-	if len(m.set) > 0 {
-		mutation += strings.Join([]string{"set {", m.set, "}"}, "\n")
-	}
-	if len(m.del) > 0 {
-		mutation += strings.Join([]string{"\ndelete {", m.del, "}"}, "\n")
-	}
-	mutation = strings.Join([]string{"mutation {", mutation, "}"}, "\n")
-	return mutation
-}
+func SendMutation(m *Mutation) (MutationRes, error) {
+	txn := dgClient.NewTxn()
+	ctx := context.Background()
+	defer txn.Discard(ctx)
 
-func SendMutation(m string) (MutationRes, error) {
-	res, err := http.Post(endpoint, "application/x-www-form-urlencoded", strings.NewReader(m))
+	res, err := txn.Mutate(ctx, &api.Mutation{
+		SetNquads: []byte(m.set), DelNquads: []byte(m.del) })
 	if err != nil {
-		return MutationRes{}, errors.Wrap(err, "Couldn't send mutation")
+		return MutationRes{}, err
 	}
-	defer res.Body.Close()
 
 	var mr MutationRes
-	json.NewDecoder(res.Body).Decode(&mr)
-	if mr.Code != Success {
-		return MutationRes{}, fmt.Errorf(mr.Message)
+	mr.Uids = res.Uids
+	mr.Code = Success
+
+	err = txn.Commit(ctx)
+	if err != nil {
+		return MutationRes{}, err
 	}
 	return mr, nil
 }

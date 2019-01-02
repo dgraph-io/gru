@@ -17,10 +17,10 @@ type Tag struct {
 
 // Question is marshalled to JSON and sent to the client.
 type Question struct {
-	Id string `json:"_uid_"`
+	Uid string `json:"uid"`
 
 	// cuid represents the uid of the question asked to the candidate, it is linked
-	// to the original question _uid_.
+	// to the original question uid.
 	Cid     string   `json:"cuid"`
 	Text    string   `json:"text"`
 	Options []Answer `json:"question.option"`
@@ -67,7 +67,7 @@ func QuestionHandler(w http.ResponseWriter, r *http.Request) {
 		updateMap(userId, c)
 		m := new(dgraph.Mutation)
 		m.Set(`<` + userId + `> <quiz_start> "` + c.quizStart.Format(timeLayout) + `" .`)
-		_, err := dgraph.SendMutation(m.String())
+		_, err := dgraph.SendMutation(m)
 		if err != nil {
 			sr.Write(w, "", err.Error(), http.StatusInternalServerError)
 			return
@@ -78,7 +78,7 @@ func QuestionHandler(w http.ResponseWriter, r *http.Request) {
 		// No more questions to ask or score is less than threshold.
 		// Client ends quiz when question id is END.
 		q := Question{
-			Id:    "END",
+			Uid:    "END",
 			Score: x.ToFixed(c.score, 2),
 		}
 
@@ -88,7 +88,7 @@ func QuestionHandler(w http.ResponseWriter, r *http.Request) {
 		// Completed at is used to reject candidates whose score is < cutoff
 		m.Set(`<` + userId + `> <completed_at> "` + time.Now().UTC().Format(timeLayout) + `" .`)
 		m.Set(`<` + userId + `> <score> "` + strconv.FormatFloat(x.ToFixed(c.score, 2), 'g', -1, 64) + `" .`)
-		_, err := dgraph.SendMutation(m.String())
+		_, err := dgraph.SendMutation(m)
 		if err != nil {
 			sr.Write(w, "", err.Error(), http.StatusInternalServerError)
 			return
@@ -122,7 +122,7 @@ func QuestionHandler(w http.ResponseWriter, r *http.Request) {
 	qn.NumQns = c.numQuestions
 	qn.Idx = c.qnIdx
 	updateMap(userId, c)
-	if c.lastQnUid != "" && c.lastQnUid == qn.Id {
+	if c.lastQnUid != "" && c.lastQnUid == qn.Uid {
 		qn.Cid = c.lastQnCuid
 		server.MarshalAndWrite(w, &qn)
 		return
@@ -130,11 +130,11 @@ func QuestionHandler(w http.ResponseWriter, r *http.Request) {
 
 	m := new(dgraph.Mutation)
 	m.Set(`<` + userId + `> <candidate.question> <_:qn> .`)
-	m.Set(`<_:qn> <question.uid> <` + qn.Id + `> .`)
-	m.Set(`<` + qn.Id + `> <question.candidate> <` + userId + `> .`)
+	m.Set(`<_:qn> <question.uid> <` + qn.Uid + `> .`)
+	m.Set(`<` + qn.Uid + `> <question.candidate> <` + userId + `> .`)
 	m.Set(`<_:qn> <question.asked> "` + time.Now().UTC().Format("2006-01-02T15:04:05Z07:00") + `" .`)
-	m.Set(`<` + userId + `> <candidate.lastqnuid> "` + qn.Id + `" .`)
-	res, err := dgraph.SendMutation(m.String())
+	m.Set(`<` + userId + `> <candidate.lastqnuid> "` + qn.Uid + `" .`)
+	res, err := dgraph.SendMutation(m)
 	if err != nil {
 		sr.Write(w, "", err.Error(), http.StatusInternalServerError)
 		return
@@ -146,7 +146,7 @@ func QuestionHandler(w http.ResponseWriter, r *http.Request) {
 
 	c.lastQnCuid = res.Uids["qn"]
 	qn.Cid = res.Uids["qn"]
-	c.lastQnUid = qn.Id
+	c.lastQnUid = qn.Uid
 	qn.Idx = c.qnIdx + 1
 	c.qnIdx += 1
 	updateMap(userId, c)

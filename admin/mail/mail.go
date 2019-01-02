@@ -22,6 +22,7 @@ func Send(email, validity, token string) {
 		fmt.Println(*Ip + "/#/quiz/" + token)
 		return
 	}
+	fmt.Println("sending " + *Ip + "/#/quiz/" + token)
 
 	c, err := company.Info()
 	if err != nil {

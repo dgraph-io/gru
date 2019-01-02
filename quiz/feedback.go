@@ -25,7 +25,7 @@ func Feedback(w http.ResponseWriter, r *http.Request) {
 	m := new(dgraph.Mutation)
 	m.Set(`<` + userId + `> <feedback> "` + f + `" .`)
 
-	if _, err = dgraph.SendMutation(m.String()); err != nil {
+	if _, err = dgraph.SendMutation(m); err != nil {
 		sr.Write(w, "", err.Error(), http.StatusInternalServerError)
 		return
 	}
