@@ -50,8 +50,12 @@ func genToken(uid string) (string, error) {
 	return token, nil
 }
 
-type quizInfo struct {
+type QuizInfo struct {
 	Quizzes []quiz `json:"quiz"`
+}
+
+type QuizInfoResp struct {
+	Data QuizInfo `json:"data"`
 }
 
 func quizQns(quizId string) ([]Question, error) {
@@ -74,16 +78,16 @@ func quizQns(quizId string) ([]Question, error) {
 		}
 	}`
 
-	var resp quizInfo
+	var resp QuizInfoResp
 	if err := dgraph.QueryAndUnmarshal(q, &resp); err != nil {
 		return []Question{}, err
 	}
-	if len(resp.Quizzes) != 1 {
+	if len(resp.Data.Quizzes) != 1 {
 		return []Question{}, fmt.Errorf("Expected length of quizzes: %v. Got %v",
-			1, len(resp.Quizzes))
+			1, len(resp.Data.Quizzes))
 	}
 
-	return resp.Quizzes[0].Questions, nil
+	return resp.Data.Quizzes[0].Questions, nil
 }
 
 func candQuery(cid string) string {
@@ -161,7 +165,6 @@ func checkAndUpdate(uid string) (int, error) {
 	}
 	if quiz.Uid == "" {
 		return http.StatusUnauthorized, fmt.Errorf("Invalid token.")
-
 	}
 
 	c := Candidate{
@@ -175,7 +178,7 @@ func checkAndUpdate(uid string) (int, error) {
 	// required.
 	var err error
 	if c.validity, err = time.Parse("2006-01-02 15:04:05 +0000 UTC", cand.Validity); err != nil {
-		return http.StatusInternalServerError, fmt.Errorf("Something went wrong.")
+		return http.StatusInternalServerError, fmt.Errorf("Could not parse time.")
 	}
 	if c.validity.Before(time.Now()) {
 		return http.StatusUnauthorized,

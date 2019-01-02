@@ -119,13 +119,13 @@ type cand struct {
 	QuizStart   time.Time `json:"quiz_start"`
 }
 
-type resp struct {
+type CandidateResp struct {
 	Cand []cand `json:"quiz.candidate"`
 }
 
-// type QuizCandidatesResp struct {
-// 	Data resp `json:"data"`
-// }
+type QuizCandidatesResp struct {
+	Data CandidateResp `json:"data"`
+}
 
 type uid struct {
 	Uid string `json:"uid"`

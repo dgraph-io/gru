@@ -358,21 +358,20 @@
         } else {
           completed = [];
           notCompleted = [];
-          for (var j = 0; j < quizCandidates.length; j++) {
-            if (quizCandidates[j].complete == "false") {
-              quizCandidates[j].invite_sent = new Date(
-                Date.parse(quizCandidates[j].invite_sent)
+          quizCandidates.forEach(function(candidate) {
+            if (!candidate.complete) {
+              candidate.invite_sent = new Date(
+                Date.parse(candidate.invite_sent)
               );
-              notCompleted.push(quizCandidates[j]);
-              continue;
+              notCompleted.push(candidate);
+            } else {
+              candidate.quiz_start = new Date(
+                Date.parse(candidate.quiz_start)
+              );
+              candidate.score = parseFloat(candidate.score) || 0.0;
+              completed.push(candidate);
             }
-            quizCandidates[j].quiz_start = new Date(
-              Date.parse(quizCandidates[j].quiz_start)
-            );
-            quizCandidates[j].score = parseFloat(quizCandidates[j].score) ||
-              0.0;
-            completed.push(quizCandidates[j]);
-          }
+          });
 
           completed.sort(function(c1, c2) {
             return c1.score - c2.score;
@@ -390,7 +389,6 @@
             }
             idx++;
           }
-          candidatesVm.completedLen = idx;
           candidatesVm.completed = completed;
           candidatesVm.notCompleted = notCompleted;
           scrollToCandidate();

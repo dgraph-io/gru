@@ -51,7 +51,7 @@
                   <td class="mdl-data-table__cell--non-numeric">{{candidate.email}}</td>
                   <td class="mdl-data-table__cell--non-numeric">{{candidate.score | number: 2}}</td>
                   <!-- <td class="mdl-data-table__cell--non-numeric">{{candidate.idx | number: 2}}</td> -->
-                  <td class="mdl-data-table__cell--non-numeric">{{candidatesVm.percentile(candidatesVm.completedLen, candidate.idx) | number: 0}}</td>
+                  <td class="mdl-data-table__cell--non-numeric">{{candidatesVm.percentile(candidatesVm.completed.length, candidate.idx) | number: 0}}</td>
                   <td class="mdl-data-table__cell--non-numeric">{{candidate.quiz_start | date : 'MMM dd, yyyy'}}</td>
                   <td class="mdl-data-table__cell--non-numeric">
                     <a ui-sref="invite.report({candidateID: candidate.uid})">VIEW REPORT</a> &nbsp;|&nbsp;

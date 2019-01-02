@@ -53,8 +53,7 @@ func QuestionHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if timeLeft(c.quizStart, c.quizDuration) < 0 {
-		sr.Write(w, "", "Your quiz has already finished.",
-			http.StatusBadRequest)
+		sr.Write(w, "", "Your quiz has already finished.", http.StatusBadRequest)
 		return
 	}
 
@@ -66,7 +65,7 @@ func QuestionHandler(w http.ResponseWriter, r *http.Request) {
 		c.quizStart = time.Now().UTC()
 		updateMap(userId, c)
 		m := new(dgraph.Mutation)
-		m.Set(`<` + userId + `> <quiz_start> "` + c.quizStart.Format(timeLayout) + `" .`)
+		m.SetString(userId, "quiz_start", c.quizStart.Format(timeLayout))
 		_, err := dgraph.SendMutation(m)
 		if err != nil {
 			sr.Write(w, "", err.Error(), http.StatusInternalServerError)

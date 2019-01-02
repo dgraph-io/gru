@@ -320,7 +320,7 @@
           "By taking this quiz, you agree not to discuss/post the questions shown here.",
           $interpolate(
             "The duration of the quiz is <span class='bold text-red'> \
-            {{time_minutes}} minutes</span>. Timing would be clearly shown."
+            {{time_minutes}} minutes</span>. Timing will be clearly shown."
           )($scope),
           "We recommend using a pen and paper to help visualize some of the questions.",
           "Once you start the quiz, the timer would not stop, irrespective of any client side issues.",
