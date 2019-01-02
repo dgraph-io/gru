@@ -147,9 +147,8 @@ func checkAndUpdate(uid string) (int, error) {
 
 	// Candidate doesn't exist in the map. So we get candidate info from database
 	// and insert it into map.
-	var resp resp
+	var resp QuizCandidatesResp
 	if err := dgraph.QueryAndUnmarshal(candQuery(uid), &resp); err != nil {
-		fmt.Println("bad unmarshal", err, candQuery(uid))
 		return http.StatusInternalServerError, fmt.Errorf("Something went wrong.")
 	}
 

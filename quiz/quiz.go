@@ -124,7 +124,9 @@ type CandidateResp struct {
 }
 
 type QuizCandidatesResp struct {
-	Data CandidateResp `json:"data"`
+	Data struct {
+		Cand []cand `json:"quiz.candidate"`
+	} `json:"data"`
 }
 
 type uid struct {
