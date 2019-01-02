@@ -123,9 +123,9 @@ type resp struct {
 	Cand []cand `json:"quiz.candidate"`
 }
 
-type QuizCandidatesResp struct {
-	Data resp `json:"data"`
-}
+// type QuizCandidatesResp struct {
+// 	Data resp `json:"data"`
+// }
 
 type uid struct {
 	Uid string `json:"uid"`
