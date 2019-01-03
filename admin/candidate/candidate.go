@@ -264,7 +264,9 @@ func ResendInvite(w http.ResponseWriter, r *http.Request) {
 }
 
 type candInfo struct {
-	Candidates []Candidate `json:"candidate"`
+	Data struct {
+		Candidates []Candidate
+	}
 }
 
 func candName(id string) string {
@@ -277,8 +279,8 @@ func candName(id string) string {
 	if err := dgraph.QueryAndUnmarshal(q, &ci); err != nil {
 		return ""
 	}
-	if len(ci.Candidates) != 1 {
+	if len(ci.Data.Candidates) != 1 {
 		return ""
 	}
-	return ci.Candidates[0].Name
+	return ci.Data.Candidates[0].Name
 }

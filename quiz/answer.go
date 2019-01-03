@@ -13,16 +13,16 @@ import (
 
 type questionAnswer struct {
 	Data struct {
-		Question []struct {
+		Answer []struct {
 			Answered string `json:"question.answered"`
-		} `json:"candidate.question"`
+		}
 	}
 }
 
 // Queries Dgraph and checks if the candidate has already answered the question.
 func alreadyAnswered(cuid string) (int, error) {
 	q := `{
-    candidate.question(func: uid(` + cuid + `)) {
+    answer(func: uid(` + cuid + `)) {
       question.answered
     }
   }`
@@ -32,7 +32,7 @@ func alreadyAnswered(cuid string) (int, error) {
 		return http.StatusInternalServerError, err
 	}
 
-	if len(ca.Data.Question) > 0 && ca.Data.Question[0].Answered != "" {
+	if len(ca.Data.Answer) > 0 && ca.Data.Answer[0].Answered != "" {
 		return http.StatusBadRequest, fmt.Errorf("You have already answered this question.")
 	}
 	return http.StatusOK, nil
@@ -67,19 +67,21 @@ func getScore(selected []string, actual []string, pos, neg float64) float64 {
 	return score
 }
 
-type queInfo struct {
-	Question []struct {
-		Negative float64 `json:"negative"`
-		Positive float64 `json:"positive"`
-		Correct  []struct {
-			Uid string `json:"uid"`
-		} `json:"question.correct"`
-	} `json:"question"`
+type QuestionInfo struct {
+	Data struct {
+		Question []struct {
+			Negative float64
+			Positive float64
+			Correct  []struct {
+				Uid string
+			} `json:"question.correct"`
+		}
+	}
 }
 
-func checkAnswer(qid string, ansIds []string) (float64, bool, error) {
+func checkAnswer(questionUid string, ansIds []string) (float64, bool, error) {
 	q := `{
-		question(func: uid(` + qid + `)) {
+		question(func: uid(` + questionUid + `)) {
 			question.correct {
 				uid
 			}
@@ -88,15 +90,15 @@ func checkAnswer(qid string, ansIds []string) (float64, bool, error) {
 		}
 	}`
 
-	var qi queInfo
+	var qi QuestionInfo
 	if err := dgraph.QueryAndUnmarshal(q, &qi); err != nil {
 		return 0, false, err
 	}
-	if len(qi.Question) != 1 {
+	if len(qi.Data.Question) != 1 {
 		return 0, false, fmt.Errorf("There should be just one question returned")
 	}
 
-	qn := qi.Question[0]
+	qn := qi.Data.Question[0]
 	correctAids := []string{}
 	for _, answer := range qn.Correct {
 		correctAids = append(correctAids, answer.Uid)

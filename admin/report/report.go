@@ -83,7 +83,9 @@ type candidates struct {
 }
 
 type report struct {
-	Candidates []candidates `json:"candidate"`
+	Data struct {
+		Candidates []candidates `json:"candidate"`
+	}
 }
 
 func reportQuery(id string) string {
@@ -183,10 +185,12 @@ type ReportError struct {
 	code int
 }
 
-type quizRes struct {
-	Quiz []struct {
-		Candidates []candidates `json:"quiz.candidate"`
-	} `json:"quiz"`
+type QuizCompleteScores struct {
+	Data struct {
+		Quiz []struct {
+			Candidates []candidates `json:"quiz.candidate"`
+		}
+	}
 }
 
 // ByScore implements sort.Interface for []candidates based on
@@ -200,29 +204,19 @@ func (a ByScore) Less(i, j int) bool { return a[i].Score > a[j].Score }
 func percentile(quizId string, cid string) (float64, error) {
 	q := `{
 		quiz(func: uid(` + quizId + `)) {
-			quiz.candidate {
+			quiz.candidate @filter(eq(complete, true)) {
 				uid
 				complete
 				score
 			}
 		}
 	}`
-	var res quizRes
+	var res QuizCompleteScores
 	if err := dgraph.QueryAndUnmarshal(q, &res); err != nil {
 		return 0.0, err
 	}
 
-	candidates := res.Quiz[0].Candidates
-	i := 0
-	for _, cand := range candidates {
-		if cand.Complete {
-			// Lets retain only the candidates who have completed the test
-			// for percentile calculation.
-			candidates[i] = cand
-			i++
-		}
-	}
-	candidates = candidates[:i]
+	candidates := res.Data.Quiz[0].Candidates
 
 	sort.Sort(ByScore(candidates))
 	lastScore := 0.0
@@ -251,12 +245,12 @@ func ReportSummary(cid string) (Summary, ReportError) {
 		return s, ReportError{err.Error(), "", http.StatusInternalServerError}
 	}
 
-	if len(rep.Candidates) != 1 || rep.Candidates[0].Uid == "" || len(rep.Candidates[0].Quiz) != 1 {
+	if len(rep.Data.Candidates) != 1 || rep.Data.Candidates[0].Uid == "" || len(rep.Data.Candidates[0].Quiz) != 1 {
 		return s, ReportError{"", "Candidate not found.", http.StatusBadRequest}
 	}
-	s.Id = rep.Candidates[0].Uid
+	s.Id = rep.Data.Candidates[0].Uid
 
-	c := rep.Candidates[0]
+	c := rep.Data.Candidates[0]
 	s.Name = c.Name
 	s.Email = c.Email
 	s.Country = c.Country
