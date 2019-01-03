@@ -269,10 +269,10 @@ type candInfo struct {
 
 func candName(id string) string {
 	q := `query {
-                candidate(func: uid(` + id + `) {
-                        name
-                }
-        }`
+    candidate(func: uid(` + id + `)) {
+      name
+    }
+  }`
 	var ci candInfo
 	if err := dgraph.QueryAndUnmarshal(q, &ci); err != nil {
 		return ""

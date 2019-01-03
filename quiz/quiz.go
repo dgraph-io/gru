@@ -98,8 +98,8 @@ func readMap(uid string) (Candidate, error) {
 	return c, nil
 }
 
-type quiz struct {
-	Uid        string     `json:"uid"`
+type QuizInfo struct {
+	Uid       string     `json:"uid"`
 	Duration  int        `json:"duration"`
 	CutOff    float64    `json:"cut_off,string"`
 	Threshold float64    `json:"threshold,string"`
@@ -108,15 +108,15 @@ type quiz struct {
 
 // Used to fetch data about a candidate from Dgraph and populate Candidate struct.
 type cand struct {
-	Uid         string `json:"uid"`
+	Uid         string     `json:"uid"`
 	Name        string
 	Email       string
-	Token       string    `json:"token"`
-	Validity    string    `json:"validity"`
-	Complete    bool      `json:"complete"`
-	CompletedAt time.Time `json:"completed_at,string"`
-	Quiz        []quiz    `json:"candidate.quiz"`
-	QuizStart   time.Time `json:"quiz_start"`
+	Token       string     `json:"token"`
+	Validity    string     `json:"validity"`
+	Complete    bool       `json:"complete"`
+	CompletedAt time.Time  `json:"completed_at,string"`
+	Quiz        []QuizInfo `json:"candidate.quiz"`
+	QuizStart   time.Time  `json:"quiz_start"`
 }
 
 type CandidateResp struct {

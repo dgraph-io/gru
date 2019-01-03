@@ -20,7 +20,7 @@ type questionAnswer struct {
 // Queries Dgraph and checks if the candidate has already answered the question.
 func alreadyAnswered(cuid string) (int, error) {
 	q := `{
-        candidate.question(func: uid(` + cuid + `) {
+        candidate.question(func: uid(` + cuid + `)) {
             question.answered
         }
     }`

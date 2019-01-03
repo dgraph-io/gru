@@ -50,12 +50,10 @@ func genToken(uid string) (string, error) {
 	return token, nil
 }
 
-type QuizInfo struct {
-	Quizzes []quiz `json:"quiz"`
-}
-
 type QuizInfoResp struct {
-	Data QuizInfo `json:"data"`
+	Data struct {
+		Quizzes []QuizInfo `json:"quiz"`
+	} `json:"data"`
 }
 
 func quizQns(quizId string) ([]Question, error) {
@@ -116,22 +114,28 @@ func filter(qns []Question) map[difficulty][]Question {
 		// TODO - Move the difficulty into a separate field within the
 		// question separate from tags. So that we don't have to loop over
 		// the tags.
+		hasDifficulty := false
 	L:
 		for _, t := range tags {
 			switch n := t.Name; n {
 			case "easy":
 				qnDiffMap[EASY] = append(qnDiffMap[EASY], q)
+				hasDifficulty = true
 				break L
 			case "medium":
 				qnDiffMap[MEDIUM] = append(qnDiffMap[MEDIUM], q)
+				hasDifficulty = true
 				break L
 			case "hard":
 				qnDiffMap[HARD] = append(qnDiffMap[HARD], q)
+				hasDifficulty = true
 				break L
 			default:
 				continue
 			}
-
+		}
+		if !hasDifficulty {
+			qnDiffMap[MEDIUM] = append(qnDiffMap[MEDIUM], q)
 		}
 	}
 	return qnDiffMap
@@ -198,7 +202,7 @@ func checkAndUpdate(uid string) (int, error) {
 	// Get quiz questions for the quiz id.
 	questions, err := quizQns(quiz.Uid)
 	if err != nil {
-		return http.StatusInternalServerError, fmt.Errorf("Something went wrong.")
+		return http.StatusInternalServerError, fmt.Errorf("Could not load questions")
 	}
 	shuffleQuestions(questions)
 	c.numQuestions = len(questions)

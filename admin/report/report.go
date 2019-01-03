@@ -58,14 +58,14 @@ type cq struct {
 	Question []que     `json:"question.uid"`
 }
 
-type quiz struct {
-	Uid       string `json:"uid"`
+type QuizInfoBrief struct {
+	Uid      string `json:"uid"`
 	Duration int
 	Name     string
 }
 
 type candidates struct {
-	Uid      string `json:"uid"`
+	Uid     string `json:"uid"`
 	Name    string
 	Email   string
 	Country string
@@ -78,7 +78,7 @@ type candidates struct {
 	Score       float64
 	CandidateQn []cq `json:"candidate.question"`
 	Complete    bool
-	Quiz        []quiz `json:"candidate.quiz"`
+	Quiz        []QuizInfoBrief `json:"candidate.quiz"`
 	TotalScore  float64
 }
 
