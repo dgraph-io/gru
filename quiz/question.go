@@ -19,6 +19,10 @@ type Tag struct {
 type Question struct {
 	Uid string `json:"uid"`
 
+	// TODO - I wanted to write a sarcastic comment about this name choice,
+	// but all my ideas were totally passive agressive
+	// Rename cuid to something that makes sense without reading the below comment
+
 	// cuid represents the uid of the question asked to the candidate, it is linked
 	// to the original question uid.
 	Cid     string   `json:"cuid"`
@@ -27,8 +31,8 @@ type Question struct {
 	Tags    []Tag    `json:"question.tag"`
 	// TODO - Remove the ,string after we incorporate Dgraph schema here.
 	IsMultiple bool    `json:"multiple"`
-	Positive   float64 `json:"negative"`
-	Negative   float64 `json:"positive"`
+	Positive   float64 `json:"positive"`
+	Negative   float64 `json:"negative"`
 	// Score of the candidate is sent as part of the questions API.
 	Score     float64 `json:"score"`
 	TimeTaken string  `json:"time_taken"`
