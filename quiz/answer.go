@@ -12,27 +12,28 @@ import (
 )
 
 type questionAnswer struct {
-	Question []struct {
-		Answered string `json:"question.answered"`
-	} `json:"candidate.question"`
+	Data struct {
+		Question []struct {
+			Answered string `json:"question.answered"`
+		} `json:"candidate.question"`
+	}
 }
 
 // Queries Dgraph and checks if the candidate has already answered the question.
 func alreadyAnswered(cuid string) (int, error) {
 	q := `{
-        candidate.question(func: uid(` + cuid + `)) {
-            question.answered
-        }
-    }`
+    candidate.question(func: uid(` + cuid + `)) {
+      question.answered
+    }
+  }`
 
 	var ca questionAnswer
 	if err := dgraph.QueryAndUnmarshal(q, &ca); err != nil {
 		return http.StatusInternalServerError, err
 	}
 
-	if len(ca.Question) > 0 && ca.Question[0].Answered != "" {
+	if len(ca.Data.Question) > 0 && ca.Data.Question[0].Answered != "" {
 		return http.StatusBadRequest, fmt.Errorf("You have already answered this question.")
-
 	}
 	return http.StatusOK, nil
 }
