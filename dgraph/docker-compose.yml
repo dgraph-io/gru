@@ -50,5 +50,8 @@ services:
         target: /certbot-webroot
         read_only: true
       - type: volume
-        source: ./nginx-logs
+        source: /etc/letsencrypt/live/gru.dgraph.io/
+        target: /certbot-keys/
+      - type: volume
+        source: /var/log/nginx/
         target: /log/
