@@ -4,7 +4,7 @@ services:
     image: dgraph/dgraph:v1.0.11
     volumes:
       - type: volume
-        source: ./data-gru-dgraph
+        source: /home/ubuntu/gru/dgraph-data/
         target: /dgraph
     ports:
       - 5080:5080
@@ -16,7 +16,7 @@ services:
     image: dgraph/dgraph:v1.0.11
     volumes:
       - type: volume
-        source: ./data-gru-dgraph
+        source: /home/ubuntu/gru/dgraph-data/
         target: /dgraph
     ports:
       - 8080:8080
@@ -29,6 +29,20 @@ services:
     ports:
       - 8800:8000
     command: dgraph-ratel
+
+  gru:
+    image: dgraph/dgraph:v1.0.11
+    ports:
+      - 8000:8000
+    volumes:
+      - type: volume
+        source: ../gru
+        target: /bin/gru
+      - type: volume
+        source: /home/ubuntu/gru/server-data/
+        target: /bin
+    command: sh /bin/run.sh
+
 
   nginx:
     image: nginx:1.15

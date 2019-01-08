@@ -3,3 +3,6 @@
 # docker rm helper
 
 sudo mkdir -p /var/log/nginx
+sudo mkdir -p /home/ubuntu/gru/server-data/
+
+go build ..
