@@ -27,8 +27,8 @@ angular.module("GruiApp").config(function(uiSelectConfig) {
   uiSelectConfig.theme = "select2";
 });
 
-// var hostname = "https://gru.dgraph.io";
-var hostname = "http://127.0.0.1";
+var hostname = "https://gru.dgraph.io";
+// var hostname = "http://127.0.0.1";
 
 //Run After view has been loaded
 angular
