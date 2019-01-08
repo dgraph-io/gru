@@ -41,7 +41,7 @@ services:
       - type: volume
         source: /home/ubuntu/gru/server-data/
         target: /bin
-    command: sh /bin/run.sh
+    command: /bin/run.sh
 
 
   nginx:
