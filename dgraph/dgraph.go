@@ -21,12 +21,11 @@ var (
 	Server = flag.String("dgraph", "127.0.0.1:9080", "Dgraph server address")
 	// TODO switch to 100% dgo & grpc
 	HttpServer = flag.String("httpdgraph", "http://127.0.0.1:8080", "Dgraph HTTP address")
-	endpoint = strings.Join([]string{*HttpServer, "query"}, "/")
 )
 
 const Success = "Success"
 
-func newClient() *dgo.Dgraph {
+func _newClient() *dgo.Dgraph {
 	d, err := grpc.Dial(*Server, grpc.WithInsecure())
 	if err != nil {
 		log.Fatal(err)
@@ -37,7 +36,14 @@ func newClient() *dgo.Dgraph {
 	)
 }
 
-var dgClient = newClient()
+var _dgClient *dgo.Dgraph
+
+func getDgraphClient() *dgo.Dgraph {
+	if _dgClient == nil {
+		_dgClient = _newClient()
+	}
+	return _dgClient
+}
 
 type MutationRes struct {
 	Code    string            `json:"code"`
@@ -71,7 +77,7 @@ func (m *Mutation) Del(del string) {
 }
 
 func SendMutation(m *Mutation) (MutationRes, error) {
-	txn := dgClient.NewTxn()
+	txn := getDgraphClient().NewTxn()
 	ctx := context.Background()
 	defer txn.Discard(ctx)
 
@@ -93,6 +99,7 @@ func SendMutation(m *Mutation) (MutationRes, error) {
 }
 
 func QueryAndUnmarshal(q string, i interface{}) error {
+	endpoint := strings.Join([]string{*HttpServer, "query"}, "/")
 	res, err := http.Post(endpoint, "application/x-www-form-urlencoded", strings.NewReader(q))
 	if err != nil {
 		return errors.Wrap(err, "Couldn't get response from Dgraph")
@@ -114,6 +121,7 @@ func QueryAndUnmarshal(q string, i interface{}) error {
 }
 
 func Query(q string) ([]byte, error) {
+	endpoint := strings.Join([]string{*HttpServer, "query"}, "/")
 	res, err := http.Post(endpoint, "application/x-www-form-urlencoded", strings.NewReader(q))
 	if err != nil {
 		return []byte{}, errors.Wrap(err, "Couldn't get response from Dgraph")
