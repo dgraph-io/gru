@@ -28,6 +28,7 @@ services:
     image: dgraph/dgraph:v1.0.11
     ports:
       - 8800:8000
+    restart: on-failure
     command: dgraph-ratel
 
   gru:
@@ -41,6 +42,7 @@ services:
       - type: volume
         source: /home/ubuntu/gru/server-data/run.sh
         target: /gruserver/run.sh
+    restart: on-failure
     command: /gruserver/run.sh
 
   nginx:
@@ -48,6 +50,7 @@ services:
     ports:
       - 80:80
       - 443:443
+    restart: on-failure
     command: nginx -g "daemon off;" -c /etc/nginx.conf
     volumes:
       - type: volume
