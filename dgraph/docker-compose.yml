@@ -52,6 +52,3 @@ services:
       - type: volume
         source: ./nginx-logs
         target: /log/
-        read_only: true
-
-#volumes:
