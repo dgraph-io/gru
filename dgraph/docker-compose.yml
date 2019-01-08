@@ -45,5 +45,9 @@ services:
         source: ../admin/webUI
         target: /webroot
         read_only: true
+      - type: volume
+        source: ./certbot-webroot
+        target: /certbot-webroot
+        read_only: true
 
 #volumes:
