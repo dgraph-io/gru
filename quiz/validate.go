@@ -201,12 +201,15 @@ func checkAndUpdate(uid string) (int, error) {
 
 	// Get quiz questions for the quiz id.
 	questions, err := quizQns(quiz.Uid)
+	fmt.Println("quizQns ", quiz, questions, err)
 	if err != nil {
 		return http.StatusInternalServerError, fmt.Errorf("Could not load questions")
 	}
 	shuffleQuestions(questions)
 	c.numQuestions = len(questions)
+	fmt.Println("had qns", questions)
 	c.qns = filter(questions)
+	fmt.Println("update Map", uid, c)
 	updateMap(uid, c)
 	return http.StatusOK, nil
 }
