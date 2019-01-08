@@ -4,7 +4,7 @@ services:
     image: dgraph/dgraph:v1.0.11
     volumes:
       - type: volume
-        source: gru-dgraph
+        source: ./data-gru-dgraph
         target: /dgraph
         volume:
           nocopy: true
@@ -13,11 +13,12 @@ services:
       - 6080:6080
     restart: on-failure
     command: dgraph zero --my=gru-zero:5080
+
   gru-alpha:
     image: dgraph/dgraph:v1.0.11
     volumes:
       - type: volume
-        source: gru-dgraph
+        source: ./data-gru-dgraph
         target: /dgraph
         volume:
           nocopy: true
@@ -26,6 +27,7 @@ services:
       - 9080:9080
     restart: on-failure
     command: dgraph alpha --my=gru-alpha:8080 --lru_mb=2048 --zero=gru-zero:5080
+
   ratel:
     image: dgraph/dgraph:v1.0.11
     ports:
@@ -40,17 +42,12 @@ services:
     command: nginx -g "daemon off;" -c /nginxconfig
     volumes:
       - type: volume
-        source: nginx-config
-        target: /nginxconfig
-        volume:
-          nocopy: true
+        source: ./nginx.conf
+        target: /etc/nginx.conf
+        read_only: true
       - type: volume
-        source: nginx-webroot
+        source: ../admin/webUI
         target: /webroot
-        volume:
-          nocopy: true
+        read_only: true
 
-volumes:
-  gru-dgraph:./data-gru-dgraph
-  nginx-config:./nginx.conf
-  nginx-webroot:../admin/webUI
+#volumes:
