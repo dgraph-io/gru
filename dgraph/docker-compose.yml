@@ -37,12 +37,11 @@ services:
     volumes:
       - type: volume
         source: ../gru
-        target: /bin/gru
+        target: /gruserver/gru
       - type: volume
-        source: /home/ubuntu/gru/server-data/
-        target: /bin
-    command: /bin/run.sh
-
+        source: /home/ubuntu/gru/server-data/run.sh
+        target: /gruserver/run.sh
+    command: /gruserver/run.sh
 
   nginx:
     image: nginx:1.15
