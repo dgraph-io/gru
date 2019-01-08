@@ -49,5 +49,9 @@ services:
         source: ./certbot-webroot
         target: /certbot-webroot
         read_only: true
+      - type: volume
+        source: ./nginx-logs
+        target: /log/
+        read_only: true
 
 #volumes:
