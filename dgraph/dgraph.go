@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"flag"
-	"fmt"
 	"log"
 	"io/ioutil"
 	"net/http"
@@ -110,13 +109,9 @@ func QueryAndUnmarshal(q string, i interface{}) error {
 	if err != nil {
 		return errors.Wrap(err, "Couldn't read response body")
 	}
-	fmt.Println("Query:", q)
-	fmt.Println("Body: ", string(b))
 	if err = json.Unmarshal(b, i); err != nil {
-		fmt.Println("Failed to Unmarshal ", err)
 		return err
 	}
-	fmt.Println("Parsed as ", i)
 	return nil
 }
 
