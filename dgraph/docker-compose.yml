@@ -28,20 +28,29 @@ services:
     command: dgraph alpha --my=gru-alpha:8080 --lru_mb=2048 --zero=gru-zero:5080
   ratel:
     image: dgraph/dgraph:v1.0.11
-    volumes:
-      - type: volume
-        source: gru-dgraph
-        target: /dgraph
-        volume:
-          nocopy: true
     ports:
       - 8800:8000
     command: dgraph-ratel
 
+  nginx:
+    image: nginx:1.15
+    ports:
+      - 80:80
+      - 443:443
+    command: nginx -g "daemon off;" -c /nginxconfig
+    volumes:
+      - type: volume
+        source: nginx-config
+        target: /nginxconfig
+        volume:
+          nocopy: true
+      - type: volume
+        source: nginx-webroot
+        target: /webroot
+        volume:
+          nocopy: true
+
 volumes:
-  gru-dgraph:
-    external:
-      name: vol-gru-dgraph
-  gru-serverdata:
-      external:
-        name: vol-gru-serverdata
+  gru-dgraph:./data-gru-dgraph
+  nginx-config:./nginx.conf
+  nginx-webroot:../admin/webUI
