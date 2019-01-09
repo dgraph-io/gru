@@ -15,18 +15,18 @@ import (
 var SENDGRID_API_KEY = flag.String("sendgrid", "", "Sendgrid API Key")
 
 // TODO - Later just have one IP address with port info.
-var Ip = flag.String("ip", "http://localhost:2020", "Public IP address of server")
+var Ip = flag.String("ip", "https://gru.dgraph.io", "Public IP address of server")
 
 func Send(email, validity, token string) {
 	if *SENDGRID_API_KEY == "" {
 		fmt.Println(*Ip + "/#/quiz/" + token)
 		return
 	}
-	fmt.Println("sending " + *Ip + "/#/quiz/" + token)
+	fmt.Println("Sending invite: " + *Ip + "/#/quiz/" + token)
 
 	c, err := company.Info()
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("Invite not sent", err)
 		return
 	}
 
@@ -38,7 +38,7 @@ func Send(email, validity, token string) {
 	// Lets unescape it first.
 	invite, err := url.QueryUnescape(c.Invite)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("Invite not sent", err)
 		return
 	}
 
@@ -70,7 +70,7 @@ You can take the quiz anytime till ` + validity + ` <a href="` + URL + `" target
 	request.Body = mail.GetRequestBody(m)
 	_, err = sendgrid.API(request)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("Invite not sent", err)
 		return
 	}
 	x.Debug("Mail sent")

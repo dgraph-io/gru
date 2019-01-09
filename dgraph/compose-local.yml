@@ -1,0 +1,38 @@
+version: "3.2"
+services:
+  gru-zero:
+    image: dgraph/dgraph:v1.0.11
+    ports:
+      - 5080:5080
+      - 6080:6080
+    restart: on-failure
+    command: dgraph zero --my=gru-zero:5080
+    volumes:
+      - ./gru-dev/:/dgraph
+
+  gru-alpha:
+    image: dgraph/dgraph:v1.0.11
+    ports:
+      - 8080:8080
+      - 9080:9080
+    restart: on-failure
+    command: dgraph alpha --my=gru-alpha:8080 --lru_mb=2048 --zero=gru-zero:5080
+    volumes:
+      - ./gru-dev/:/dgraph
+
+  ratel:
+    image: dgraph/dgraph:v1.0.11
+    ports:
+      - 8800:8000
+    restart: on-failure
+    command: dgraph-ratel
+
+  nginx:
+    image: nginx:1.15
+    ports:
+      - 80:80
+    command: nginx -g "daemon off;" -c /etc/nginx.conf
+    volumes:
+      - ./gru-dev/nginx-local.conf:/etc/nginx.conf
+      - ../admin/webUI:/webroot
+      - ./gru-dev/:/log

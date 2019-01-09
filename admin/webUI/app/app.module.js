@@ -1,5 +1,3 @@
-//Main Config file for Angular.js
-//Initialize Angular app, Declare Controller files, Main Controller.
 componentHandler.upgradeAllRegistered();
 angular
   .module("GruiApp", [
@@ -27,9 +25,6 @@ angular.module("GruiApp").config(function(uiSelectConfig) {
   uiSelectConfig.theme = "select2";
 });
 
-var hostname = "https://gru.dgraph.io";
-// var hostname = "http://127.0.0.1";
-
 //Run After view has been loaded
 angular
   .module("GruiApp")
@@ -43,20 +38,6 @@ angular
       }, 1000);
     });
 
-    $rootScope.$on("$locationChangeStart", function(
-      e,
-      currentLocation,
-      previousLocation
-    ) {
-      // window.currentLocation = currentLocation;
-      // window.previousLocation = previousLocation;
-      // $rootScope.is_direct_url = (currentLocation == previousLocation);
-      // isAuthenticated = window.localStorage.getItem("username");
-      // if($rootScope.is_direct_url) {
-      //     // console.log("Hola!");
-      // }
-    });
-
     var stateChangeStartHandler = function(
       e,
       toState,
@@ -65,9 +46,9 @@ angular
       fromParams
     ) {
       if (toState.authenticate || toState.name == "login") {
-        mainVm.base_url = hostname + "/api/admin";
+        mainVm.base_url = "/api/admin";
       } else {
-        mainVm.base_url = hostname + "/api";
+        mainVm.base_url = "/api";
       }
       if (toState.authenticate && !mainVm.isLoggedIn()) {
         $state.transitionTo("login");
@@ -163,10 +144,6 @@ angular.module("GruiApp").constant("APP_REQUIRES", {
   }
 });
 
-/**=========================================================
- * Module: helpers.js
- * Provides helper functions for routes definition
- =========================================================*/
 angular.module("GruiApp").provider("RouteHelpers", [
   "APP_REQUIRES",
   function(appRequires) {
@@ -227,37 +204,16 @@ angular.module("GruiApp").provider("RouteHelpers", [
   }
 ]);
 
-// GENERAL CONTROLLER, SERVICE, DIRECTIVE,FILTER
-(function() {
-  // CONTROLLERs, SERVICEs, DIRECTIVES DECLARATION
-
-  // MAIN CONTROLLER declaration
-  var MainDependency = [
-    "$scope",
-    "$rootScope",
-    "$state",
-    "$stateParams",
-    "$sce",
-    "$parse",
-    "$http",
-    "$q",
-    "MainService",
-    MainController
-  ];
-  angular.module("GruiApp").controller("MainController", MainDependency);
-
-  var MainServiceDependency = [
-    "$http",
-    "$q",
-    "$state",
-    "$location",
-    MainService
-  ];
-  angular.module("GruiApp").service("MainService", MainServiceDependency);
-
-  // CONTROLLERS, SERVICES FUNCTION DEFINITION
-
-  // MAIN CONTROLLER
+angular.module("GruiApp").controller("MainController", [
+  "$scope",
+  "$rootScope",
+  "$state",
+  "$stateParams",
+  "$sce",
+  "$parse",
+  "$http",
+  "$q",
+  "MainService",
   function MainController(
     $scope,
     $rootScope,
@@ -269,15 +225,11 @@ angular.module("GruiApp").provider("RouteHelpers", [
     $q,
     MainService
   ) {
-    //ViewModal binding using this, instead of $scope
-    //Must be use with ControllerAs syntax in view
-    mainVm = this; // $Scope aliase
+    mainVm = this;
     mainVm.timerObj;
-    mainVm.admin_url = hostname + "/api/admin";
-    mainVm.candidate_url = hostname + "/api";
+    mainVm.admin_url = "/api/admin";
+    mainVm.candidate_url = "/api";
     mainVm.showModal = false;
-
-    //General Methods
 
     mainVm.getNumber = getNumber;
     mainVm.indexOfObject = indexOfObject;
@@ -300,7 +252,6 @@ angular.module("GruiApp").provider("RouteHelpers", [
 
     mainVm.getAllTags = getAllTags;
 
-    // General Functions
     function markDownFormat(content) {
       if (!content) {
         return;
@@ -355,7 +306,6 @@ angular.module("GruiApp").provider("RouteHelpers", [
       // CHECK IF TEMPLATE IS STRING OR URL
       mainVm.modal.isString = setting.isString ? true : false;
       if (mainVm.modal.isString) {
-        // setting.template = $parse($sce.trustAsHtml(setting.template))($scope);
         $(".modal-wrapper").html(
           $parse($sce.trustAsHtml(setting.template))($scope)
         );
@@ -381,7 +331,6 @@ angular.module("GruiApp").provider("RouteHelpers", [
       modalContent +=
         "<div>Please send us a email on - contact@dgraph.io</div>";
       mainVm.openModal({
-        // template: "./app/shared/_server_crash.html",
         template: modalContent,
         isString: true
       });
@@ -472,9 +421,15 @@ angular.module("GruiApp").provider("RouteHelpers", [
         $scope.$apply();
       }, 2000);
     }
-  }
+  },
+]);
 
-  // MAIN Service
+
+angular.module("GruiApp").service("MainService", [
+  "$http",
+  "$q",
+  "$state",
+  "$location",
   function MainService($http, $q, $state, $location) {
     var services = {}; //Object to return
     services.post = post;
@@ -498,7 +453,6 @@ angular.module("GruiApp").provider("RouteHelpers", [
           "Basic " + btoa(data.user + ":" + data.password);
         delete req.data;
       } else {
-        // req.url = mainVm.candidate_url + url;
         candidateToken = JSON.parse(localStorage.getItem("candidate_info"));
 
         if (
@@ -508,7 +462,6 @@ angular.module("GruiApp").provider("RouteHelpers", [
         ) {
           setAuth("Bearer " + candidateToken.token);
         } else {
-          // req.url = mainVm.admin_url + url;
           setAuth("Bearer " + localStorage.getItem("token"));
         }
       }
@@ -551,7 +504,6 @@ angular.module("GruiApp").provider("RouteHelpers", [
       ) {
         setAuth("Bearer " + candidateToken.token);
       } else {
-        // req.url = mainVm.admin_url + url;
         setAuth("Bearer " + localStorage.getItem("token"));
       }
 
@@ -601,7 +553,6 @@ angular.module("GruiApp").provider("RouteHelpers", [
       return post("/proxy", data);
     }
 
-    // PRIVATE FUNCTIONS
     function setAuth(auth) {
       $http.defaults.headers.common["Authorization"] = auth;
     }
@@ -618,5 +569,5 @@ angular.module("GruiApp").provider("RouteHelpers", [
     }
 
     return services;
-  }
-})();
+  },
+]);

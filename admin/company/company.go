@@ -17,7 +17,9 @@ type Company struct {
 }
 
 type info struct {
-	Companies []Company `json:"info"`
+	Data struct {
+		Companies []Company `json:"info"`
+	}
 }
 
 func Info() (Company, error) {
@@ -38,10 +40,9 @@ func Info() (Company, error) {
 		return Company{}, err
 	}
 
-	if len(companies.Companies) != 1 {
+	if len(companies.Data.Companies) != 1 {
 		return Company{}, fmt.Errorf("No company information found.")
 	}
 
-	com := companies.Companies[0]
-	return com, nil
+	return companies.Data.Companies[0], nil
 }
