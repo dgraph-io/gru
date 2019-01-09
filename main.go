@@ -166,6 +166,7 @@ func runHTTPServer(address string) {
 
 	adminRouter := admin.PathPrefix("/api/admin").Subrouter()
 	adminRouter.HandleFunc("/proxy", dgraph.Proxy).Methods("POST", "OPTIONS")
+	adminRouter.HandleFunc("/mutateProxy", dgraph.MutateProxy).Methods("POST", "OPTIONS")
 
 	// TODO - Change to payload endpoint.
 	adminRouter.HandleFunc("/add-question", question.Add).Methods("POST", "OPTIONS")

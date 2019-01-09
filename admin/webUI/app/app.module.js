@@ -304,14 +304,13 @@ angular.module("GruiApp").controller("MainController", [
       mainVm.modal = {};
 
       // CHECK IF TEMPLATE IS STRING OR URL
-      mainVm.modal.isString = setting.isString ? true : false;
+      mainVm.modal.isString = !!setting.isString;
       if (mainVm.modal.isString) {
         $(".modal-wrapper").html(
           $parse($sce.trustAsHtml(setting.template))($scope)
         );
       }
 
-      // SET TEMPLATE
       mainVm.modal.template = setting.template;
       mainVm.modal.class = setting.class || "";
       mainVm.modal.hideClose = setting.hideClose || false;
@@ -327,9 +326,9 @@ angular.module("GruiApp").controller("MainController", [
 
     function timeoutModal() {
       var modalContent =
-        "Sorry to inform you but we are facing some severe problems.";
+        "We are sorry but we are facing some problems.";
       modalContent +=
-        "<div>Please send us a email on - contact@dgraph.io</div>";
+        "Please send us a email on <a href='mailto:contact@dgraph.io'>contact@dgraph.io</a>";
       mainVm.openModal({
         template: modalContent,
         isString: true
@@ -431,128 +430,6 @@ angular.module("GruiApp").service("MainService", [
   "$state",
   "$location",
   function MainService($http, $q, $state, $location) {
-    var services = {}; //Object to return
-    services.post = post;
-    services.get = get;
-    services.put = put;
-    services.proxy = proxy;
-    services.dgraphSuccess = "Success";
-
-    function post(url, data, hideLoader) {
-      var deferred = $q.defer();
-
-      var req = {
-        method: "POST",
-        url: mainVm.base_url + url,
-        data: data,
-        timeout: 30000
-      };
-
-      if (url == "/login") {
-        $http.defaults.headers.common["Authorization"] =
-          "Basic " + btoa(data.user + ":" + data.password);
-        delete req.data;
-      } else {
-        candidateToken = JSON.parse(localStorage.getItem("candidate_info"));
-
-        if (
-          mainVm.base_url.indexOf("admin") == -1 &&
-          candidateToken &&
-          candidateToken.token
-        ) {
-          setAuth("Bearer " + candidateToken.token);
-        } else {
-          setAuth("Bearer " + localStorage.getItem("token"));
-        }
-      }
-
-      if (!hideLoader) {
-        mainVm.showAjaxLoader = true;
-      }
-      $http(req).then(
-        function(data) {
-          mainVm.showAjaxLoader = false;
-          deferred.resolve(data.data);
-        },
-        function(response, code) {
-          if (!hideLoader) {
-            mainVm.showAjaxLoader = false;
-          }
-          // TODO - Remove this dirty edge case handling for login. We have it because otherwise if you login
-          // with incorrect creds, it show You must login and then shows the actual error.
-          url !== "/login" && redirectIfUnautorized(response);
-          deferred.reject(response);
-        }
-      );
-
-      return deferred.promise;
-    }
-
-    function get(url) {
-      var deferred = $q.defer();
-      var req = {
-        method: "GET",
-        url: mainVm.base_url + url
-      };
-
-      candidateToken = JSON.parse(localStorage.getItem("candidate_info"));
-
-      if (
-        mainVm.base_url.indexOf("admin") == -1 &&
-        candidateToken &&
-        candidateToken.token
-      ) {
-        setAuth("Bearer " + candidateToken.token);
-      } else {
-        setAuth("Bearer " + localStorage.getItem("token"));
-      }
-
-      mainVm.showAjaxLoader = true;
-      $http(req).then(
-        function(data) {
-          mainVm.showAjaxLoader = false;
-          deferred.resolve(data.data);
-        },
-        function(response) {
-          mainVm.showAjaxLoader = false;
-          redirectIfUnautorized(response);
-          deferred.reject(response);
-        }
-      );
-
-      return deferred.promise;
-    }
-
-    function put(url, data) {
-      var deferred = $q.defer();
-      var auth_token = "Bearer " + localStorage.getItem("token");
-
-      setAuth(auth_token);
-      var req = {
-        method: "PUT",
-        url: mainVm.admin_url + url,
-        data: data
-      };
-      mainVm.showAjaxLoader = true;
-      $http(req).then(
-        function(data) {
-          mainVm.showAjaxLoader = false;
-          deferred.resolve(data.data);
-        },
-        function(response) {
-          mainVm.showAjaxLoader = false;
-          redirectIfUnautorized(response);
-          deferred.reject(response);
-        }
-      );
-
-      return deferred.promise;
-    }
-
-    function proxy(data) {
-      return post("/proxy", data);
-    }
-
     function setAuth(auth) {
       $http.defaults.headers.common["Authorization"] = auth;
     }
@@ -568,6 +445,102 @@ angular.module("GruiApp").service("MainService", [
       $state.transitionTo("login");
     }
 
-    return services;
+    return mainService = {
+      dgraphSuccess: "Success",
+      proxy: function proxy(data) {
+        return mainService.post("/proxy", data);
+      },
+      mutateProxy: function mutateProxy(data) {
+        return mainService.post("/mutateProxy", data);
+      },
+      post: function post(url, data, hideLoader) {
+        var req = {
+          method: "POST",
+          url: mainVm.base_url + url,
+          data: data,
+          timeout: 30000
+        };
+
+        if (url == "/login") {
+          $http.defaults.headers.common["Authorization"] =
+            "Basic " + btoa(data.user + ":" + data.password);
+          delete req.data;
+        } else {
+          var candidateInfo = JSON.parse(localStorage.getItem("candidate_info"));
+          if (mainVm.base_url.indexOf("admin") == -1 &&
+            candidateInfo && candidateInfo.token
+          ) {
+            setAuth("Bearer " + candidateInfo.token);
+          } else {
+            setAuth("Bearer " + localStorage.getItem("token"));
+          }
+        }
+
+        if (!hideLoader) {
+          mainVm.showAjaxLoader = true;
+        }
+        return $http(req).then(
+          function(data) {
+            mainVm.showAjaxLoader = false;
+            return data.data;
+          },
+          function(response, code) {
+            if (!hideLoader) {
+              mainVm.showAjaxLoader = false;
+            }
+            // TODO - Remove this dirty edge case handling for login. We have it because otherwise if you login
+            // with incorrect creds, it show You must login and then shows the actual error.
+            url !== "/login" && redirectIfUnautorized(response);
+            throw response;
+          }
+        );
+      },
+      get: function get(url) {
+        var req = {
+          method: "GET",
+          url: mainVm.base_url + url
+        };
+        var candidateInfo = JSON.parse(localStorage.getItem("candidate_info"));
+        if (mainVm.base_url.indexOf("admin") == -1 &&
+          candidateInfo && candidateInfo.token
+        ) {
+          setAuth("Bearer " + candidateInfo.token);
+        } else {
+          setAuth("Bearer " + localStorage.getItem("token"));
+        }
+
+        mainVm.showAjaxLoader = true;
+        return $http(req).then(
+          function(data) {
+            mainVm.showAjaxLoader = false;
+            return data.data;
+          },
+          function(response) {
+            mainVm.showAjaxLoader = false;
+            redirectIfUnautorized(response);
+            throw response;
+          }
+        );
+      },
+      put: function put(url, data) {
+        setAuth("Bearer " + localStorage.getItem("token"));
+        mainVm.showAjaxLoader = true;
+        return $http({
+          method: "PUT",
+          url: mainVm.admin_url + url,
+          data: data
+        }).then(
+          function(data) {
+            mainVm.showAjaxLoader = false;
+            return data.data;
+          },
+          function(response) {
+            mainVm.showAjaxLoader = false;
+            redirectIfUnautorized(response);
+            throw response;
+          }
+        );
+      },
+    };
   },
 ]);

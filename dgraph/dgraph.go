@@ -130,6 +130,26 @@ func Query(q string) ([]byte, error) {
 	return b, nil
 }
 
+func QueryOrMutate(mutate bool, q string) ([]byte, error) {
+	var endpoint string
+	if mutate {
+		endpoint = strings.Join([]string{*HttpServer, "mutate"}, "/")
+	} else {
+		endpoint = strings.Join([]string{*HttpServer, "query"}, "/")
+	}
+	res, err := http.Post(endpoint, "application/x-www-form-urlencoded", strings.NewReader(q))
+	if err != nil {
+		return []byte{}, errors.Wrap(err, "Couldn't get response from Dgraph")
+	}
+	defer res.Body.Close()
+
+	b, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return []byte{}, errors.Wrap(err, "Couldn't read response body")
+	}
+	return b, nil
+}
+
 func Proxy(w http.ResponseWriter, r *http.Request) {
 	sr := server.Response{}
 	b, err := ioutil.ReadAll(r.Body)
@@ -139,7 +159,24 @@ func Proxy(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// TODO - Later send bytes directly to Dgraph.
-	res, err := Query(string(b))
+	res, err := QueryOrMutate(false, string(b))
+	if err != nil {
+		sr.Write(w, err.Error(), "Couldn't read body", http.StatusBadRequest)
+		return
+	}
+	w.Write(res)
+}
+
+func MutateProxy(w http.ResponseWriter, r *http.Request) {
+	sr := server.Response{}
+	b, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		sr.Write(w, err.Error(), "Couldn't read body", http.StatusBadRequest)
+		return
+	}
+
+	// TODO - Later send bytes directly to Dgraph.
+	res, err := QueryOrMutate(true, string(b))
 	if err != nil {
 		sr.Write(w, err.Error(), "Couldn't read body", http.StatusBadRequest)
 		return

@@ -26,7 +26,6 @@ type Candidate struct {
 
 const (
 	letterBytes    = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890"
-	validityLayout = "2006-01-02"
 )
 
 // TODO - Optimize later.
@@ -124,7 +123,7 @@ func Add(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var t time.Time
-	if t, err = time.Parse(validityLayout, c.Validity); err != nil {
+	if t, err = time.Parse(time.RFC3339Nano, c.Validity); err != nil {
 		sr.Write(w, err.Error(), "Couldn't parse the validity", http.StatusBadRequest)
 		return
 	}
@@ -171,8 +170,8 @@ func Edit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var t time.Time
-	if t, err = time.Parse(validityLayout, c.Validity); err != nil {
+	t, err := time.Parse(time.RFC3339Nano, c.Validity);
+	if err != nil {
 		sr.Message = "Couldn't parse the validity"
 		sr.Error = err.Error()
 		w.WriteHeader(http.StatusBadRequest)
@@ -234,8 +233,7 @@ type resendReq struct {
 
 func ResendInvite(w http.ResponseWriter, r *http.Request) {
 	sr := server.Response{}
-	vars := mux.Vars(r)
-	cid := vars["id"]
+	cid := mux.Vars(r)["id"]
 
 	b, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -253,13 +251,15 @@ func ResendInvite(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var t time.Time
-	if t, err = time.Parse("2006-01-02 15:04:05 +0000 MST", rr.Validity); err != nil {
+	t, err := time.Parse(time.RFC3339Nano, rr.Validity);
+	if err != nil {
 		sr.Write(w, err.Error(), "Couldn't parse the validity", http.StatusBadRequest)
 		return
 	}
 
 	go mail.Send(rr.Email, t.Format("Mon Jan 2 2006"), cid+rr.Token)
+
+	sr.Success = true
 	sr.Write(w, "", "Invite has been resent.", http.StatusOK)
 }
 
