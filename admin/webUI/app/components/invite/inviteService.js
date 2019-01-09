@@ -98,7 +98,7 @@ angular.module("GruiApp").service("inviteService", [
             }\n\
           }";
         return MainService.mutateProxy(mutation).then(function(data) {
-          return (data.code == MainService.dgraphSuccess);
+          return (data.data && data.data.code == MainService.dgraphSuccess);
         });
       },
 
