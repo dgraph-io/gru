@@ -115,21 +115,6 @@ func QueryAndUnmarshal(q string, i interface{}) error {
 	return nil
 }
 
-func Query(q string) ([]byte, error) {
-	endpoint := strings.Join([]string{*HttpServer, "query"}, "/")
-	res, err := http.Post(endpoint, "application/x-www-form-urlencoded", strings.NewReader(q))
-	if err != nil {
-		return []byte{}, errors.Wrap(err, "Couldn't get response from Dgraph")
-	}
-	defer res.Body.Close()
-
-	b, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		return []byte{}, errors.Wrap(err, "Couldn't read response body")
-	}
-	return b, nil
-}
-
 func QueryOrMutate(mutate bool, q string) ([]byte, error) {
 	var endpoint string
 	if mutate {
@@ -137,7 +122,14 @@ func QueryOrMutate(mutate bool, q string) ([]byte, error) {
 	} else {
 		endpoint = strings.Join([]string{*HttpServer, "query"}, "/")
 	}
-	res, err := http.Post(endpoint, "application/x-www-form-urlencoded", strings.NewReader(q))
+
+	req, err := http.NewRequest("POST", endpoint, strings.NewReader(q))
+	if err != nil {
+		return []byte{}, errors.Wrap(err, "Couldn't get response from Dgraph")
+	}
+	req.Header.Add("X-Dgraph-CommitNow", "true")
+
+	res, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return []byte{}, errors.Wrap(err, "Couldn't get response from Dgraph")
 	}
@@ -149,6 +141,11 @@ func QueryOrMutate(mutate bool, q string) ([]byte, error) {
 	}
 	return b, nil
 }
+
+func Query(q string) ([]byte, error) {
+	return QueryOrMutate(false, q);
+}
+
 
 func Proxy(w http.ResponseWriter, r *http.Request) {
 	sr := server.Response{}

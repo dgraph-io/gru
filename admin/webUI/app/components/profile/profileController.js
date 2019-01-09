@@ -1,8 +1,8 @@
-(function() {
-
+angular.module('GruiApp').controller('profileController', [
+  "$scope",
+  "$rootScope",
+  "profileService",
   function profileController($scope, $rootScope, profileService) {
-
-    // VARIABLE DECLARATION
     profileVm = this;
     mainVm.pageName = "profile-page"
 
@@ -16,7 +16,7 @@
       smartLists: true,
       smartypants: false,
       highlight: function(code, lang) {
-        // in case, there is code without language specified
+        // in case there is code without language specified
         if (lang) {
           return hljs.highlight(lang, code).value;
         } else {
@@ -29,9 +29,7 @@
       lineWrapping: true
     };
 
-    profileVm.initCodeMirror = initCodeMirror;
-
-    function initCodeMirror() {
+    profileVm.initCodeMirror = function initCodeMirror() {
       $scope.cmOption = {}
       $scope.cmOption2 = {}
       setTimeout(function() {
@@ -40,9 +38,16 @@
         // To refresh the reject mail editor which is hidden initially.
         $(".CodeMirror").length > 0 && $(".CodeMirror")[1].CodeMirror.refresh()
       }, 500);
-    }
+    };
   }
+]);
 
+
+angular.module('GruiApp').controller('editProfileController', [
+  "$scope",
+  "$rootScope",
+  "$state",
+  "profileService",
   function editProfileController($scope, $rootScope, $state, profileService) {
     editProfileVm = this;
     editProfileVm.update = updateProfile;
@@ -51,15 +56,21 @@
     profileService.getProfile()
       .then(function(data) {
         editProfileVm.info = {}
-        editProfileVm.info.name = data['info'][0]["company.name"]
-        editProfileVm.info.email = data['info'][0]["company.email"]
-        editProfileVm.info.invite_email = decodeURI(data['info'][0]["company.invite_email"])
+        if (!data.info || !data.info[0]) {
+          return;
+        }
+        var info = data.info[0];
+
+        editProfileVm.info.uid = info.uid;
+        editProfileVm.info.name = info["company.name"]
+        editProfileVm.info.email = info["company.email"]
+        editProfileVm.info.invite_email = decodeURI(info["company.invite_email"])
         editProfileVm.info.invite_email = editProfileVm.info.invite_email === "undefined" ? "" : editProfileVm.info.invite_email
-        editProfileVm.info.reject_email = decodeURI(data['info'][0]["company.reject_email"])
+        editProfileVm.info.reject_email = decodeURI(info["company.reject_email"])
         editProfileVm.info.reject_email = editProfileVm.info.reject_email === "undefined" ? "" : editProfileVm.info.reject_email
-        editProfileVm.info.reject = data['info'][0]["company.reject"] === "true"
-        editProfileVm.info.backup = parseInt(data['info'][0]["backup"])
-        editProfileVm.info.backup_days = parseInt(data['info'][0]["backup_days"])
+        editProfileVm.info.reject = info["company.reject"] === "true"
+        editProfileVm.info.backup = parseInt(info.backup)
+        editProfileVm.info.backup_days = parseInt(info.backup_days)
         editProfileVm.info.backup = isNaN(editProfileVm.info.backup) ? 1 : editProfileVm.info.backup
         editProfileVm.info.backup_days = isNaN(editProfileVm.info.backup_days) ? 5 : editProfileVm.info.backup_days
       }, function(err) {
@@ -95,7 +106,6 @@
 
       profileService.updateProfile(requestData)
         .then(function(data) {
-          console.log(data)
           SNACKBAR({
             message: "Profile updated successfully.",
             messageType: "success",
@@ -103,6 +113,10 @@
           $state.transitionTo("root")
         }, function(err) {
           console.log(err)
+          SNACKBAR({
+            message: "Something went wrong: " + JSON.stringify(err),
+            messageType: "error",
+          })
         })
     }
 
@@ -112,22 +126,4 @@
 
     profileVm.initCodeMirror();
   }
-
-  var profileDependency = [
-    "$scope",
-    "$rootScope",
-    "profileService",
-    profileController
-  ];
-  angular.module('GruiApp').controller('profileController', profileDependency);
-
-  var editProfileDependency = [
-    "$scope",
-    "$rootScope",
-    "$state",
-    "profileService",
-    editProfileController
-  ];
-  angular.module('GruiApp').controller('editProfileController', editProfileDependency);
-
-})();
+]);

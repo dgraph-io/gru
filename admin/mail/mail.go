@@ -49,15 +49,12 @@ func Send(email, validity, token string) {
 
 	body := `
 <html>
-<head>
-    <title></title>
-</head>
 <body>
 Hello!
 <br/><br/>
 You have been invited to take the screening quiz by ` + c.Name + `.
 <br/><br/>
-You can take the quiz anytime till ` + validity + ` <a href="` + URL + `" target="_blank"> by visiting ` + URL + `</a>.
+You can take the quiz any time till ` + validity + ` by visiting <a href="` + URL + `"> ` + URL + `</a>.
 <br/>
 ` + invite + `
 </body>
