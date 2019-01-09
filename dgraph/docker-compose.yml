@@ -42,6 +42,9 @@ services:
       - type: volume
         source: /home/ubuntu/gru/server-data/run.sh
         target: /gruserver/run.sh
+      - type: volume
+        source: /home/ubuntu/gru/server-data/backup/
+        target: /gruserver/backup
     restart: on-failure
     command: /gruserver/run.sh
 
