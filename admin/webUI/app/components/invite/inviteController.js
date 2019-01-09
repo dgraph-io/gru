@@ -476,12 +476,13 @@
           if (!cancelled) {
             SNACKBAR({
               message: "Invite could not be cancelled.",
-              messageType: "error"
+              messageType: "error",
             });
             return;
           }
           SNACKBAR({
-            message: "Invite cancelled successfully."
+            message: "Invite cancelled successfully.",
+            messageType: "success",
           });
           deleteFromArray(candidate.uid, candidatesVm.notCompleted);
           $state.transitionTo("invite.dashboard", {
