@@ -39,11 +39,6 @@ func round(num float64) int {
 	return int(num + math.Copysign(0.5, num))
 }
 
-func ToFixed(num float64, precision int) float64 {
-	output := math.Pow(10, float64(precision))
-	return float64(round(num*output)) / output
-}
-
 type Claims struct {
 	UserId string `json:"user_id"`
 	jwt.StandardClaims
@@ -86,7 +81,7 @@ func Backup() {
 	}
 }
 
-var layout = "2006-01-02-15-04"
+var filenameTimeLayout = "2006-01-02-15-04"
 
 func check(file os.FileInfo) {
 	fname := file.Name()
@@ -100,7 +95,7 @@ func check(file os.FileInfo) {
 	fname = fname[:len(fname)-7]
 	dateTime := fname[len(fname)-16:]
 
-	t, err := time.Parse(layout, dateTime)
+	t, err := time.Parse(filenameTimeLayout, dateTime)
 	if err != nil {
 		fmt.Println("While parsing backup filename: ", file.Name())
 		return

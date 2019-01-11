@@ -73,7 +73,7 @@ angular.module('GruiApp').controller('quizController', [
           quizVm.newQuiz = {}
           SNACKBAR({
             message: data.Message,
-            messageType: "error",
+            messageType: "success",
           })
           $state.transitionTo("quiz.all");
         }, function(err) {

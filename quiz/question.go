@@ -8,7 +8,6 @@ import (
 
 	"github.com/dgraph-io/gru/admin/server"
 	"github.com/dgraph-io/gru/dgraph"
-	"github.com/dgraph-io/gru/x"
 )
 
 type Tag struct {
@@ -69,7 +68,7 @@ func QuestionHandler(w http.ResponseWriter, r *http.Request) {
 		c.quizStart = time.Now().UTC()
 		updateMap(userId, c)
 		m := new(dgraph.Mutation)
-		m.SetString(userId, "quiz_start", c.quizStart.Format(timeLayout))
+		m.SetString(userId, "quiz_start", c.quizStart.Format(time.RFC3339Nano))
 		_, err := dgraph.SendMutation(m)
 		if err != nil {
 			sr.Write(w, "", err.Error(), http.StatusInternalServerError)
@@ -82,15 +81,15 @@ func QuestionHandler(w http.ResponseWriter, r *http.Request) {
 		// Client ends quiz when question id is END.
 		q := Question{
 			Uid:    "END",
-			Score: x.ToFixed(c.score, 2),
+			Score: c.score,
 		}
 
 		// Lets store that the user successfully completed the test.
 		m := new(dgraph.Mutation)
-		m.Set(`<` + userId + `> <complete> "true" .`)
+		m.SetString(userId, "complete", "true")
 		// Completed at is used to reject candidates whose score is < cutoff
-		m.Set(`<` + userId + `> <completed_at> "` + time.Now().UTC().Format(timeLayout) + `" .`)
-		m.Set(`<` + userId + `> <score> "` + strconv.FormatFloat(x.ToFixed(c.score, 2), 'g', -1, 64) + `" .`)
+		m.SetString(userId, "completed_at", time.Now().Format(time.RFC3339Nano))
+		m.SetString(userId, "score", strconv.FormatFloat(c.score, 'f', 2, 64))
 		_, err := dgraph.SendMutation(m)
 		if err != nil {
 			sr.Write(w, "", err.Error(), http.StatusInternalServerError)
@@ -119,7 +118,7 @@ func QuestionHandler(w http.ResponseWriter, r *http.Request) {
 		qn.TimeTaken = time.Now().UTC().Sub(c.lastQnAsked).String()
 	}
 
-	qn.Score = x.ToFixed(c.score, 2)
+	qn.Score = c.score
 	shuffleOptions(qn.Options)
 
 	qn.NumQns = c.numQuestions
@@ -132,11 +131,11 @@ func QuestionHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	m := new(dgraph.Mutation)
-	m.Set(`<` + userId + `> <candidate.question> <_:qn> .`)
-	m.Set(`<_:qn> <question.uid> <` + qn.Uid + `> .`)
-	m.Set(`<` + qn.Uid + `> <question.candidate> <` + userId + `> .`)
-	m.Set(`<_:qn> <question.asked> "` + time.Now().UTC().Format("2006-01-02T15:04:05Z07:00") + `" .`)
-	m.Set(`<` + userId + `> <candidate.lastqnuid> "` + qn.Uid + `" .`)
+	m.SetLink(userId, "candidate.question", "_:qn")
+	m.SetLink("_:qn", "question", qn.Uid)
+	m.SetLink(qn.Uid, "question.candidate", userId)
+	m.SetString("_:qn", "question.asked", time.Now().Format(time.RFC3339Nano))
+	m.SetString(userId, "candidate.lastqnuid", qn.Uid)
 	res, err := dgraph.SendMutation(m)
 	if err != nil {
 		sr.Write(w, "", err.Error(), http.StatusInternalServerError)

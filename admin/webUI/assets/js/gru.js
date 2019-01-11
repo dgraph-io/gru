@@ -3,20 +3,12 @@
   $(document).ready(function() {
     componentHandler.upgradeAllRegistered();
 
-    window.formatDate = formatDate;
-    window.getDocHeight = getDocHeight;
+    window.formatDate = function formatDate(date) {
+      return date.toISOString();
+    };
+
     window.scrollTo = scrollTo;
     window.scrollNavInit = scrollNavInit;
-
-
-    function getDocHeight(pageID) {
-      var D = document;
-      return Math.max(
-        document.getElementById(pageID).scrollHeight,
-        document.getElementById(pageID).offsetHeight,
-        document.getElementById(pageID).clientHeight
-      );
-    }
 
     (function() {
       setTimeout(function() {
@@ -59,18 +51,6 @@
       local.setMinutes(this.getMinutes() - this.getTimezoneOffset());
       return local.toJSON().slice(0, 10);
     });
-
-    function formatDate(date) {
-      var d = new Date(date),
-        month = '' + (d.getMonth() + 1),
-        day = '' + d.getDate(),
-        year = d.getFullYear();
-
-      if (month.length < 2) month = '0' + month;
-      if (day.length < 2) day = '0' + day;
-
-      return [year, month, day].join('-');
-    }
 
     $(document).on("click", ".slide-wrapper .slide-link", function() {
       $this = $(this);

@@ -199,7 +199,7 @@
             </div>
           </div>
           <div class="pv-10 ph-10 full-border-grey">
-            <pre class="pt-10 ph-10 code-block" ng-bind-html="mainVm.markDownFormat(mainVm.unescapeText(question.text))"></pre>
+            <pre class="pt-10 ph-10 code-block" ng-bind-html="mainVm.markDownFormat(question.text)"></pre>
             <div class="mdl-grid no-pad" ng-show="question.tags">
               <div class="mdl-cell mdl-cell--2-col mdl-cell--1-col-tablet mdl-cell--1-col-phone mdl-cell--middle">
                 <span class="bold">TAGS</span>
@@ -223,7 +223,7 @@
             <div class="mdl-grid no-pad mt-10" ng-repeat="option in question.options track by $index">
               <div class="mdl-cell mdl-cell--10-col mdl-cell--6-col-tablet mdl-cell--2-col-phone mdl-cell--middle full-border-grey">
                 <div class="ph-10 pt-10 position-relative">
-                  <pre ng-bind-html="mainVm.markDownFormat(mainVm.unescapeText(option.name))" class="code-block"></pre>
+                  <pre ng-bind-html="mainVm.markDownFormat(option.name)" class="code-block"></pre>
                 </div>
               </div>
               <div class="mdl-cell mdl-cell--1-col mdl-cell--1-col-tablet mdl-cell--1-col-phone mdl-cell--middle">
@@ -234,8 +234,6 @@
               </div>
             </div>
           </div>
-        </div>
-        <div class="dummy">
         </div>
       </div>
     </div>

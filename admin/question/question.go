@@ -57,13 +57,11 @@ func add(q Question) *dgraph.Mutation {
 		idx := strconv.Itoa(i)
 		if t.Uid != "" {
 			m.SetLink("_:qn", "question.tag", t.Uid)
-			m.SetLink(t.Uid, "tag.question", "_:qn")
 		} else {
 			tagKey := "_:t" + idx
 			m.SetString(tagKey, "is_tag", "")
 			m.SetString(tagKey, "name", t.Name)
 			m.SetLink("_:qn", "question.tag", tagKey)
-			m.SetLink(tagKey, "tag.question", "_:qn")
 		}
 	}
 
@@ -245,29 +243,31 @@ func edit(q Question) (*dgraph.Mutation, error) {
 		}
 	}
 
+	tagCount := 0
 	// Create and associate Tags
 	for i, t := range q.Tags {
 		if t.Uid != "" && t.Is_delete {
 			m.DelLink(q.Uid, "question.tag", t.Uid)
-			m.DelLink(t.Uid, "tag.question", q.Uid)
 		} else if t.Uid != "" {
+			tagCount++
 			m.SetLink(q.Uid, "question.tag", t.Uid)
-			m.SetLink(t.Uid, "tag.question", q.Uid)
 		} else if t.Uid == "" {
 			if t.Name == "" {
-				return nil, fmt.Errorf("Tag name can't be empty.")
+				return nil, fmt.Errorf("Tag name can't be empty")
 			}
+			tagCount++
 			tagKey := "_:tag" + strconv.Itoa(i)
 			m.SetString(tagKey, "name", t.Name)
 			m.SetString(tagKey, "is_tag", "")
 			m.SetLink(q.Uid, "question.tag", tagKey)
-			m.SetLink(tagKey, "tag.question", q.Uid)
 		}
 	}
-	// TODO - There should be at least one tag associated with a question.
+	if tagCount == 0 {
+		return nil, fmt.Errorf("A question should have at least one tag")
+	}
 
 	if correct == 0 {
-		return nil, fmt.Errorf("At least one option should be correct.")
+		return nil, fmt.Errorf("At least one option should be correct")
 	} else if correct > 1 {
 		m.SetString(q.Uid, "multiple", "true")
 	} else {

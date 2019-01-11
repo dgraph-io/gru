@@ -8,7 +8,6 @@ import (
 
 	"github.com/dgraph-io/gru/admin/server"
 	"github.com/dgraph-io/gru/dgraph"
-	"github.com/dgraph-io/gru/x"
 )
 
 type pingRes struct {
@@ -30,28 +29,28 @@ func PingHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	c.lastExchange = time.Now().UTC()
+	c.lastExchange = time.Now()
 	updateMap(userId, c)
-	pr := &pingRes{TimeLeft: "-1"}
+	pingResult := &pingRes{TimeLeft: "-1"}
 	// If quiz hasn't started yet, we return time_left as -1.
 	if c.quizStart.IsZero() {
-		json.NewEncoder(w).Encode(pr)
+		json.NewEncoder(w).Encode(pingResult)
 		return
 	}
 
 	end := c.quizStart.Add(c.quizDuration).Truncate(time.Second)
 	timeLeft := end.Sub(time.Now().UTC().Truncate(time.Second))
-	pr.TimeLeft = timeLeft.String()
+	pingResult.TimeLeft = timeLeft.String()
 	if timeLeft > 0 {
-		json.NewEncoder(w).Encode(pr)
+		json.NewEncoder(w).Encode(pingResult)
 		return
 	}
 
 	// Time left is <=0, that means quiz should end now. Lets store this information.
 	m := new(dgraph.Mutation)
-	m.Set(`<` + userId + `> <complete> "true" .`)
-	m.Set(`<` + userId + `> <completed_at> "` + time.Now().UTC().Format(timeLayout) + `" .`)
-	m.Set(`<` + userId + `> <score> "` + strconv.FormatFloat(x.ToFixed(c.score, 2), 'g', -1, 64) + `" .`)
+	m.SetString(userId, "complete", "true")
+	m.SetString(userId, "completed_at", time.Now().Format(time.RFC3339Nano))
+	m.SetString(userId, "score", strconv.FormatFloat(c.score, 'f', 2, 64))
 	_, err = dgraph.SendMutation(m)
 	if err != nil {
 		sr.Write(w, "", err.Error(), http.StatusInternalServerError)
@@ -63,5 +62,5 @@ func PingHandler(w http.ResponseWriter, r *http.Request) {
 		sr.Write(w, err.Error(), "", http.StatusInternalServerError)
 		return
 	}
-	json.NewEncoder(w).Encode(pr)
+	json.NewEncoder(w).Encode(pingResult)
 }

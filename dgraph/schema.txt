@@ -30,7 +30,6 @@
 <quiz.question>: uid .
 <quiz_start>: datetime @index(hour) .
 <score>: float @index(float) .
-<tag.question>: uid .
 <testo>: default .
 <text>: default .
 <threshold>: default .

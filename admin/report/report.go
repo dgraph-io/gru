@@ -11,7 +11,6 @@ import (
 	"github.com/dgraph-io/gru/admin/mail"
 	"github.com/dgraph-io/gru/admin/server"
 	"github.com/dgraph-io/gru/dgraph"
-	"github.com/dgraph-io/gru/x"
 	"github.com/gorilla/mux"
 )
 
@@ -276,7 +275,7 @@ func ReportSummary(cid string) (Summary, ReportError) {
 	if err != nil {
 		return s, ReportError{err.Error(), "Error while calculating percentile", http.StatusInternalServerError}
 	}
-	s.Percentile = x.ToFixed(perc, 2)
+	s.Percentile = perc
 
 	for _, qn := range c.CandidateQn {
 		s.TotalScore += qn.Score
@@ -302,8 +301,6 @@ func ReportSummary(cid string) (Summary, ReportError) {
 		}
 		s.Questions = append(s.Questions, sq)
 	}
-	s.TotalScore = x.ToFixed(s.TotalScore, 2)
-	s.MaxScore = x.ToFixed(s.MaxScore, 2)
 	return s, ReportError{}
 }
 

@@ -13,10 +13,6 @@
         </div>
         <div class="mdl-grid no-pad no-margin-lr">
           <div class="mdl-cell mdl-cell--12-col">
-            <!-- <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label" ng-class="{'is-dirty': quizVm.newQuiz.duration}">
-              <input class="mdl-textfield__input" type="text" name="text" id="quiz-duration" ng-model="quizVm.newQuiz.duration">
-              <label class="mdl-textfield__label" for="quiz-duration">Duration</label>
-            </div> -->
             <div class="duration-inputs">
               <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label" ng-class="{'is-dirty': quizVm.newQuiz.duration >= 0}">
                 <input class="mdl-textfield__input" type="number" pattern="-?[0-9]*(\.[0-9]+)?" ng-model="quizVm.newQuiz.duration" id="minutes" min="0" max="120">
@@ -46,25 +42,7 @@
           <div class="bold pb-10">
             {{ editQuizVm.getQuestionCount() }} Question<span ng-if="mainVm.objLen(quizVm.newQuiz['quiz.question']) != 1">s</span>, Total Score: {{quizVm.getTotalScore(quizVm.newQuiz['quiz.question']) | number: 2}}
           </div>
-          <!-- <div ng-repeat="(key, question) in quizVm.newQuiz['quiz.question']" ng-if="question.text">
-            <span class="mdl-chip mdl-chip--deletable" ng-if="!question.is_delete">
-              <span class="mdl-chip__text">{{question.name}}</span>
-              <button type="button" class="mdl-chip__action" ng-click="editQuizVm.onQuestionRemove(question)">
-                <i class="material-icons">cancel</i>
-              </button>
-            </span>
-          </div> -->
         </div>
-        <!-- <div ng-if="quizVm.newQuiz.newQuestions">
-          <div ng-repeat="(key, question) in quizVm.newQuiz.newQuestions" ng-if="question.text">
-            <span class="mdl-chip mdl-chip--deletable">
-              <span class="mdl-chip__text">{{question.name}}</span>
-              <button type="button" class="mdl-chip__action" ng-click="editQuizVm.onNewQuestionRemove(question)">
-                <i class="material-icons">cancel</i>
-              </button>
-            </span>
-          </div>
-        </div> -->
         <div class="mt-20">
           <button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect action-btn" type="submit">
             Update Quiz
@@ -77,34 +55,33 @@
     </div>
   </div>
   <div class="mdl-cell mdl-cell--6-col  mdl-cell--1-offset-desktop">
-    <h5>Select Question to add it to quiz</h5>
+    <h5>Select Question to add it to the quiz</h5>
     <div class="question mt-20" ng-repeat="question in mainVm.allQuestions | filter:searchQ">
       <div class="mdl-grid no-pad clickable-hover">
         <div class="mdl-cell mdl-cell--12-col">
           <label class="mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect height-inherit" for="question-{{$index}}" ng-class="{'is-checked': editQuizVm.isExisting(question) == true}">
-            <input type="checkbox" id="question-{{$index}}" class="mdl-checkbox__input" ng-change="editQuizVm.addNewQuestion(question, $index)" ng-model="question.is_checked">
+            <input type="checkbox" id="question-{{$index}}" class="mdl-checkbox__input" ng-change="editQuizVm.addNewQuestion(question, $index)" ng-model="question.is_checked" />
             <span class="mdl-checkbox__label">
               {{question.name}}
+              <button ng-click="editQuizVm.editQuestion(question, $index)">Edit</button>
               <div class="base-font">
-                Positive Score: {{question.positive}}, &nbsp;&nbsp;
-                Negative Score: {{question.negative}}, &nbsp;&nbsp;
-                Answer 
-                <span class="text-green option-icon">
-                  <span ng-if="question['question.correct'].length == 1">
-                    <i class="material-icons">done</i>
-                  </span>
-            <span ng-if="question['question.correct'].length > 1">
-                    <i class="material-icons">done_all</i>
-                  </span>
-            </span>
-        </div>
-        <span ng-repeat="tags in question['question.tag'] track by $index">
+                Score: <span class="text-green bold">+ {{question.positive}}</span> |
+                <span class="text-red bold">- {{question.negative}}</span>
+                &nbsp;&nbsp;
+                <span ng-if="question['question.correct'].length == 1">
+                  Single Answer
+                </span>
+                <span ng-if="question['question.correct'].length > 1">
+                  Multiple Answers
+                </span>
+              </div>
+              <span ng-repeat="tags in question['question.tag'] track by $index">
                 <span class="mdl-chip">
                   <span class="mdl-chip__text">{{tags.name}}</span>
-        </span>
-        </span>
-        </span>
-        </label>
+                </span>
+              </span>
+            </span>
+          </label>
       </div>
     </div>
   </div>

@@ -319,10 +319,6 @@ body.home {
   color: white;
 }
 
-.question-form .mdl-checkbox.is-checked .mdl-checkbox__label {
-  color: #4CB973;
-}
-
 .select2-container {
   width: 100% !Important;
 }

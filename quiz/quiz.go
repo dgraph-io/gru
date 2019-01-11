@@ -34,7 +34,6 @@ const (
 	MEDIUM
 	HARD
 	rate       = time.Second
-	timeLayout = "2006-01-02T15:04:05Z07:00"
 )
 
 func init() {
@@ -199,7 +198,7 @@ func sendMail(c Candidate, userId string) error {
 	}
 
 	m := new(dgraph.Mutation)
-	m.Set(`<` + userId + `> <completed_at> "` + time.Now().UTC().Format(timeLayout) + `" .`)
+	m.SetString(userId, "completed_at", time.Now().Format(time.RFC3339Nano))
 	_, err := dgraph.SendMutation(m)
 	return err
 }

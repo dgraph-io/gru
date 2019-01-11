@@ -227,9 +227,9 @@ func AnswerHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Lets store some information about this question.
 	m := new(dgraph.Mutation)
-	m.Set(`<` + cuid + `> <candidate.answer> "` + aid + `" .`)
-	m.Set(`<` + cuid + `> <candidate.score> "` + strconv.FormatFloat(s, 'g', -1, 64) + `" .`)
-	m.Set(`<` + cuid + `> <question.answered> "` + time.Now().UTC().Format(timeLayout) + `" .`)
+	m.SetString(cuid, "candidate.answer", aid)
+	m.SetString(cuid, "candidate.score", strconv.FormatFloat(s, 'f', 2, 64))
+	m.SetString(cuid, "question.answered", time.Now().Format(time.RFC3339Nano))
 
 	if _, err = dgraph.SendMutation(m); err != nil {
 		sr.Write(w, "", err.Error(), http.StatusInternalServerError)

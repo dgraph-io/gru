@@ -110,33 +110,7 @@ func candQuery(cid string) string {
 func filter(qns []Question) map[difficulty][]Question {
 	qnDiffMap := make(map[difficulty][]Question)
 	for _, q := range qns {
-		tags := q.Tags
-		// TODO - Move the difficulty into a separate field within the
-		// question separate from tags. So that we don't have to loop over
-		// the tags.
-		hasDifficulty := false
-	L:
-		for _, t := range tags {
-			switch n := t.Name; n {
-			case "easy":
-				qnDiffMap[EASY] = append(qnDiffMap[EASY], q)
-				hasDifficulty = true
-				break L
-			case "medium":
-				qnDiffMap[MEDIUM] = append(qnDiffMap[MEDIUM], q)
-				hasDifficulty = true
-				break L
-			case "hard":
-				qnDiffMap[HARD] = append(qnDiffMap[HARD], q)
-				hasDifficulty = true
-				break L
-			default:
-				continue
-			}
-		}
-		if !hasDifficulty {
-			qnDiffMap[MEDIUM] = append(qnDiffMap[MEDIUM], q)
-		}
+		qnDiffMap[EASY] = append(qnDiffMap[EASY], q)
 	}
 	return qnDiffMap
 }
@@ -181,7 +155,7 @@ func checkAndUpdate(uid string) (int, error) {
 	// required.
 	var err error
 	if c.validity, err = time.Parse("2006-01-02 15:04:05 +0000 UTC", cand.Validity); err != nil {
-		return http.StatusInternalServerError, fmt.Errorf("Could not parse time.")
+		return http.StatusInternalServerError, fmt.Errorf("Could not parse Validity: %v", err)
 	}
 	if c.validity.Before(time.Now()) {
 		return http.StatusUnauthorized,
