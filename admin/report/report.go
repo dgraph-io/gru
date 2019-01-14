@@ -114,11 +114,11 @@ func reportQuery(id string) string {
             uid
             name
           }
-          question.option {
+          options: question.option {
             uid
             name
           }
-          question.correct {
+          correct: question.correct {
             uid
           }
           multiple

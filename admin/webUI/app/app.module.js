@@ -25,7 +25,6 @@ angular.module("GruiApp").config(function(uiSelectConfig) {
   uiSelectConfig.theme = "select2";
 });
 
-//Run After view has been loaded
 angular
   .module("GruiApp")
   .run(function($rootScope, $location, $timeout, $state) {
@@ -107,14 +106,13 @@ angular.module("GruiApp").config([
 
 // SCRIPT NAME CONFIG For OCLAZYLOAD
 angular.module("GruiApp").constant("APP_REQUIRES", {
-  // jQuery based/Cusomt/standalone scripts
   scripts: {
     homeController: ["app/components/home/homeController.js"],
     loginController: ["app/components/login/loginController.js"],
     loginService: ["app/components/login/loginService.js"],
-    questionController: [
-      "app/components/question/questionController.js"
-    ],
+    questionController: ["app/components/question/questionController.js"],
+    addQuestionController: ["app/components/question/addQuestionController.js"],
+    editQuestionController: ["app/components/question/editQuestionController.js"],
     questionServices: ["app/components/question/questionServices.js"],
     quizController: ["app/components/quiz/quizController.js"],
     quizServices: ["app/components/quiz/quizServices.js"],
@@ -212,8 +210,6 @@ angular.module("GruiApp").controller("MainController", [
   "$sce",
   "$parse",
   "$http",
-  "$q",
-  "MainService",
   function MainController(
     $scope,
     $rootScope,
@@ -222,8 +218,6 @@ angular.module("GruiApp").controller("MainController", [
     $sce,
     $parse,
     $http,
-    $q,
-    MainService
   ) {
     mainVm = this;
     mainVm.timerObj;
@@ -231,18 +225,19 @@ angular.module("GruiApp").controller("MainController", [
     mainVm.candidate_url = "/api";
     mainVm.showModal = false;
 
-    mainVm.getNumber = getNumber;
+    mainVm.getNumber = function(num) {
+      return new Array(num);
+    };
+
     mainVm.indexOfObject = indexOfObject;
     mainVm.hasKey = hasKey;
     mainVm.isObject = isObject;
     mainVm.goTo = goTo;
-    mainVm.unescapeText = unescapeText;
     mainVm.objLen = objLen;
 
     mainVm.isLoggedIn = isLoggedIn;
     mainVm.logout = logout;
-    mainVm.isValidCandidate = isValidCandidate;
-    mainVm.markDownFormat = markDownFormat;
+
     mainVm.parseGoTime = parseGoTime;
     mainVm.openModal = openModal;
     mainVm.hideModal = hideModal;
@@ -250,19 +245,10 @@ angular.module("GruiApp").controller("MainController", [
     mainVm.initNotification = initNotification;
     mainVm.hideNotification = hideNotification;
 
-    mainVm.getAllTags = getAllTags;
-
-    function markDownFormat(content) {
-      if (!content) {
-        return;
-      }
-      return marked(content, {
+    mainVm.markDownFormat = function(content) {
+      return marked(content || "", {
         gfm: true
       });
-    }
-
-    function getNumber(num) {
-      return new Array(num);
     }
 
     function indexOfObject(arr, obj) {
@@ -279,10 +265,6 @@ angular.module("GruiApp").controller("MainController", [
 
     function objLen(object) {
       return Object.keys(object).length;
-    }
-
-    function unescapeText(question) {
-      return unescape(question);
     }
 
     function isLoggedIn() {
@@ -338,23 +320,6 @@ angular.module("GruiApp").controller("MainController", [
       });
     }
 
-    function isValidCandidate() {
-      var quizToken = localStorage.getItem("quiz_token");
-      MainService.post("/validate/" + quizToken).then(
-        function(data) {
-          return data;
-        },
-        function(err) {
-          if (err.status == 401) {
-            SNACKBAR({
-              message: err.data.Message,
-              messageType: "error"
-            });
-          }
-        }
-      );
-    }
-
     function hasKey(obj, key) {
       if (!obj) {
         return false;
@@ -368,10 +333,6 @@ angular.module("GruiApp").controller("MainController", [
 
     function goTo(state, data) {
       $state.transitionTo(state, data);
-    }
-
-    function getAllTags() {
-      return MainService.get("/get-all-tags");
     }
 
     function parseGoTime(time) {
@@ -426,10 +387,9 @@ angular.module("GruiApp").controller("MainController", [
 
 angular.module("GruiApp").service("MainService", [
   "$http",
-  "$q",
   "$state",
   "$location",
-  function MainService($http, $q, $state, $location) {
+  function MainService($http, $state, $location) {
     function setAuth(auth) {
       $http.defaults.headers.common["Authorization"] = auth;
     }

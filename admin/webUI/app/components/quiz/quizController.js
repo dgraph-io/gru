@@ -15,16 +15,12 @@ angular.module('GruiApp').controller('quizController', [
     quizVm.removeCheckedQuestion = removeCheckedQuestion;
     quizVm.addQuizForm = addQuizForm;
     quizVm.validateInput = validateInput;
-    quizVm.getAllQuestions = getAllQuestions;
     quizVm.getTotalScore = getTotalScore;
     quizVm.resetForm = resetForm;
 
-    // Function for fetching next question
-    function getAllQuestions() {
+    quizVm.getAllQuestions = function() {
       questionService.getAllQuestions().then(function(questions) {
         mainVm.allQuestions = questions;
-      }, function(err) {
-        console.log(err)
       });
 
       $rootScope.upgradeMDL();

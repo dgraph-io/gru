@@ -60,7 +60,12 @@ func (m *Mutation) Set(set string) {
 }
 
 func (m *Mutation) SetString(l string, p string, val string) {
-	m.Set(`<` + l + `> <` + p + `> "` + val + `" .`)
+	// JSON escape the val string.
+  buf, err := json.Marshal(val)
+  if err != nil {
+    return
+  }
+	m.Set(`<` + l + `> <` + p + `> ` + string(buf) + ` .`)
 }
 
 func (m *Mutation) SetLink(l string, p string, val string) {

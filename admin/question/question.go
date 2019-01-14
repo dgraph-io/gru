@@ -152,11 +152,11 @@ func Index(w http.ResponseWriter, r *http.Request) {
 				uid
 				name
 			}
-			question.option {
+			options: question.option {
 				uid
 				name
 			}
-			question.correct {
+			correct: question.correct {
 				uid
 				name
 			}
@@ -182,11 +182,11 @@ func getQuestionQuery(questionId string) string {
 			positive
 			negative
 			notes
-			question.option	{
+			options: question.option	{
 				uid
 				name
 			}
-			question.correct {
+			correct: question.correct {
 				uid
 				name
 			}

@@ -88,8 +88,6 @@ angular.module("GruiApp").service("inviteService", [
       },
 
       cancelInvite: function(candidate, quizId) {
-        // TODO - Abstract this out into a library so that its easier to add mutations
-        // and values are escaped easily.
         var mutation =
           "{\n\
             delete {\n\
@@ -103,8 +101,6 @@ angular.module("GruiApp").service("inviteService", [
       },
 
       deleteCand: function(candidateId) {
-        // TODO - Abstract this out into a library so that its easier to add mutations
-        // and values are escaped easily.
         var mutation =
           "{\n\
             set {\n\

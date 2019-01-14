@@ -60,13 +60,10 @@
           inviteVm.newInvite.dates = new Date(
             today.setDate(today.getDate() + 7)
           );
-          // $datePicker.val(formatDate(inviteVm.newInvite.dates));
         },
         100
       );
     }
-
-    // FUNCTION DEFINITION
 
     function inviteCandidate() {
       var invalidateInput = inviteVm.invalidateInput(inviteVm.newInvite);
@@ -179,7 +176,7 @@
 
     inviteService.getCandidate(candidateUID).then(
       function(data) {
-        editInviteVm.candidateBak = data["quiz.candidate"][0];
+        editInviteVm.candidateBak = data.data["quiz.candidate"][0];
         editInviteVm.candidate = angular.copy(editInviteVm.candidateBak);
 
         editInviteVm.candidate.dates = new Date(
@@ -187,11 +184,7 @@
         );
 
         editInviteVm.initAllQuiz();
-      },
-      function(err) {
-        console.log(err);
-      }
-    );
+      });
 
     function valid(input) {
       if (!isValidEmail(input.email)) {
@@ -599,11 +592,6 @@
           }
           cReportVm.info = data;
           cReportVm.timeTaken = mainVm.parseGoTime(cReportVm.info.time_taken);
-          cReportVm.info.feedback = unescape(cReportVm.info.feedback).replace(
-            /\n/,
-            "<br>"
-          );
-
           cReportVm.initScoreCircle();
         },
         function(error) {
@@ -655,7 +643,6 @@
         setTimeout(
           function() {
             scrollNavInit();
-            adjustHeight();
             bindHandlers();
           },
           0
@@ -697,16 +684,6 @@
         },
         100
       );
-    }
-
-    function adjustHeight() {
-      var questions = $(".slide-wrapper"),
-        $lastQuestion = $(questions[questions.length - 1]);
-
-      diff = $window.height() - $lastQuestion.height();
-      if (diff > 0) {
-        $(".dummy").height(diff);
-      }
     }
 
     // To scroll to next and previous question on pressing Up and Down arrow keys.
@@ -758,7 +735,6 @@
 
       for (var i = 0; i < optLength; i++) {
         if (correct_options[i] == uid) {
-          // option.is_correct = true
           return true;
         }
       }

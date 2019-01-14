@@ -96,7 +96,7 @@ func getQuizQuery(quizId string) string {
 				positive
 				negative
 				question.tag { uid name }
-				question.correct { uid name }
+				correct: question.correct { uid name }
 			}
 		}
   }`

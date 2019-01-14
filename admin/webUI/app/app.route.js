@@ -1,62 +1,51 @@
--//Angular Routes defined here.
+angular.module("GruiRoutes", ["GruiApp"]);
 
-// Setting Module
-(function() {
-  angular.module("GruiRoutes", ["GruiApp"]);
+var homeTemplate = "app/components/home/home.html";
+var indexTemplate = "app/index.html";
+var loginTemplate = "app/components/login/index.html";
 
-  // Template, dirctives, js/css urls
+var questionTemplate = "app/components/question/index.html";
+var allQuestionTemplate = "app/components/question/all-question.html";
+var addQuestionTemplate = "app/components/question/add-question.html";
+var editQuestionTemplate = "app/components/question/edit-question.html";
 
-  var homeTemplate = "app/components/home/home.html";
-  var indexTemplate = "app/index.html";
-  var loginTemplate = "app/components/login/index.html";
+var quizTemplate = "app/components/quiz/index.html";
+var addQuizTemplate = "app/components/quiz/add-quiz.html";
+var editQuizTemplate = "app/components/quiz/edit-quiz.html";
+var allQuizTemplate = "app/components/quiz/all-quiz.html";
 
-  var questionTemplate = "app/components/question/index.html";
-  var allQuestionTemplate =
-    "app/components/question/all-question.html";
-  var addQuestionTemplate =
-    "app/components/question/add-question.html";
-  var editQuestionTemplate =
-    "app/components/question/views/edit-question.html";
+var inviteTemplate = "app/components/invite/index.html";
+var inviteDashboardTemplate =
+  "app/components/invite/views/invite-dashboard.html";
+var inviteUserTemplate = "app/components/invite/views/invite-user.html";
+var editInviteTemplate = "app/components/invite/views/edit-invite.html";
+var candidateReportTemplate = "app/components/invite/views/candidate-report.html";
 
-  var quizTemplate = "app/components/quiz/index.html";
-  var addQuizTemplate = "app/components/quiz/add-quiz.html";
-  var editQuizTemplate = "app/components/quiz/edit-quiz.html";
-  var allQuizTemplate = "app/components/quiz/all-quiz.html";
+var candidateIndexTemplate = "app/components/candidate/index.html";
+var candidateLandingTemplate = "app/components/candidate/views/landing.html";
+var candidateQuizTemplate = "app/components/candidate/views/quiz.html";
 
-  var inviteTemplate = "app/components/invite/index.html";
-  var inviteDashboardTemplate =
-    "app/components/invite/views/invite-dashboard.html";
-  var inviteUserTemplate =
-    "app/components/invite/views/invite-user.html";
-  var editInviteTemplate =
-    "app/components/invite/views/edit-invite.html";
-  var candidateReportTemplate =
-    "app/components/invite/views/candidate-report.html";
+var quizLandingTemplate = "app/components/candidate/views/quiz-landing.html";
 
-  var candidateIndexTemplate = "app/components/candidate/index.html";
-  var candidateLandingTemplate =
-    "app/components/candidate/views/landing.html";
-  var candidateQuizTemplate =
-    "app/components/candidate/views/quiz.html";
+var profileIndexTemplate = "app/components/profile/index.html";
+var editProfileTemplate = "app/components/profile/edit.html";
 
-  var quizLandingTemplate =
-    "app/components/candidate/views/quiz-landing.html?v-20181403-1";
+// CSS for View/Directives
+var angularSelectCSS = "assets/lib/css/angular-select.min.css";
+var codeMirrorCSS = "assets/lib/css/codemirror.css";
+var githubCSS = "assets/lib/css/github.css";
 
-  var profileIndexTemplate = "app/components/profile/index.html";
-  var editProfileTemplate = "app/components/profile/edit.html";
-
-  // CSS for View/Directives
-  var angularSelectCSS = "assets/lib/css/angular-select.min.css";
-  var codeMirrorCSS = "assets/lib/css/codemirror.css";
-  var githubCSS = "assets/lib/css/github.css";
-
+angular.module("GruiRoutes").config([
+  "$stateProvider",
+  "$locationProvider",
+  "$urlRouterProvider",
+  "RouteHelpersProvider",
   function MainRoutes(
     $stateProvider,
     $locationProvider,
     $urlRouterProvider,
     helper
   ) {
-    "use strict";
     // Set the following to true to enable the HTML5 Mode
     // You may have to set <base> tag in index and a routing configuration in your server
     $locationProvider.html5Mode(false);
@@ -65,7 +54,6 @@
     // default route
     $urlRouterProvider.otherwise("/login");
 
-    // --------------Application Routes---------------
     $stateProvider
       .state("root", {
         url: "/admin",
@@ -106,6 +94,9 @@
         parent: "question",
         templateUrl: addQuestionTemplate,
         css: [angularSelectCSS, codeMirrorCSS, githubCSS],
+        resolve: helper.resolveFor(
+          "addQuestionController",
+        ),
         authenticate: true
       })
       .state("question.edit", {
@@ -113,6 +104,9 @@
         parent: "question",
         templateUrl: editQuestionTemplate,
         css: [angularSelectCSS, codeMirrorCSS, githubCSS],
+        resolve: helper.resolveFor(
+          "editQuestionController",
+        ),
         authenticate: true
       })
       .state("quiz", {
@@ -235,16 +229,4 @@
         templateUrl: editProfileTemplate
       });
   }
-
-  // Dependency and rout function array
-  var GruiRoutes = [
-    "$stateProvider",
-    "$locationProvider",
-    "$urlRouterProvider",
-    "RouteHelpersProvider",
-    MainRoutes
-  ];
-
-  // Getting module and setting routes
-  angular.module("GruiRoutes").config(GruiRoutes);
-})();
+]);

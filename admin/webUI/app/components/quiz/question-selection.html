@@ -13,13 +13,13 @@
           <div class="base-font">
             Positve Score: {{question.positive}} &nbsp;&nbsp;
             Negative Score: {{question.negative}}&nbsp;&nbsp;
-            Answer 
+            Answer
 
             <span class="text-green option-icon">
-              <span ng-if="question['question.correct'].length == 1">
+              <span ng-if="question.correct.length == 1">
                 <i class="material-icons">done</i>
               </span>
-        <span ng-if="question['question.correct'].length > 1">
+        <span ng-if="question.correct.length > 1">
                 <i class="material-icons">done_all</i>
               </span>
         </span>

@@ -354,17 +354,12 @@
         return;
       }
 
-      var requestData = {
-        feedback: escape(cqVm.feedback)
-      };
-      candidateService.sendFeedback(requestData).then(
+      candidateService.sendFeedback({
+        feedback: cqVm.feedback
+      }).then(
         function(data) {
           cqVm.feedbackSubmitted = true;
-        },
-        function(err) {
-          console.log(err);
-        }
-      );
+        });
     }
 
     $scope.$on("$destroy", function() {

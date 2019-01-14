@@ -68,10 +68,10 @@
                 Score: <span class="text-green bold">+ {{question.positive}}</span> |
                 <span class="text-red bold">- {{question.negative}}</span>
                 &nbsp;&nbsp;
-                <span ng-if="question['question.correct'].length == 1">
+                <span ng-if="question.correct.length == 1">
                   Single Answer
                 </span>
-                <span ng-if="question['question.correct'].length > 1">
+                <span ng-if="question.correct.length > 1">
                   Multiple Answers
                 </span>
               </div>
