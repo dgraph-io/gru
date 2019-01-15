@@ -73,7 +73,7 @@ angular.module('GruiApp').controller('quizController', [
           })
           $state.transitionTo("quiz.all");
         }, function(err) {
-          console.log(err);
+          console.error(err);
         })
     }
 
@@ -129,7 +129,7 @@ angular.module('GruiApp').controller('allQuizController', [
     quizService.getAllQuizzes().then(function(quizzes) {
       quizVm.allQuizes = quizzes;
     }, function(err) {
-      console.log(err);
+      console.error(err);
     });
     quizVm.getAllQuestions();
   }
@@ -170,7 +170,7 @@ angular.module('GruiApp').controller('editQuizController', [
 
         quizVm.getAllQuestions();
       }, function(err) {
-        console.log(err);
+        console.error(err);
       });
 
     function editQuiz() {
@@ -220,7 +220,7 @@ angular.module('GruiApp').controller('editQuizController', [
           quizVm.newQuiz = {};
           $state.transitionTo("quiz.all");
         }, function(err) {
-          console.log(err);
+          console.error(err);
         })
     }
 

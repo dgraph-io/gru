@@ -29,7 +29,7 @@
             preSelectQuiz(quizID);
           },
           function(err) {
-            console.log(err);
+            console.error(err);
           }
         );
       } else {
@@ -106,7 +106,7 @@
                 }
               },
               function(err) {
-                console.log(err);
+                console.error(err);
               }
             );
           }
@@ -232,7 +232,7 @@
             });
           },
           function(err) {
-            console.log(err);
+            console.error(err);
           }
         );
       }
@@ -388,7 +388,7 @@
         }
       },
       function(err) {
-        console.log(err);
+        console.error(err);
       }
     );
 
@@ -510,7 +510,7 @@
           mainVm.hideModal();
         },
         function(err) {
-          console.log(error);
+          console.error(error);
           candidatesVm.currentDelete = "";
           mainVm.hideModal();
         }
@@ -595,7 +595,7 @@
           cReportVm.initScoreCircle();
         },
         function(error) {
-          console.log(error);
+          console.error(error);
         }
       )
       .then(function() {

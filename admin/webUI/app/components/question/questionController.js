@@ -219,7 +219,7 @@ angular.module("GruiApp").controller("allQuestionController", [
         },
         function(err) {
           allQVm.showLazyLoader = false;
-          console.log(err);
+          console.error(err);
         }
       );
     }

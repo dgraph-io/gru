@@ -262,7 +262,7 @@
     mainVm.pageName = "quiz-landing";
 
     if (!$stateParams.quiz_token) {
-      console.log("Not a valid CANDIDATE");
+      console.error("Not a valid CANDIDATE");
       qlVm.invalidUser = true;
     } else {
       localStorage.setItem("quiz_token", $stateParams.quiz_token);
@@ -374,7 +374,7 @@
           mainVm.goTo("candidate.quiz");
         },
         function(err) {
-          console.log(err);
+          console.error(err);
         }
       );
     }

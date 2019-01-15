@@ -74,7 +74,7 @@ angular.module('GruiApp').controller('editProfileController', [
         editProfileVm.info.backup = isNaN(editProfileVm.info.backup) ? 1 : editProfileVm.info.backup
         editProfileVm.info.backup_days = isNaN(editProfileVm.info.backup_days) ? 5 : editProfileVm.info.backup_days
       }, function(err) {
-        console.log(err)
+        console.error(err)
       });
 
     function valid(input) {
@@ -112,7 +112,7 @@ angular.module('GruiApp').controller('editProfileController', [
           })
           $state.transitionTo("root")
         }, function(err) {
-          console.log(err)
+          console.error(err)
           SNACKBAR({
             message: "Something went wrong: " + JSON.stringify(err),
             messageType: "error",

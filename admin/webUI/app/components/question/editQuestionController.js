@@ -106,7 +106,7 @@ angular.module("GruiApp").controller("editQuestionController", [
           }
         },
         function(err) {
-          console.log(err);
+          console.error(err);
           // Should not happen, but if it does remove tag deletions from the UI.
           question.tags = question.tags.filter(function(tag) {
             return !tag.is_delete;
