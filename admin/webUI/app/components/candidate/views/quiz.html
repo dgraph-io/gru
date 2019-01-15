@@ -153,16 +153,16 @@
             <label class="pb-10">OPTIONS</label>
 
             <div ng-repeat="option in cqVm.question.options">
-              <label class="mdl-radio mdl-js-radio mdl-js-ripple-effect mt-10" for="option{{$index}}">
+              <label class="{{cqVm.question.multiple && 'mdl-checkbox mdl-js-checkbox'}} {{!cqVm.question.multiple && 'mdl-radio mdl-js-radio'}} mdl-js-ripple-effect mt-10" for="option{{$index}}">
                 <input
-                  ng-if="!cqVm.question.multiple"
                   type="radio"
+                  ng-if="!cqVm.question.multiple"
                   id="option{{$index}}"
                   class="mdl-radio__button"
                   name="answer"
                   value="{{option.uid}}"
                   ng-model="cqVm.answer"
-                >
+                />
                 <input
                   ng-if="cqVm.question.multiple"
                   type="checkbox"
@@ -170,8 +170,8 @@
                   name="answer"
                   class="mdl-checkbox__input"
                   ng-model="cqVm.answer[option.uid]"
-                >
-                <span class="mdl-radio__label">
+                />
+                <span>
                   <pre ng-bind-html="mainVm.markDownFormat(option.name)" class="pl-20 pr-20 pt-10 code-block full-border-grey"></pre>
                 </span>
               </label>

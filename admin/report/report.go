@@ -31,8 +31,8 @@ type que struct {
 	Text     string
 	Name     string
 	Tags     []option `json:"question.tag"`
-	Options  []option `json:"question.option"`
-	Correct  []option `json:"question.correct"`
+	Options  []option `json:"options"`
+	Correct  []option `json:"correct"`
 }
 
 type questions []cq

@@ -24,11 +24,9 @@ type Question struct {
 
 	// cuid represents the uid of the question asked to the candidate, it is linked
 	// to the original question uid.
-	Cid     string   `json:"cuid"`
-	Text    string   `json:"text"`
-	Options []Answer `json:"question.option"`
-	Tags    []Tag    `json:"question.tag"`
-	// TODO - Remove the ,string after we incorporate Dgraph schema here.
+	Cid     string     `json:"cuid"`
+	Text    string		 `json:"text"`
+	Options []Answer	 `json:"options"`
 	IsMultiple bool    `json:"multiple"`
 	Positive   float64 `json:"positive"`
 	Negative   float64 `json:"negative"`

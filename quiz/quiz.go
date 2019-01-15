@@ -169,7 +169,8 @@ func sendReport(cid string) {
 	dir, _ := os.Getwd()
 	t, err := template.ParseFiles(filepath.Join(dir, "quiz/report.html"))
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("Report not sent", err)
+		return
 	}
 	buf := new(bytes.Buffer)
 	s, re := report.ReportSummary(cid)

@@ -58,14 +58,12 @@
     $interval,
     candidateService
   ) {
-    // VARIABLE DECLARATION
     cqVm = this;
     cqVm.total_score = 0;
     candidateVm.isValidUser = candidateVm.checkValidity();
     mainVm.pageName = "candidate-quiz-page";
     cqVm.timerObj = {};
 
-    // FUNCTION DECLARATION
     cqVm.getQuestion = getQuestion;
     cqVm.submitAnswer = submitAnswer;
     cqVm.getTime = getTime;
@@ -74,7 +72,6 @@
     cqVm.stopQuiz = stopQuiz;
     cqVm.submitFeedback = submitFeedback;
 
-    // INITIALIZERS
     if (candidateVm.isValidUser) {
       cqVm.getQuestion();
     }
@@ -85,9 +82,6 @@
       mainVm.hideNotification(true);
     });
 
-    // FUNCTION DEFINITION
-
-    // Get Question
     function getQuestion() {
       candidateService.getQuestion().then(
         function(data) {
@@ -98,8 +92,6 @@
             cqVm.stopQuiz();
             cqVm.total_score = data.score;
           } else {
-            //INIT DATA AND TIMERS
-
             var seconds = Duration.parse(data.time_taken).seconds();
             $timeTakenElem = document.querySelector("#time-taken");
             // So that we call getTime() when question is fetched the first time and update

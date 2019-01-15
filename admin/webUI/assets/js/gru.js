@@ -165,22 +165,12 @@
 
     var snackbarContainer = document.querySelector('#snackbar-container');
     window.SNACKBAR = function(setting) {
-      if (setting.messageType) {
-        $(snackbarContainer).addClass(setting.messageType);
-      } else {
-        $(snackbarContainer).addClass("error");
-      }
+      $(snackbarContainer).addClass(setting.messageType || "error");
 
-      var data = {
+      snackbarContainer.MaterialSnackbar.showSnackbar({
         message: setting.message,
-      };
-
-      if (setting.timeout) {
-        data.timeout = setting.timeout;
-      } else {
-        data.timeout = 3000;
-      }
-      snackbarContainer.MaterialSnackbar.showSnackbar(data);
+        timeout: setting.timeout || 3000,
+      });
     }
 
     function close() {

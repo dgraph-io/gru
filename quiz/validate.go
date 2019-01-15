@@ -64,7 +64,7 @@ func quizQns(quizId string) ([]Question, error) {
 				text
 				positive
 				negative
-				question.option {
+				options: question.option {
 					uid
 					name
 				}
