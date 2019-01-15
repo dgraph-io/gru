@@ -1,14 +1,20 @@
-(function() {
+angular.module("GruiApp").controller("questionController", [
+  "$scope",
+  "$rootScope",
+  "$http",
+  "$state",
+  "$stateParams",
+  "questionService",
+  "MainService",
   function questionController(
     $scope,
     $rootScope,
     $http,
-    $q,
     $state,
     $stateParams,
-    questionService
+    questionService,
+    MainService
   ) {
-    // VARIABLE DECLARATION
     mainVm.pageName = "question";
     questionVm = this;
     questionVm.optionsCount = 4;
@@ -38,28 +44,21 @@
       indentWithTabs: true
     };
 
-    // FUNCTION DECLARATION
-    questionVm.addNewTag = addNewTag;
-    questionVm.validateInput = validateInput;
-    questionVm.initCodeMirror = initCodeMirror;
-    questionVm.initOptionEditor = initOptionEditor;
     questionVm.isCorrect = isCorrect;
-    questionVm.getAllTags = getAllTags;
     questionVm.onTagSelect = onTagSelect;
-    questionVm.markDownFormat = markDownFormat;
-    questionVm.transitionToQuestion = transitionToQuestion;
-    questionVm.getAllTags();
 
-    // FUNCTION DEFINITION
+    questionVm.markDownFormat = function(content) {
+      return marked(content);
+    }
 
-    function initCodeMirror() {
+    questionVm.initCodeMirror = function() {
       $scope.cmOption = {};
       setTimeout(function() {
         $scope.cmOption = questionVm.editorSetting;
       }, 500);
     }
 
-    function initOptionEditor() {
+    questionVm.initOptionEditor = function() {
       var setting = {};
       for (var i = 0; i < questionVm.optionsCount; i++) {
         setting["option" + i] = questionVm.editorSetting;
@@ -67,77 +66,62 @@
       return setting;
     }
 
-    $rootScope.$on("$viewContentLoaded", function() {
-      // questionVm.initCodeMirror();
-    });
-
-    function markDownFormat(content) {
-      return marked(content);
-    }
-
-    // Get all Tags
-    function getAllTags() {
-      mainVm.getAllTags().then(
+    questionVm.getAllTags = function() {
+      MainService.get("/get-all-tags").then(
         function(data) {
           if (!data || !data.data || !data.data.tags) {
             questionVm.allTags = [];
             return;
           }
           questionVm.allTags = data.data.tags;
-        },
-        function(err) {
-          console.log(err);
-        }
-      );
+        });
     }
 
-    function addNewTag(new_tag) {
+    questionVm.getAllTags();
+
+    questionVm.addNewTag = function(new_tag) {
       return {
         id: "",
         name: new_tag
       };
     }
 
-    function validateInput(inputs) {
-      if (!inputs.name) {
+    questionVm.validateInput = function(question) {
+      if (!question.name) {
         return "Please enter valid question name";
       }
-      if (!inputs.text) {
+      if (!question.text) {
         return "Please enter valid question text";
       }
-      if (inputs.positive == null || isNaN(inputs.positive)) {
+      if (question.positive == null || isNaN(question.positive)) {
         return "Please enter valid positve marks";
       }
-      if (inputs.negative == null || isNaN(inputs.negative)) {
+      if (question.negative == null || isNaN(question.negative)) {
         return "Please enter valid negative marks";
       }
-      if (Object.keys(inputs.options).length != questionVm.optionsCount) {
+      if (Object.keys(question.options).length != questionVm.optionsCount) {
         return "Please enter all the options";
       }
 
       hasCorrectAnswer = false;
-      hasEmptyName = false;
       correct = 0;
-      angular.forEach(inputs.options, function(value, key) {
+      angular.forEach(question.options, function(value) {
         if (value.is_correct) {
           hasCorrectAnswer = true;
           correct++;
         }
         if (!value.name) {
-          hasEmptyName = true;
+          return "Please enter option name correctly";
         }
       });
-      if (hasEmptyName) {
-        return "Please enter option name correctly";
-      }
       if (!hasCorrectAnswer) {
         return "Please mark at least one correct answer";
       }
 
-      if (!inputs.tags.length) {
+      if (!question.tags || !question.tags.length) {
         return "Minimum one tag is required";
       }
-      if (correct > 1 && inputs.negative < inputs.positive) {
+      if (correct > 1 && question.negative < question.positive) {
         return "For questions with multiple correct answers, negative score should be more than positive.";
       }
 
@@ -160,7 +144,7 @@
       return false;
     }
 
-    function onTagSelect(item, model, isEdit) {
+    function onTagSelect(item, model) {
       for (var i = 0; i < questionVm.allTags.length; i++) {
         if (item.name == questionVm.allTags[i].name && !item.uid) {
           delete model.id;
@@ -168,155 +152,49 @@
           model.uid = questionVm.allTags[i].uid;
         }
       }
-
-      if (isEdit) {
-        $rootScope.$broadcast("onSelect", {
-          item: item,
-          model: model
-        });
-      }
-    }
-
-    function transitionToQuestion(questionId) {
-      $state.transitionTo("question.all", {
-        quesID: questionId
-      });
     }
   }
+]);
 
-  function addQuestionController(
-    $scope,
-    $rootScope,
-    $http,
-    $q,
-    $state,
-    $stateParams,
-    questionService
-  ) {
-    // See if update
-    addQueVm = this;
-    addQueVm.newQuestion = {};
-    addQueVm.newQuestion.tags = [];
-    addQueVm.cmModel = "";
-
-    setTimeout(function() {
-      addQueVm.editor = questionVm.initOptionEditor();
-    }, 500);
-
-    $scope.$watch("addQueVm.cmModel", function(current, original) {
-      addQueVm.outputMarked = marked(current);
-    });
-
-    //FUnction Declaration
-    addQueVm.addQuestionForm = addQuestionForm;
-    addQueVm.resetForm = resetForm;
-
-    // Check if user is authorized
-    function addQuestionForm() {
-      var options = [];
-      var newOptions = angular.copy(addQueVm.newQuestion.optionsBak);
-      angular.forEach(newOptions, function(value, key) {
-        if (!value.is_correct) {
-          value.is_correct = false;
-        }
-        value.name = escape(value.name);
-        options.push(value);
-      });
-      addQueVm.newQuestion.options = options;
-      addQueVm.newQuestion.text = escape(addQueVm.cmModel);
-      var validataionError = questionVm.validateInput(addQueVm.newQuestion);
-      if (validataionError) {
-        SNACKBAR({
-          message: validataionError,
-          messageType: "error"
-        });
-        return;
-      }
-
-      var requestData = angular.copy(addQueVm.newQuestion);
-      requestData.notes = requestData.notes;
-
-      // Hit the API
-      questionService.saveQuestion(JSON.stringify(requestData)).then(
-        function(data) {
-          addQueVm.newQuestion = {};
-          addQueVm.cmModel = "";
-
-          if (data.code == "Error") {
-            SNACKBAR({
-              message: data.message,
-              messageType: "error"
-            });
-          }
-          if (data.Success) {
-            SNACKBAR({
-              message: data.Message
-            });
-          }
-          $state.transitionTo("question.all");
-        },
-        function(err) {
-          console.log(err);
-        }
-      );
-    }
-
-    $rootScope.$on("$viewContentLoaded", function() {
-      questionVm.initCodeMirror();
-    });
-
-    questionVm.initCodeMirror();
-
-    function resetForm() {
-      addQueVm.cmModel = "";
-      addQueVm.newQuestion = {};
-      addQueVm.newQuestion.tags = [];
-      $(".mdl-textfield.is-dirty").removeClass("is-dirty");
-    }
-  }
-
+angular.module("GruiApp").controller("allQuestionController", [
+  "$scope",
+  "$rootScope",
+  "$http",
+  "$state",
+  "$stateParams",
+  "questionService",
   function allQuestionController(
     $scope,
     $rootScope,
     $http,
-    $q,
     $state,
     $stateParams,
     questionService
   ) {
-    // VARIABLE DECLARATION
     allQVm = this;
     allQVm.showLazyLoader = false;
-    allQVm.noItemFound = false;
     mainVm.allQuestions = [];
 
-    // FUNCTION DECLARATION
     allQVm.getAllQuestions = getAllQuestions;
     allQVm.getQuestion = getQuestion;
-    allQVm.setQuestion = setQuestion;
     allQVm.toggleFilter = toggleFilter;
     allQVm.filterBy = filterBy;
     allQVm.removeAllFilter = removeAllFilter;
     allQVm.setFirstQuestion = setFirstQuestion;
     allQVm.searchText = "";
 
-    // INITITIALIZERS
     allQVm.getAllQuestions();
     questionVm.getAllTags();
 
-    // FUNCTION DEFINITIONS
     function getAllQuestions() {
       allQVm.showLazyLoader = true;
-      // TODO - Fetch only meta for all questions, and details for just the
-      // first question because we anyway refetch the questions from the server
-      // on click. In the meta call, fetch tags and multiple status too so that
-      // we can do filtering based on that.
+
       questionService.getAllQuestions(false).then(
         function(questions) {
           allQVm.showLazyLoader = false;
 
           if (!questions) {
-            allQVm.noItemFound = true;
+            mainVm.allQuestions = [];
             return;
           }
 
@@ -335,14 +213,9 @@
               });
             }
             questionIndex = Math.max(questionIndex, 0)
-            allQVm.setQuestion(
-              mainVm.allQuestions[questionIndex],
-              questionIndex,
-            );
+            allQVm.question = mainVm.allQuestions[questionIndex]
+            allQVm.questionIndex = questionIndex;
           }
-
-          allQVm.lastQuestion =
-            mainVm.allQuestions[mainVm.allQuestions.length - 1].uid;
         },
         function(err) {
           allQVm.showLazyLoader = false;
@@ -357,11 +230,6 @@
       questionService.getQuestion(questionId).then(function(question) {
         allQVm.question = question;
       });
-    }
-
-    function setQuestion(question, index) {
-      allQVm.question = question;
-      allQVm.questionIndex = index;
     }
 
     function toggleFilter(filter_value, key) {
@@ -400,10 +268,9 @@
       if (allQVm.filter && allQVm.filter.tag && allQVm.filter.tag.length) {
         var found = false;
         var tagFound = true;
-        var tagsLen = allQVm.filter.tag.length;
-        for (var i = 0; i < tagsLen; i++) {
+        for (var i = 0; i < allQVm.filter.tag.length; i++) {
           var tagIndex = mainVm.indexOfObject(
-            question["question.tag"],
+            question.tags,
             allQVm.filter.tag[i]
           );
           if (tagIndex == -1) {
@@ -412,13 +279,13 @@
           }
           if (
             tagIndex > -1 &&
-            (allQVm.filter.multiple && question["question.correct"].length == 1)
+            (allQVm.filter.multiple && question.correct.length == 1)
           ) {
             tagFound = false;
           }
           if (
             tagIndex > -1 &&
-            (allQVm.filter.single && question["question.correct"].length > 1)
+            (allQVm.filter.single && question.correct.length > 1)
           ) {
             tagFound = false;
           }
@@ -426,19 +293,15 @@
         }
         return textFilterMatch && tagFound;
       } else if (allQVm.filter && allQVm.filter.multiple) {
-        if (question["question.correct"].length > 1) {
+        if (question.correct.length > 1) {
           return textFilterMatch && true;
         } else {
           return textFilterMatch && false;
         }
       } else if (allQVm.filter && allQVm.filter.single) {
-        if (question["question.correct"].length == 1) {
-          return textFilterMatch && true;
-        } else {
-          return textFilterMatch && false;
-        }
+        return (question.correct.length == 1) && !!textFilterMatch;
       } else {
-        return textFilterMatch && true;
+        return !!textFilterMatch;
       }
     }
 
@@ -455,200 +318,5 @@
         }
       }, 300);
     }
-  } // AllQuestionController
-
-  function editQuestionController(
-    $scope,
-    $rootScope,
-    $state,
-    $stateParams,
-    questionService
-  ) {
-    editQuesVm = this;
-    editQuesVm.newQuestion = {};
-
-    // Functin Declaratin
-    editQuesVm.updateQuestionForm = updateQuestionForm;
-    editQuesVm.onRemoveTag = onRemoveTag;
-    editQuesVm.initMarkeDownPreview = initMarkeDownPreview;
-
-    // INITIALIZERS
-    questionVm.initCodeMirror();
-    setTimeout(function() {
-      editQuesVm.editor = questionVm.initOptionEditor();
-    }, 500);
-
-    questionVm.getAllTags();
-
-    questionService.getQuestion($stateParams.quesID).then(
-      function(question) {
-        editQuesVm.newQuestion = question;
-        editQuesVm.cmModel = unescape(editQuesVm.newQuestion.text);
-        question.optionsBak = angular.copy(
-          question["question.option"]
-        );
-        for (var i = 0; i < question.optionsBak.length; i++) {
-          question.optionsBak[i].name = unescape(question.optionsBak[i].name);
-        }
-        editQuesVm.newQuestion.positive = parseFloat(question.positive);
-        editQuesVm.newQuestion.negative = parseFloat(question.negative);
-
-        editQuesVm.originalQuestion = angular.copy(editQuesVm.newQuestion);
-
-        editQuesVm.initMarkeDownPreview();
-      },
-      function(err) {
-        console.log(err);
-      }
-    );
-
-    $rootScope.$on("onSelect", function(e, data) {
-      if (data.model.is_delete) {
-        var idx = mainVm.indexOfObject(
-          editQuesVm.newQuestion.deletedTag,
-          data.model
-        );
-        if (idx >= 0) {
-          editQuesVm.newQuestion.deletedTag.splice(idx, 1);
-        }
-        data.model.is_delete = false;
-      }
-    });
-
-    function updateQuestionForm() {
-      if (editQuesVm.newQuestion.deletedTag) {
-        editQuesVm.newQuestion.tags = editQuesVm.newQuestion[
-          "question.tag"
-        ].concat(editQuesVm.newQuestion.deletedTag);
-      } else {
-        editQuesVm.newQuestion.tags = editQuesVm.newQuestion["question.tag"];
-      }
-
-      editQuesVm.newQuestion.options = angular.copy(
-        editQuesVm.newQuestion.optionsBak
-      );
-      editQuesVm.newQuestion.text = escape(editQuesVm.cmModel);
-
-      angular.forEach(editQuesVm.newQuestion.options, function(value, key) {
-        editQuesVm.newQuestion.options[key].name = escape(value.name);
-      });
-      var validataionError = questionVm.validateInput(editQuesVm.newQuestion);
-      if (validataionError) {
-        SNACKBAR({
-          message: validataionError,
-          messageType: "error"
-        });
-        return;
-      }
-
-      var deletedAllTags = true;
-      var allTags = editQuesVm.newQuestion.tags;
-      var tagsLength = allTags.length;
-      for (var i = 0; i < tagsLength; i++) {
-        if (!allTags[i].is_delete) {
-          deletedAllTags = false;
-        }
-      }
-
-      if (deletedAllTags) {
-        SNACKBAR({
-          message: "Please enter at least one tag",
-          messageType: "error"
-        });
-        return;
-      }
-
-      var requestData = angular.copy(editQuesVm.newQuestion);
-      requestData.notes = requestData.notes;
-      questionService.editQuestion(requestData).then(
-        function(data) {
-          SNACKBAR({
-            message: data.Message
-          });
-          $state.transitionTo("question.all", {
-            quesID: $stateParams.quesID
-          });
-        },
-        function(err) {
-          console.log(err);
-        }
-      );
-    }
-
-    function resetQuestion(index) {
-      editQuesVm.newQuestion = angular.copy(editQuesVm.originalQuestion);
-
-      $rootScope.upgradeMDL();
-    }
-
-    function onRemoveTag(tag, model, question) {
-      if (tag.uid) {
-        tag.is_delete = true;
-        question.deletedTag = question.deletedTag || [];
-        question.deletedTag.push(tag);
-      }
-    }
-
-    function initMarkeDownPreview() {
-      $scope.$watch("editQuesVm.cmModel", function(current, original) {
-        editQuesVm.outputMarked = marked(current, {
-          gfm: true
-        });
-      });
-    }
   }
-
-  var editQuestionDependency = [
-    "$scope",
-    "$rootScope",
-    "$state",
-    "$stateParams",
-    "questionService",
-    editQuestionController
-  ];
-  angular
-    .module("GruiApp")
-    .controller("editQuestionController", editQuestionDependency);
-
-  var allQuestionDependency = [
-    "$scope",
-    "$rootScope",
-    "$http",
-    "$q",
-    "$state",
-    "$stateParams",
-    "questionService",
-    allQuestionController
-  ];
-  angular
-    .module("GruiApp")
-    .controller("allQuestionController", allQuestionDependency);
-
-  var addQuestionDependency = [
-    "$scope",
-    "$rootScope",
-    "$http",
-    "$q",
-    "$state",
-    "$stateParams",
-    "questionService",
-    addQuestionController
-  ];
-  angular
-    .module("GruiApp")
-    .controller("addQuestionController", addQuestionDependency);
-
-  var questionDependency = [
-    "$scope",
-    "$rootScope",
-    "$http",
-    "$q",
-    "$state",
-    "$stateParams",
-    "questionService",
-    questionController
-  ];
-  angular
-    .module("GruiApp")
-    .controller("questionController", questionDependency);
-})();
+]);

@@ -22,7 +22,6 @@
     services.getQuestion = function(questionId) {
       return MainService.get('/question/' + questionId)
         .then(function(data) {
-          console.log('received question', data);
           return data.data.question[0];
         })
     }

@@ -1,7 +1,7 @@
-<div class="mdl-grid container" ng-controller="addQuestionController as ctrl">
+<div class="mdl-grid container" ng-controller="editQuestionController as ctrl">
   <div class="mdl-cell mdl-cell--12-col">
     <h5>
-      Add Question
+      Edit Question
     </h5>
     <form ng-submit="ctrl.submitForm()">
       <div class="mdl-grid no-pad">
@@ -55,7 +55,14 @@
       </div>
       <div class="mdl-grid no-pad">
         <div class="mdl-cell mdl-cell--6-col ml-0">
-          <ui-select multiple tagging="questionVm.addNewTag" theme="select2" ng-model="ctrl.newQuestion.tags" class="mdl-select" on-select="questionVm.onTagSelect($item, $model)">
+          <ui-select multiple
+            tagging="questionVm.addNewTag"
+            theme="select2"
+            ng-model="ctrl.newQuestion.tags"
+            class="mdl-select"
+            on-remove="ctrl.onRemoveTag($item, ctrl.newQuestion)"
+            on-select="questionVm.onTagSelect($item, $model)"
+          >
             <ui-select-match placeholder="Enter tags">
               <span ng-bind="$item.name"></span>
             </ui-select-match>
@@ -76,8 +83,10 @@
       <button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mt-20">
         Save Question
       </button>
-      <button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mt-20 ml-20" type="reset" ng-click="ctrl.resetForm()">
-        Reset
+      <button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mt-20 ml-20"
+          ng-click="ctrl.cancelEdit()"
+      >
+        Cancel
       </button>
     </form>
   </div>

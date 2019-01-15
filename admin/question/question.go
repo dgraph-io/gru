@@ -148,7 +148,7 @@ func Index(w http.ResponseWriter, r *http.Request) {
 			negative
 			positive
 			notes
-			question.tag {
+			tags: question.tag {
 				uid
 				name
 			}
@@ -190,7 +190,7 @@ func getQuestionQuery(questionId string) string {
 				uid
 				name
 			}
-			question.tag {
+			tags: question.tag {
 				uid
 				name
 			}

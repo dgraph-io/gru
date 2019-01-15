@@ -63,7 +63,11 @@
             <input type="checkbox" id="question-{{$index}}" class="mdl-checkbox__input" ng-change="editQuizVm.addNewQuestion(question, $index)" ng-model="question.is_checked" />
             <span class="mdl-checkbox__label">
               {{question.name}}
-              <button ng-click="editQuizVm.editQuestion(question, $index)">Edit</button>
+              <a ui-sref="question.edit({quesID: question.uid, returnQuizId: editQuizVm.quizId})"
+                  class="question-edit"
+              >
+                Edit
+              </a>
               <div class="base-font">
                 Score: <span class="text-green bold">+ {{question.positive}}</span> |
                 <span class="text-red bold">- {{question.negative}}</span>

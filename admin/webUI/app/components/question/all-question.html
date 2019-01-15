@@ -50,10 +50,10 @@
             >
               {{question.name}}
             </div>
-            <div class="pt-20 text-center text-red no-item " ng-show="allQVm.noItemFound ">
+            <div class="pt-20 text-center text-red no-item" ng-show="allQVm.allQuestions.length == 0">
               <div>No more questions available</div>
             </div>
-            <div class="text-red text-center pt-20" ng-show="!filteredQues.length">
+            <div class="text-red text-center pt-20" ng-show="filteredQues.length == 0">
               No questions matched the given criteria.
             </div>
           </div>
@@ -101,19 +101,18 @@
             </div>
             <div class="mt-10 pl-10 ">
               <strong>QUESTION CONTENT</strong>
-              <pre class="ph-20 pv-5 full-border code-block " ng-bind-html="questionVm.markDownFormat(mainVm.unescapeText(allQVm.question.text)) "></pre>
+              <pre class="ph-20 pv-5 full-border code-block " ng-bind-html="questionVm.markDownFormat(allQVm.question.text) "></pre>
             </div>
-            <div class="mdl-grid no-pad mt-5 " ng-repeat="option in allQVm.question[ 'question.option'] track by $index ">
+            <div class="mdl-grid no-pad mt-5" ng-repeat="option in allQVm.question.options">
               <div class="mdl-cell mdl-cell--2-col mdl-cell--middle ">
-                <span class="bold " ng-class="{ 'text-green': questionVm.isCorrect(option, allQVm.question[ 'question.correct'])} ">
-                  OPTIONS {{$index + 1}}
-                  <i class="material-icons mdi-sm " ng-show="questionVm.isCorrect(option, allQVm.question[ 'question.correct']) ">check_circle</i>
-
+                <span class="bold" ng-class="{ 'text-green': questionVm.isCorrect(option, allQVm.question.correct)}">
+                  OPTION {{$index + 1}}
+                  <i class="material-icons mdi-sm" ng-show="questionVm.isCorrect(option, allQVm.question.correct)">check_circle</i>
                 </span>
               </div>
               <div class="mdl-cell mdl-cell--10-col full-border option ">
                 <div class="ph-10 position-relative ">
-                  <pre ng-bind-html="questionVm.markDownFormat(mainVm.unescapeText(option.name)) " class="code-block "></pre>
+                  <pre ng-bind-html="questionVm.markDownFormat(option.name) " class="code-block "></pre>
                 </div>
               </div>
             </div>
@@ -125,9 +124,9 @@
                 {{allQVm.question.notes}}
               </div>
             </div>
-            <div class="mdl-grid no-pad " ng-show="allQVm.question[ 'question.tag'] ">
-              <div class="mdl-cell mdl-cell--12-col ">
-                <a ui-sref="question.edit({quesID: allQVm.question.uid}) " class="mdl-button question-action mr-10 ">
+            <div class="mdl-grid no-pad">
+              <div class="mdl-cell mdl-cell--12-col">
+                <a ui-sref="question.edit({quesID: allQVm.question.uid})" class="mdl-button question-action">
                   EDIT
                 </a>
               </div>

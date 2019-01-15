@@ -98,17 +98,16 @@ angular.module('GruiApp').controller('quizController', [
 
     function getTotalScore(questions) {
       var totalScore = 0;
-      angular.forEach(questions, function(value, key) {
-        var commulativeScore = value['question.correct'].length * value.positive;
-        if (!value.is_delete) { //Hadnling edit page condition
-          totalScore += commulativeScore;
+      angular.forEach(questions, function(question, key) {
+        if (!question.is_delete) {
+          totalScore += question.correct.length * question.positive;
         }
       });
       if (quizVm.newQuiz.newQuestions && quizVm.newQuiz.newQuestions.length) {
         for (var i = 0; i < quizVm.newQuiz.newQuestions.length; i++) {
           var commulativeScore = 0;
           var thisQues = quizVm.newQuiz.newQuestions[i];
-          commulativeScore = thisQues['question.correct'].length * thisQues.positive;
+          commulativeScore = thisQues.correct.length * thisQues.positive;
           totalScore += commulativeScore;
         }
       }
@@ -155,8 +154,9 @@ angular.module('GruiApp').controller('editQuizController', [
     mainVm.allQuestions = [];
 
     editQuizVm.editQuiz = editQuiz;
-    editQuizVm.addNewQuestion = addNewQuestion;
     editQuizVm.isExisting = isExisting;
+
+    editQuizVm.quizId = $stateParams.quizID;
 
     quizService.getQuiz($stateParams.quizID)
       .then(function(quiz) {
@@ -224,7 +224,7 @@ angular.module('GruiApp').controller('editQuizController', [
         })
     }
 
-    function addNewQuestion(question, index) {
+    editQuizVm.addNewQuestion = function addNewQuestion(question, index) {
       var questionLength = editQuizVm.selectedQuestion.length;
 
       if (question.is_checked) {

@@ -100,7 +100,7 @@ angular.module("GruiRoutes").config([
         authenticate: true
       })
       .state("question.edit", {
-        url: "/edit-question/:quesID",
+        url: "/edit-question/:quesID/returnQuizId/:returnQuizId",
         parent: "question",
         templateUrl: editQuestionTemplate,
         css: [angularSelectCSS, codeMirrorCSS, githubCSS],

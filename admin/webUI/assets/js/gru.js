@@ -72,17 +72,6 @@
       });
     });
 
-    // So that clicking on the question name in the side nav should bring the
-    // question description for this question to the top.
-    $(document).on("click", ".qn-nav .side-tabs", function() {
-      $container = $(".qn-desc")
-      $qnDesc = $("#tab0-panel")
-      $container.scrollTop(
-        $qnDesc.offset().top - $container.offset().top + $container.scrollTop()
-      );
-    });
-
-
     // General Function for Scroll to particular element
 
     function scrollTo(selector) {
