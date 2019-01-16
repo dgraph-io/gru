@@ -14,26 +14,23 @@
         </div>
       </div>
       <div class="mdl-cell mdl-cell--9-col mdl-cell--4-col-tablet pl-5 mdl-cell--middle">
-        <div class="mt-10 pb-5">
-          <div class="tag-wrapper">
-            <div class="inline-block" ng-repeat="tag in questionVm.allTags track by tag.uid">
-              <div class="tag-filter capitalize" ng-click="allQVm.toggleFilter(tag, 'tag')" ng-class="{'selected-filter': mainVm.indexOfObject(allQVm.filter.tag, tag) > -1}">
-                {{tag.name}}
-              </div>
-            </div>
-            <div class="tag-filter capitalize option-filter" ng-click="allQVm.toggleFilter('multiple')" ng-class="{'selected-filter': allQVm.filter.multiple}">
-              Multiple
-            </div>
-            <div class="tag-filter capitalize option-filter" ng-click="allQVm.toggleFilter('single')" ng-class="{'selected-filter': allQVm.filter.single}">
-              Single
-            </div>
-            <div class="inline-block">
-              <span class="text-red clickable" ng-click="allQVm.removeAllFilter()" ng-show="allQVm.filter.tag.length > 1 || (allQVm.filter.tag.length && (allQVm.filter.multiple || allQVm.filter.single))">
-                Clear All
-              </span>
-            </div>
-          </div>
+        <div
+            ng-repeat="tag in questionVm.allTags"
+            class="tag-filter capitalize inline-block"
+            ng-class="{'selected-filter': mainVm.indexOfObject(allQVm.filter.tag, tag) > -1}"
+            ng-click="allQVm.toggleFilter(tag, 'tag')"
+        >
+          {{tag.name}}
         </div>
+        <div class="tag-filter capitalize option-filter" ng-click="allQVm.toggleFilter('multiple')" ng-class="{'selected-filter': allQVm.filter.multiple}">
+          Multiple
+        </div>
+        <div class="tag-filter capitalize option-filter" ng-click="allQVm.toggleFilter('single')" ng-class="{'selected-filter': allQVm.filter.single}">
+          Single
+        </div>
+        <span class="text-red clickable" ng-click="allQVm.removeAllFilter()" ng-show="allQVm.filter.tag.length > 1 || (allQVm.filter.tag.length && (allQVm.filter.multiple || allQVm.filter.single))">
+          Clear All
+        </span>
       </div>
       <div class="mdl-cell mdl-cell--1-col mdl-cell--4-col-tablet ">
         <button class="mdl-button btn-succes bg-green pull-right mt-10 " ng-click="mainVm.goTo( 'question.add') ">Add New</button>
