@@ -1,6 +1,16 @@
+<backup>: default .
+<backup_days>: default .
+<candidate.answer>: default .
+<candidate.lastqnuid>: default .
+<candidate.question>: uid .
 <candidate.quiz>: uid .
 <candidate.score>: float .
-<complete>: bool .
+<company.email>: default .
+<company.invite_email>: default .
+<company.name>: default .
+<company.reject>: default .
+<company.reject_email>: default .
+<complete>: bool @index(bool) .
 <completed_at>: default .
 <country>: default .
 <cut_off>: default .
@@ -12,6 +22,7 @@
 <email>: default .
 <feedback>: default .
 <invite_sent>: default .
+<is_company_info>: default .
 <is_question>: string .
 <is_quiz>: string .
 <is_tag>: string .
@@ -22,15 +33,17 @@
 <positive>: float .
 <question.answered>: datetime .
 <question.asked>: datetime .
+<question.candidate>: uid .
 <question.correct>: uid .
 <question.option>: uid .
 <question.score>: float .
 <question.tag>: uid .
+<question>: uid .
 <quiz.candidate>: uid .
 <quiz.question>: uid .
 <quiz_start>: datetime @index(hour) .
 <score>: float @index(float) .
-<testo>: default .
+<tag.question>: uid .
 <text>: default .
 <threshold>: default .
 <token>: default .

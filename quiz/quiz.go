@@ -133,7 +133,7 @@ type uid struct {
 }
 
 type qids struct {
-	QuestionUid []uid   `json:"question.uid"`
+	QuestionUid []uid   `json:"question"`
 	Score       float64 `json:"candidate.score"`
 	Answered    string  `json:"question.answered"`
 }

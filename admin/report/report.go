@@ -54,7 +54,7 @@ type cq struct {
 	Score    float64   `json:"candidate.score"`
 	Asked    time.Time `json:"question.asked"`
 	Answered time.Time `json:"question.answered"`
-	Question []que     `json:"question.uid"`
+	Question []que     `json:"question"`
 }
 
 type QuizInfoBrief struct {
@@ -104,7 +104,7 @@ func reportQuery(id string) string {
         duration
       }
       candidate.question {
-        question.uid {
+        question {
           uid
           text
           name
