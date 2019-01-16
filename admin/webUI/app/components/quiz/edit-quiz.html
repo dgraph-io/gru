@@ -24,7 +24,7 @@
         </div>
         <div class="mdl-grid no-pad no-margin-lr">
           <div class="mdl-cell mdl-cell--12-col">
-            <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label" ng-class="{'is-dirty': quizVm.newQuiz.cut_off >= 0.0}">
+            <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label" ng-class="{'is-dirty': quizVm.newQuiz.cut_off != undefined}">
               <input class="mdl-textfield__input" type="number" name="text" id="cut_off" ng-model="quizVm.newQuiz.cut_off">
               <label class="mdl-textfield__label" for="cut_off">Cut off</label>
             </div>
@@ -40,7 +40,9 @@
         </div>
         <div class="mt-20" ng-if="quizVm.newQuiz['quiz.question']">
           <div class="bold pb-10">
-            {{ editQuizVm.getQuestionCount() }} Question<span ng-if="mainVm.objLen(quizVm.newQuiz['quiz.question']) != 1">s</span>, Total Score: {{quizVm.getTotalScore(quizVm.newQuiz['quiz.question']) | number: 2}}
+            {{ editQuizVm.getQuestionCount() }}
+            Question{{mainVm.objLen(quizVm.newQuiz['quiz.question']) != 1 && "s" || ""}},
+            Max Score: {{quizVm.getTotalScore(quizVm.newQuiz['quiz.question']) | number: 2}}
           </div>
         </div>
         <div class="mt-20">
@@ -63,6 +65,13 @@
             <input type="checkbox" id="question-{{$index}}" class="mdl-checkbox__input" ng-change="editQuizVm.addNewQuestion(question, $index)" ng-model="question.is_checked" />
             <span class="mdl-checkbox__label">
               {{question.name}}
+              <div
+                  ng-repeat="tag in question.tags"
+                  class="tag-filter capitalize inline-block"
+              >
+                {{tag.name}}
+              </div>
+
               <a ui-sref="question.edit({quesID: question.uid, returnQuizId: editQuizVm.quizId})"
                   class="question-edit"
               >
