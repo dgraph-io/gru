@@ -80,12 +80,8 @@
         Score: <span class="text-green bold">+ {{question.positive}}</span> |
         <span class="text-red bold">- {{question.negative}}</span>
         &nbsp;&nbsp;
-        <span ng-if="question.correct.length == 1">
-          Single Answer
-        </span>
-        <span ng-if="question.correct.length > 1">
-          Multiple Answers
-        </span>
+        <i ng-if="question.correct.length == 1" class="material-icons" style="font-size:16px">done</i>
+        <i ng-if="question.correct.length > 1" class="material-icons" style="font-size:16px">done_all</i>
       </div>
       <span ng-repeat="tag in question['question.tag']">
         <span class="mdl-chip">
