@@ -58,7 +58,7 @@ angular.module("GruiRoutes").config([
       .state("root", {
         url: "/admin",
         templateUrl: homeTemplate,
-        resolve: helper.resolveFor("homeController"),
+        resolve: helper.resolveFor("homeController", "marked"),
         authenticate: true
       })
       .state("login", {
@@ -73,7 +73,7 @@ angular.module("GruiRoutes").config([
         css: [angularSelectCSS, githubCSS],
         resolve: helper.resolveFor(
           "questionController",
-          "questionServices",
+          "questionService",
           "angular-select",
           "codeMirror",
           "javascript",
@@ -116,7 +116,8 @@ angular.module("GruiRoutes").config([
         resolve: helper.resolveFor(
           "quizController",
           "quizServices",
-          "questionServices"
+          "questionController",
+          "questionService",
         )
       })
       .state("quiz.all", {

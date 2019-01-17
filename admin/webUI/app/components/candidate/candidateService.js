@@ -1,85 +1,58 @@
-(function() {
-
+angular.module('GruiApp').service('candidateService', [
+  "$q",
+  "$http",
+  "MainService",
   function candidateService($q, $http, MainService) {
+    return {
+      getQuestion: function() {
+        return MainService.post('/quiz/question');
+      },
 
-    var services = {}; //Object to return
+      sendFeedback: function(data) {
+        mainVm.showAjaxLoader = true;
+        return $http({
+            method: 'POST',
+            url: mainVm.candidate_url + '/quiz/feedback',
+            data: $.param(data),
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded'
+            }
+          })
+          .then(function(data) {
+              mainVm.showAjaxLoader = false;
+              return data;
+            },
+            function(response, code) {
+              mainVm.showAjaxLoader = false;
+              throw response;
+            }
+          );
+      },
 
-    services.getQuestion = function() {
-      return MainService.post('/quiz/question');
+      submitAnswer: function(requestData) {
+        mainVm.showAjaxLoader = true;
+        return $http({
+            method: 'POST',
+            url: mainVm.candidate_url + '/quiz/answer',
+            data: $.param(requestData),
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded'
+            }
+          })
+          .then(function(data) {
+              mainVm.showAjaxLoader = false;
+              return data;
+            },
+            function(response, code) {
+              mainVm.showAjaxLoader = false;
+              throw response;
+            }
+          );
+      },
+
+      getTime: function() {
+        return MainService.post('/quiz/ping', "", true);
+      },
     }
-
-    services.sendFeedback = function(data) {
-      var deferred = $q.defer();
-
-      mainVm.showAjaxLoader = true;
-      $http({
-          method: 'POST',
-          url: mainVm.candidate_url + '/quiz/feedback',
-          data: $.param(data),
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded'
-          }
-        })
-        .then(function(data) {
-            mainVm.showAjaxLoader = false;
-            deferred.resolve(data);
-          },
-          function(response, code) {
-            mainVm.showAjaxLoader = false;
-            deferred.reject(response);
-          }
-        );
-      return deferred.promise;
-    }
-
-    services.submitAnswer = function(requestData) {
-      var deferred = $q.defer();
-
-      mainVm.showAjaxLoader = true;
-      $http({
-          method: 'POST',
-          url: mainVm.candidate_url + '/quiz/answer',
-          data: $.param(requestData),
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded'
-          }
-        })
-        .then(function(data) {
-            mainVm.showAjaxLoader = false;
-            deferred.resolve(data);
-          },
-          function(response, code) {
-            mainVm.showAjaxLoader = false;
-            deferred.reject(response);
-          }
-        );
-      return deferred.promise;
-    }
-
-    services.getTime = function() {
-      return MainService.post('/quiz/ping', "", true);
-    }
-
-    // private functions
-    function handleSuccess(data) { //SUCCESS API HIT
-      deferred.resolve(data);
-    }
-
-    function handleError(error) { //ERROR ON API HIT
-      deferred.reject(error);
-    }
-
-    return services;
-
   }
-
-  var candidateServiceArray = [
-    "$q",
-    "$http",
-    "MainService",
-    candidateService
-  ];
-
-  angular.module('GruiApp').service('candidateService', candidateServiceArray);
-
-})();
+]);

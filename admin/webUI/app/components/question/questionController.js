@@ -1,15 +1,42 @@
+angular.module('GruiApp').service('allQuestions', [
+  'questionService',
+  '$rootScope',
+  function(questionService, $rootScope) {
+    var allQuestions = [];
+
+    function fetchQuestions() {
+      questionService.getAllQuestions(true).then(
+        function(questions) {
+          setTimeout(function() {
+            $rootScope.$apply(function() {
+              allQuestions = questions;
+            });
+          }, 1);
+        },
+        function(err) {
+          console.error(err);
+        });
+    }
+    fetchQuestions();
+
+    setInterval(fetchQuestions, 5000);
+
+    return {
+      get: function() {
+        return allQuestions;
+      }
+    }
+  }
+]);
+
 angular.module("GruiApp").controller("questionController", [
   "$scope",
-  "$rootScope",
-  "$http",
   "$state",
   "$stateParams",
   "questionService",
   "MainService",
   function questionController(
     $scope,
-    $rootScope,
-    $http,
     $state,
     $stateParams,
     questionService,
@@ -135,78 +162,40 @@ angular.module("GruiApp").controller("questionController", [
 
 angular.module("GruiApp").controller("allQuestionController", [
   "$scope",
-  "$rootScope",
-  "$http",
   "$state",
   "$stateParams",
-  "questionService",
+  "allQuestions",
   function allQuestionController(
     $scope,
-    $rootScope,
-    $http,
     $state,
     $stateParams,
-    questionService
+    allQuestions
   ) {
     allQVm = this;
-    allQVm.showLazyLoader = false;
-    mainVm.allQuestions = [];
-
-    allQVm.getAllQuestions = getAllQuestions;
-    allQVm.getQuestion = getQuestion;
-    allQVm.toggleFilter = toggleFilter;
-    allQVm.filterBy = filterBy;
-    allQVm.removeAllFilter = removeAllFilter;
-    allQVm.setFirstQuestion = setFirstQuestion;
     allQVm.searchText = "";
 
-    allQVm.getAllQuestions();
+    allQVm.toggleFilter = toggleFilter;
+    allQVm.filterBy = filterBy;
+
     questionVm.getAllTags();
 
-    function getAllQuestions() {
-      allQVm.showLazyLoader = true;
-
-      questionService.getAllQuestions(false).then(
-        function(questions) {
-          allQVm.showLazyLoader = false;
-
-          if (!questions) {
-            mainVm.allQuestions = [];
-            return;
-          }
-
-          if (questions) {
-            if (mainVm.allQuestions && mainVm.allQuestions.length) {
-              for (var i = 0; i < questions.length; i++) {
-                mainVm.allQuestions.push(questions[i]);
-              }
-            } else {
-              mainVm.allQuestions = questions;
-            }
-            var questionIndex = -1;
-            if ($stateParams.quesID) {
-              questionIndex = mainVm.allQuestions.findIndex(function(q) {
-                return q.uid == $stateParams.quesID;
-              });
-            }
-            questionIndex = Math.max(questionIndex, 0)
-            allQVm.question = mainVm.allQuestions[questionIndex]
-            allQVm.questionIndex = questionIndex;
-          }
-        },
-        function(err) {
-          allQVm.showLazyLoader = false;
-          console.error(err);
-        }
-      );
+    if ($stateParams.quesID) {
+      allQVm.question = allQuestions.get().find(function(q) {
+        return q.uid == $stateParams.quesID;
+      });
     }
+    allQVm.question = allQVm.question || allQuestions.get()[0];
 
-    function getQuestion(questionId) {
+    allQVm.getQuestion = function getQuestion(questionId) {
       // When question is clicked on the side nav bar, we fetch its
       // information from backend and refresh it.
       questionService.getQuestion(questionId).then(function(question) {
         allQVm.question = question;
       });
+    }
+
+    allQVm.questions = function() {
+      return allQuestions.get();
     }
 
     function toggleFilter(filter_value, key) {
@@ -223,17 +212,13 @@ angular.module("GruiApp").controller("allQuestionController", [
       }
 
       if (!key) {
-        allQVm.filter[filter_value] = allQVm.filter[filter_value]
-          ? false
-          : true;
+        allQVm.filter[filter_value] = !allQVm.filter[filter_value];
         if (filter_value == "multiple") {
           allQVm.filter.single = false;
         } else if (filter_value == "single") {
           allQVm.filter.multiple = false;
         }
       }
-
-      allQVm.setFirstQuestion();
     }
 
     // TODO : Write modular code Filtering
@@ -282,18 +267,10 @@ angular.module("GruiApp").controller("allQuestionController", [
       }
     }
 
-    function removeAllFilter() {
+    allQVm.removeAllFilter = function removeAllFilter() {
       delete allQVm.filter;
-      allQVm.setFirstQuestion();
-    }
-
-    function setFirstQuestion() {
-      setTimeout(function() {
-        var question = $(".side-tabs");
-        if (question.length) {
-          question[0].click();
-        }
-      }, 300);
+      var questions = allQuestions.get();
+      questions.length && allQVm.getQuestion(questions[0].uid);
     }
   }
 ]);

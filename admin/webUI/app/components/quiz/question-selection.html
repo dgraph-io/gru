@@ -6,12 +6,11 @@
 <div class="question mt-20" ng-repeat="question in mainVm.allQuestions | filter:searchQ">
   <div class="mdl-grid no-pad clickable-hover">
     <div class="mdl-cell mdl-cell--12-col">
-      <label class="mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect height-inherit" for="question-{{$index}}" ng-class="{'is-checked': mainVm.hasKey(quizVm.newQuiz.questions, 'question-'+$index)}">
-        <input type="checkbox" id="question-{{$index}}" class="mdl-checkbox__input" ng-model="quizVm.newQuiz.questions['question-'+$index]" ng-true-value="{{question}}" ng-change="quizVm.removeCheckedQuestion($index)">
+      <label class="mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect height-inherit" for="question-{{$index}}" ng-class="{'is-checked': mainVm.hasKey(quizVm.quiz.questions, 'question-'+$index)}">
         <span class="mdl-checkbox__label">
           {{question.name}}
           <div class="base-font">
-            Positve Score: {{question.positive}} &nbsp;&nbsp;
+            Positive Score: {{question.positive}} &nbsp;&nbsp;
             Negative Score: {{question.negative}}&nbsp;&nbsp;
             Answer
 

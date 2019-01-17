@@ -1,9 +1,9 @@
 <div ng-controller="allQuestionController as allQVm" class="question-listing" id="question-listing">
-  <div class="" ng-if="mainVm.allQuestions.length">
+  <div ng-if="allQVm.questions().length">
     <div class="mdl-grid mdl-grid--no-spacing b-border">
       <div class="mdl-cell mdl-cell--2-col mdl-cell--4-col-tablet pl-5 mdl-cell--middle">
         <div class="pv-10">
-          {{filteredQues.length}} QUESTION<span ng-if="filteredQues.length > 1">S</span>
+          {{filteredQues.length}} QUESTION<span ng-if="filteredQues.length != 1">S</span>
           <br>
           <form action="#">
             <div class="mdl-textfield mdl-js-textfield">
@@ -41,7 +41,7 @@
         <div class="mdl-cell mdl-cell--2-col r-border ">
           <div class="qn-nav">
             <div class="side-tabs pv-5"
-                ng-repeat="question in filteredQues = (mainVm.allQuestions | filter: allQVm.filterBy)"
+                ng-repeat="question in filteredQues = (allQVm.questions() | filter: allQVm.filterBy)"
                 ng-class="{ 'is-active': allQVm.question.uid==question.uid}"
                 ng-click="allQVm.getQuestion(question.uid)"
             >

@@ -97,7 +97,7 @@ angular.module("GruiApp").config([
 
     // Lazy Load modules configuration
     $ocLazyLoadProvider.config({
-      debug: false,
+      debug: true,
       events: true,
       modules: APP_REQUIRES.modules
     });
@@ -113,7 +113,7 @@ angular.module("GruiApp").constant("APP_REQUIRES", {
     questionController: ["app/components/question/questionController.js"],
     addQuestionController: ["app/components/question/addQuestionController.js"],
     editQuestionController: ["app/components/question/editQuestionController.js"],
-    questionServices: ["app/components/question/questionServices.js"],
+    questionService: ["app/components/question/questionService.js"],
     quizController: ["app/components/quiz/quizController.js"],
     quizServices: ["app/components/quiz/quizServices.js"],
     inviteController: [
@@ -183,13 +183,13 @@ angular.module("GruiApp").provider("RouteHelpers", [
             }
 
             function getRequired(name) {
-              if (appRequires.modules)
-                for (var m in appRequires.modules)
-                  if (
-                    appRequires.modules[m].name &&
-                    appRequires.modules[m].name === name
-                  )
+              if (appRequires.modules) {
+                for (var m in appRequires.modules) {
+                  if (appRequires.modules[m].name === name) {
                     return appRequires.modules[m];
+                  }
+                }
+              }
               return appRequires.scripts && appRequires.scripts[name];
             }
           }
@@ -247,31 +247,6 @@ angular.module("GruiApp").controller("MainController", [
     mainVm.timeoutModal = timeoutModal;
     mainVm.initNotification = initNotification;
     mainVm.hideNotification = hideNotification;
-
-    marked.setOptions({
-      renderer: new marked.Renderer(),
-      gfm: true,
-      tables: true,
-      breaks: false,
-      pedantic: false,
-      sanitize: false, // if false -> allow plain old HTML ;)
-      smartLists: true,
-      smartypants: false,
-      highlight: function(code, lang) {
-        // in case, there is code without language specified
-        if (lang) {
-          return hljs.highlight(lang, code).value;
-        } else {
-          return hljs.highlightAuto(code).value;
-        }
-      }
-    });
-
-    mainVm.markDownFormat = function(content) {
-      return marked(content || "", {
-        gfm: true
-      });
-    }
 
     function indexOfObject(arr, obj) {
       if (!arr) {
@@ -420,7 +395,7 @@ angular.module("GruiApp").service("MainService", [
       mutateProxy: function mutateProxy(data) {
         return mainService.post("/mutateProxy", data);
       },
-      post: function post(url, data, hideLoader) {
+      post: function post(url, data) {
         var req = {
           method: "POST",
           url: mainVm.base_url + url,
@@ -443,18 +418,14 @@ angular.module("GruiApp").service("MainService", [
           }
         }
 
-        if (!hideLoader) {
-          mainVm.showAjaxLoader = true;
-        }
+        mainVm.showAjaxLoader = true;
         return $http(req).then(
           function(data) {
             mainVm.showAjaxLoader = false;
             return data.data;
           },
           function(response, code) {
-            if (!hideLoader) {
-              mainVm.showAjaxLoader = false;
-            }
+            mainVm.showAjaxLoader = false;
             // TODO - Remove this dirty edge case handling for login. We have it because otherwise if you login
             // with incorrect creds, it show You must login and then shows the actual error.
             url !== "/login" && redirectIfUnautorized(response);

@@ -167,7 +167,6 @@ angular.module("GruiApp").controller("candidateQuizController", [
           }
         },
         function(err) {
-          mainVm.showAjaxLoader = true;
           cqVm.clearUnwatch = $scope.$watch(
             angular.bind(mainVm, function() {
               return mainVm.showNotification;
