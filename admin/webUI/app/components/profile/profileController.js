@@ -6,25 +6,6 @@ angular.module('GruiApp').controller('profileController', [
     profileVm = this;
     mainVm.pageName = "profile-page"
 
-    marked.setOptions({
-      renderer: new marked.Renderer(),
-      gfm: true,
-      tables: true,
-      breaks: false,
-      pedantic: false,
-      sanitize: false, // if false -> allow plain old HTML ;)
-      smartLists: true,
-      smartypants: false,
-      highlight: function(code, lang) {
-        // in case there is code without language specified
-        if (lang) {
-          return hljs.highlight(lang, code).value;
-        } else {
-          return hljs.highlightAuto(code).value;
-        }
-      }
-    });
-
     profileVm.editorSetting = {
       lineWrapping: true
     };

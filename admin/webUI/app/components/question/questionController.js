@@ -19,25 +19,6 @@ angular.module("GruiApp").controller("questionController", [
     questionVm = this;
     questionVm.optionsCount = 4;
 
-    marked.setOptions({
-      renderer: new marked.Renderer(),
-      gfm: true,
-      tables: true,
-      breaks: false,
-      pedantic: false,
-      sanitize: false, // if false -> allow plain old HTML ;)
-      smartLists: true,
-      smartypants: false,
-      highlight: function(code, lang) {
-        // in case, there is code without language specified
-        if (lang) {
-          return hljs.highlight(lang, code).value;
-        } else {
-          return hljs.highlightAuto(code).value;
-        }
-      }
-    });
-
     questionVm.editorSetting = {
       lineNumbers: true,
       lineWrapping: true,
@@ -46,10 +27,6 @@ angular.module("GruiApp").controller("questionController", [
 
     questionVm.isCorrect = isCorrect;
     questionVm.onTagSelect = onTagSelect;
-
-    questionVm.markDownFormat = function(content) {
-      return marked(content);
-    }
 
     questionVm.initCodeMirror = function() {
       $scope.cmOption = {};

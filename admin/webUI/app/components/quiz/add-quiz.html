@@ -38,22 +38,13 @@
             </div>
           </div>
         </div>
-        <div ng-if="quizVm.newQuiz.questions">
-          <label class="bold">
+        <p>
+          <strong>
             {{mainVm.objLen(quizVm.newQuiz.questions)}}
             {{mainVm.objLen(quizVm.newQuiz.questions) != 1 ? "Questions" : "Question"}},
             Total Score: {{quizVm.getTotalScore(quizVm.newQuiz.questions) | number: 2}}
-          </label>
-          <!-- <div ng-repeat="(key, question) in quizVm.newQuiz.questions" ng-if="question.text">
-            {{parseInt(question.positive)}}
-            <span class="mdl-chip mdl-chip--deletable quiz-questions">
-              <span class="mdl-chip__text">{{question.name}}</span>
-            <button type="button" class="mdl-chip__action" ng-click="quizVm.removeSelectedQuestion(key)">
-              <i class="material-icons">cancel</i>
-            </button>
-            </span>
-          </div> -->
-        </div>
+          </strong>
+        </p>
         <button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mt-20 mt-20">
           Save Quiz
         </button>

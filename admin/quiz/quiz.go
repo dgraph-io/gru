@@ -150,7 +150,6 @@ func Edit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	q.Uid = qid
-	// TODO - Validate candidate fields shouldn't be empty.
 	m := edit(q)
 	_, err = dgraph.SendMutation(m)
 	if err != nil {

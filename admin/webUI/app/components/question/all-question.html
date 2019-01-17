@@ -33,7 +33,7 @@
         </span>
       </div>
       <div class="mdl-cell mdl-cell--1-col mdl-cell--4-col-tablet ">
-        <button class="mdl-button btn-succes bg-green pull-right mt-10 " ng-click="mainVm.goTo( 'question.add') ">Add New</button>
+        <button class="mdl-button btn-succes bg-green pull-right mt-10 " ng-click="mainVm.goTo('question.add') ">Add New</button>
       </div>
     </div>
     <div class="mdl-tabs vertical-mdl-tabs mdl-js-tabs mdl-js-ripple-effect mt-10 ">
@@ -84,12 +84,12 @@
                 </span>
               </div>
             </div>
-            <div class="mdl-grid no-pad " ng-show="allQVm.question[ 'question.tag'] ">
+            <div class="mdl-grid no-pad" ng-show="allQVm.question['question.tag']">
               <div class="mdl-cell mdl-cell--2-col mdl-cell--middle ">
                 <span ng-show="!editQuestion " class="bold ">TAGS</span>
               </div>
-              <div class="mdl-cell mdl-cell--10-col ">
-                <span ng-repeat="tag in allQVm.question[ 'question.tag'] track by $index ">
+              <div class="mdl-cell mdl-cell--10-col">
+                <span ng-repeat="tag in allQVm.question[ 'question.tag']">
                   <span class="mdl-chip clickable" ng-click="allQVm.toggleFilter(tag, 'tag')" ng-class="{'selected-filter': mainVm.indexOfObject(allQVm.filter.tag, tag) > -1}">
                     <span class="mdl-chip__text ">{{tag.name}}</span>
                 </span>
@@ -98,7 +98,7 @@
             </div>
             <div class="mt-10 pl-10 ">
               <strong>QUESTION CONTENT</strong>
-              <pre class="ph-20 pv-5 full-border code-block " ng-bind-html="questionVm.markDownFormat(allQVm.question.text) "></pre>
+              <pre class="ph-20 pv-5 full-border code-block " ng-bind-html="mainVm.markDownFormat(allQVm.question.text) "></pre>
             </div>
             <div class="mdl-grid no-pad mt-5" ng-repeat="option in allQVm.question.options">
               <div class="mdl-cell mdl-cell--2-col mdl-cell--middle ">
@@ -109,7 +109,7 @@
               </div>
               <div class="mdl-cell mdl-cell--10-col full-border option ">
                 <div class="ph-10 position-relative ">
-                  <pre ng-bind-html="questionVm.markDownFormat(option.name) " class="code-block "></pre>
+                  <pre ng-bind-html="mainVm.markDownFormat(option.name) " class="code-block "></pre>
                 </div>
               </div>
             </div>

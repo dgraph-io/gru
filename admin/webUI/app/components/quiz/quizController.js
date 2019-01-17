@@ -77,20 +77,20 @@ angular.module('GruiApp').controller('quizController', [
         })
     }
 
-    function validateInput(inputs) {
-      if (!inputs.name) {
+    function validateQuiz(quiz) {
+      if (!quiz.name) {
         return "Please enter valid Quiz name"
       }
-      if (!inputs.duration) {
+      if (!quiz.duration) {
         return "Please enter valid time"
       }
-      if (!inputs.questions) {
+      if (!quiz.questions) {
         return "Please add question to the quiz before submitting"
       }
-      if (inputs.threshold >= 0) {
+      if (quiz.threshold >= 0) {
         return "Threshold should be less than 0"
       }
-      if (inputs.cut_off >= getTotalScore(inputs.questions)) {
+      if (quiz.cut_off >= getTotalScore(quiz.questions)) {
         return "Cutoff should be less than the total possible score"
       }
       return false

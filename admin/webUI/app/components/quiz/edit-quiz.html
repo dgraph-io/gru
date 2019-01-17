@@ -38,12 +38,10 @@
             </div>
           </div>
         </div>
-        <div class="mt-20" ng-if="quizVm.newQuiz['quiz.question']">
-          <div class="bold pb-10">
-            {{ editQuizVm.getQuestionCount() }}
-            Question{{mainVm.objLen(quizVm.newQuiz['quiz.question']) != 1 && "s" || ""}},
-            Max Score: {{quizVm.getTotalScore(quizVm.newQuiz['quiz.question']) | number: 2}}
-          </div>
+        <div class="bold pb-10">
+          {{ editQuizVm.getQuestionCount() }}
+          Question{{mainVm.objLen(quizVm.newQuiz['quiz.question']) != 1 && "s" || ""}},
+          Max Score: {{quizVm.getTotalScore(quizVm.newQuiz['quiz.question']) | number: 2}}
         </div>
         <div class="mt-20">
           <button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect action-btn" type="submit">

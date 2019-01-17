@@ -1,43 +1,18 @@
-(function() {
+angular.module("GruiApp").controller("candidateController", [
+  "$state",
   function candidateController($state) {
-    // VARIABLE DECLARATION
     candidateVm = this;
     mainVm.pageName = "candidate-page";
 
-    // FUNCTION DECLARATION
-    candidateVm.checkValidity = checkValidity;
-
-    // INITIALIZER
     candidateVm.isValidUser = candidateVm.checkValidity();
 
-    marked.setOptions({
-      renderer: new marked.Renderer(),
-      gfm: true,
-      tables: true,
-      breaks: false,
-      pedantic: false,
-      sanitize: false, // if false -> allow plain old HTML ;)
-      smartLists: true,
-      smartypants: false,
-      highlight: function(code, lang) {
-        // in case, there is code without language specified
-        if (lang) {
-          return hljs.highlight(lang, code).value;
-        } else {
-          return hljs.highlightAuto(code).value;
-        }
-      }
-    });
-
-    // FUNCTION DEFINITION
-
     // Check if user is authorized
-    function checkValidity() {
+    candidateVm.checkValidity = function checkValidity() {
       var candToken = localStorage.getItem("candidate_info");
       // If the candidate directly came to /quiz url to resume the quiz, then token might be null
       // in incognito window. So we show him an error.
       if (candToken == null) {
-        mainVm.errorMessage = "Please use the link sent to your mail to resume the quiz.";
+        mainVm.errorMessage = "Please use the link we emailed you to resume the quiz.";
         return false;
       }
       var ctoken = JSON.parse(candToken);
@@ -50,7 +25,14 @@
       }
     }
   }
+]);
 
+angular.module("GruiApp").controller("candidateQuizController", [
+  "$scope",
+  "$rootScope",
+  "$state",
+  "$interval",
+  "candidateService",
   function candidateQuizController(
     $scope,
     $rootScope,
@@ -360,23 +342,4 @@
       }
     });
   }
-
-  // CANDIDATE QUIZ
-  var candidateQuizDependency = [
-    "$scope",
-    "$rootScope",
-    "$state",
-    "$interval",
-    "candidateService",
-    candidateQuizController
-  ];
-  angular
-    .module("GruiApp")
-    .controller("candidateQuizController", candidateQuizDependency);
-
-  // MAIN CANDIDATE CONTROLLER
-  var candidateDependency = ["$state", candidateController];
-  angular
-    .module("GruiApp")
-    .controller("candidateController", candidateDependency);
-})();
+]);
