@@ -449,12 +449,12 @@ body.home {
   margin-top: -5px;
 }
 
-.question .question-edit {
+.question .hover-link {
   opacity: 0;
   transition: opacity 250ms;
 }
 
-.question:hover .question-edit {
+.question:hover .hover-link {
   opacity: 1;
 }
 

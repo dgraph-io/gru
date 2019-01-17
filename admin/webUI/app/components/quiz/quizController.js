@@ -5,10 +5,18 @@ angular.module('GruiApp').controller('quizController', [
   function quizController($state, quizService, allQuestions) {
     mainVm.pageName = "quiz";
     quizVm = this;
-    quizVm.quiz = {};
+
+    quizVm.loadEmptyQuiz = function() {
+      quizVm.quiz = {
+        questionUids: {},
+      };
+    }
+    quizVm.loadEmptyQuiz();
 
     quizVm.submitQuiz = function() {
-      var validataionError = quizVm.validateQuiz(quizVm.quiz);
+      var quiz = quizVm.quiz;
+
+      var validataionError = quizVm.validateQuiz();
       if (validataionError) {
         SNACKBAR({
           message: validataionError,
@@ -17,27 +25,43 @@ angular.module('GruiApp').controller('quizController', [
         return
       }
 
-      quizService.saveQuiz(quizVm.quiz)
-        .then(function(data) {
-          quizVm.quiz = {}
-          SNACKBAR({
-            message: data.Message,
-            messageType: "success",
-          })
-          $state.transitionTo("quiz.all");
-        }, function(err) {
-          console.error(err);
+      quiz.questions = allQuestions.get().map(function (q) {
+        return {
+          uid: q.uid,
+          is_delete: !quiz.questionUids[q.uid] || undefined,
+        }
+      });
+
+      console.log('Saving Quiz: ', quiz);
+
+      var apiCall = quiz.uid
+          ? quizService.editQuiz(quiz)
+          : quizService.saveQuiz(quiz)
+
+      return apiCall.then(function(data) {
+        SNACKBAR({
+          message: data.Message,
+          messageType: "success",
         })
+        $state.transitionTo("quiz.all");
+      }, function(err) {
+        SNACKBAR({
+          message: "Something went wrong: " + err,
+          messageType: "error",
+        })
+      })
     }
 
-    function validateQuiz(quiz) {
+    quizVm.validateQuiz = function() {
+      var quiz = quizVm.quiz;
+
       if (!quiz.name) {
         return "Please enter valid Quiz name"
       }
       if (!quiz.duration) {
         return "Please enter valid time"
       }
-      if (!quiz.questions) {
+      if (!quizVm.quizQuestions().length) {
         return "Please add question to the quiz before submitting"
       }
       if (quiz.threshold >= 0) {
@@ -49,16 +73,41 @@ angular.module('GruiApp').controller('quizController', [
       return false
     }
 
+    quizVm.removeQuestion = function(question) {
+      quizVm.quiz.questionUids[question.uid] = false;
+    }
+
+    quizVm.addQuestion = function(question) {
+      quizVm.quiz.questionUids[question.uid] = true;
+    }
+
+    quizVm.isQuestionInQuiz = function(question) {
+      return quizVm.quiz.questionUids[question.uid];
+    }
+
+    // TODO: There's probably a better way but it's not worth my time to google.
+    // needed for inverse filter.
+    quizVm.isNotInQuiz = function(question) {
+      return !quizVm.isQuestionInQuiz(question);
+    }
+
+    quizVm.quizQuestions = function() {
+      var questionUids = quizVm.quiz.questionUids;
+      return allQuestions.get().filter(function (q) {
+        return questionUids[q.uid];
+      })
+    }
+
+    quizVm.allQuestions = function() {
+      return allQuestions.get();
+    }
+
     quizVm.getTotalScore = function() {
-      // TODO
-      return 666;
-      var totalScore = 0;
-      questions.forEach(function(question) {
+      return quizVm.quizQuestions().reduce(function(acc, question) {
         if (!question.is_delete) {
-          totalScore += question.correct.length * question.positive;
+          return acc + question.correct.length * question.positive;
         }
-      });
-      return totalScore;
+      }, 0);
     }
   }
 ]);
@@ -77,45 +126,41 @@ angular.module('GruiApp').controller('allQuizController', [
 ]);
 
 angular.module('GruiApp').controller('addQuizController', [
-  'allQuestions',
-  function addQuizController(allQuestions) {
+  function addQuizController() {
     addQuizVm = this;
-    quizVm.quiz = {};
+    quizVm.loadEmptyQuiz();
   }
 ]);
 
 angular.module('GruiApp').controller('editQuizController', [
   "$stateParams",
   "quizService",
-  "allQuestions",
-  function editQuizController($stateParams, quizService, allQuestions) {
+  function editQuizController($stateParams, quizService) {
     editQuizVm = this;
-    quizVm.quiz = {};
 
-    // Read by edit-quiz.html to send user back to this quiz after editing a qn.
-    editQuizVm.quizId = $stateParams.quizID;
+    quizVm.loadEmptyQuiz();
 
-    quizService.getQuiz($stateParams.quizID)
-      .then(function(quiz) {
-        quizVm.quiz = quiz;
-        quiz.duration = parseInt(quiz.duration)
-        quiz.cut_off = parseFloat(quiz.cut_off)
-        quiz.threshold = parseFloat(quiz.threshold)
+    // If we are editing an existing quiz - load it.
+    if ($stateParams.quizID) {
+      // Read by edit-quiz.html to send user back to this quiz after editing a qn.
+      editQuizVm.quizId = $stateParams.quizID;
 
-        quiz.questionUids = {}
-        if (quiz['quiz.question']) {
-          quiz['quiz.question'].forEach(function (q) {
-            quiz.questionUids[q.uid] = true;
-          })
-        }
-        console.log('q uids = ', quiz.questionUids);
-      }, function(err) {
-        console.error(err);
-      });
+      quizService.getQuiz($stateParams.quizID)
+        .then(function(quiz) {
+          quizVm.quiz = quiz;
+          quiz.duration = parseInt(quiz.duration)
+          quiz.cut_off = parseFloat(quiz.cut_off)
+          quiz.threshold = parseFloat(quiz.threshold)
 
-    editQuizVm.getQuestionCount = function getQuestionCount() {
-      // TODO
-      return 333;
+          quiz.questionUids = {}
+          if (quiz['quiz.question']) {
+            quiz['quiz.question'].forEach(function (q) {
+              quiz.questionUids[q.uid] = true;
+            })
+          }
+        }, function(err) {
+          console.error(err);
+        });
     }
   }
 ]);

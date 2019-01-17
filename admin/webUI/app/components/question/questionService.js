@@ -51,12 +51,13 @@ angular.module('GruiApp').service('allQuestions', [
     }
     fetchQuestions();
 
-    setInterval(fetchQuestions, 5000);
+    setInterval(fetchQuestions, 60000);
 
     return {
       get: function() {
         return allQuestions;
-      }
+      },
+      refresh: fetchQuestions,
     }
   }
 ]);

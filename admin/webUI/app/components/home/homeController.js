@@ -29,4 +29,5 @@ angular.module('GruiApp').controller('homeController', [
         gfm: true
       });
     }
+  }
 ]);

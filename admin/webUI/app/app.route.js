@@ -10,7 +10,6 @@ var addQuestionTemplate = "app/components/question/add-question.html";
 var editQuestionTemplate = "app/components/question/edit-question.html";
 
 var quizTemplate = "app/components/quiz/index.html";
-var addQuizTemplate = "app/components/quiz/add-quiz.html";
 var editQuizTemplate = "app/components/quiz/edit-quiz.html";
 var allQuizTemplate = "app/components/quiz/all-quiz.html";
 
@@ -128,7 +127,7 @@ angular.module("GruiRoutes").config([
       .state("quiz.add", {
         url: "/add-quiz?:index?:qid",
         parent: "quiz",
-        templateUrl: addQuizTemplate,
+        templateUrl: editQuizTemplate,
         authenticate: true
       })
       .state("quiz.edit", {

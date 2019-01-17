@@ -1,35 +1,44 @@
-<h5>Select Question to add it to quiz</h5>
-<div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
-  <input class="mdl-textfield__input" type="text" id="search_question" ng-model="searchQ" />
-  <label class="mdl-textfield__label" for="search_question">Search question name</label>
-</div>
-<div class="question mt-20" ng-repeat="question in mainVm.allQuestions | filter:searchQ">
-  <div class="mdl-grid no-pad clickable-hover">
-    <div class="mdl-cell mdl-cell--12-col">
-      <label class="mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect height-inherit" for="question-{{$index}}" ng-class="{'is-checked': mainVm.hasKey(quizVm.quiz.questions, 'question-'+$index)}">
-        <span class="mdl-checkbox__label">
-          {{question.name}}
-          <div class="base-font">
-            Positive Score: {{question.positive}} &nbsp;&nbsp;
-            Negative Score: {{question.negative}}&nbsp;&nbsp;
-            Answer
-
-            <span class="text-green option-icon">
-              <span ng-if="question.correct.length == 1">
-                <i class="material-icons">done</i>
-              </span>
-        <span ng-if="question.correct.length > 1">
-                <i class="material-icons">done_all</i>
-              </span>
-        </span>
+<div style="border: 1px solid #999; max-height: 300px; overflow: hidden auto; position: relative;">
+  <div style="background-color: #fff; left: 2px; right: 2px; top: 0">
+    <h5>Select Question to add it to quiz</h5>
+    <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+      <input class="mdl-textfield__input" type="text" id="search_question" ng-model="searchQ" />
+      <label class="mdl-textfield__label" for="search_question">Search question Name, Tag, body etc</label>
     </div>
-    <span ng-repeat="tags in question['question.tag'] track by $index">
-            <span class="mdl-chip">
-              <span class="mdl-chip__text">{{tags.name}}</span>
-    </span>
-    </span>
-    </span>
-    </label>
   </div>
-</div>
+  <div class="question clickable-hover" ng-repeat="question in quizVm.allQuestions() | filter:searchQ | filter:quizVm.isNotInQuiz"
+      style="position: relative; padding-left: 32px;"
+  >
+    <a
+        href="#"
+        ng-click="quizVm.addQuestion(question)"
+        class="hover-link"
+        style="position: absolute; display: block; left: 2px; top: 50%; margin-top: -10px;">
+      <i class="material-icons text-green" ng-if="!quizVm.isQuestionInQuiz(question)">add</i>
+      <i class="material-icons" style="color:#ccc" ng-if="quizVm.isQuestionInQuiz(question)">done</i>
+    </a>
+    <div class="mdl-grid no-pad">
+      <div class="mdl-cell mdl-cell--12-col">
+        {{question.name}}
+        <div class="base-font">
+          Score: + {{question.positive}} &nbsp;|&nbsp;
+                 - {{question.negative}}&nbsp;&nbsp;
+
+          <span class="option-icon">
+            <span ng-if="question.correct.length == 1">
+              <i class="material-icons">done</i>
+            </span>
+            <span ng-if="question.correct.length > 1">
+              <i class="material-icons">done_all</i>
+            </span>
+          </span>
+        </div>
+        <span ng-repeat="tag in question['question.tag']">
+          <span class="mdl-chip">
+            <span class="mdl-chip__text">{{tag.name}}</span>
+          </span>
+        </span>
+      </div>
+    </div>
+  </div>
 </div>

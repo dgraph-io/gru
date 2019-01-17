@@ -21,8 +21,36 @@ type Quiz struct {
 
 type Question struct {
 	Uid       string `json:"uid"`
-	Text      string
 	Is_delete bool
+}
+
+func buildQuizMutation(q Quiz) *dgraph.Mutation {
+	m := new(dgraph.Mutation)
+
+	uid := "_:quiz"
+	if (q.Uid != "") {
+		uid = q.Uid
+	}
+
+	m.SetString(uid, "is_quiz", "")
+	// TODO - Error if Name is empty.
+	m.SetString(uid, "name", q.Name)
+	m.SetString(uid, "threshold", strconv.FormatFloat(q.Threshold, 'g', -1, 64))
+	m.SetString(uid, "cut_off", strconv.FormatFloat(q.Cutoff, 'g', -1, 64))
+	m.SetString(uid, "duration", strconv.Itoa(q.Duration))
+	for _, q := range q.Questions {
+		m.SetLink(uid, "quiz.question", q.Uid)
+	}
+
+	for _, q := range q.Questions {
+		if q.Is_delete {
+			m.DelLink(uid, "quiz.question", q.Uid)
+		} else {
+			m.SetLink(uid, "quiz.question", q.Uid)
+		}
+	}
+
+	return m
 }
 
 func Add(w http.ResponseWriter, r *http.Request) {
@@ -34,18 +62,7 @@ func Add(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	m := new(dgraph.Mutation)
-	m.SetString("_:quiz", "is_quiz", "")
-	// TODO - Error if Name is empty.
-	m.SetString("_:quiz", "name", q.Name)
-	m.SetString("_:quiz", "threshold", strconv.FormatFloat(q.Threshold, 'g', -1, 64))
-	m.SetString("_:quiz", "cut_off", strconv.FormatFloat(q.Cutoff, 'g', -1, 64))
-	m.SetString("_:quiz", "duration", strconv.Itoa(q.Duration))
-	for _, q := range q.Questions {
-		m.SetLink("_:quiz", "quiz.question", q.Uid)
-	}
-
-	mr, err := dgraph.SendMutation(m)
+	mr, err := dgraph.SendMutation(buildQuizMutation(q))
 	if err != nil {
 		sr.Write(w, "", err.Error(), http.StatusInternalServerError)
 		return
@@ -119,26 +136,6 @@ func Get(w http.ResponseWriter, r *http.Request) {
 	w.Write(res)
 }
 
-func edit(q Quiz) *dgraph.Mutation {
-	m := new(dgraph.Mutation)
-	// TODO - Validate these fields.
-	m.SetString(q.Uid, "is_quiz", "")
-	m.SetString(q.Uid, "name", q.Name)
-	m.SetString(q.Uid, "duration", strconv.Itoa(q.Duration))
-	m.SetString(q.Uid, "threshold", strconv.FormatFloat(q.Threshold, 'g', -1, 64))
-	m.SetString(q.Uid, "cut_off", strconv.FormatFloat(q.Cutoff, 'g', -1, 64))
-
-	// Create and associate Tags
-	for _, que := range q.Questions {
-		if que.Is_delete {
-			m.DelLink(q.Uid, "quiz.question", que.Uid)
-		} else if que.Uid != "" {
-			m.SetLink(q.Uid, "quiz.question", que.Uid)
-		}
-	}
-	return m
-}
-
 func Edit(w http.ResponseWriter, r *http.Request) {
 	var q Quiz
 	vars := mux.Vars(r)
@@ -150,8 +147,7 @@ func Edit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	q.Uid = qid
-	m := edit(q)
-	_, err = dgraph.SendMutation(m)
+	_, err = dgraph.SendMutation(buildQuizMutation(q))
 	if err != nil {
 		sr.Write(w, "", err.Error(), http.StatusInternalServerError)
 		return

@@ -97,7 +97,7 @@ angular.module("GruiApp").config([
 
     // Lazy Load modules configuration
     $ocLazyLoadProvider.config({
-      debug: true,
+      debug: false,
       events: true,
       modules: APP_REQUIRES.modules
     });
