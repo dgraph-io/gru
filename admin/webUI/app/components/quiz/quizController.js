@@ -125,13 +125,6 @@ angular.module('GruiApp').controller('allQuizController', [
   }
 ]);
 
-angular.module('GruiApp').controller('addQuizController', [
-  function addQuizController() {
-    addQuizVm = this;
-    quizVm.loadEmptyQuiz();
-  }
-]);
-
 angular.module('GruiApp').controller('editQuizController', [
   "$stateParams",
   "quizService",
