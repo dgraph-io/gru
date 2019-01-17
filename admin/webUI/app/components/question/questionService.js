@@ -14,7 +14,7 @@ angular.module('GruiApp').service('questionService', [
       },
 
       getAllQuestions: function(hideLoader) {
-        return MainService.post('/get-all-questions', hideLoader)
+        return MainService.post('/get-all-questions', {}, hideLoader)
           .then(function(data) {
             return data && data.data && data.data.questions ? data.data.questions : [];
           })

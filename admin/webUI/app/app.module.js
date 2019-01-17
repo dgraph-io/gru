@@ -395,7 +395,7 @@ angular.module("GruiApp").service("MainService", [
       mutateProxy: function mutateProxy(data) {
         return mainService.post("/mutateProxy", data);
       },
-      post: function post(url, data) {
+      post: function post(url, data, hideLoader) {
         var req = {
           method: "POST",
           url: mainVm.base_url + url,
@@ -418,7 +418,9 @@ angular.module("GruiApp").service("MainService", [
           }
         }
 
-        mainVm.showAjaxLoader = true;
+        if (!hideLoader) {
+          mainVm.showAjaxLoader = true;
+        }
         return $http(req).then(
           function(data) {
             mainVm.showAjaxLoader = false;
