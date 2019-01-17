@@ -1,34 +1,3 @@
-angular.module('GruiApp').service('allQuestions', [
-  'questionService',
-  '$rootScope',
-  function(questionService, $rootScope) {
-    var allQuestions = [];
-
-    function fetchQuestions() {
-      questionService.getAllQuestions(true).then(
-        function(questions) {
-          setTimeout(function() {
-            $rootScope.$apply(function() {
-              allQuestions = questions;
-            });
-          }, 1);
-        },
-        function(err) {
-          console.error(err);
-        });
-    }
-    fetchQuestions();
-
-    setInterval(fetchQuestions, 5000);
-
-    return {
-      get: function() {
-        return allQuestions;
-      }
-    }
-  }
-]);
-
 angular.module("GruiApp").controller("questionController", [
   "$scope",
   "$state",

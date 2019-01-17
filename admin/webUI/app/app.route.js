@@ -116,7 +116,6 @@ angular.module("GruiRoutes").config([
         resolve: helper.resolveFor(
           "quizController",
           "quizServices",
-          "questionController",
           "questionService",
         )
       })
