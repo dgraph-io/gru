@@ -4,8 +4,6 @@ angular.module("GruiApp").controller("candidateController", [
     candidateVm = this;
     mainVm.pageName = "candidate-page";
 
-    candidateVm.isValidUser = candidateVm.checkValidity();
-
     // Check if user is authorized
     candidateVm.checkValidity = function checkValidity() {
       var candToken = localStorage.getItem("candidate_info");
@@ -24,6 +22,8 @@ angular.module("GruiApp").controller("candidateController", [
         return false;
       }
     }
+
+    candidateVm.isValidUser = candidateVm.checkValidity();
   }
 ]);
 
