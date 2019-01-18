@@ -134,11 +134,13 @@ angular.module("GruiApp").controller("allQuestionController", [
   "$state",
   "$stateParams",
   "allQuestions",
+  "questionService",
   function allQuestionController(
     $scope,
     $state,
     $stateParams,
-    allQuestions
+    allQuestions,
+    questionService,
   ) {
     allQVm = this;
     allQVm.searchText = "";
