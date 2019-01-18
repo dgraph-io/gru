@@ -48,6 +48,9 @@
   color: #2F3757;
 }
 
+.position-absolute {
+  position: absolute;
+}
 .position-relative {
   position: relative;
 }

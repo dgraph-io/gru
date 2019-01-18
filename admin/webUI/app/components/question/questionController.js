@@ -143,7 +143,6 @@ angular.module("GruiApp").controller("allQuestionController", [
     allQVm = this;
     allQVm.searchText = "";
 
-    allQVm.toggleFilter = toggleFilter;
     allQVm.filterBy = filterBy;
 
     questionVm.getAllTags();
@@ -167,10 +166,10 @@ angular.module("GruiApp").controller("allQuestionController", [
       return allQuestions.get();
     }
 
-    function toggleFilter(filter_value, key) {
+    allQVm.toggleFilter = function(filter_value, key) {
       allQVm.filter = allQVm.filter || {};
       if (key == "tag") {
-        allQVm.filter.tag || (allQVm.filter.tag = []);
+        allQVm.filter.tag = allQVm.filter.tag || [];
         var tagIndex = mainVm.indexOfObject(allQVm.filter.tag, filter_value);
         // If tag is already there in our array, then we remove it.
         if (tagIndex > -1) {
@@ -178,9 +177,7 @@ angular.module("GruiApp").controller("allQuestionController", [
         } else {
           allQVm.filter.tag.push(filter_value);
         }
-      }
-
-      if (!key) {
+      } else {
         allQVm.filter[filter_value] = !allQVm.filter[filter_value];
         if (filter_value == "multiple") {
           allQVm.filter.single = false;

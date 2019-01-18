@@ -1,9 +1,6 @@
 angular.module('GruiApp').service('questionService', [
-  "$q",
-  "$http",
-  "$rootScope",
   "MainService",
-  function questionService($q, $http, $rootScope, MainService) {
+  function questionService(MainService) {
     return {
       saveQuestion: function(data) {
         return MainService.post('/add-question', data);

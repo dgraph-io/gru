@@ -41,7 +41,7 @@
         <div class="bold pb-10">
           {{ quizVm.quizQuestions().length }}
           Question{{quizVm.quizQuestions().length != 1 ? "s" : ""}},
-          Max Score: {{quizVm.getTotalScore() | number: 2}}
+          Max Score: {{quizVm.getTotalScore(quizVm.quizQuestions()) | number: 2}}
         </div>
         <div class="mt-20">
           <button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect action-btn" type="submit">
@@ -57,7 +57,41 @@
   <div class="mdl-cell mdl-cell--6-col mdl-cell--1-offset-desktop">
     <div ng-include="'app/components/quiz/question-selection.html'"></div>
     <h5>Questions in this quiz</h5>
-    <div class="question mt-20 clickable-hover" ng-repeat="question in quizVm.quizQuestions()" style="padding-left: 32px; position: relative;">
+    <div>
+      <div
+          ng-repeat="tag in quizVm.allQuestionTags()"
+          ng-init="stats = quizVm.getTagStats(tag)"
+          ng-click="quizVm.selectedTagUid = quizVm.selectedTagUid==tag.uid ? null : tag.uid"
+          class="tag-filter capitalize inline-block position-relative"
+          style="overflow:hidden; padding-right:32px"
+          ng-style="{'box-shadow': tag.uid!=quizVm.selectedTagUid?'': 'inset 0 0 2px 2px rgba(0,0,0,0.7)'}"
+      >
+        {{tag.name}}
+        <div class="position-absolute" style="right:0; top:0; bottom: 0; right:0; width:30px; background-color:rgb(200,200,200,0.5)">
+          <div
+              style="position:absolute; bottom:0; left:0; right:0; background:linear-gradient(rgb(0,0,0,0.0), rgb(50,200,100,0.5) 99%)"
+              ng-style="{height: stats.share*100+'%' }"
+          ></div>
+          <div class="mt-5" style="font-weight: bold">{{stats.score}}</div>
+          <div style="font-size:8px;line-height:4px;position:absolute;left:1px;right:1px;bottom:3px;text-align:center">
+            {{ quizVm.dots(stats.count) }}
+          </div>
+        </div>
+      </div>
+      <div
+          class="tag-filter inline-block text-red position-relative"
+          style="border-color: transparent; overflow:hidden"
+          ng-if="quizVm.selectedTagUid"
+          ng-click="quizVm.selectedTagUid = null">
+        Show All
+      </div>
+    </div>
+
+    <div
+        class="question mt-10 clickable-hover pl-30 position-relative"
+        style="border: 1px dotted #ddd; padding: 4px 4px 4px 30px; border-radius: 3px"
+        ng-repeat="question in quizVm.quizQuestions() | filter: quizVm.isQuestionInFilter"
+    >
       <a ng-click="quizVm.removeQuestion(question)" class="hover-link" href="#" style="display: block; float: left; position: absolute; top: 50%; margin-top: -10px; left: 2px;">
         <i class="material-icons mdi-sm text-red">delete</i>
       </a>

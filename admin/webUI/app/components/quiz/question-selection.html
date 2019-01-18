@@ -1,4 +1,4 @@
-<div style="border: 1px solid #999; max-height: 300px; overflow: hidden auto; position: relative;">
+<div style="border: 1px solid #999; height: 230px; overflow: hidden auto; position: relative;">
   <div style="background-color: #fff; left: 2px; right: 2px; top: 0">
     <h5>Select Question to add it to quiz</h5>
     <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
@@ -6,8 +6,9 @@
       <label class="mdl-textfield__label" for="search_question">Search question Name, Tag, body etc</label>
     </div>
   </div>
-  <div class="question clickable-hover" ng-repeat="question in quizVm.allQuestions() | filter:searchQ | filter:quizVm.isNotInQuiz"
-      style="position: relative; padding-left: 32px;"
+  <div
+      class="question clickable-hover position-relative pl-30"
+      ng-repeat="question in quizVm.allQuestions() | filter:searchQ | filter:quizVm.isNotInQuiz"
   >
     <a
         href="#"

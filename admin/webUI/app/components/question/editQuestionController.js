@@ -1,15 +1,13 @@
 angular.module("GruiApp").controller("editQuestionController", [
-  "$scope",
-  "$rootScope",
   "$state",
   "$stateParams",
   "questionService",
+  "allQuestions",
   function editQuestionController(
-    $scope,
-    $rootScope,
     $state,
     $stateParams,
-    questionService
+    questionService,
+    allQuestions
   ) {
     editQuesVm = this;
     editQuesVm.newQuestion = {};
@@ -92,6 +90,7 @@ angular.module("GruiApp").controller("editQuestionController", [
 
       questionService.editQuestion(question).then(
         function(data) {
+          allQuestions.refresh();
           SNACKBAR({
             message: data.Message
           });

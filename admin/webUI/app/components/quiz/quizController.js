@@ -32,8 +32,6 @@ angular.module('GruiApp').controller('quizController', [
         }
       });
 
-      console.log('Saving Quiz: ', quiz);
-
       var apiCall = quiz.uid
           ? quizService.editQuiz(quiz)
           : quizService.saveQuiz(quiz)
@@ -67,10 +65,52 @@ angular.module('GruiApp').controller('quizController', [
       if (quiz.threshold >= 0) {
         return "Threshold should be less than 0"
       }
-      if (quiz.cut_off >= quizVm.getTotalScore(quiz.questions)) {
+      if (quiz.cut_off >= quizVm.getTotalScore(quizVm.quizQuestions())) {
         return "Cutoff should be less than the total possible score"
       }
       return false
+    }
+
+    function findByUid(arr, uid) {
+      var idx = arr.findIndex(function(el) { return el.uid == uid });
+      return {
+        index: idx,
+        item: idx >= 0 ? arr[idx] : null,
+      }
+    }
+
+    quizVm.allQuestionTags = function() {
+      var allTags = quizVm.quizQuestions().reduce(function(acc, q) {
+        return acc.concat(q.tags)
+      }, [])
+      allTags = allTags.filter(function(tag, index) {
+        return index == findByUid(allTags, tag.uid).index;
+      })
+      allTags.sort(function(a, b) {
+        return a.name < b.name ? -1 : (a.name > b.name ? 1 : 0);
+      })
+      return allTags;
+    }
+
+    quizVm.getTagStats = function(tag) {
+      var allQuestions = quizVm.quizQuestions();
+      var withTag = allQuestions.filter(function(q) {
+        return findByUid(q.tags, tag.uid).item
+      })
+      var score = quizVm.getTotalScore(withTag)
+      return {
+        count: withTag.length,
+        score: score,
+        share: score / quizVm.getTotalScore(allQuestions)
+      }
+    }
+
+    quizVm.dots = function(count) {
+      var res = "";
+      for (var i = 0; i < count; i++) {
+        res += " ●"
+      }
+      return res;
     }
 
     quizVm.removeQuestion = function(question) {
@@ -83,6 +123,13 @@ angular.module('GruiApp').controller('quizController', [
 
     quizVm.isQuestionInQuiz = function(question) {
       return quizVm.quiz.questionUids[question.uid];
+    }
+
+    quizVm.isQuestionInFilter = function(question) {
+      if (quizVm.selectedTagUid && findByUid(quizVm.allQuestionTags(), quizVm.selectedTagUid).item == null) {
+        quizVm.selectedTagUid = null;
+      }
+      return !quizVm.selectedTagUid || findByUid(question.tags, quizVm.selectedTagUid).item;
     }
 
     // TODO: There's probably a better way but it's not worth my time to google.
@@ -102,11 +149,9 @@ angular.module('GruiApp').controller('quizController', [
       return allQuestions.get();
     }
 
-    quizVm.getTotalScore = function() {
-      return quizVm.quizQuestions().reduce(function(acc, question) {
-        if (!question.is_delete) {
-          return acc + question.correct.length * question.positive;
-        }
+    quizVm.getTotalScore = function(questions) {
+      return questions.reduce(function(acc, question) {
+        return acc + question.correct.length * question.positive;
       }, 0);
     }
   }
