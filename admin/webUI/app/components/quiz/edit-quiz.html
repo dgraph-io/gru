@@ -60,7 +60,6 @@
     <div>
       <div
           ng-repeat="tag in quizVm.allQuestionTags()"
-          ng-init="stats = quizVm.getTagStats(tag)"
           ng-click="quizVm.selectedTagUid = quizVm.selectedTagUid==tag.uid ? null : tag.uid"
           class="tag-filter capitalize inline-block position-relative"
           style="overflow:hidden; padding-right:32px"
@@ -70,11 +69,11 @@
         <div class="position-absolute" style="right:0; top:0; bottom: 0; right:0; width:30px; background-color:rgb(200,200,200,0.5)">
           <div
               style="position:absolute; bottom:0; left:0; right:0; background:linear-gradient(rgb(0,0,0,0.0), rgb(50,200,100,0.5) 99%)"
-              ng-style="{height: stats.share*100+'%' }"
+              ng-style="{height: quizVm.getTagStats(tag).share*100+'%' }"
           ></div>
-          <div class="mt-5" style="font-weight: bold">{{stats.score}}</div>
+          <div class="mt-5" style="font-weight: bold">{{quizVm.getTagStats(tag).score}}</div>
           <div style="font-size:8px;line-height:4px;position:absolute;left:1px;right:1px;bottom:3px;text-align:center">
-            {{ quizVm.dots(stats.count) }}
+            {{ quizVm.dots(quizVm.getTagStats(tag).count) }}
           </div>
         </div>
       </div>
