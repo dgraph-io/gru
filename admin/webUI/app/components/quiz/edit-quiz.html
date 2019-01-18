@@ -91,7 +91,7 @@
         style="border: 1px dotted #ddd; padding: 4px 4px 4px 30px; border-radius: 3px"
         ng-repeat="question in quizVm.quizQuestions() | filter: quizVm.isQuestionInFilter"
     >
-      <a ng-click="quizVm.removeQuestion(question)" class="hover-link" href="#" style="display: block; float: left; position: absolute; top: 50%; margin-top: -10px; left: 2px;">
+      <a ng-click="quizVm.removeQuestion(question)" class="hover-show" href="#" style="display: block; float: left; position: absolute; top: 50%; margin-top: -10px; left: 2px;">
         <i class="material-icons mdi-sm text-red">delete</i>
       </a>
 
@@ -104,18 +104,27 @@
       </div>
 
       <a ui-sref="question.edit({quesID: question.uid, returnQuizId: editQuizVm.quizId})"
-          class="hover-link"
+          class="hover-show"
       >
         Edit
       </a>
 
-      <div class="base-font">
+      <div
+          class="base-font hover-hide"
+          style="height: 60px"
+      >
         Score: <span class="text-green bold">+ {{question.positive}}</span> |
         <span class="text-red bold">- {{question.negative}}</span>
         &nbsp;&nbsp;
         <i ng-if="question.correct.length == 1" class="material-icons" style="font-size:16px">done</i>
         <i ng-if="question.correct.length > 1" class="material-icons" style="font-size:16px">done_all</i>
       </div>
+
+      <div
+          class="hover-show"
+          style="border: 1px dashed #ddd; height: 60px; margin-top: -60px; overflow: hidden;"
+          ng-bind-html="mainVm.markDownFormat(question.text)"
+      ></div>
       <span ng-repeat="tag in question['question.tag']">
         <span class="mdl-chip">
           <span class="mdl-chip__text">{{tag.name}}</span>

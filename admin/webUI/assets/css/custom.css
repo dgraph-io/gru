@@ -449,13 +449,21 @@ body.home {
   margin-top: -5px;
 }
 
-.question .hover-link {
+.question .hover-show, .question .hover-hide {
   opacity: 0;
   transition: opacity 250ms;
 }
 
-.question:hover .hover-link {
+.question .hover-hide {
   opacity: 1;
+}
+
+.question:hover .hover-show {
+  opacity: 1;
+}
+
+.question:hover .hover-hide {
+  opacity: 0;
 }
 
 /* CODEMIRROR*/

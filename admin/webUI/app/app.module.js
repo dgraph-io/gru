@@ -229,6 +229,12 @@ angular.module("GruiApp").controller("MainController", [
       return new Array(num);
     };
 
+    mainVm.markDownFormat = function(content) {
+      return marked(content || "", {
+        gfm: true
+      });
+    }
+
     mainVm.indexOfObject = indexOfObject;
     mainVm.isObject = isObject;
     mainVm.goTo = function(state, data) {

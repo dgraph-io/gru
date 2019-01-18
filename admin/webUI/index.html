@@ -11,6 +11,29 @@
   <link rel="stylesheet" href="assets/lib/css/material.indigo-pink.min.css">
   <link rel="stylesheet" href="assets/lib/css/select2.css">
   <link rel="stylesheet" href="assets/css/main.css">
+
+  <script src="/assets/lib/js/marked.min.js"></script>
+  <script src="/assets/lib/js/highlight.pack.js"></script>
+  <script>
+    marked.setOptions({
+      renderer: new marked.Renderer(),
+      gfm: true,
+      tables: true,
+      breaks: false,
+      pedantic: false,
+      sanitize: false, // if false -> allow plain old HTML ;)
+      smartLists: true,
+      smartypants: false,
+      highlight: function(code, lang) {
+        // in case, there is code without language specified
+        if (lang) {
+          return hljs.highlight(lang, code).value;
+        } else {
+          return hljs.highlightAuto(code).value;
+        }
+      }
+    });
+  </script>
 </head>
 
 <body ng-controller="MainController as mainVm" class="position-relative {{mainVm.pageName}}" autoscroll="" ng-class="{'admin-panel': mainVm.isLoggedIn()}">
