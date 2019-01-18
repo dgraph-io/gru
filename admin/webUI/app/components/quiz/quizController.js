@@ -105,14 +105,6 @@ angular.module('GruiApp').controller('quizController', [
       }
     }
 
-    quizVm.dots = function(count) {
-      var res = "";
-      for (var i = 0; i < count; i++) {
-        res += " ●"
-      }
-      return res;
-    }
-
     quizVm.removeQuestion = function(question) {
       quizVm.quiz.questionUids[question.uid] = false;
     }
