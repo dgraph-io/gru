@@ -30,6 +30,10 @@ angular.module('GruiApp').service('questionService', [
 
             answers.forEach(function(answer) {
               var question = questionUids[answer.questionUid];
+              if (!question) {
+                console.error('Uknown question for answer ', answer);
+                return
+              }
               question.answerCount++;
               question.answerTotalScore += answer.score;
               if (answer.score == 0) {
