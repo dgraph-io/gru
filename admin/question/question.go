@@ -166,9 +166,6 @@ func Index(w http.ResponseWriter, r *http.Request) {
 			question {
 				questionUid: uid
 			}
-			question.uid {
-				questionUid: uid				
-			}
 			score: candidate.score
 		}
 	}`
