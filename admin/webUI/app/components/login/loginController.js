@@ -1,6 +1,8 @@
-(function() {
-
-  function loginController($scope, $rootScope, $stateParams, $state, MainService) {
+angular.module('GruiApp').controller('loginController', [
+  "$scope",
+  "$state",
+  "MainService",
+  function loginController($scope, $state, MainService) {
     if (mainVm.isLoggedIn()) {
       $state.transitionTo("root");
     }
@@ -26,7 +28,7 @@
           if (data.token) {
             SNACKBAR({
               message: "Logged In Successfuly",
-              messageType: "error",
+              messageType: "success",
             })
             localStorage.setItem("token", data.token);
             $state.transitionTo('root')
@@ -39,15 +41,4 @@
         })
     }
   }
-
-  var loginDependency = [
-    "$scope",
-    "$rootScope",
-    "$stateParams",
-    "$state",
-    "MainService",
-    loginController
-  ];
-  angular.module('GruiApp').controller('loginController', loginDependency);
-
-})();
+]);
