@@ -97,6 +97,7 @@
       <div
           ng-repeat="tag in question.tags"
           class="tag-filter capitalize inline-block"
+          style="margin-bottom: 5px;"
       >
         {{tag.name}}
       </div>
@@ -111,18 +112,31 @@
           class="base-font hover-hide"
           style="height: 60px"
       >
-        Score: <span class="text-green bold">+ {{question.positive}}</span> |
-        <span class="text-red bold">- {{question.negative}}</span>
+        Score: <span class="text-green bold">+{{question.positive}}</span> |
+        <span class="text-red bold">-{{question.negative}}</span>
         &nbsp;&nbsp;
         <i ng-if="question.correct.length == 1" class="material-icons" style="font-size:16px">done</i>
         <i ng-if="question.correct.length > 1" class="material-icons" style="font-size:16px">done_all</i>
-
-        <div>
-            <span ng-if="question.answerCount > 0" style="font-weight:bold">
-              Avg Score: {{ question.answerTotalScore / question.answerCount / question.positive / question.correct.length * 100 | number:0 }}% -
-            </span>
-            <span>{{question.answerCount}} Answers ({{question.skipCount}} skips)
-        </div>
+        <br />
+        <span ng-if="question.answerCount > 0">
+          <span
+              ng-if="question.difficulty > 0.7"
+              class="bold text-green">
+            Easy {{ question.difficulty * 100 | number:0 }}%
+          </span>
+          <span
+              ng-if="question.difficulty < 0.2"
+              class="bold text-red">
+            Hard {{ question.difficulty * 100 | number:0 }}%
+          </span>
+          <span
+              ng-if="question.difficulty >= 0.2 && question.difficulty <= 0.7"
+              class="bold"
+          >
+            Average {{ question.difficulty * 100 | number:0 }}%
+          </span> |
+        </span>
+        <span>{{question.answerCount}} Answers ({{question.skipCount}} skips)
       </div>
 
       <div
