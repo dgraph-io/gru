@@ -37,7 +37,7 @@ angular
       }, 1000);
     });
 
-    var stateChangeStartHandler = function(
+    $rootScope.$on("$stateChangeStart", function(
       e,
       toState,
       toParams,
@@ -52,26 +52,23 @@ angular
       if (toState.authenticate && !mainVm.isLoggedIn()) {
         $state.transitionTo("login");
         e.preventDefault();
-      }
-      if (toState.name == "login" && mainVm.isLoggedIn()) {
+      } else if (toState.name == "login" && mainVm.isLoggedIn()) {
         $state.transitionTo("root");
         e.preventDefault();
       }
-      (function() {
-        setTimeout(function() {
-          $mdl_input = $(".mdl-textfield__input");
-          for (var i = 0; i < $mdl_input.length; i++) {
-            var this_field = $($mdl_input[i]);
-            this_field.removeClass("is-invalid");
 
-            if (this_field.attr("type") == "date") {
-              this_field.parent().addClass("is-focused");
-            }
+      setTimeout(function() {
+        $mdl_input = $(".mdl-textfield__input");
+        for (var i = 0; i < $mdl_input.length; i++) {
+          var this_field = $($mdl_input[i]);
+          this_field.removeClass("is-invalid");
+
+          if (this_field.attr("type") == "date") {
+            this_field.parent().addClass("is-focused");
           }
-        }, 700);
-      })();
-    };
-    $rootScope.$on("$stateChangeStart", stateChangeStartHandler);
+        }
+      }, 700);
+    });
 
     $rootScope.upgradeMDL = function() {
       $timeout(function() {

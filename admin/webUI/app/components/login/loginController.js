@@ -11,11 +11,7 @@ angular.module('GruiApp').controller('loginController', [
     loginVm.authData = {};
     mainVm.pageName = "login-page"
 
-    // Function Declaration
-    loginVm.authenticate = authenticate;
-
-    // Functin Deinitions
-    function authenticate() {
+    loginVm.authenticate = function() {
       if (!loginVm.authData.user || !loginVm.authData.password) {
         SNACKBAR({
           message: "Please fill all the details",
