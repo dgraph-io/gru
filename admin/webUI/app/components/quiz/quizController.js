@@ -6,6 +6,8 @@ angular.module('GruiApp').controller('quizController', [
     mainVm.pageName = "quiz";
     quizVm = this;
 
+    quizVm.selectedTags = {}
+
     quizVm.loadEmptyQuiz = function() {
       quizVm.quiz = {
         questionUids: {},
@@ -118,10 +120,16 @@ angular.module('GruiApp').controller('quizController', [
     }
 
     quizVm.isQuestionInFilter = function(question) {
-      if (quizVm.selectedTagUid && findByUid(quizVm.allQuestionTags(), quizVm.selectedTagUid).item == null) {
-        quizVm.selectedTagUid = null;
-      }
-      return !quizVm.selectedTagUid || findByUid(question.tags, quizVm.selectedTagUid).item;
+      var missingTag = Object.keys(quizVm.selectedTags).find(function(tagUid) {
+        return quizVm.selectedTags[tagUid] && findByUid(question.tags,tagUid).item == null
+      });
+      return !missingTag;
+    }
+
+    quizVm.selectedTagsNotEmpty = function() {
+      return Object.keys(quizVm.selectedTags).filter(function(tagUid) {
+        return quizVm.selectedTags[tagUid];
+      }).length;
     }
 
     // TODO: There's probably a better way but it's not worth my time to google.
