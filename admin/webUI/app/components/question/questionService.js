@@ -13,7 +13,31 @@ angular.module('GruiApp').service('questionService', [
       getAllQuestions: function(hideLoader) {
         return MainService.post('/get-all-questions', {}, hideLoader)
           .then(function(data) {
-            return data && data.data && data.data.questions ? data.data.questions : [];
+            if (!data || !data.data) {
+              return [];
+            }
+            data = data.data
+            var questions = data.questions || [];
+            var answers = data.answers || [];
+
+            var questionUids = questions.reduce(function(acc, q) {
+              acc[q.uid] = q;
+              q.answerCount = 0;
+              q.answerTotalScore = 0;
+              q.skipCount = 0;
+              return acc
+            }, {})
+
+            answers.forEach(function(answer) {
+              var question = questionUids[answer.questionUid];
+              question.answerCount++;
+              question.answerTotalScore += answer.score;
+              if (answer.score == 0) {
+                question.skipCount++;
+              }
+            })
+
+            return questions;
           })
       },
 

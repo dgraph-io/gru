@@ -89,7 +89,7 @@
         style="border: 1px dotted #ddd; padding: 4px 4px 4px 30px; border-radius: 3px"
         ng-repeat="question in quizVm.quizQuestions() | filter: quizVm.isQuestionInFilter"
     >
-      <a ng-click="quizVm.removeQuestion(question)" class="hover-show" href="#" style="display: block; float: left; position: absolute; top: 50%; margin-top: -10px; left: 2px;">
+      <a ng-click="quizVm.removeQuestion(question)" class="hover-show" style="display: block; float: left; position: absolute; top: 50%; margin-top: -10px; left: 2px;">
         <i class="material-icons mdi-sm text-red">delete</i>
       </a>
 
@@ -116,6 +116,13 @@
         &nbsp;&nbsp;
         <i ng-if="question.correct.length == 1" class="material-icons" style="font-size:16px">done</i>
         <i ng-if="question.correct.length > 1" class="material-icons" style="font-size:16px">done_all</i>
+
+        <div>
+            <span ng-if="question.answerCount > 0" style="font-weight:bold">
+              Avg Score: {{ question.answerTotalScore / question.answerCount / question.positive / question.correct.length * 100 | number:0 }}% -
+            </span>
+            <span>{{question.answerCount}} Answers ({{question.skipCount}} skips)
+        </div>
       </div>
 
       <div
@@ -123,11 +130,6 @@
           style="border: 1px dashed #ddd; height: 60px; margin-top: -60px; overflow: hidden;"
           ng-bind-html="mainVm.markDownFormat(question.text)"
       ></div>
-      <span ng-repeat="tag in question['question.tag']">
-        <span class="mdl-chip">
-          <span class="mdl-chip__text">{{tag.name}}</span>
-        </span>
-      </span>
     </div>
   </div>
 </div>

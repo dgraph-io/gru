@@ -161,6 +161,13 @@ func Index(w http.ResponseWriter, r *http.Request) {
 				name
 			}
 		}
+
+		answers(func: has(candidate.answer)) @normalize {
+			question {
+				questionUid: uid
+			}
+			score: candidate.score
+		}
 	}`
 
 	b, err := dgraph.Query(query)
