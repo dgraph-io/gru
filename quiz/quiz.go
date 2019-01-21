@@ -30,9 +30,16 @@ var (
 type difficulty int
 
 const (
-	EASY difficulty = iota
-	MEDIUM
-	HARD
+	EASY difficulty = 0
+	MEDIUM difficulty = 1
+	HARD difficulty = 2
+
+	LEVEL_UP difficulty = +1
+	LEVEL_DOWN difficulty = -1
+
+	// EASY, MEDIUM and HARD.
+	NumLevels = 3
+
 	rate       = time.Second
 )
 
