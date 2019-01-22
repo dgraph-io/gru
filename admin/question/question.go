@@ -162,12 +162,25 @@ func Index(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 
-		answers(func: has(candidate.answer)) @normalize {
-			question {
-				questionUid: uid
-			}
-			score: candidate.score
-		}
+		var(func: has(candidate.answer)) {
+	    score as candidate.score
+	  }
+
+	  var(func: uid(score)) @groupby(question) {
+	    sumScore as sum(candidate.score)
+	    countScore as count(uid)
+	  }
+
+	  var(func: uid(score)) @groupby(question) @filter(eq(val(score), 0)) {
+	    countZero as count(uid)
+	  }
+
+	  answers(func: uid(sumScore)) {
+	    questionUid: uid
+	    totalScore: val(sumScore)
+	    totalCount: val(countScore)
+	    skippedCount: val(countZero)
+	  }
 	}`
 
 	b, err := dgraph.Query(query)

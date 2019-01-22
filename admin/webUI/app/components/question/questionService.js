@@ -34,11 +34,9 @@ angular.module('GruiApp').service('questionService', [
                 console.error('Uknown question for answer ', answer);
                 return
               }
-              question.answerCount++;
-              question.answerTotalScore += answer.score;
-              if (answer.score == 0) {
-                question.skipCount++;
-              }
+              question.answerCount = answer.totalCount;
+              question.answerTotalScore = answer.totalScore;
+              question.skipCount = answer.skippedCount || 0;
               question.difficulty = question.answerTotalScore
                   / question.answerCount
                   / question.positive / question.correct.length;
