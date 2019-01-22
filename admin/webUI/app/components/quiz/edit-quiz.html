@@ -115,8 +115,7 @@
           class="base-font hover-hide"
           style="height: 60px"
       >
-        Score: <span class="text-green bold">+{{question.positive}}</span> |
-        <span class="text-red bold">-{{question.negative}}</span>
+        Score: <span class="text-green bold">+{{question.positive}}</span>&nbsp;<span class="text-red bold">-{{question.negative}}</span>
         &nbsp;&nbsp;
         <i ng-if="question.correct.length == 1" class="material-icons" style="font-size:16px">done</i>
         <i ng-if="question.correct.length > 1" class="material-icons" style="font-size:16px">done_all</i>
@@ -137,7 +136,7 @@
               class="bold"
           >
             Average {{ question.difficulty * 100 | number:0 }}%
-          </span> |
+          </span>&nbsp;&nbsp;
         </span>
         <span>{{question.answerCount}} Answers ({{question.skipCount}} skips)
       </div>
