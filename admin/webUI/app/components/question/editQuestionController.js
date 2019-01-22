@@ -23,17 +23,6 @@ angular.module("GruiApp").controller("editQuestionController", [
       return marked(editQuesVm.newQuestion.text || "");
     }
 
-    function detectUnescape(txt) {
-      if (!txt) {
-        return txt;
-      }
-      if (txt.indexOf("%20") >= 0 || txt.indexOf("%3A") >= 0) {
-        return unescape(txt);
-      } else {
-        return txt;
-      }
-    }
-
     questionService.getQuestion($stateParams.quesID).then(
       function(question) {
         var correctUids = question.correct.reduce(function(acc, val) {
@@ -41,9 +30,7 @@ angular.module("GruiApp").controller("editQuestionController", [
         }, {})
         question.options.forEach(function(opt) {
           opt.is_correct = !!correctUids[opt.uid];
-          opt.name = detectUnescape(opt.name);
         })
-        question.text = detectUnescape(question.text);
         question.positive = parseFloat(question.positive);
         question.negative = parseFloat(question.negative);
 
