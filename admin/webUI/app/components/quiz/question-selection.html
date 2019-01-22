@@ -49,6 +49,13 @@
           >
             {{tag.name}}
           </div>
+
+          <a ui-sref="question.edit({quesID: question.uid, returnQuizId: editQuizVm.quizId})"
+              class="hover-show"
+          >
+            Edit
+          </a>
+
           <div
               class="base-font hover-hide"
               style="height: 60px"
