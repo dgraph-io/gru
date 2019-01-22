@@ -56,7 +56,7 @@ func PingHandler(w http.ResponseWriter, r *http.Request) {
 		sr.Write(w, "", err.Error(), http.StatusInternalServerError)
 		return
 	}
-	// Client may call ping twice after the timeLeft <= 0, but we wan't to send mail
+	// Client may call ping twice after the timeLeft <= 0, but we want to send mail
 	// only once. So we check if we already sent the mail.
 	if err = sendMail(c, userId); err != nil {
 		sr.Write(w, err.Error(), "", http.StatusInternalServerError)

@@ -237,7 +237,7 @@
         );
       }
 
-      // If either the email or the quiz changes, we wan't to validate that the email
+      // If either the email or the quiz changes, we want to validate that the email
       // shouldn't be already invited to this quiz.
       if (
         editInviteVm.candidateBak.email != editInviteVm.candidate.email ||
