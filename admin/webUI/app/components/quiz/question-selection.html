@@ -1,68 +1,91 @@
-<div style="border: 1px solid #999; height: 230px; overflow: hidden auto; position: relative;">
-  <div style="background-color: #fff; left: 2px; right: 2px; top: 0">
-    <h5>Select Question to add it to quiz</h5>
-    <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
-      <input class="mdl-textfield__input" type="text" id="search_question" ng-model="searchQ" />
-      <label class="mdl-textfield__label" for="search_question">Search question Name, Tag, body etc</label>
+<div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+  <input class="mdl-textfield__input" type="text" id="search_question" ng-model="searchQ" />
+  <label class="mdl-textfield__label" for="search_question">Search question Name, Tag, body etc</label>
+</div>
+
+<div style="position:relative; height: 55vh; width: 80vw; overflow: hidden auto;">
+  <div style="position: fixed; left:460px; bottom:62px; right: 0; top: 80px; background-color:#fff">
+    <div
+        style="border: 1px dashed #ddd; position: absolute; top: 0; bottom: 84px; left:4px; right: 4px; overflow: hidden;"
+        ng-bind-html="mainVm.markDownFormat(quizVm.previewQuestion.text)"
+    ></div>
+    <div
+        ng-repeat="option in quizVm.previewQuestion.options"
+        style="
+            position: absolute;
+            left: {{1.6 + 24.6 * $index + '%'}};
+            width: 23%;
+            bottom: 4px;
+            height: 76px;
+            box-sizing: border-box;
+            border: 1px dashed {{quizVm.isOptionCorrect(quizVm.previewQuestion, option) ? '#333' : '#ddd'}};
+            overflow: hidden;
+            padding: 2px;
+        "
+        ng-bind-html="mainVm.markDownFormat(option.name)"
+    >
     </div>
   </div>
-  <div
-      class="question clickable-hover position-relative pl-30"
-      ng-repeat="question in quizVm.allQuestions() | filter:searchQ | filter:quizVm.isNotInQuiz"
-  >
-    <a
-        ng-click="quizVm.addQuestion(question)"
-        class="hover-show"
-        style="position: absolute; display: block; left: 2px; top: 50%; margin-top: -10px;">
-      <i class="material-icons text-green" ng-if="!quizVm.isQuestionInQuiz(question)">add</i>
-      <i class="material-icons" style="color:#ccc" ng-if="quizVm.isQuestionInQuiz(question)">done</i>
-    </a>
-    <div class="mdl-grid no-pad">
-      <div class="mdl-cell mdl-cell--12-col">
-        {{question.name}}
-        <div
-            ng-repeat="tag in question.tags"
-            class="tag-filter capitalize inline-block"
-        >
-          {{tag.name}}
-        </div>
-        <div
-            class="base-font hover-hide"
-            style="height: 60px"
-        >
-          Score: <span class="text-green bold">+{{question.positive}}</span>&nbsp;<span class="text-red bold">-{{question.negative}}</span>
-          &nbsp;&nbsp;
-          <i ng-if="question.correct.length == 1" class="material-icons" style="font-size:16px">done</i>
-          <i ng-if="question.correct.length > 1" class="material-icons" style="font-size:16px">done_all</i>
 
-          <br />
-          <span ng-if="question.answerCount > 0">
-            <span
-                ng-if="question.difficulty > 0.7"
-                class="bold text-green">
-              Easy {{ question.difficulty * 100 | number:0 }}%
-            </span>
-            <span
-                ng-if="question.difficulty < 0.2"
-                class="bold text-red">
-              Hard {{ question.difficulty * 100 | number:0 }}%
-            </span>
-            <span
-                ng-if="question.difficulty >= 0.2 && question.difficulty <= 0.7"
-                class="bold"
-            >
-              Average {{ question.difficulty * 100 | number:0 }}%
-            </span>&nbsp;&nbsp;
-          </span>
-          <span>{{question.answerCount}} Answers ({{question.skipCount}} skips)
-        </div>
+    <div
+        class="question clickable-hover position-relative pl-30"
+        ng-repeat="question in quizVm.allQuestions() | filter:searchQ | filter:quizVm.isNotInQuiz"
+        style="width:400px"
+        ng-mouseover="quizVm.previewQuestion = question"
+    >
+      <a
+          ng-click="quizVm.addQuestion(question)"
+          class="hover-show"
+          style="position: absolute; display: block; left: 2px; top: 50%; margin-top: -10px;">
+        <i class="material-icons text-green" ng-if="!quizVm.isQuestionInQuiz(question)">add</i>
+        <i class="material-icons" style="color:#ccc" ng-if="quizVm.isQuestionInQuiz(question)">done</i>
+      </a>
+      <div class="mdl-grid no-pad">
+        <div class="mdl-cell mdl-cell--12-col">
+          {{question.name}}
+          <div
+              ng-repeat="tag in question.tags"
+              class="tag-filter capitalize inline-block"
+          >
+            {{tag.name}}
+          </div>
+          <div
+              class="base-font hover-hide"
+              style="height: 60px"
+          >
+            Score: <span class="text-green bold">+{{question.positive}}</span>&nbsp;<span class="text-red bold">-{{question.negative}}</span>
+            &nbsp;&nbsp;
+            <i ng-if="question.correct.length == 1" class="material-icons" style="font-size:16px">done</i>
+            <i ng-if="question.correct.length > 1" class="material-icons" style="font-size:16px">done_all</i>
 
-        <div
-            class="hover-show"
-            style="border: 1px dashed #ddd; height: 60px; margin-top: -60px; overflow: hidden;"
-            ng-bind-html="mainVm.markDownFormat(question.text)"
-        ></div>
+            <br />
+            <span ng-if="question.answerCount > 0">
+              <span
+                  ng-if="question.difficulty > 0.7"
+                  class="bold text-green">
+                Easy {{ question.difficulty * 100 | number:0 }}%
+              </span>
+              <span
+                  ng-if="question.difficulty < 0.2"
+                  class="bold text-red">
+                Hard {{ question.difficulty * 100 | number:0 }}%
+              </span>
+              <span
+                  ng-if="question.difficulty >= 0.2 && question.difficulty <= 0.7"
+                  class="bold"
+              >
+                Average {{ question.difficulty * 100 | number:0 }}%
+              </span>&nbsp;&nbsp;
+            </span>
+            <span>{{question.answerCount}} Answers ({{question.skipCount}} skips)
+          </div>
+
+          <div
+              class="hover-show"
+              style="border: 1px dashed #ddd; height: 60px; margin-top: -60px; overflow: hidden;"
+              ng-bind-html="mainVm.markDownFormat(question.text)"
+          ></div>
+        </div>
       </div>
     </div>
-  </div>
 </div>

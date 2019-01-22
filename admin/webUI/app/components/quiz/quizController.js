@@ -107,6 +107,18 @@ angular.module('GruiApp').controller('quizController', [
       }
     }
 
+    quizVm.showAddQuestionModal = function() {
+      mainVm.openModal({
+        class: "add-question-modal-template",
+        hideClose: true,
+        template: "add-question-modal-template",
+      });
+    }
+
+    quizVm.isOptionCorrect = function(question, option) {
+      return findByUid(question.correct, option.uid).item != null
+    }
+
     quizVm.removeQuestion = function(question) {
       quizVm.quiz.questionUids[question.uid] = false;
     }

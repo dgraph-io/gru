@@ -1,5 +1,5 @@
 <div class="mdl-grid" ng-controller="editQuizController as editQuizVm">
-  <div class="mdl-cell mdl-cell--5-col">
+  <div class="mdl-cell mdl-cell--4-col">
     <div class="scroll-fix mdl-shadow--2dp">
       <h5 class="mt-0">Update Quiz</h5>
       <form ng-submit="quizVm.submitQuiz()">
@@ -54,8 +54,13 @@
       </form>
     </div>
   </div>
-  <div class="mdl-cell mdl-cell--6-col mdl-cell--1-offset-desktop">
-    <div ng-include="'app/components/quiz/question-selection.html'"></div>
+  <div class="mdl-cell mdl-cell--7-col mdl-cell--1-offset-desktop">
+    <button
+        ng-click="quizVm.showAddQuestionModal()"
+        class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect action-btn"
+    >
+      <span><i class="material-icons">add</i> Add Questions</span>
+    </button>
     <h5>Questions in this quiz</h5>
     <div>
       <div
@@ -147,4 +152,18 @@
       ></div>
     </div>
   </div>
+
+  <script type="text/ng-template" id="add-question-modal-template">
+    <div class="add-question-modal-template">
+      <h5 class="mdl-dialog__title">Add Questions to the Quiz</h5>
+      <div class="mdl-dialog__content pb-0">
+        <div ng-include="'app/components/quiz/question-selection.html'"></div>
+
+        <div class="text-right pt-5">
+          <button class="mdl-button mr-20" ng-click="mainVm.hideModal()">Back to Quiz</button>
+        </div>
+      </div>
+    </div>
+  </script>
+  <div data-ng-include data-src="'app/shared/_modal_template.html'"></div>
 </div>

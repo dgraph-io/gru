@@ -125,7 +125,7 @@ angular.module("GruiRoutes").config([
         authenticate: true
       })
       .state("quiz.add", {
-        url: "/add-quiz?:index?:qid",
+        url: "/add-quiz",
         parent: "quiz",
         templateUrl: editQuizTemplate,
         authenticate: true
