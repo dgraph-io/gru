@@ -1,16 +1,12 @@
 angular.module("GruiApp").controller("addQuestionController", [
-  "$scope",
   "$rootScope",
-  "$http",
   "$state",
-  "$stateParams",
+  "allQuestions",
   "questionService",
   function addQuestionController(
-    $scope,
     $rootScope,
-    $http,
     $state,
-    $stateParams,
+    allQuestions,
     questionService
   ) {
     addQueVm = this;
@@ -53,6 +49,7 @@ angular.module("GruiApp").controller("addQuestionController", [
           if (data.code != "Error") {
             addQueVm.loadEmptyQuestion();
           }
+          allQuestions.refresh();
 
           SNACKBAR({
             message: data.message || data.Message,

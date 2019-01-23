@@ -43,7 +43,7 @@
             <div class="side-tabs pv-5"
                 ng-repeat="question in filteredQues = (allQVm.questions() | filter: allQVm.filterBy)"
                 ng-class="{'is-active': allQVm.question.uid==question.uid}"
-                ng-click="allQVm.getQuestion(question.uid)"
+                ng-click="allQVm.clickQuestion(question)"
             >
               {{question.name}}
             </div>

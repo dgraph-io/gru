@@ -157,12 +157,8 @@ angular.module("GruiApp").controller("allQuestionController", [
       allQVm.question = allQVm.question || newQuestions.find(allQVm.filterBy)
     });
 
-    allQVm.getQuestion = function getQuestion(questionId) {
-      // When question is clicked on the side nav bar, we fetch its
-      // information from backend and refresh it.
-      questionService.getQuestion(questionId).then(function(question) {
-        allQVm.question = question;
-      });
+    allQVm.clickQuestion = function getQuestion(question) {
+      allQVm.question = question;
     }
 
     allQVm.questions = function() {
