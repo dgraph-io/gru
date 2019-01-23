@@ -133,12 +133,13 @@
       </div>
     </div>
   </div>
-  <div class="lazy-loader text-center " ng-show="allQVm.showLazyLoader ">
-    <div class="mdl-spinner mdl-js-spinner is-active "></div>
+  <div class="lazy-loader text-center " ng-show="allQVm.showLazyLoader">
+    <div class="mdl-spinner mdl-js-spinner is-active"></div>
   </div>
-  <div class="text-center " ng-if="!mainVm.allQuestions.length ">
-    <h4 class="text-center ">
+  <div ng-if="mainVm.questions().length == 0" class="text-center">
+    <h4>
       Could not find any questions.
-    </h4> Go to <a ui-sref="question.add ">Add Question</a> page to add some.
+    </h4>
+    Go to <a ui-sref="question.add">Add Question</a> page to add some.
   </div>
 </div>

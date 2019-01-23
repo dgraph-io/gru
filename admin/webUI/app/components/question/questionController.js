@@ -189,50 +189,42 @@ angular.module("GruiApp").controller("allQuestionController", [
       }
     }
 
-    // TODO : Write modular code Filtering
     function filterBy(question) {
-      textFilterMatch =
-        question.name.toUpperCase().indexOf(allQVm.searchText.toUpperCase()) !=
-        -1;
-
-      if (allQVm.filter && allQVm.filter.tag && allQVm.filter.tag.length) {
-        var found = false;
-        var tagFound = true;
-        for (var i = 0; i < allQVm.filter.tag.length; i++) {
-          var tagIndex = mainVm.indexOfObject(
-            question.tags,
-            allQVm.filter.tag[i]
-          );
-          if (tagIndex == -1) {
-            tagFound = false;
-            break;
-          }
-          if (
-            tagIndex > -1 &&
-            (allQVm.filter.multiple && question.correct.length == 1)
-          ) {
-            tagFound = false;
-          }
-          if (
-            tagIndex > -1 &&
-            (allQVm.filter.single && question.correct.length > 1)
-          ) {
-            tagFound = false;
-          }
-          if (!tagFound) break;
-        }
-        return textFilterMatch && tagFound;
-      } else if (allQVm.filter && allQVm.filter.multiple) {
-        if (question.correct.length > 1) {
-          return textFilterMatch && true;
-        } else {
-          return textFilterMatch && false;
-        }
-      } else if (allQVm.filter && allQVm.filter.single) {
-        return (question.correct.length == 1) && !!textFilterMatch;
-      } else {
-        return !!textFilterMatch;
+      if (question.name.toUpperCase().indexOf(allQVm.searchText.toUpperCase()) < 0) {
+        // Search string not found, abort;
+        return false
       }
+      if (!allQVm.filter) {
+        // No other filters.
+        return true;
+      }
+
+      var isQuestionMultiple = question.correct.length > 1;
+      if (allQVm.filter.multiple && !isQuestionMultiple) {
+        // Multiple filter is selected and question is single answer => Fail.
+        return false;
+      }
+      if (allQVm.filter.single && isQuestionMultiple) {
+        // Same as above but for single filter.
+        return false;
+      }
+
+      if (!allQVm.filter.tag) {
+        // No tags filter. Question is good.
+        return true;
+      }
+
+      // Invariant: we've checked the search string, multiple and single filters
+      // there's tags filter but we haven't looked into it yet.
+
+      // If we cannot find a filter tag that matches question tag
+      // this question passed the tag filters.
+      return !allQVm.filter.tag.find(function(filterTag) {
+        return !question.tags.find(function(questionTag) {
+          console.log('Compare', filterTag, ' q n tag = ', questionTag);
+          return questionTag.uid == filterTag.uid
+        })
+      })
     }
 
     allQVm.removeAllFilter = function removeAllFilter() {
