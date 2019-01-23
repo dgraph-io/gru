@@ -42,7 +42,7 @@
           <div class="qn-nav">
             <div class="side-tabs pv-5"
                 ng-repeat="question in filteredQues = (allQVm.questions() | filter: allQVm.filterBy)"
-                ng-class="{ 'is-active': allQVm.question.uid==question.uid}"
+                ng-class="{'is-active': allQVm.question.uid==question.uid}"
                 ng-click="allQVm.getQuestion(question.uid)"
             >
               {{question.name}}
@@ -55,8 +55,11 @@
             </div>
           </div>
         </div>
-        <div class="mdl-cell mdl-cell--10-col pl-30 qn-desc " ng-show="filteredQues.length">
-          <div class="mdl-tabs__panel is-active " id="tab{{allQVm.questionIndex}}-panel ">
+        <div
+            ng-show="filteredQues.length && allQVm.question"
+            class="mdl-cell mdl-cell--10-col pl-30 qn-desc"
+        >
+          <div class="mdl-tabs__panel is-active " id="tab{{allQVm.questionIndex}}-panel">
             <div class="mdl-grid no-pad ">
               <div class="mdl-cell mdl-cell--2-col mdl-cell--middle ">
                 <span class="bold ">NAME</span>

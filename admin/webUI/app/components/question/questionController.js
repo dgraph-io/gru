@@ -145,8 +145,6 @@ angular.module("GruiApp").controller("allQuestionController", [
     allQVm = this;
     allQVm.searchText = "";
 
-    allQVm.filterBy = filterBy;
-
     questionVm.getAllTags();
 
     if ($stateParams.quesID) {
@@ -154,7 +152,10 @@ angular.module("GruiApp").controller("allQuestionController", [
         return q.uid == $stateParams.quesID;
       });
     }
-    allQVm.question = allQVm.question || allQuestions.get()[0];
+
+    $scope.$watch("allQVm.questions()", function(newQuestions) {
+      allQVm.question = allQVm.question || newQuestions.find(allQVm.filterBy)
+    });
 
     allQVm.getQuestion = function getQuestion(questionId) {
       // When question is clicked on the side nav bar, we fetch its
@@ -189,7 +190,7 @@ angular.module("GruiApp").controller("allQuestionController", [
       }
     }
 
-    function filterBy(question) {
+    allQVm.filterBy = function filterBy(question) {
       if (question.name.toUpperCase().indexOf(allQVm.searchText.toUpperCase()) < 0) {
         // Search string not found, abort;
         return false
@@ -221,7 +222,6 @@ angular.module("GruiApp").controller("allQuestionController", [
       // this question passed the tag filters.
       return !allQVm.filter.tag.find(function(filterTag) {
         return !question.tags.find(function(questionTag) {
-          console.log('Compare', filterTag, ' q n tag = ', questionTag);
           return questionTag.uid == filterTag.uid
         })
       })
