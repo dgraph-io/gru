@@ -1,22 +1,3 @@
-function detectUnescape(txt) {
-  if (!txt) {
-    return txt;
-  }
-  if (txt.indexOf("%20") >= 0 || txt.indexOf("%3A") >= 0 || txt.indexOf("%28") >= 0) {
-    return unescape(txt);
-  } else {
-    return txt;
-  }
-}
-
-function fixQuestionUnescape(question) {
-  question.text = detectUnescape(question.text);
-  question.options.forEach(function(opt) {
-    opt.name = detectUnescape(opt.name);
-  });
-  return question;
-}
-
 angular.module('GruiApp').service('questionService', [
   "MainService",
   function questionService(MainService) {
@@ -39,7 +20,7 @@ angular.module('GruiApp').service('questionService', [
             var questions = data.questions || [];
             var answers = data.answers || [];
 
-            questions.forEach(fixQuestionUnescape);
+            questions.forEach(mainVm.fixQuestionUnescape);
 
             var questionUids = questions.reduce(function(acc, q) {
               acc[q.uid] = q;

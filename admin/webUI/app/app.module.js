@@ -255,6 +255,30 @@ angular.module("GruiApp").controller("MainController", [
     mainVm.initNotification = initNotification;
     mainVm.hideNotification = hideNotification;
 
+    mainVm.detectUnescape = function detectUnescape(txt) {
+      if (!txt) {
+        return txt;
+      }
+      if (txt.indexOf("%20") >= 0 || txt.indexOf("%3A") >= 0
+          || txt.indexOf("%28") >= 0) {
+        return unescape(txt);
+      } else {
+        return txt;
+      }
+    }
+
+    mainVm.fixQuestionUnescape = function fixQuestionUnescape(question) {
+      if (question.text) {
+        question.text = mainVm.detectUnescape(question.text);
+      }
+      if (question.options) {
+        question.options.forEach(function(opt) {
+          opt.name = mainVm.detectUnescape(opt.name);
+        });
+      }
+      return question;
+    }
+
     function indexOfObject(arr, obj) {
       if (!arr) {
         return -1;

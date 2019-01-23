@@ -1,11 +1,12 @@
 angular.module('GruiApp').service('candidateService', [
-  "$q",
   "$http",
   "MainService",
-  function candidateService($q, $http, MainService) {
+  function candidateService($http, MainService) {
     return {
       getQuestion: function() {
-        return MainService.post('/quiz/question');
+        return MainService.post('/quiz/question').then(function(question) {
+          return mainVm.fixQuestionUnescape(question);
+        });
       },
 
       sendFeedback: function(data) {
