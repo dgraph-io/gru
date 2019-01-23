@@ -57,7 +57,7 @@ angular.module("GruiRoutes").config([
       .state("root", {
         url: "/admin",
         templateUrl: homeTemplate,
-        resolve: helper.resolveFor("homeController", "marked"),
+        resolve: helper.resolveFor("homeController"),
         authenticate: true
       })
       .state("login", {

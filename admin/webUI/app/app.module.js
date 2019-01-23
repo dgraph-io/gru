@@ -51,10 +51,8 @@ angular
       }
       if (toState.authenticate && !mainVm.isLoggedIn()) {
         $state.transitionTo("login");
-        e.preventDefault();
       } else if (toState.name == "login" && mainVm.isLoggedIn()) {
         $state.transitionTo("root");
-        e.preventDefault();
       }
 
       setTimeout(function() {
@@ -241,8 +239,14 @@ angular.module("GruiApp").controller("MainController", [
       return !object ? 0 : Object.keys(object).length;
     }
 
-    mainVm.isLoggedIn = isLoggedIn;
-    mainVm.logout = logout;
+    mainVm.isLoggedIn = function isLoggedIn() {
+      return !!localStorage.getItem("token")
+    }
+
+    mainVm.logout = function logout() {
+      localStorage.removeItem("token");
+      $state.transitionTo("login");
+    }
 
     mainVm.parseGoTime = parseGoTime;
     mainVm.openModal = openModal;
@@ -261,18 +265,6 @@ angular.module("GruiApp").controller("MainController", [
         }
       }
       return -1;
-    }
-
-    function isLoggedIn() {
-      if (localStorage.getItem("token")) {
-        return true;
-      }
-      return false;
-    }
-
-    function logout() {
-      localStorage.removeItem("token");
-      $state.transitionTo("login");
     }
 
     function openModal(setting) {
