@@ -215,6 +215,11 @@ func percentile(quizId string, cid string) (float64, error) {
 		return 0.0, err
 	}
 
+	if len(res.Data.Quiz) < 1 {
+		fmt.Println("Could not find quiz results for quiz ", quizId, " cid=", cid)
+		return 0.0, nil
+	}
+
 	candidates := res.Data.Quiz[0].Candidates
 
 	sort.Sort(ByScore(candidates))
