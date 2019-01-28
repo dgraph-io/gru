@@ -51,7 +51,7 @@ angular.module('GruiApp').service('questionService', [
       getQuestion: function(questionId) {
         return MainService.get('/question/' + questionId)
           .then(function(data) {
-            return fixQuestionUnescape(data.data.question[0]);
+            return mainVm.fixQuestionUnescape(data.data.question[0]);
           })
       },
     }
