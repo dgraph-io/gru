@@ -22,7 +22,11 @@ angular.module("GruiApp").service("inviteService", [
       },
 
       getReport: function(candidateID) {
-        return MainService.get("/candidate/report/" + candidateID);
+        return MainService.get("/candidate/report/" + candidateID)
+          .then(function(reportData) {
+            reportData.questions.map(mainVm.fixQuestionUnescape);
+            return reportData;
+          });
       },
 
       alreadyInvited: function(quizId, emails) {

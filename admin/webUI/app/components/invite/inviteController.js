@@ -12,7 +12,6 @@
     inviteVm.newInvite = {};
     mainVm.pageName = "invite-page";
 
-    // FUNCTION DECLARATION
     inviteVm.getAllQuizzes = getAllQuizzes;
     inviteVm.inviteCandidate = inviteCandidate;
     inviteVm.removeSelectedQuiz = removeSelectedQuiz;
@@ -557,6 +556,12 @@
     $(".mdl-layout__content").unbind("scroll");
   }
 
+angular.module("GruiApp").controller("candidateReportController", [
+  "$scope",
+  "$rootScope",
+  "$stateParams",
+  "$state",
+  "inviteService",
   function candidateReportController(
     $scope,
     $rootScope,
@@ -741,30 +746,13 @@
       return false;
     }
 
-    // var mdlContent = $(".mdl-layout__content");
     $(".mdl-layout__content").scroll(function() {
-      if (this.scrollTop >= 100) {
-        cReportVm.pageScrolled = true;
-      } else {
-        cReportVm.pageScrolled = false;
-      }
-      $scope.$digest();
+      cReportVm.pageScrolled = this.scrollTop > 100
+      $scope.$digest()
     });
-  }
+  }]);
 
-  var candidateReportDependency = [
-    "$scope",
-    "$rootScope",
-    "$stateParams",
-    "$state",
-    "inviteService",
-    candidateReportController
-  ];
-  angular
-    .module("GruiApp")
-    .controller("candidateReportController", candidateReportDependency);
-
-  var candidatesDependency = [
+  angular.module("GruiApp").controller("candidatesController", [
     "$scope",
     "$rootScope",
     "$stateParams",
@@ -773,29 +761,24 @@
     "$templateCache",
     "inviteService",
     candidatesController
-  ];
-  angular
-    .module("GruiApp")
-    .controller("candidatesController", candidatesDependency);
+  ]);
 
-  var addCandidatesDependency = ["$state", addCandidatesController];
-  angular
-    .module("GruiApp")
-    .controller("addCandidatesController", addCandidatesDependency);
-
-  var editInviteDependency = [
-    "$rootScope",
-    "$stateParams",
+  angular.module("GruiApp").controller("addCandidatesController", [
     "$state",
-    "quizService",
-    "inviteService",
-    editInviteController
-  ];
-  angular
-    .module("GruiApp")
-    .controller("editInviteController", editInviteDependency);
+    addCandidatesController
+  ]);
 
-  var inviteDependency = [
+  angular.module("GruiApp")
+    .controller("editInviteController",   [
+      "$rootScope",
+      "$stateParams",
+      "$state",
+      "quizService",
+      "inviteService",
+      editInviteController
+    ]);
+
+  angular.module("GruiApp").controller("inviteController", [
     "$scope",
     "$rootScope",
     "$stateParams",
@@ -803,6 +786,5 @@
     "quizService",
     "inviteService",
     inviteController
-  ];
-  angular.module("GruiApp").controller("inviteController", inviteDependency);
+  ]);
 })();
