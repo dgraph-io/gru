@@ -694,39 +694,28 @@ angular.module("GruiApp").controller("candidateReportController", [
     // To scroll to next and previous question on pressing Up and Down arrow keys.
     function bindHandlers() {
       document.onkeydown = function(e) {
+        var direction = 0;
         switch (e.keyCode) {
           case 38:
             // Up arrow key
-            selected = $(".selected-sidebar").data("scrollto");
-            // Initially selected would be undefined, we don't want to do
-            // anything on up key.
-            if (selected === undefined) {
-              break;
-            }
-            // Lets get the current selected question.
-            qno = parseInt(selected.slice(9, 11));
-            $previousQn = $("#question" + (qno - 1));
-            if ($previousQn.length != 0) {
-              $question = $previousQn;
-            }
-            $question.length != 0 && scrollTo($question);
+            direction = -1
             break;
           case 40:
             // Down arrow key
-            selected = $(".selected-sidebar").data("scrollto");
-            // Initially selected would be undefined, so lets select the first
-            // question.
-            if (selected === undefined) {
-              $question = $("#question0");
-            } else {
-              qno = parseInt(selected.slice(9, 11));
-              $nextQn = $("#question" + (qno + 1));
-              if ($nextQn.length != 0) {
-                $question = $nextQn;
-              }
-            }
-            $question.length != 0 && scrollTo($question);
+            direction = +1
             break;
+        }
+
+        var nextQuestion = direction + (cReportVm.scrolledQuestion || 0);
+
+        var $question = $("#question" + nextQuestion);
+        if (!$question.length && direction < 0) {
+          nextQuestion = 0;
+          $question = $("#question0");
+        }
+        if ($question.length) {
+          scrollTo($question);
+          cReportVm.scrolledQuestion = nextQuestion;
         }
       };
     }
