@@ -1,43 +1,48 @@
-<div class="main-content ng-cloak" ng-controller="candidateQuizController as cqVm">
+<div
+    class="main-content ng-cloak"
+    ng-controller="candidateQuizController as cqVm"
+    style="margin-top: 50px"
+>
   <div class="" ng-if="!cqVm.apiError">
     <div class="mdl-grid" ng-class="{'quiz-ended mdl-shadow--2dp pv-20': cqVm.quizEnded, 'b-border quiz-stats': !cqVm.quizEnded }">
       <div class="mdl-cell mdl-cell--3-col mdl-cell--8-col-tablet mdl-cell--middle resp-center" ng-if="cqVm.quizEnded">
         <h5 ng-if="cqVm.quizEnded" class="bold">Hi, {{candidateVm.info.Name}}. </h5>
         <h5 class="bold mt-5 mb-5">Quiz <span ng-if="cqVm.quizEnded">ended</span></h5>
       </div>
-      <div class="mdl-cell mdl-cell--4-col mdl-cell--8-col-tablet mdl-cell--middle big-font time-stats" ng-if="!cqVm.quizEnded">
-        <span class="mdl-chip mdl-chip--contact mr-20" ng-if="!cqVm.quizEnded">
-          <span class="mdl-chip__contact mdl-color--teal mdl-color-text--white">
-            Total Time left
-          </span>
+      <span
+          class="mdl-chip mdl-chip--contact mr-20"
+          ng-if="!cqVm.quizEnded"
+          style="position: fixed; top: 50px; z-index: 2; left: 230px; box-shadow: 0 0 10px 14px #fff;"
+      >
+        <span class="mdl-chip__contact mdl-color--teal mdl-color-text--white">
+          Total Time left
+        </span>
         <span class="mdl-chip__text bold text-center timer-chip-text">
             <span id="time"></span>
         </span>
-        </span>
-      </div>
+      </span>
       <div class="mdl-cell mdl-cell--5-col mdl-cell--8-col-tablet mdl-cell--middle text-center resp-center time-stats mv-0">
-        <span class="mdl-chip mdl-chip--contact">
-          <span class="mdl-chip__contact mdl-color--teal mdl-color-text--white">
-            <span ng-if="!cqVm.quizEnded">Time spent on question</span>
-        <span ng-if="cqVm.quizEnded">Total time taken</span>
-        </span>
-        <span class="mdl-chip__text bold text-center timer-chip-text"><span id="time-taken"></span></span>
-        </span>
         <span class="mdl-chip mdl-chip--contact" ng-if="cqVm.quizEnded">
           <span class="mdl-chip__contact mdl-color--teal mdl-color-text--white">
-            <span ng-if="cqVm.quizEnded">Final</span> Score
-        </span>
-        <span class="mdl-chip__text bold text-center ">{{cqVm.question.score | number: 2}}</span>
-        </span>
-      </div>
-      <div class="mdl-cell mdl-cell--3-col mdl-cell--8-col-tablet mdl-cell--middle text-right big-font quiz-score" ng-if="!cqVm.quizEnded">
-        <span class="mdl-chip mdl-chip--contact">
-          <span class="mdl-chip__contact mdl-color--teal mdl-color-text--white">
-            <span ng-if="cqVm.quizEnded">Final</span> Score
-        </span>
-        <span class="mdl-chip__text bold text-center ">{{cqVm.question.score | number: 2}}</span>
+            Final Score
+          </span>
+          <span class="mdl-chip__text bold text-center ">
+            {{cqVm.question.score | number: 1}}
+          </span>
         </span>
       </div>
+      <span
+          class="mdl-chip mdl-chip--contact"
+          ng-if="!cqVm.quizEnded"
+          style="position: fixed; top: 50px; z-index: 2; left: 500px; box-shadow: 0 0 10px 14px #fff;"
+      >
+        <span class="mdl-chip__contact mdl-color--teal mdl-color-text--white">
+          Score
+        </span>
+        <span class="mdl-chip__text bold text-center ">
+          {{cqVm.question.score | number: 1}}
+        </span>
+      </span>
       <div ng-show="cqVm.quizEnded" class="pl-10 t-border">
         <div ng-show="!cqVm.feedbackSubmitted">
           <form ng-submit="cqVm.submitFeedback()">

@@ -79,7 +79,9 @@ angular.module("GruiApp").controller("candidateQuizController", [
             // So that we call getTime() when question is fetched the first time and update
             // time.
             cqVm.getTime();
-            $timeTakenElem.textContent = "00:00";
+            if ($timeTakenElem) {
+              $timeTakenElem.textContent = "00:00";
+            }
             cqVm.timerObj.time_elapsed = 0;
             startTimer(seconds, $timeTakenElem, true);
 
@@ -178,8 +180,6 @@ angular.module("GruiApp").controller("candidateQuizController", [
               }
             }
           );
-          if (err.status == 400) {
-          }
         }
       );
     }
@@ -199,9 +199,14 @@ angular.module("GruiApp").controller("candidateQuizController", [
       minutes = minutes < 10 ? "0" + minutes : minutes;
       seconds = seconds < 10 ? "0" + seconds : seconds;
 
-      display.textContent = minutes + ":" + seconds;
+      if (display) {
+        display.textContent = minutes + ":" + seconds;
+      }
     }
 
+    // TODO: this function has side effect assignment of timerObj.foo
+    // where foo depends on the isReverse field.
+    // TODO: direct manipulation of DOM in Angular is not Angular way.
     function startTimer(duration, display, isReverse) {
       var timer = duration, hours, minutes, seconds;
 
