@@ -60,86 +60,27 @@
         </div>
       </div>
     </div>
-    <!-- <div class="mdl-grid" ng-if="!cqVm.quizEnded" ng-class="{'quiz-ended mdl-shadow--2dp pv-20': cqVm.quizEnded, 'b-border quiz-stats': !cqVm.quizEnded }">
-  <div class="mdl-cell mdl-cell--4-col mdl-cell--8-col-tablet mdl-cell--middle big-font time-stats">
-    <span class="mdl-chip mdl-chip--contact mr-20">
-          <span class="mdl-chip__contact mdl-color--teal mdl-color-text--white">
-            Questions left
-          </span>
-    <span class="mdl-chip__text bold text-center timer-chip-text">
-            {{cqVm.question.qns_left}}
-          </span>
-    </span>
-  </div>
-  <div class="mdl-cell mdl-cell--5-col mdl-cell--8-col-tablet mdl-cell--middle text-center resp-center time-stats mv-0">
-    <span class="mdl-chip mdl-chip--contact">
-          <span class="mdl-chip__contact mdl-color--teal mdl-color-text--white">
-            <span>Score on last question</span>
-    </span>
-    <span class="mdl-chip__text bold text-center ">{{cqVm.question.last_score | number: 2}}</span>
-    </span>
-  </div>
-  <div class="mdl-cell mdl-cell--3-col mdl-cell--8-col-tablet mdl-cell--middle text-right big-font quiz-score">
-    <span class="mdl-chip mdl-chip--contact">
-          <span class="mdl-chip__contact mdl-color--teal mdl-color-text--white">
-          Max score left
-          </span>
-    <span class="mdl-chip__text bold text-center timer-chip-text">{{cqVm.question.score_left | number: 2}}</span>
-  </div>
-</div>
- -->
     <div ng-if="!cqVm.quizEnded">
       <div class="mdl-grid question-stats" ng-if="cqVm.question.text">
         <div class="mdl-cell mdl-cell--3-col mdl-cell--8-col-tablet mdl-cell--4-col-phone mdl-cell--1-order-desktop mdl-cell--order-1-desktop mb-5">
           <div class="mdl-shadow--2dp">
             <div class="alert alert-success mdl-cell--hide-phone mdl-cell--hide-tablet">
-              Scoring
+              Question Score
             </div>
-            <div>
-              <div class="mdl-grid pad-0">
-                <div class="mdl-cell mdl-cell--6-col mdl-cell--8-col-tablet mdl-cell--middle">
-                  <label>
-                    CORRECT
-                    <span class="text-green mdl-cell--hide-desktop ph-block">
-                      <span class="mdl-cell--hide-phone">:</span> +{{cqVm.question.positive | number: 2}}
-                    </span>
-                  </label>
-                </div>
-                <div class="mdl-cell mdl-cell--6-col mdl-cell--hide-tablet mdl-cell--hide-phone">
-                  <button class="mdl-button mdl-js-button mdl-button--fab mdl-button--mini-fab btn-success">
-                    +{{cqVm.question.positive | number: 2}}
-                  </button>
-                </div>
-              </div>
-              <div class="mdl-grid pad-0">
-                <div class="mdl-cell mdl-cell--6-col mdl-cell--8-col-tablet mdl-cell--middle">
-                  <label>INCORRECT
-                    <span class="text-red mdl-cell--hide-desktop ph-block">
-                      <span class="mdl-cell--hide-phone">:</span> -{{cqVm.question.negative | number: 2}}
-                    </span>
-                  </label>
-                </div>
-                <div class="mdl-cell mdl-cell--6-col mdl-cell--hide-tablet mdl-cell--hide-phone">
-                  <button class="mdl-button mdl-js-button mdl-button--fab mdl-button--mini-fab btn-red">
-                    -{{cqVm.question.negative | number: 2}}
-                  </button>
-                </div>
-              </div>
-              <div class="mdl-grid pad-0">
-                <div class="mdl-cell mdl-cell--6-col mdl-cell--8-col-tablet mdl-cell--middle">
-                  <label>
-                    SKIP
-                    <span class="text-red mdl-cell--hide-desktop ph-block">
-                      <span class="mdl-cell--hide-phone">:</span> 0
-                    </span>
-                  </label>
-                </div>
-                <div class="mdl-cell mdl-cell--6-col mdl-cell--hide-tablet mdl-cell--hide-phone">
-                  <button class="mdl-button mdl-js-button mdl-button--fab mdl-button--mini-fab btn-default">
-                    0
-                  </button>
-                </div>
-              </div>
+            <div style="padding: 2px 8px">
+              Correct Answer:
+              <span class="text-green">
+                +{{cqVm.question.positive | number: 1}}
+              </span>
+            </div>
+            <div style="padding: 2px 8px">
+              Incorrect Answer:
+              <span class="text-red">
+                +{{cqVm.question.negative | number: 1}}
+              </span>
+            </div>
+            <div style="padding: 2px 8px">
+              Skip Question: <span class="bold">0.0</span>
             </div>
           </div>
         </div>
@@ -150,7 +91,10 @@
             <pre ng-bind-html="mainVm.markDownFormat(cqVm.question.text)" class="code-block"></pre>
           </div>
           <div class="options pt-20">
-            <label class="pb-10">OPTIONS</label>
+            <label class="pb-10">
+              OPTIONS
+              <span ng-if="cqVm.question.multiple == true">(Multiple Choice)</span>
+            </label>
 
             <div ng-repeat="option in cqVm.question.options">
               <label class="{{cqVm.question.multiple && 'mdl-checkbox mdl-js-checkbox'}} {{!cqVm.question.multiple && 'mdl-radio mdl-js-radio'}} mdl-js-ripple-effect mt-10" for="option{{$index}}">
@@ -181,7 +125,15 @@
             <button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect btn-lg" ng-click="cqVm.submitAnswer()">
               Submit
             </button>
-            <button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect btn-lg ml-20" ng-click="cqVm.submitAnswer(true)" ng-disabled="!(cqVm.timerObj.time_elapsed >= 60)">SKIP</button>
+            <button
+                class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect btn-lg ml-20"
+                ng-click="cqVm.submitAnswer(true)"
+                ng-disabled="cqVm.timerObj.time_elapsed < 60">
+              Skip
+              <span ng-if="cqVm.timerObj.time_elapsed < 60" style="font-family: monospace">
+                in {{ 60 - cqVm.timerObj.time_elapsed | number: 0 }}
+              </span>
+            </button>
           </div>
         </div>
       </div>
