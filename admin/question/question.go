@@ -175,11 +175,21 @@ func Index(w http.ResponseWriter, r *http.Request) {
 	    countZero as count(uid)
 	  }
 
+		var(func: uid(score)) @groupby(question) @filter(gt(val(score), 0)) {
+	    countPositive as count(uid)
+	  }
+
+		var(func: uid(score)) @groupby(question) @filter(lt(val(score), 0)) {
+	    countNegative as count(uid)
+	  }
+
 	  answers(func: uid(sumScore)) {
 	    questionUid: uid
 	    totalScore: val(sumScore)
 	    totalCount: val(countScore)
 	    skippedCount: val(countZero)
+			correctCount: val(countPositive)
+			wrongCount: val(countNegative)
 	  }
 	}`
 

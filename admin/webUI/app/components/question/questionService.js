@@ -39,9 +39,7 @@ angular.module('GruiApp').service('questionService', [
               question.answerCount = answer.totalCount;
               question.answerTotalScore = answer.totalScore;
               question.skipCount = answer.skippedCount || 0;
-              question.difficulty = question.answerTotalScore
-                  / question.answerCount
-                  / question.positive / question.correct.length;
+              question.difficulty = answer.correctCount / answer.totalCount;
             })
 
             return questions;
