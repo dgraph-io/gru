@@ -312,7 +312,7 @@
     inviteService
   ) {
     candidatesVm = this;
-    candidatesVm.sortType = "score";
+    candidatesVm.sortType = "quiz_start";
     candidatesVm.sortReverse = true;
 
     candidatesVm.expires = expires;
