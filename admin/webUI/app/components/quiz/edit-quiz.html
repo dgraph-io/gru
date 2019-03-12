@@ -126,17 +126,17 @@
         <br />
         <span ng-if="question.answerCount > 0">
           <span
-              ng-if="question.difficulty > 0.7"
+              ng-if="question.difficulty > 0.75"
               class="bold text-green">
             Easy {{ question.difficulty * 100 | number:0 }}%
           </span>
           <span
-              ng-if="question.difficulty < 0.2"
+              ng-if="question.difficulty < 0.35"
               class="bold text-red">
             Hard {{ question.difficulty * 100 | number:0 }}%
           </span>
           <span
-              ng-if="question.difficulty >= 0.2 && question.difficulty <= 0.7"
+              ng-if="question.difficulty >= 0.35 && question.difficulty <= 0.75"
               class="bold"
           >
             Average {{ question.difficulty * 100 | number:0 }}%
