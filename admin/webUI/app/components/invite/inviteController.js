@@ -655,6 +655,9 @@ angular.module("GruiApp").controller("candidateReportController", [
         }
         cReportVm.statistics = statistics;
         cReportVm.tagScores = Object.entries(tagScores);
+        cReportVm.tagScores.sort(function(a,b) {
+          return a[1].total - b[1].total;
+        })
 
 
         setTimeout(
