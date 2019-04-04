@@ -620,6 +620,8 @@ angular.module("GruiApp").controller("candidateReportController", [
           }
         };
 
+        var tagScores = {};
+
         for (var i = 0; i < questions.length; i++) {
           qn = questions[i];
           d = difficulty(qn.tags);
@@ -627,6 +629,14 @@ angular.module("GruiApp").controller("candidateReportController", [
             statistics[d].total++;
             correct(qn) && statistics[d].correct++;
           }
+
+          qn.tags.forEach(function(tag) {
+            var ts = tagScores[tag] = tagScores[tag] || {count: 0, correct: 0};
+
+            ts.count++;
+            correct(qn) && ts.correct++;
+          });
+
           qn.answerArray = [];
           for (var j = 0; j < qn.answers.length; j++) {
             var answerObj = {
@@ -644,6 +654,8 @@ angular.module("GruiApp").controller("candidateReportController", [
           }
         }
         cReportVm.statistics = statistics;
+        cReportVm.ragScores = Object.items(tagScores);
+
 
         setTimeout(
           function() {
