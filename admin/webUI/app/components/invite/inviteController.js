@@ -654,7 +654,7 @@ angular.module("GruiApp").controller("candidateReportController", [
           }
         }
         cReportVm.statistics = statistics;
-        cReportVm.ragScores = Object.entries(tagScores);
+        cReportVm.tagScores = Object.entries(tagScores);
 
 
         setTimeout(
