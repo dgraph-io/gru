@@ -656,7 +656,7 @@ angular.module("GruiApp").controller("candidateReportController", [
         cReportVm.statistics = statistics;
         cReportVm.tagScores = Object.entries(tagScores);
         cReportVm.tagScores.sort(function(a,b) {
-          return a[1].count - b[1].count;
+          return b[1].count - a[1].count;
         })
 
 
