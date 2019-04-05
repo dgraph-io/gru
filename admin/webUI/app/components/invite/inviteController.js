@@ -641,8 +641,8 @@ angular.module("GruiApp").controller("candidateReportController", [
             ts.count++;
             ts.correct += correct(qn) ? 1 : 0;
 
-            ts.totalPts += maxScore(q)
-            ts.score += candidateScore(q)
+            ts.totalPts += maxScore(qn)
+            ts.score += candidateScore(qn)
           });
 
           qn.answerArray = [];
