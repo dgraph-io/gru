@@ -155,7 +155,7 @@
           <tr ng-repeat="ts in cReportVm.tagScores">
             <td class="mdl-data-table__cell--non-numeric">{{ts[0]}}</td>
             <td class="mdl-data-table__cell--non-numeric">{{ts[1].correct}} / {{ts[1].count}}</td>
-            <td class="mdl-data-table__cell--non-numeric">{{(100 * ts[1].correct / ts[1].count).toFixed(0)}}%</td>
+            <td class="mdl-data-table__cell--non-numeric">{{(100 * ts[1].score / ts[1].totalPts).toFixed(0)}}%</td>
           </tr>
         </tbody>
       </table>

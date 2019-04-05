@@ -631,10 +631,18 @@ angular.module("GruiApp").controller("candidateReportController", [
           }
 
           qn.tags.forEach(function(tag) {
-            var ts = tagScores[tag] = tagScores[tag] || {count: 0, correct: 0};
+            var ts = tagScores[tag] = tagScores[tag] || {
+              count: 0,
+              correct: 0,
+              totalPts: 0,
+              score: 0,
+            };
 
             ts.count++;
-            correct(qn) && ts.correct++;
+            ts.correct += correct(qn) ? 1 : 0;
+
+            ts.totalPts += maxScore(q)
+            ts.score += candidateScore(q)
           });
 
           qn.answerArray = [];
@@ -684,6 +692,19 @@ angular.module("GruiApp").controller("candidateReportController", [
 
     function correct(question) {
       return angular.equals(question.correct.sort(), question.answers.sort());
+    }
+
+    function candidateScore(q) {
+      if (!q.answered) { return 0; }
+      let res = 0
+      for (let ans of q.answers) {
+        res += q.correct.indexOf(ans) >= 0 ? q.positive : q.negative
+      }
+      return res;
+    }
+
+    function maxScore(q) {
+      return q.positive * q.correct.length
     }
 
     function initScoreCircle() {
