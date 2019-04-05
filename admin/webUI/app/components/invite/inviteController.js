@@ -695,10 +695,10 @@ angular.module("GruiApp").controller("candidateReportController", [
     }
 
     function candidateScore(q) {
-      if (!q.answered) { return 0; }
+      if (!q.Answered) { return 0; }
       let res = 0
       for (let ans of q.answers) {
-        res += q.correct.indexOf(ans) >= 0 ? q.positive : q.negative
+        res += q.correct.indexOf(ans) >= 0 ? q.positive : -q.negative
       }
       return res;
     }
