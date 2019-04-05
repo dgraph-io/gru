@@ -590,7 +590,7 @@ angular.module("GruiApp").controller("candidateReportController", [
           cReportVm.fatReport = fatReport
           console.log(fatReport)
 
-          // TODO: parse fat report
+          cReportVm.questionStats = parseFatReport(data.fatReport[0]["quiz.candidate"])
 
           return inviteService.getReport(cReportVm.candidateID)
       })
@@ -713,6 +713,68 @@ angular.module("GruiApp").controller("candidateReportController", [
 
     function maxScore(q) {
       return q.positive * q.correct.length
+    }
+
+    function parseFatReport(candidates) {
+      candidates = candidates.filter(x => x.complete && !x.deleted)
+
+      console.log('fat report for ', candidates.length)
+
+      var qnMap = {}
+
+      function getScore(answers, correct, positive, negative) {
+        let res = 0
+        for (let ans of answers) {
+          res += correct.indexOf(ans) >= 0 ? positive : -negative
+        }
+        return res;
+      }
+
+      for (let k of candidates) {
+        for (let qRec of k["candidate.question"]) {
+          if (!qRec["candidate.answer"]) {
+            continue
+          }
+
+          let q = qRec.question[0]
+          const correct = q.correct.map(x => x.uid)
+
+          const answers = qRec["candidate.answer"].split(',')
+          const skipped = !answers.length || answers[0] === "skip"
+
+          const score = skipped ? 0 : getScore(answers, correct, q.positive, q.negative)
+
+          const curQ = qnMap[q.uid] = qnMap[q.uid] || {
+            uid: q.uid,
+            name: q.name,
+            answerCount: 0,
+            skippedCount: 0,
+            maxScore: correct.length * q.positive,
+            sumScores: 0,
+            sumScoresSquared: 0,
+          }
+
+          curQ.answerCount ++;
+          curQ.skippedCount ++;
+          curQ.sumScores += score;
+          curQ.sumScoresSquared += score * score;
+        }
+      }
+
+      for (let q of Object.values(qnMap)) {
+        let mean = 0;
+        let std = q.maxScore / 2;
+        const N = q.answerCount;
+        if (N > 2) {
+          mean = q.sumScores / N
+          std = Math.sqrt(q.sumScoresSquared / (N - 1) - q.sumScores * q.sumScores / N / (N - 1))
+        }
+
+        q.mean = mean
+        q.std = std
+      }
+
+      return qnMap
     }
 
     function initScoreCircle() {
