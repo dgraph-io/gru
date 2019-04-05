@@ -585,7 +585,15 @@ angular.module("GruiApp").controller("candidateReportController", [
     }
 
     inviteService
-      .getReport(cReportVm.candidateID)
+      .getFatReport(cReportVm.candidateID)
+      .then(function(fatReport) {
+          cReportVm.fatReport = fatReport
+          console.log(fatReport)
+
+          // TODO: parse fat report
+
+          return inviteService.getReport(cReportVm.candidateID)
+      })
       .then(
         function(data) {
           for (var i = 0; i < data.questions.length; i++) {

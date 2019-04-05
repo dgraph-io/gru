@@ -89,45 +89,6 @@ type report struct {
 
 func reportQuery(candidateId string) string {
 	return `{
-		var(func: uid(` + candidateId + `)) {
-	    candidate.quiz {
-	      quizUid as uid
-	    }
-	  }
-
-		fatReport(func: uid(quizUid)) {
-			quiz.candidate {
-				uid
-				name
-				email
-				score
-				token
-				validity
-				complete
-				deleted
-				quiz_start
-				invite_sent
-	      candidate.quiz {
-	        uid
-	        quiz_name: name
-	      }
-				candidate.question {
-	        question {
-	          uid
-	          name
-	          positive
-	          negative
-	          correct: question.correct {
-	            uid
-	          }
-	        }
-	        question.asked
-	        question.answered
-	        candidate.answer
-	        }
-			}
-		}
-
     candidate(func: uid(` + candidateId + `)) {
       uid
       name
@@ -168,6 +129,49 @@ func reportQuery(candidateId string) string {
         candidate.score
       }
     }
+  }`
+}
+
+func fatReportQuery(candidateId string) string {
+	return `{
+		var(func: uid(` + candidateId + `)) {
+	    candidate.quiz {
+	      quizUid as uid
+	    }
+	  }
+
+		fatReport(func: uid(quizUid)) {
+			quiz.candidate {
+				uid
+				name
+				email
+				score
+				token
+				validity
+				complete
+				deleted
+				quiz_start
+				invite_sent
+	      candidate.quiz {
+	        uid
+	        quiz_name: name
+	      }
+				candidate.question {
+	        question {
+	          uid
+	          name
+	          positive
+	          negative
+	          correct: question.correct {
+	            uid
+	          }
+	        }
+	        question.asked
+	        question.answered
+	        candidate.answer
+	        }
+			}
+		}
   }`
 }
 
@@ -366,4 +370,17 @@ func Report(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Write(b)
+}
+
+func GetFatReport(w http.ResponseWriter, r *http.Request) {
+	sr := server.Response{}
+	vars := mux.Vars(r)
+	cid := vars["id"]
+
+	res, err := dgraph.Query(fatReportQuery(cid))
+	if err != nil {
+		sr.Write(w, "", err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Write(res)
 }

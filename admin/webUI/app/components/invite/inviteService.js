@@ -29,6 +29,10 @@ angular.module("GruiApp").service("inviteService", [
           });
       },
 
+      getFatReport: function(candidateID) {
+        return MainService.get("/quiz/fatreport/" + candidateID);
+      },
+
       alreadyInvited: function(quizId, emails) {
         // TODO - User filter on email after incorporating Dgraph schema.
         var query =

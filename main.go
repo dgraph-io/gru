@@ -180,6 +180,7 @@ func runHTTPServer(address string) {
 	adminRouter.HandleFunc("/get-all-quizzes", quizzes.Index).Methods("GET", "OPTIONS")
 	adminRouter.HandleFunc("/quiz/{id}", quizzes.Get).Methods("GET", "OPTIONS")
 	adminRouter.HandleFunc("/quiz/{id}", quizzes.Edit).Methods("PUT", "OPTIONS")
+	adminRouter.HandleFunc("/quiz/fatreport/{id}", report.GetFatReport).Methods("GET", "OPTIONS")
 
 	adminRouter.HandleFunc("/get-all-tags", tag.Index).Methods("GET", "OPTIONS")
 
