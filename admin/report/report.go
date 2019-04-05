@@ -138,6 +138,7 @@ type question struct {
 	Text      string   `json:"text"`
 	TimeTaken string   `json:"time_taken"`
 	Positive  float64  `json:"positive"`
+	Negative  float64  `json:"negative"`
 	Score     float64  `json:"score"`
 	Options   []option `json:"options"`
 	Correct   []string `json:"correct"`
@@ -293,6 +294,7 @@ func ReportSummary(cid string) (Summary, ReportError) {
 			Options:  q.Options,
 			Score:    qn.Score,
 			Positive: q.Positive,
+			Negative: q.Negative,
 			Multiple: q.Multiple,
 			Correct:  uids(q.Correct),
 			Tags:     names(q.Tags),
