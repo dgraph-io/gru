@@ -740,6 +740,9 @@ angular.module("GruiApp").controller("candidateReportController", [
             // Down arrow key
             direction = +1
             break;
+          default:
+            // Unknown key. Ignore.
+            return;
         }
 
         var nextQuestion = direction + (cReportVm.scrolledQuestion || 0);

@@ -143,7 +143,7 @@
         </tbody>
       </table>
 
-      <div>
+      <div calss="mt-20">
         <div
             ng-repeat="tag in cReportVm.tagScores"
             class="tag-filter capitalize inline-block position-relative"
@@ -160,23 +160,6 @@
           </div>
         </div>
       </div>
-
-      <table class="mdl-data-table mdl-shadow--2dp">
-        <thead>
-          <tr>
-            <th class="mdl-data-table__cell--non-numeric">Tag</th>
-            <th class="mdl-data-table__cell--non-numeric">Correct</th>
-            <th class="mdl-data-table__cell--non-numeric">%</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr ng-repeat="ts in cReportVm.tagScores">
-            <td class="mdl-data-table__cell--non-numeric">{{ts[0]}}</td>
-            <td class="mdl-data-table__cell--non-numeric">{{ts[1].correct}} / {{ts[1].count}}</td>
-            <td class="mdl-data-table__cell--non-numeric">{{(100 * ts[1].score / ts[1].totalPts).toFixed(0)}}%</td>
-          </tr>
-        </tbody>
-      </table>
 
     </div>
     <div class="mdl-grid no-pad">
