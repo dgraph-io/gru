@@ -87,9 +87,48 @@ type report struct {
 	}
 }
 
-func reportQuery(id string) string {
+func reportQuery(candidateId string) string {
 	return `{
-    candidate(func: uid(` + id + `)) {
+		var(func: uid(` + candidateId + `)) {
+	    candidate.quiz {
+	      quizUid as uid
+	    }
+	  }
+
+		fatReport(func: uid(quizUid)) {
+			quiz.candidate {
+				uid
+				name
+				email
+				score
+				token
+				validity
+				complete
+				deleted
+				quiz_start
+				invite_sent
+	      candidate.quiz {
+	        uid
+	        quiz_name: name
+	      }
+				candidate.question {
+	        question {
+	          uid
+	          name
+	          positive
+	          negative
+	          correct: question.correct {
+	            uid
+	          }
+	        }
+	        question.asked
+	        question.answered
+	        candidate.answer
+	        }
+			}
+		}
+
+    candidate(func: uid(` + candidateId + `)) {
       uid
       name
       email
