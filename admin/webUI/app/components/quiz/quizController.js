@@ -185,15 +185,157 @@ angular.module('GruiApp').controller('allQuizController', [
 angular.module('GruiApp').controller('editQuizController', [
   "$stateParams",
   "quizService",
-  function editQuizController($stateParams, quizService) {
+  "MainService",
+  function editQuizController($stateParams, quizService, mainService) {
     editQuizVm = this;
 
     quizVm.loadEmptyQuiz();
+
+    // TODO: this is copy-pasted from inviteController
+    function parseFatReport(candidates) {
+      candidates = candidates.filter(x => x.complete && !x.deleted)
+
+      const qnMap = {}
+
+      function getScore(answers, correct, positive, negative) {
+        let res = 0
+        for (let ans of answers) {
+          res += correct.indexOf(ans) >= 0 ? positive : -negative
+        }
+        return res;
+      }
+
+      for (let k of candidates) {
+        for (let qRec of k["candidate.question"]) {
+          if (!qRec["candidate.answer"]) {
+            continue
+          }
+
+          let q = qRec.question[0]
+          const correct = q.correct.map(x => x.uid)
+          const maxScore = correct.length * q.positive
+
+          const answers = qRec["candidate.answer"].split(',')
+          const skipped = !answers.length || answers[0] === "skip"
+
+          const score = skipped ? 0 : getScore(answers, correct, q.positive, q.negative)
+
+          const curQ = qnMap[q.uid] = qnMap[q.uid] || {
+            uid: q.uid,
+            name: q.name,
+            answerCount: 0,
+            skippedCount: 0,
+            maxScore,
+            numOfCorrectChoices: correct.length,
+            sumScores: 0,
+            sumScoresSquared: 0,
+            valMap: getEmptyValMap(),
+          }
+
+          curQ.valMap[score]++;
+
+          curQ.answerCount ++;
+          curQ.skippedCount += skipped ? 1 : 0;
+          curQ.sumScores += score;
+          curQ.sumScoresSquared += score * score;
+        }
+      }
+
+      for (let q of Object.values(qnMap)) {
+        let mean = 0;
+        let std = q.maxScore / 2;
+        const N = q.answerCount;
+        if (N > 2) {
+          mean = q.sumScores / N
+          std = Math.sqrt(q.sumScoresSquared / (N - 1) - q.sumScores * q.sumScores / N / (N - 1))
+        }
+        q.mean = mean
+        q.std = std
+        q.difficulty = q.mean / q.maxScore
+      }
+
+      return qnMap
+    }
+
+    const MAX_SCORE = 300
+
+    function getEmptyValMap() {
+      const res = {}
+      for (let i = -MAX_SCORE; i <= MAX_SCORE; i++ ) {
+        res[i] = 0
+      }
+      return res
+    }
+
+    function buildScoreMatrix(qnMap) {
+      let endValMap = getEmptyValMap()
+      endValMap[0] = 1
+
+      for (let q of Object.values(qnMap)) {
+        const N = q.answerCount;
+
+        if (N <= 0) {
+          continue;
+        }
+          // Calculate new score probability using dynamic programming
+          const newEndValMap = getEmptyValMap()
+          for (let i = -MAX_SCORE; i <=MAX_SCORE; i++) {
+            for (let j = -MAX_SCORE; j <=MAX_SCORE; j++) {
+              if (Math.abs(i + j) > MAX_SCORE) {
+                continue;
+              }
+              newEndValMap[i + j] += endValMap[i] * q.valMap[j] / N
+            }
+          }
+          endValMap = newEndValMap
+      }
+      console.log('End Val Map', endValMap)
+      return endValMap
+    }
+
+    function getQuizStatsQuery(quizId) {
+      return `{
+        fatReport(func: uid(${quizId})) {
+    			quiz.candidate {
+    				uid
+    				name
+    				email
+    				score
+    				token
+    				validity
+    				complete
+    				deleted
+    				quiz_start
+    				invite_sent
+    				candidate.question {
+    	        question {
+    	          uid
+    	          name
+    	          positive
+    	          negative
+    	          correct: question.correct {
+    	            uid
+    	          }
+    	        }
+    	        question.asked
+    	        question.answered
+    	        candidate.answer
+    	        }
+    			}
+    		}
+      }`;
+    }
 
     // If we are editing an existing quiz - load it.
     if ($stateParams.quizID) {
       // Read by edit-quiz.html to send user back to this quiz after editing a qn.
       editQuizVm.quizId = $stateParams.quizID;
+
+      mainService.proxy(getQuizStatsQuery($stateParams.quizID))
+        .then(function(report) {
+          quizVm.questionStats = parseFatReport(report.data.fatReport[0]["quiz.candidate"])
+          quizVm.percentileMap = buildScoreMatrix(quizVm.questionStats)
+        })
 
       quizService.getQuiz($stateParams.quizID)
         .then(function(quiz) {

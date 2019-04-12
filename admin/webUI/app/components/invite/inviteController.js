@@ -590,6 +590,7 @@ angular.module("GruiApp").controller("candidateReportController", [
           console.log(fatReport)
 
           cReportVm.questionStats = parseFatReport(fatReport.data.fatReport[0]["quiz.candidate"])
+          cReportVm.scoreMatrix = buildScoreMatrix(cReportVm.questionStats)
 
           return inviteService.getReport(cReportVm.candidateID)
       })
@@ -604,7 +605,6 @@ angular.module("GruiApp").controller("candidateReportController", [
           }
           cReportVm.info = data;
           cReportVm.timeTaken = mainVm.parseGoTime(cReportVm.info.time_taken);
-          cReportVm.initScoreCircle();
         },
         function(error) {
           console.error(error);
@@ -628,6 +628,7 @@ angular.module("GruiApp").controller("candidateReportController", [
         };
 
         var tagScores = {};
+        cReportVm.totalCandidateScore = 0;
 
         for (var i = 0; i < questions.length; i++) {
           qn = questions[i];
@@ -636,6 +637,8 @@ angular.module("GruiApp").controller("candidateReportController", [
             statistics[d].total++;
             correct(qn) && statistics[d].correct++;
           }
+
+          cReportVm.totalCandidateScore += candidateScore(qn);
 
           qn.tags.forEach(function(tag) {
             var ts = tagScores[tag] = tagScores[tag] || {
@@ -652,14 +655,13 @@ angular.module("GruiApp").controller("candidateReportController", [
             ts.score += candidateScore(qn)
           });
 
-          qn.answerArray = [];
-          for (var j = 0; j < qn.answers.length; j++) {
-            var answerObj = {
-              uid: qn.answers[j]
-            };
-            answerObj.is_correct = qn.correct.indexOf(qn.answers[j]) > -1;
-            qn.answerArray.push(answerObj);
-          }
+          qn.answerArray = qn.answers.map(function(ans) {
+            return {
+              uid: ans,
+              is_correct: qn.correct.indexOf(ans) > -1,
+            }
+          })
+
           if (qn.answers.length < qn.correct.length) {
             qn.notAnswered = qn.correct.length - qn.answers.length;
           }
@@ -674,6 +676,7 @@ angular.module("GruiApp").controller("candidateReportController", [
           return b[1].count - a[1].count;
         })
 
+        cReportVm.initScoreCircle();
 
         setTimeout(
           function() {
@@ -717,9 +720,7 @@ angular.module("GruiApp").controller("candidateReportController", [
     function parseFatReport(candidates) {
       candidates = candidates.filter(x => x.complete && !x.deleted)
 
-      console.log('fat report for ', candidates.length)
-
-      var qnMap = {}
+      const qnMap = {}
 
       function getScore(answers, correct, positive, negative) {
         let res = 0
@@ -748,13 +749,18 @@ angular.module("GruiApp").controller("candidateReportController", [
             name: q.name,
             answerCount: 0,
             skippedCount: 0,
-            maxScore: correct.length * q.positive,
+            maxScore: maxScore(q),
             sumScores: 0,
             sumScoresSquared: 0,
+            valMap: {},
           }
 
-          curQ.answerCount ++;
-          curQ.skippedCount ++;
+          curQ.valMap[roundDecimal(score)] = curQ.valMap[score] || 0;
+          curQ.valMap[score]++;
+
+          curQ.answerCount++;
+
+          curQ.skippedCount += skipped ? 1 : 0;
           curQ.sumScores += score;
           curQ.sumScoresSquared += score * score;
         }
@@ -776,10 +782,67 @@ angular.module("GruiApp").controller("candidateReportController", [
       return qnMap
     }
 
+    function roundDecimal(s) {
+      return Math.round(parseFloat(s) * 10) / 10
+    }
+
+    function buildScoreMatrix(qnMap) {
+      let endValMap = {}
+      endValMap[0] = 1
+
+      for (let q of Object.values(qnMap)) {
+        const N = q.answerCount;
+
+        if (N <= 0) {
+          continue;
+        }
+          // Calculate new score probability using dynamic programming
+          const newEndValMap = {}
+
+          for (let old of Object.keys(endValMap)) {
+            for (let next of Object.keys(q.valMap)) {
+              old = roundDecimal(old)
+              next = roundDecimal(next)
+              const sum = roundDecimal(old + next)
+              newEndValMap[sum] = newEndValMap[sum] || 0
+              newEndValMap[sum] += endValMap[old] * q.valMap[next] / N
+            }
+          }
+          console.log('q ValMap', q.name, q.valMap)
+          endValMap = newEndValMap
+      }
+      console.log('End Val Map', endValMap)
+      return endValMap
+    }
+
     function initScoreCircle() {
       var circleWidth = 2 * Math.PI * 30;
 
       var percentage = cReportVm.info.percentile;
+      console.log('init score circle', cReportVm.info)
+      console.log('matrix: ', cReportVm.scoreMatrix)
+
+      let p2 = 0;
+      for (let score of Object.keys(cReportVm.scoreMatrix)) {
+        score = roundDecimal(score)
+        if (score < cReportVm.totalCandidateScore) {
+          console.log('take', score, cReportVm.totalCandidateScore)
+          p2 += cReportVm.scoreMatrix[score]
+        } else if (score == cReportVm.totalCandidateScore) {
+          p2 += cReportVm.scoreMatrix[score] / 2
+        }
+      }
+      console.log('got p2 ', p2, cReportVm.totalCandidateScore)
+
+      p2 = 0;
+      for (let score of Object.keys(cReportVm.scoreMatrix)) {
+        score = roundDecimal(score)
+        if (score > cReportVm.totalCandidateScore) {
+          p2 += cReportVm.scoreMatrix[score]
+        }
+      }
+      console.log('p left', p2)
+
 
       var circlePercentage = circleWidth * percentage / 100;
 

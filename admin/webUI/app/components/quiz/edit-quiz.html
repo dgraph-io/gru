@@ -92,9 +92,9 @@
       {{quizVm.quizQuestions().filter(quizVm.isQuestionInFilter).length == 1 ? "question" : "questions"}}</h6>
 
     <div
+        ng-repeat="question in quizVm.quizQuestions() | filter: quizVm.isQuestionInFilter"
         class="question mt-10 clickable-hover pl-30 position-relative"
         style="border: 1px dotted #ddd; padding: 4px 4px 4px 30px; border-radius: 3px"
-        ng-repeat="question in quizVm.quizQuestions() | filter: quizVm.isQuestionInFilter"
     >
       <a ng-click="quizVm.removeQuestion(question)" class="hover-show" style="display: block; float: left; position: absolute; top: 50%; margin-top: -10px; left: 2px;">
         <i class="material-icons mdi-sm text-red">delete</i>
@@ -129,20 +129,26 @@
               ng-if="question.difficulty > 0.75"
               class="bold text-green">
             Easy {{ question.difficulty * 100 | number:0 }}%
+            | {{ quizVm.questionStats[question.uid].mean/quizVm.questionStats[question.uid].maxScore*100 | number:0 }}%
           </span>
           <span
               ng-if="question.difficulty < 0.35"
               class="bold text-red">
             Hard {{ question.difficulty * 100 | number:0 }}%
+            | {{ quizVm.questionStats[question.uid].mean/quizVm.questionStats[question.uid].maxScore*100 | number:0 }}%
           </span>
           <span
               ng-if="question.difficulty >= 0.35 && question.difficulty <= 0.75"
               class="bold"
           >
             Average {{ question.difficulty * 100 | number:0 }}%
+            | {{ quizVm.questionStats[question.uid].mean/quizVm.questionStats[question.uid].maxScore*100 | number:0 }}%
           </span>&nbsp;&nbsp;
         </span>
-        <span>{{question.answerCount}} Answers ({{question.skipCount}} skips)
+        <span>
+          {{ quizVm.questionStats[question.uid].answerCount }} | {{question.answerCount}} Answers
+          ({{ quizVm.questionStats[question.uid].skippedCount }} | {{question.skipCount}} skips)
+        </span>
       </div>
 
       <div

@@ -13,10 +13,12 @@
               <span class="" ng-if="answer.is_correct">
                 <i class="material-icons mdi-sm text-green">done</i>
               </span>
-          <span class="" ng-if="!answer.is_correct">
+              <span class="" ng-if="!answer.is_correct">
                 <i class="material-icons mdi-sm text-red">clear</i>
               </span>
-          <span ng-repeat="notAnswered in mainVm.getNumber(question.notAnswered)" ng-if="question.notAnswered">
+              <span
+                  ng-repeat="notAnswered in mainVm.getNumber(question.notAnswered)"
+                  ng-if="question.notAnswered">
                 <i class="material-icons mdi-sm text-red">clear</i>
               </span>
           </span>
@@ -109,12 +111,11 @@
         <svg class="spinner" width="180" height="180" viewBox="-2 -2 70 70" id="total_score">
           <circle class="path" fill="none" stroke-width="8" stroke-linecap="round" cx="33" cy="33" r="30"></circle>
           <circle class="path prograss-circle" fill="none" stroke-width="8" stroke-linecap="round" cx="33" cy="33" r="30" style="stroke-dashoffset: {{cReportVm.circleProgressWidth}};"></circle>
-          <!-- <text x="50%" y="50%" text-anchor="middle">Look, I’m centered!Look, I’m centered!</text> -->
           <text x="50%" y="48%" text-anchor="middle" style="font-size: .4em">
             Percentile
           </text>
           <text x="50%" y="60%" text-anchor="middle" style="font-size: .4em">
-            {{cReportVm.info.percentile | number: 0}}
+            {{cReportVm.info.percentile | number: 0}} (score {{ cReportVm.totalCandidateScore }})
           </text>
         </svg>
       </div>
