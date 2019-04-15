@@ -2,7 +2,8 @@ angular.module('GruiApp').controller('quizController', [
   "$state",
   "quizService",
   "allQuestions",
-  function quizController($state, quizService, allQuestions) {
+  "questionService",
+  function quizController($state, quizService, allQuestions, questionService) {
     mainVm.pageName = "quiz";
     quizVm = this;
 
@@ -94,6 +95,25 @@ angular.module('GruiApp').controller('quizController', [
       return allTags;
     }
 
+    quizVm.clickSetPoints = function(question, positive, negative) {
+      questionService.editScore({
+        uid: question.uid,
+        negative,
+        positive,
+      }).then(function(data) {
+          allQuestions.refresh();
+          SNACKBAR({
+            message: data.Message,
+            messageType: "success",
+          })
+        }, function(err) {
+          SNACKBAR({
+            message: "Something went wrong: " + err,
+            messageType: "error",
+          })
+        })
+    }
+
     quizVm.getTagStats = function(tag) {
       var allQuestions = quizVm.quizQuestions();
       var withTag = allQuestions.filter(function(q) {
@@ -155,10 +175,6 @@ angular.module('GruiApp').controller('quizController', [
       return allQuestions.get().filter(function (q) {
         return questionUids[q.uid];
       })
-    }
-
-    quizVm.allQuestions = function() {
-      return allQuestions.get();
     }
 
     quizVm.getTotalScore = function(questions) {

@@ -10,6 +10,10 @@ angular.module('GruiApp').service('questionService', [
         return MainService.put('/question/' + data.uid, data);
       },
 
+      editScore: function(data) {
+        return MainService.post('/question/editScore', data);
+      },
+
       getAllQuestions: function(hideLoader) {
         return MainService.post('/get-all-questions', {}, hideLoader)
           .then(function(data) {

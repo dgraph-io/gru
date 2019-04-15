@@ -92,7 +92,7 @@
       {{quizVm.quizQuestions().filter(quizVm.isQuestionInFilter).length == 1 ? "question" : "questions"}}</h6>
 
     <div
-        class="question mt-10 clickable-hover pl-30 position-relative"
+        class="question mt-10 pl-30 position-relative"
         style="border: 1px dotted #ddd; padding: 4px 4px 4px 30px; border-radius: 3px"
         ng-repeat="question in quizVm.quizQuestions() | filter: quizVm.isQuestionInFilter"
     >
@@ -139,7 +139,7 @@
               ng-if="question.difficulty >= 0.35 && question.difficulty <= 0.75"
               class="bold"
           >
-            Average {{ question.difficulty * 100 | number:0 }}%
+            Medium {{ question.difficulty * 100 | number:0 }}%
           </span>&nbsp;&nbsp;
         </span>
         <span>{{question.answerCount}} Answers ({{question.skipCount}} skips)
@@ -150,6 +150,18 @@
           style="border: 1px dashed #ddd; height: 60px; margin-top: -60px; overflow: hidden;"
           ng-bind-html="mainVm.markDownFormat(question.text)"
       ></div>
+      <div class="question-buttons">
+        Set Score to
+        <button ng-click="quizVm.clickSetPoints(question, 2, 4)">
+          Easy (2 | -4)
+        </button>
+        <button ng-click="quizVm.clickSetPoints(question, 5, 6)">
+          Medium (5 | -6)
+        </button>
+        <button ng-click="quizVm.clickSetPoints(question, 8, 10)">
+          Hard (8 | -10)
+        </button>
+      </div>
     </div>
   </div>
 

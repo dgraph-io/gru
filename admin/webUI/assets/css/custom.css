@@ -466,6 +466,17 @@ body.home {
   opacity: 0;
 }
 
+.question .question-buttons {
+  padding-top: 4px;
+}
+.question .question-buttons button {
+  background: transparent;
+  border: 1px solid #008896;
+  border-radius: 6px;
+  cursor: pointer;
+  padding: 3px 6px;
+}
+
 /* CODEMIRROR*/
 
 #question-panel .CodeMirror {
