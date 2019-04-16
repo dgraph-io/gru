@@ -53,6 +53,10 @@ angular.module('GruiApp').controller('quizController', [
       })
     }
 
+    quizVm.allQuestions = function() {
+      return allQuestions.get();
+    }
+
     quizVm.validateQuiz = function() {
       var quiz = quizVm.quiz;
 
