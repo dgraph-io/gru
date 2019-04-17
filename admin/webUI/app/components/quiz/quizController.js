@@ -110,6 +110,7 @@ angular.module('GruiApp').controller('quizController', [
             message: data.Message,
             messageType: "success",
           })
+          questionService.updateAllScores();
         }, function(err) {
           SNACKBAR({
             message: "Something went wrong: " + err,
