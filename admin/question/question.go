@@ -338,3 +338,32 @@ func Edit(w http.ResponseWriter, r *http.Request) {
 	sr.Message = "Question updated successfully."
 	w.Write(server.MarshalResponse(sr))
 }
+
+func EditScore(w http.ResponseWriter, r *http.Request) {
+	sr := server.Response{}
+	var q Question
+	err := json.NewDecoder(r.Body).Decode(&q)
+	if err != nil {
+		sr.Write(w, "", "Couldn't decode JSON", http.StatusBadRequest)
+		return
+	}
+
+	m := new(dgraph.Mutation)
+
+	m.SetString(q.Uid, "positive", strconv.FormatFloat(q.Positive, 'g', -1, 64))
+	m.SetString(q.Uid, "negative", strconv.FormatFloat(q.Negative, 'g', -1, 64))
+
+	mr, err := dgraph.SendMutation(m)
+	if err != nil {
+		sr.Write(w, "", err.Error(), http.StatusInternalServerError)
+		return
+	}
+	if mr.Code != dgraph.Success {
+		sr.Write(w, mr.Message, "", http.StatusInternalServerError)
+		return
+	}
+
+	sr.Success = true
+	sr.Message = "Question updated successfully."
+	w.Write(server.MarshalResponse(sr))
+}

@@ -174,6 +174,7 @@ func runHTTPServer(address string) {
 	adminRouter.HandleFunc("/get-all-questions", question.Index).Methods("POST", "OPTIONS")
 	adminRouter.HandleFunc("/question/{id}", question.Get).Methods("GET", "OPTIONS")
 	adminRouter.HandleFunc("/question/{id}", question.Edit).Methods("PUT", "OPTIONS")
+	adminRouter.HandleFunc("/question/editScore", question.EditScore).Methods("POST", "OPTIONS")
 
 	adminRouter.HandleFunc("/add-quiz", quizzes.Add).Methods("POST", "OPTIONS")
 	// TODO - Change to PUT.

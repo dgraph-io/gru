@@ -141,7 +141,7 @@
               ng-if="question.difficulty >= 0.35 && question.difficulty <= 0.75"
               class="bold"
           >
-            Average {{ question.difficulty * 100 | number:0 }}%
+            Medium {{ question.difficulty * 100 | number:0 }}%
             | {{ quizVm.questionStats[question.uid].mean/quizVm.questionStats[question.uid].maxScore*100 | number:0 }}%
           </span>&nbsp;&nbsp;
         </span>
@@ -156,6 +156,18 @@
           style="border: 1px dashed #ddd; height: 60px; margin-top: -60px; overflow: hidden;"
           ng-bind-html="mainVm.markDownFormat(question.text)"
       ></div>
+      <div class="question-buttons">
+        Set Score to
+        <button ng-click="quizVm.clickSetPoints(question, 2, 4)">
+          Easy (2 | -4)
+        </button>
+        <button ng-click="quizVm.clickSetPoints(question, 5, 6)">
+          Medium (5 | -6)
+        </button>
+        <button ng-click="quizVm.clickSetPoints(question, 8, 10)">
+          Hard (8 | -10)
+        </button>
+      </div>
     </div>
   </div>
 

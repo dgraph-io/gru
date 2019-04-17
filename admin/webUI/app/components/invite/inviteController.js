@@ -324,7 +324,6 @@
     candidatesVm.cancel = cancel;
     candidatesVm.resend = resend;
     candidatesVm.delete = deleteCand;
-    candidatesVm.percentile = percentile;
 
     candidatesVm.quizID = $stateParams.quizID;
 
@@ -549,7 +548,7 @@
       );
     }
 
-    function percentile(size, idx) {
+    candidatesVm.percentile = function percentile(size, idx) {
       return (size - idx) / size * 100;
     }
 
@@ -740,6 +739,11 @@ angular.module("GruiApp").controller("candidateReportController", [
           const correct = q.correct.map(x => x.uid)
 
           const answers = qRec["candidate.answer"].split(',')
+          if (answers[0].length > 16) {
+            // Legacy answer, ignore
+            continue
+          }
+
           const skipped = !answers.length || answers[0] === "skip"
 
           const score = skipped ? 0 : getScore(answers, correct, q.positive, q.negative)
@@ -808,7 +812,6 @@ angular.module("GruiApp").controller("candidateReportController", [
               newEndValMap[sum] += endValMap[old] * q.valMap[next] / N
             }
           }
-          console.log('q ValMap', q.name, q.valMap)
           endValMap = newEndValMap
       }
       console.log('End Val Map', endValMap)
@@ -826,23 +829,13 @@ angular.module("GruiApp").controller("candidateReportController", [
       for (let score of Object.keys(cReportVm.scoreMatrix)) {
         score = roundDecimal(score)
         if (score < cReportVm.totalCandidateScore) {
-          console.log('take', score, cReportVm.totalCandidateScore)
           p2 += cReportVm.scoreMatrix[score]
         } else if (score == cReportVm.totalCandidateScore) {
           p2 += cReportVm.scoreMatrix[score] / 2
         }
       }
       console.log('got p2 ', p2, cReportVm.totalCandidateScore)
-
-      p2 = 0;
-      for (let score of Object.keys(cReportVm.scoreMatrix)) {
-        score = roundDecimal(score)
-        if (score > cReportVm.totalCandidateScore) {
-          p2 += cReportVm.scoreMatrix[score]
-        }
-      }
-      console.log('p left', p2)
-
+      cReportVm.info.percentile = percentage = p2 * 100;
 
       var circlePercentage = circleWidth * percentage / 100;
 
