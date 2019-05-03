@@ -147,10 +147,12 @@
         <div
             ng-repeat="tag in cReportVm.tagScores"
             class="tag-filter capitalize inline-block position-relative"
+            ng-class="{'selected-filter': cReportVm.selectedTag == tag[0]}"
+            ng-click="cReportVm.selectedTag = cReportVm.selectedTag == tag[0] ? null : tag[0]"
             style="overflow:hidden; padding-right:32px;"
         >
           {{tag[0]}}
-          <span style="opacity:0.7"> {{tag[1].correct}} / {{tag[1].count}}</span>
+          <span style="opacity:0.7"> {{tag[1].correct}}/{{tag[1].count}}</span>
           <div class="position-absolute" style="right:0; top:0; bottom: 0; right:0; width:30px; background-color:rgb(200,200,200,0.5)">
             <div
                 style="position:absolute; bottom:0; left:0; right:0; background:linear-gradient(rgba(50, 200, 100, 0.3), rgba(50, 200, 100, 0.5) 100%)"
@@ -173,7 +175,10 @@
           <div class="mdl-cell mdl-cell--2-col mdl-cell--1-col-tablet mdl-cell--1-col-phone">ANSWER</div>
         </div>
         <div class="slide-wrapper b-border" ng-repeat="question in cReportVm.info.questions | filter:searchQ" id="question{{$index}}">
-          <div class="mdl-grid no-pad question-heading mdl-color--teal">
+          <div
+              ng-if="!cReportVm.selectedTag || question.tags.indexOf(cReportVm.selectedTag) >= 0"
+              class="mdl-grid no-pad question-heading mdl-color--teal"
+          >
             <div class="mdl-cell mdl-cell--1-col mdl-cell--1-col-tablet mdl-cell--hide-phone">
               {{$index + 1}}
             </div>
