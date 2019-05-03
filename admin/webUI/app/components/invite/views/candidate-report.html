@@ -174,11 +174,13 @@
           <div class="mdl-cell mdl-cell--2-col mdl-cell--1-col-tablet mdl-cell--1-col-phone">SCORE</div>
           <div class="mdl-cell mdl-cell--2-col mdl-cell--1-col-tablet mdl-cell--1-col-phone">ANSWER</div>
         </div>
-        <div class="slide-wrapper b-border" ng-repeat="question in cReportVm.info.questions | filter:searchQ" id="question{{$index}}">
-          <div
-              ng-if="!cReportVm.selectedTag || question.tags.indexOf(cReportVm.selectedTag) >= 0"
-              class="mdl-grid no-pad question-heading mdl-color--teal"
-          >
+        <div
+            class="slide-wrapper b-border"
+            ng-repeat="question in cReportVm.info.questions | filter:searchQ"
+            id="question{{$index}}"
+            ng-if="!cReportVm.selectedTag || question.tags.indexOf(cReportVm.selectedTag) >= 0"
+        >
+          <div class="mdl-grid no-pad question-heading mdl-color--teal">
             <div class="mdl-cell mdl-cell--1-col mdl-cell--1-col-tablet mdl-cell--hide-phone">
               {{$index + 1}}
             </div>
