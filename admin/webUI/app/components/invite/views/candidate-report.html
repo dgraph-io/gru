@@ -3,7 +3,12 @@
     <div class="sticky-sidebar position-fixed">
       <div class="sticky-sidebar-content">
         <div class="pv-10 pl-30 mdl-color--teal text-white">QUESTIONS</div>
-        <div class="sticky-sidebar-link b-border pv-10 pl-30" ng-repeat="question in cReportVm.info.questions | filter:searchQ" data-scrollto="#question{{$index}}">
+        <div
+            class="sticky-sidebar-link b-border pv-10 pl-30"
+            ng-repeat="question in cReportVm.info.questions"
+            data-scrollto="#question{{$index}}"
+            ng-class="{faded: cReportVm.selectedTag && question.tags.indexOf(cReportVm.selectedTag) < 0}"
+        >
           {{$index +1}}. {{question.name}}
           <span class="text-red" ng-if="question.isSkip">
             (Skip)
@@ -176,7 +181,7 @@
         </div>
         <div
             class="slide-wrapper b-border"
-            ng-repeat="question in cReportVm.info.questions | filter:searchQ"
+            ng-repeat="question in cReportVm.info.questions"
             id="question{{$index}}"
             ng-if="!cReportVm.selectedTag || question.tags.indexOf(cReportVm.selectedTag) >= 0"
         >
