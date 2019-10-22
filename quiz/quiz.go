@@ -30,27 +30,27 @@ var (
 type difficulty int
 
 const (
-	EASY difficulty = 0
+	EASY   difficulty = 0
 	MEDIUM difficulty = 1
-	HARD difficulty = 2
+	HARD   difficulty = 2
 
-	LEVEL_UP difficulty = +1
+	LEVEL_UP   difficulty = +1
 	LEVEL_DOWN difficulty = -1
 
 	// EASY, MEDIUM and HARD.
 	NumLevels = 3
 
-	rate       = time.Second
+	rate = time.Second / 10
 )
 
 func init() {
-	throttle = make(chan time.Time, 3)
+	throttle = make(chan time.Time, 100)
 	go rateLimit()
 	cmap = make(map[string]Candidate)
 }
 
 type Answer struct {
-	Uid   string `json:"uid"`
+	Uid  string `json:"uid"`
 	Text string `json:"name"`
 }
 
@@ -114,7 +114,7 @@ type QuizInfo struct {
 
 // Used to fetch data about a candidate from Dgraph and populate Candidate struct.
 type cand struct {
-	Uid         string     `json:"uid"`
+	Uid         string `json:"uid"`
 	Name        string
 	Email       string
 	Token       string     `json:"token"`
