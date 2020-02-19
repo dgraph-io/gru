@@ -311,7 +311,7 @@
     $templateCache,
     inviteService
   ) {
-    candidatesVm = this;
+    var candidatesVm = this;
     candidatesVm.sortType = "quiz_start";
     candidatesVm.sortReverse = true;
 
@@ -322,7 +322,6 @@
     candidatesVm.initiateDelete = initiateDelete;
     candidatesVm.deleteCandFromArray = deleteFromArray;
     candidatesVm.cancel = cancel;
-    candidatesVm.resend = resend;
     candidatesVm.delete = deleteCand;
     candidatesVm.percentile = percentile;
 
@@ -390,6 +389,10 @@
         console.error(err);
       }
     );
+
+    candidatesVm.copyInviteLink = function(candidate) {
+      console.log(candidate)
+    }
 
     function showCancelModal(candidate) {
       // Timeout to let dirty checking done first then modal content get
@@ -516,7 +519,7 @@
       );
     }
 
-    function resend(candidate) {
+    candidatesVm.resend = function resend(candidate) {
       inviteService.resendInvite(candidate).then(function(response) {
         if (!response.success) {
           SNACKBAR({

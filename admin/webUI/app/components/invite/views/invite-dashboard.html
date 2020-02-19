@@ -96,13 +96,29 @@
               </thead>
               <tbody ng-repeat="candidate in candidatesVm.notCompleted | orderBy:candidatesVm.sortType:candidatesVm.sortReverse | filter:searchCand">
                 <tr>
-                  <td class="mdl-data-table__cell--non-numeric">{{candidate.email}}</td>
-                  <td class="mdl-data-table__cell--non-numeric">{{candidate.invite_sent | date : 'MMM dd, yyyy'}}</td>
-                  <td class="mdl-data-table__cell--non-numeric">{{candidatesVm.expires(candidate.validity)}}</td>
                   <td class="mdl-data-table__cell--non-numeric">
-                    <a ui-sref="invite.edit({quizID: candidatesVm.quizID, candidateID: candidate.uid})">EDIT</a> &nbsp;|&nbsp;
-                    <a ng-click="candidatesVm.resend(candidate)" href="">RESEND</a> &nbsp;|&nbsp;
+                    {{candidate.email}}
+                  </td>
+                  <td class="mdl-data-table__cell--non-numeric">
+                    {{candidate.invite_sent | date : 'MMM dd, yyyy'}}
+                  </td>
+                  <td class="mdl-data-table__cell--non-numeric">
+                    {{candidatesVm.expires(candidate.validity)}}
+                  </td>
+                  <td class="mdl-data-table__cell--non-numeric">
+                    <a ui-sref="invite.edit({quizID: candidatesVm.quizID, candidateID: candidate.uid})">
+                      EDIT
+                    </a>
+                    &nbsp;|&nbsp;
+                    <a ng-click="candidatesVm.resend(candidate)" href="">
+                      RESEND
+                    </a>
+                    &nbsp;|&nbsp;
                     <a ng-click="candidatesVm.showCancelModal(candidate)" href="">CANCEL</a>
+                    &nbsp;
+                    <a ng-click="candidatesVm.copyInviteLink(candidate)" href="">
+                      <i class="material-icons mdi-sm text-red">link</i>
+                    </a>
                   </td>
                 </tr>
               </tbody>
