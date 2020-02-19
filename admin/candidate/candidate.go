@@ -142,7 +142,7 @@ func Add(w http.ResponseWriter, r *http.Request) {
 func edit(c Candidate) *dgraph.Mutation {
 	m := new(dgraph.Mutation)
 	m.SetString(c.Uid, "email", c.Email)
-	m.SetString(c.Uid, "validity", c.Validity.UTC().String())
+	m.SetString(c.Uid, "validity", c.Validity)
 
 	// When the quiz for which candidate is invited is changed, we get both OldQuizId
 	// and new QuizId.
