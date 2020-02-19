@@ -154,7 +154,7 @@ func checkAndUpdate(uid string) (int, error) {
 	// TODO - Check how can we store this in appropriate format so that explicit parsing isn't
 	// required.
 	var err error
-	if c.validity, err = time.Parse("2006-01-02 15:04:05 +0000 UTC", cand.Validity); err != nil {
+	if c.validity, err = time.Parse(time.RFC3339Nano, cand.Validity); err != nil {
 		return http.StatusInternalServerError, fmt.Errorf("Could not parse Validity: %v", err)
 	}
 	if c.validity.Before(time.Now()) {

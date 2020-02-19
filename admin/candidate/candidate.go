@@ -103,7 +103,7 @@ func AddCand(quizId, name, email string, validity time.Time) (string, error) {
 	}
 
 	// Token sent in mail is uid + the random string.
-	go mail.Send(email, validity.Format("Mon Jan 2 2006"), uid+token)
+	go mail.Send(email, validity.Format(time.RFC3339Nano), uid+token)
 	return uid, nil
 }
 
@@ -142,7 +142,7 @@ func Add(w http.ResponseWriter, r *http.Request) {
 func edit(c Candidate) *dgraph.Mutation {
 	m := new(dgraph.Mutation)
 	m.SetString(c.Uid, "email", c.Email)
-	m.SetString(c.Uid, "validity", c.Validity)
+	m.SetString(c.Uid, "validity", c.Validity.UTC().String())
 
 	// When the quiz for which candidate is invited is changed, we get both OldQuizId
 	// and new QuizId.
