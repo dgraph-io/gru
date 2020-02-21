@@ -131,7 +131,7 @@ angular.module("GruiRoutes").config([
         authenticate: true
       })
       .state("quiz.edit", {
-        url: "/edit-quiz/:quizID",
+        url: "/edit-quiz/:quizId",
         parent: "quiz",
         templateUrl: editQuizTemplate,
         authenticate: true
@@ -149,7 +149,7 @@ angular.module("GruiRoutes").config([
         )
       })
       .state("invite.dashboard", {
-        url: "/dashboard/:quizID",
+        url: "/dashboard/:quizId",
         parent: "invite",
         templateUrl: inviteDashboardTemplate,
         authenticate: true
@@ -160,12 +160,12 @@ angular.module("GruiRoutes").config([
         css: [angularSelectCSS],
         templateUrl: inviteUserTemplate,
         params: {
-          quizID: null
+          quizId: null
         },
         authenticate: true
       })
       .state("invite.edit", {
-        url: "/edit-invite/:quizID/:candidateID",
+        url: "/edit-invite/:quizId/:candidateID",
         parent: "invite",
         css: [angularSelectCSS],
         templateUrl: editInviteTemplate,

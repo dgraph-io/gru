@@ -212,11 +212,11 @@ angular.module('GruiApp').controller('editQuizController', [
     quizVm.loadEmptyQuiz();
 
     // If we are editing an existing quiz - load it.
-    if ($stateParams.quizID) {
+    if ($stateParams.quizId) {
       // Read by edit-quiz.html to send user back to this quiz after editing a qn.
-      editQuizVm.quizId = $stateParams.quizID;
+      editQuizVm.quizId = $stateParams.quizId;
 
-      quizService.getQuiz($stateParams.quizID)
+      quizService.getQuiz($stateParams.quizId)
         .then(function(quiz) {
           quizVm.quiz = quiz;
           quiz.duration = parseInt(quiz.duration)

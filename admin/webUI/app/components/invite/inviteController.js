@@ -20,29 +20,29 @@
     inviteVm.invalidateInput = invalidateInput;
     inviteVm.preSelectQuiz = preSelectQuiz;
 
-    function getAllQuizzes(quizID) {
+    function getAllQuizzes(quizId) {
       if (!inviteVm.allQuizes) {
         quizService.getAllQuizzes().then(
           function(quizzes) {
             inviteVm.allQuizes = quizzes;
-            preSelectQuiz(quizID);
+            preSelectQuiz(quizId);
           },
           function(err) {
             console.error(err);
           }
         );
       } else {
-        preSelectQuiz(quizID);
+        preSelectQuiz(quizId);
       }
     }
 
-    function preSelectQuiz(quizID) {
-      if (!quizID) {
+    function preSelectQuiz(quizId) {
+      if (!quizId) {
         return;
       }
       var qLen = inviteVm.allQuizes.length;
       var q = inviteVm.allQuizes.find(function(quizz) {
-        return quizz.uid == quizID;
+        return quizz.uid == quizId;
       })
       if (q) {
         inviteVm.newInvite.quiz = q;
@@ -99,7 +99,7 @@
                 });
                 if (data.Success) {
                   $state.transitionTo("invite.dashboard", {
-                    quizID: inviteVm.newInvite.quiz_id
+                    quizId: inviteVm.newInvite.quiz_id
                   });
                   inviteVm.newInvite = {};
                 }
@@ -138,10 +138,10 @@
 
   function addCandidatesController($state, $stateParams) {
     acVm = this;
-    var quizID = $state.params.quizID;
+    var quizId = $state.params.quizId;
 
     inviteVm.setMinDate();
-    inviteVm.getAllQuizzes(quizID);
+    inviteVm.getAllQuizzes(quizId);
   }
 
   function editInviteController(
@@ -153,7 +153,7 @@
   ) {
     editInviteVm = this;
     var candidateUID = $stateParams.candidateID;
-    editInviteVm.quizID = $stateParams.quizID;
+    editInviteVm.quizId = $stateParams.quizId;
 
     //Function Declation
     editInviteVm.editInvite = editInvite;
@@ -214,7 +214,7 @@
 
       if (editInviteVm.candidate["candidate.quiz"][0].is_delete) {
         editInviteVm.candidate.quiz_id = editInviteVm.candidate.quiz.uid;
-        editInviteVm.candidate.old_quiz_id = editInviteVm.quizID;
+        editInviteVm.candidate.old_quiz_id = editInviteVm.quizId;
       }
 
       var requestData = angular.copy(editInviteVm.candidate);
@@ -227,7 +227,7 @@
               messageType: "success"
             });
             $state.transitionTo("invite.dashboard", {
-              quizID: editInviteVm.quizID
+              quizId: editInviteVm.quizId
             });
           },
           function(err) {
@@ -297,7 +297,7 @@
 
     function goToDashboard() {
       $state.transitionTo("invite.dashboard", {
-        quizID: editInviteVm.quizID
+        quizId: editInviteVm.quizId
       });
     }
   }
@@ -325,16 +325,16 @@
     candidatesVm.delete = deleteCand;
     candidatesVm.percentile = percentile;
 
-    candidatesVm.quizID = $stateParams.quizID;
+    candidatesVm.quizId = $stateParams.quizId;
 
-    if (!candidatesVm.quizID) {
+    if (!candidatesVm.quizId) {
       SNACKBAR({
         message: "Not a valid Quiz",
         messageType: "error"
       });
       $state.transitionTo("invite.add");
     }
-    inviteService.getInvitedCandidates(candidatesVm.quizID).then(
+    inviteService.getInvitedCandidates(candidatesVm.quizId).then(
       function(data) {
         var quizCandidates = data.data.quiz[0]["quiz.candidate"];
 
@@ -344,7 +344,7 @@
             messageType: "error"
           });
           $state.transitionTo("invite.add", {
-            quizID: candidatesVm.quizID
+            quizId: candidatesVm.quizId
           });
         } else {
           completed = [];
@@ -466,7 +466,7 @@
 
     function cancel(candidate) {
       inviteService
-        .cancelInvite(candidate, candidatesVm.quizID)
+        .cancelInvite(candidate, candidatesVm.quizId)
         .then(function(cancelled) {
           if (!cancelled) {
             SNACKBAR({
@@ -481,7 +481,7 @@
           });
           deleteFromArray(candidate.uid, candidatesVm.notCompleted);
           $state.transitionTo("invite.dashboard", {
-            quizID: candidatesVm.quizID
+            quizId: candidatesVm.quizId
           });
 
           candidatesVm.currentCancel = {};
@@ -505,7 +505,7 @@
 
           deleteFromArray(candidateId, candidatesVm.completed);
           $state.transitionTo("invite.dashboard", {
-            quizID: candidatesVm.quizID
+            quizId: candidatesVm.quizId
           });
 
           candidatesVm.currentDelete = "";
@@ -532,7 +532,7 @@
           message: response.message
         });
         $state.transitionTo("invite.dashboard", {
-          quizID: candidatesVm.quizID
+          quizId: candidatesVm.quizId
         });
       });
     }

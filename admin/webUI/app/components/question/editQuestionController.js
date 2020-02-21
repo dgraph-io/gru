@@ -44,7 +44,7 @@ angular.module("GruiApp").controller("editQuestionController", [
     editQuesVm.cancelEdit = function() {
       if ($stateParams.returnQuizId) {
         $state.transitionTo("quiz.edit", {
-          quizID: $stateParams.returnQuizId,
+          quizId: $stateParams.returnQuizId,
         });
       } else {
         $state.transitionTo("question.all", {
@@ -83,7 +83,7 @@ angular.module("GruiApp").controller("editQuestionController", [
           });
           if ($stateParams.returnQuizId) {
             $state.transitionTo("quiz.edit", {
-              quizID: $stateParams.returnQuizId,
+              quizId: $stateParams.returnQuizId,
             });
           } else {
             $state.transitionTo("question.all", {
