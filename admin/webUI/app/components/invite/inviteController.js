@@ -7,6 +7,7 @@ angular.module("GruiApp").controller("inviteController", [
   function inviteController(
     $rootScope,
     $state,
+    $timeout,
     quizService,
     inviteService
   ) {
