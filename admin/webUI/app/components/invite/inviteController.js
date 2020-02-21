@@ -92,10 +92,6 @@ angular.module("GruiApp").controller("inviteController", [
     inviteVm.removeSelectedQuiz = function removeSelectedQuiz() {
       delete inviteVm.newInvite.quiz;
     }
-
-    inviteVm.resetForm = function resetForm() {
-      inviteVm.removeSelectedQuiz();
-    }
   },
 ]);
 
