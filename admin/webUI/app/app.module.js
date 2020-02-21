@@ -17,8 +17,7 @@ angular
     "$templateCache",
     function($rootScope, $state, $stateParams, $window, $templateCache) {
       // Set reference to access them from any scope
-      $rootScope.SEO = {};
-      $rootScope.SEO.title = "Gru";
+      $rootScope.SEO = { title: "Gru" };
     }
   ]);
 angular.module("GruiApp").config(function(uiSelectConfig) {

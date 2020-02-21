@@ -1,14 +1,11 @@
 angular.module("GruiApp").controller("inviteController", [
-  "$scope",
   "$rootScope",
-  "$stateParams",
   "$state",
+  "$timeout",
   "quizService",
   "inviteService",
   function inviteController(
-    $scope,
     $rootScope,
-    $stateParams,
     $state,
     quizService,
     inviteService
@@ -18,43 +15,24 @@ angular.module("GruiApp").controller("inviteController", [
     inviteVm.newInvite = {};
     mainVm.pageName = "invite-page";
 
-    inviteVm.getAllQuizzes = getAllQuizzes;
-    inviteVm.inviteCandidate = inviteCandidate;
-    inviteVm.removeSelectedQuiz = removeSelectedQuiz;
-    inviteVm.setMinDate = setMinDate;
-    inviteVm.resetForm = resetForm;
-    inviteVm.preSelectQuiz = preSelectQuiz;
-
-    function getAllQuizzes(quizId) {
+    inviteVm.getAllQuizzes = async function getAllQuizzes(quizId) {
       if (!inviteVm.allQuizes) {
-        quizService.getAllQuizzes().then(
-          function(quizzes) {
-            inviteVm.allQuizes = quizzes;
-            preSelectQuiz(quizId);
-          },
-          function(err) {
-            console.error(err);
-          }
-        );
-      } else {
-        preSelectQuiz(quizId);
+        inviteVm.allQuizes = await quizService.getAllQuizzes();
       }
+      inviteVm.preSelectQuiz(quizId);
     }
 
     function preSelectQuiz(quizId) {
       if (!quizId) {
         return;
       }
-      var qLen = inviteVm.allQuizes.length;
-      var q = inviteVm.allQuizes.find(function(quizz) {
-        return quizz.uid == quizId;
-      })
-      if (q) {
-        inviteVm.newInvite.quiz = q;
+      var quiz = inviteVm.allQuizes.find(q => q.uid == quizId);
+      if (quiz) {
+        inviteVm.newInvite.quiz = quiz;
       }
     }
 
-    function setMinDate() {
+    inviteVm.setMinDate = function setMinDate() {
       setTimeout(
         function() {
           $datePicker = $("#datePicker");
@@ -65,7 +43,7 @@ angular.module("GruiApp").controller("inviteController", [
       );
     }
 
-    function inviteCandidate() {
+    inviteVm.inviteCandidate = async function inviteCandidate() {
       var validationResult = inviteVm.validateInvite(inviteVm.newInvite);
 
       if (validationResult) {
@@ -76,39 +54,33 @@ angular.module("GruiApp").controller("inviteController", [
         return;
       }
 
-      inviteVm.newInvite.quiz_id = inviteVm.newInvite.quiz.uid;
+      const quizId = inviteVm.newInvite.quiz.uid;
+      inviteVm.newInvite.quiz_id = quizId;
 
-      inviteService
-        .alreadyInvited(inviteVm.newInvite.quiz_id, inviteVm.newInvite.emails)
-        .then(function(email) {
-          if (email != "") {
-            SNACKBAR({
-              message: "Candidate with email " +
-                email +
-                " has already been invited.",
-              messageType: "error"
-            });
-            return;
-          } else {
-            inviteService.inviteCandidate(inviteVm.newInvite).then(
-              function(data) {
-                SNACKBAR({
-                  message: data.Message,
-                  messageType: "success"
-                });
-                if (data.Success) {
-                  $state.transitionTo("invite.dashboard", {
-                    quizId: inviteVm.newInvite.quiz_id
-                  });
-                  inviteVm.newInvite = {};
-                }
-              },
-              function(err) {
-                console.error(err);
-              }
-            );
-          }
+      const email =
+          await inviteService.alreadyInvited(quizId, inviteVm.newInvite.emails);
+
+      if (email != "") {
+        SNACKBAR({
+          message: "Candidate with email " +
+            email +
+            " has already been invited.",
+          messageType: "error"
         });
+        return;
+      }
+
+      const data = await inviteService.inviteCandidate(inviteVm.newInvite);
+
+      SNACKBAR({
+        message: data.Message,
+        messageType: "success",
+      });
+
+      if (data.Success) {
+        $state.transitionTo("invite.dashboard", { quizId });
+        inviteVm.newInvite = {};
+      }
     }
 
     inviteVm.validateInvite = function(invite) {
@@ -123,14 +95,16 @@ angular.module("GruiApp").controller("inviteController", [
       return false;
     }
 
-    function removeSelectedQuiz() {
+    inviteVm.removeSelectedQuiz = function removeSelectedQuiz() {
       delete inviteVm.newInvite.quiz;
     }
-    $(document).ready(function() {
-      $("#datePicker").val(new Date().toDateInputValue());
-    });
 
-    function resetForm() {
+    $timeout(
+      () => $("#datePicker").val(new Date().toDateInputValue()),
+      500,
+    );
+
+    inviteVm.resetForm = function resetForm() {
       inviteVm.removeSelectedQuiz();
     }
   },
