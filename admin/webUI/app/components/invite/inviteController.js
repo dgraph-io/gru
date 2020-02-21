@@ -1,4 +1,10 @@
-(function() {
+angular.module("GruiApp").controller("inviteController", [
+  "$scope",
+  "$rootScope",
+  "$stateParams",
+  "$state",
+  "quizService",
+  "inviteService",
   function inviteController(
     $scope,
     $rootScope,
@@ -127,16 +133,23 @@
     function resetForm() {
       inviteVm.removeSelectedQuiz();
     }
-  }
+  },
+]);
 
-  function addCandidatesController($state, $stateParams) {
-    acVm = this;
-    var quizId = $state.params.quizId;
-
+angular.module("GruiApp").controller("addCandidatesController", [
+  "$state",
+  function addCandidatesController($state) {
     inviteVm.setMinDate();
-    inviteVm.getAllQuizzes(quizId);
-  }
+    inviteVm.getAllQuizzes($state.params.quizId);
+  },
+]);
 
+angular.module("GruiApp").controller("editInviteController",   [
+  "$rootScope",
+  "$stateParams",
+  "$state",
+  "quizService",
+  "inviteService",
   function editInviteController(
     $rootScope,
     $stateParams,
@@ -289,8 +302,17 @@
         quizId: editInviteVm.quizId
       });
     }
-  }
+  },
+]);
 
+angular.module("GruiApp").controller("candidatesController", [
+  "$scope",
+  "$rootScope",
+  "$stateParams",
+  "$state",
+  "$timeout",
+  "$templateCache",
+  "inviteService",
   function candidatesController(
     $scope,
     $rootScope,
@@ -546,7 +568,9 @@
     }
 
     $(".mdl-layout__content").unbind("scroll");
-  }
+  },
+]);
+
 
 angular.module("GruiApp").controller("candidateReportController", [
   "$scope",
@@ -840,40 +864,3 @@ angular.module("GruiApp").controller("candidateReportController", [
       $scope.$digest()
     });
   }]);
-
-  angular.module("GruiApp").controller("candidatesController", [
-    "$scope",
-    "$rootScope",
-    "$stateParams",
-    "$state",
-    "$timeout",
-    "$templateCache",
-    "inviteService",
-    candidatesController
-  ]);
-
-  angular.module("GruiApp").controller("addCandidatesController", [
-    "$state",
-    addCandidatesController
-  ]);
-
-  angular.module("GruiApp")
-    .controller("editInviteController",   [
-      "$rootScope",
-      "$stateParams",
-      "$state",
-      "quizService",
-      "inviteService",
-      editInviteController
-    ]);
-
-  angular.module("GruiApp").controller("inviteController", [
-    "$scope",
-    "$rootScope",
-    "$stateParams",
-    "$state",
-    "quizService",
-    "inviteService",
-    inviteController
-  ]);
-})();
