@@ -103,7 +103,7 @@ func AddCand(quizId, name, email string, validity time.Time) (string, error) {
 	}
 
 	// Token sent in mail is uid + the random string.
-	go mail.Send(email, validity.Format("dd MMMM yyyy"), uid+token)
+	go mail.Send(email, validity.Format("02 January 2006"), uid+token)
 	return uid, nil
 }
 
@@ -257,7 +257,7 @@ func ResendInvite(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	go mail.Send(rr.Email, t.Format("dd MMMM yyyy"), cid+rr.Token)
+	go mail.Send(rr.Email, t.Format("02 January 2006"), cid+rr.Token)
 
 	sr.Success = true
 	sr.Write(w, "", "Invite has been resent.", http.StatusOK)
