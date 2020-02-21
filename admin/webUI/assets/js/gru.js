@@ -3,10 +3,6 @@
   $(document).ready(function() {
     componentHandler.upgradeAllRegistered();
 
-    window.formatDate = function formatDate(date) {
-      return date.toISOString();
-    };
-
     window.scrollTo = scrollTo;
     window.scrollNavInit = scrollNavInit;
 
@@ -23,6 +19,12 @@
         }
       }, 1000);
     })();
+
+    window.sevenDaysFromNow = function() {
+      var now = new Date();
+      now.setDate(now.getDate() + 7);
+      return now;
+    }
 
     window.getDate = function(date) {
       var now = new Date(date);

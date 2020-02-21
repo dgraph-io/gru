@@ -17,7 +17,6 @@
     inviteVm.removeSelectedQuiz = removeSelectedQuiz;
     inviteVm.setMinDate = setMinDate;
     inviteVm.resetForm = resetForm;
-    inviteVm.invalidateInput = invalidateInput;
     inviteVm.preSelectQuiz = preSelectQuiz;
 
     function getAllQuizzes(quizId) {
@@ -53,31 +52,25 @@
       setTimeout(
         function() {
           $datePicker = $("#datePicker");
-          var today = new Date();
-          $datePicker.attr("min", formatDate(new Date()));
-
-          inviteVm.newInvite.dates = new Date(
-            today.setDate(today.getDate() + 7)
-          );
+          $datePicker.attr("min", new Date().toISOString());
+          inviteVm.newInvite.validity = sevenDaysFromNow();
         },
         100
       );
     }
 
     function inviteCandidate() {
-      var invalidateInput = inviteVm.invalidateInput(inviteVm.newInvite);
+      var validationResult = inviteVm.validateInvite(inviteVm.newInvite);
 
-      if (invalidateInput) {
+      if (validationResult) {
         SNACKBAR({
-          message: invalidateInput,
+          message: validationResult,
           messageType: "error"
         });
         return;
       }
 
-      var dateTime = formatDate(inviteVm.newInvite.dates);
       inviteVm.newInvite.quiz_id = inviteVm.newInvite.quiz.uid;
-      inviteVm.newInvite.validity = dateTime;
 
       inviteService
         .alreadyInvited(inviteVm.newInvite.quiz_id, inviteVm.newInvite.emails)
@@ -112,13 +105,13 @@
         });
     }
 
-    function invalidateInput(inputs) {
-      for (var i = 0; i < inputs.emails.length; i++) {
-        if (!isValidEmail(inputs.emails[i])) {
-          return inputs.emails[i] + " isn't a valid email.";
-        }
+    inviteVm.validateInvite = function(invite) {
+      const badEmail = invite.emails.find(email => !isValidEmail(email));
+      if (badEmail) {
+        return `${badEmail} isn't a valid email.`;
       }
-      if (!inputs.dates) {
+
+      if (!invite.validity || invite.validity < new Date()) {
         return "Please Enter Valid Date";
       }
       return false;
@@ -178,9 +171,8 @@
         editInviteVm.candidateBak = data.data["quiz.candidate"][0];
         editInviteVm.candidate = angular.copy(editInviteVm.candidateBak);
 
-        editInviteVm.candidate.dates = new Date(
-          getDate(editInviteVm.candidate.validity)
-        );
+        editInviteVm.candidate.validity =
+            new Date(editInviteVm.candidate.validity);
 
         editInviteVm.initAllQuiz();
       });
@@ -189,7 +181,7 @@
       if (!isValidEmail(input.email)) {
         return input.email + " isn't a valid email.";
       }
-      if (!input.dates) {
+      if (!input.validity) {
         return "Please Enter Valid Date";
       }
       return true;
@@ -199,9 +191,6 @@
       editInviteVm.candidate.id = candidateUID;
       editInviteVm.candidate.quiz_id = "";
       editInviteVm.candidate.old_quiz_id = "";
-      editInviteVm.candidate.validity = formatDate(
-        editInviteVm.candidate.dates
-      );
 
       var validateInput = valid(editInviteVm.candidate);
       if (validateInput != true) {
