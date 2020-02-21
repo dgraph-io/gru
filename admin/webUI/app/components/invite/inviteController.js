@@ -21,7 +21,7 @@ angular.module("GruiApp").controller("inviteController", [
       inviteVm.preSelectQuiz(quizId);
     }
 
-    function preSelectQuiz(quizId) {
+    inviteVm.preSelectQuiz = function preSelectQuiz(quizId) {
       if (!quizId) {
         return;
       }
@@ -127,10 +127,8 @@ angular.module("GruiApp").controller("editInviteController",   [
     var candidateUID = $stateParams.candidateID;
     editInviteVm.quizId = $stateParams.quizId;
 
-    //Function Declation
     editInviteVm.editInvite = editInvite;
     editInviteVm.initAllQuiz = initAllQuiz;
-    editInviteVm.selectedQuiz = selectedQuiz;
     editInviteVm.onQuizChange = onQuizChange;
     editInviteVm.goToDashboard = goToDashboard;
 
@@ -244,7 +242,7 @@ angular.module("GruiApp").controller("editInviteController",   [
       );
     }
 
-    function selectedQuiz() {
+    editInviteVm.selectedQuiz = function selectedQuiz() {
       var oldQuiz = editInviteVm.candidate["candidate.quiz"][0];
 
       editInviteVm.candidate.quiz =
