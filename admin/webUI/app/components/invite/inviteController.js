@@ -25,10 +25,7 @@ angular.module("GruiApp").controller("inviteController", [
       if (!quizId) {
         return;
       }
-      var quiz = inviteVm.allQuizes.find(q => q.uid == quizId);
-      if (quiz) {
-        inviteVm.newInvite.quiz = quiz;
-      }
+      inviteVm.newInvite.quiz = inviteVm.allQuizes.find(q => q.uid == quizId);
     }
 
     inviteVm.setMinDate = function setMinDate() {
