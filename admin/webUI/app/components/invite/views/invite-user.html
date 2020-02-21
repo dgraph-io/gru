@@ -9,7 +9,7 @@
         <span class="mdl-textfield__error">Should be valid email</span>
       </div>
       <div class="mdl-textfield mdl-textfield--floating-label mt-20 is-dirty is-focused">
-        <input class="mdl-textfield__input" type="date" id="datePicker" ng-model="inviteVm.newInvite.dates">
+        <input class="mdl-textfield__input" type="date" id="datePicker" ng-model="inviteVm.newInvite.validity">
         <label class="mdl-textfield__label" for="datePicker">Enter Validity</label>
         <span class="mdl-textfield__error">Should be valid date</span>
       </div>
@@ -24,9 +24,6 @@
       <div class="mt-20">
         <button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mt-20 action-btn" ng-disabled="!inviteVm.newInvite.quiz">
           Send Invite
-        </button>
-        <button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mt-20 ml-20" type="reset" ng-click="inviteVm.resetForm()">
-          Reset
         </button>
       </div>
     </form>

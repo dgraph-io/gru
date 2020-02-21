@@ -17,8 +17,7 @@ angular
     "$templateCache",
     function($rootScope, $state, $stateParams, $window, $templateCache) {
       // Set reference to access them from any scope
-      $rootScope.SEO = {};
-      $rootScope.SEO.title = "Gru";
+      $rootScope.SEO = { title: "Gru"};
     }
   ]);
 angular.module("GruiApp").config(function(uiSelectConfig) {
@@ -45,9 +44,9 @@ angular
       fromParams
     ) {
       if (toState.authenticate || toState.name == "login") {
-        mainVm.base_url = "/api/admin";
+        mainVm.base_url = "http://localhost:8000/api/admin";
       } else {
-        mainVm.base_url = "/api";
+        mainVm.base_url = "http://localhost:8000/api";
       }
       if (toState.authenticate && !mainVm.isLoggedIn()) {
         $state.transitionTo("login");
@@ -414,7 +413,7 @@ angular.module("GruiApp").service("MainService", [
       mutateProxy: function mutateProxy(data) {
         return mainService.post("/mutateProxy", data);
       },
-      post: function post(url, data, hideLoader) {
+      post: async function post(url, data, hideLoader) {
         var req = {
           method: "POST",
           url: mainVm.base_url + url,
@@ -443,6 +442,7 @@ angular.module("GruiApp").service("MainService", [
         return $http(req).then(
           function(data) {
             mainVm.showAjaxLoader = false;
+            console.log('login data', data);
             return data.data;
           },
           function(response, code) {

@@ -3,26 +3,26 @@
   $(document).ready(function() {
     componentHandler.upgradeAllRegistered();
 
-    window.formatDate = function formatDate(date) {
-      return date.toISOString();
-    };
-
     window.scrollTo = scrollTo;
     window.scrollNavInit = scrollNavInit;
 
-    (function() {
-      setTimeout(function() {
-        $mdl_input = $(".mdl-textfield__input")
-        for (var i = 0; i < $mdl_input.length; i++) {
-          var this_field = $($mdl_input[i]);
-          this_field.removeClass("is-invalid");
+    window.sevenDaysFromNow = function() {
+      var now = new Date();
+      now.setDate(now.getDate() + 7);
+      return now;
+    }
 
-          if (this_field.attr('type') == "date") {
-            this_field.parent().addClass("is-focused");
-          }
+    setTimeout(function() {
+      $mdl_input = $(".mdl-textfield__input")
+      for (var i = 0; i < $mdl_input.length; i++) {
+        var this_field = $($mdl_input[i]);
+        this_field.removeClass("is-invalid");
+
+        if (this_field.attr('type') == "date") {
+          this_field.parent().addClass("is-focused");
         }
-      }, 1000);
-    })();
+      }
+    }, 1000);
 
     window.getDate = function(date) {
       var now = new Date(date);

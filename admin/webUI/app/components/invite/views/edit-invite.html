@@ -7,9 +7,16 @@
         <label class="mdl-textfield__label" for="email">Enter Email</label>
         <span class="mdl-textfield__error">Should be valid email</span>
       </div>
-      <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label mt-20" ng-class="{'is-dirty': editInviteVm.candidate.dates}">
-        <input class="mdl-textfield__input" type="date" id="datePicker" ng-model="editInviteVm.candidate.dates">
-        <label class="mdl-textfield__label" for="datePicker">Enter validity</label>
+      <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label mt-20">
+        <input
+            class="mdl-textfield__input"
+            type="date"
+            id="datePicker"
+            ng-model="editInviteVm.candidate.validity"
+        >
+        <label class="mdl-textfield__label" for="datePicker">
+          Enter validity
+        </label>
         <span class="mdl-textfield__error">Should be valid date</span>
       </div>
       <ui-select theme="select2" ng-model="editInviteVm.candidate.quiz" class="mdl-select" on-select="editInviteVm.onQuizChange($item, $model)">

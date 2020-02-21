@@ -192,46 +192,42 @@ angular.module('GruiApp').controller('quizController', [
 
 angular.module('GruiApp').controller('allQuizController', [
   "quizService",
-  function allQuizController(quizService) {
+  async function allQuizController(quizService) {
     quizVm.allQuizes = [];
-
-    quizService.getAllQuizzes().then(function(quizzes) {
-      quizVm.allQuizes = quizzes;
-    }, function(err) {
-      console.error(err);
-    });
+    quizVm.allQuizes = await quizService.getAllQuizzes();
   }
 ]);
 
 angular.module('GruiApp').controller('editQuizController', [
   "$stateParams",
   "quizService",
-  function editQuizController($stateParams, quizService) {
+  async function editQuizController($stateParams, quizService) {
     editQuizVm = this;
 
     quizVm.loadEmptyQuiz();
 
     // If we are editing an existing quiz - load it.
-    if ($stateParams.quizID) {
+    if ($stateParams.quizId) {
       // Read by edit-quiz.html to send user back to this quiz after editing a qn.
-      editQuizVm.quizId = $stateParams.quizID;
+      editQuizVm.quizId = $stateParams.quizId;
 
-      quizService.getQuiz($stateParams.quizID)
-        .then(function(quiz) {
-          quizVm.quiz = quiz;
-          quiz.duration = parseInt(quiz.duration)
-          quiz.cut_off = parseFloat(quiz.cut_off)
-          quiz.threshold = parseFloat(quiz.threshold)
+      try {
+        const quiz = await quizService.getQuiz($stateParams.quizId)
 
-          quiz.questionUids = {}
-          if (quiz['quiz.question']) {
-            quiz['quiz.question'].forEach(function (q) {
-              quiz.questionUids[q.uid] = true;
-            })
-          }
-        }, function(err) {
-          console.error(err);
-        });
+        quizVm.quiz = quiz;
+        quiz.duration = parseInt(quiz.duration)
+        quiz.cut_off = parseFloat(quiz.cut_off)
+        quiz.threshold = parseFloat(quiz.threshold)
+
+        quiz.questionUids = {}
+        if (quiz['quiz.question']) {
+          quiz['quiz.question'].forEach(function (q) {
+            quiz.questionUids[q.uid] = true;
+          })
+        }
+      } catch(err) {
+        console.error(err);
+      }
     }
   }
 ]);

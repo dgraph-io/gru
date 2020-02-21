@@ -1,4 +1,10 @@
-(function() {
+angular.module("GruiApp").controller("inviteController", [
+  "$scope",
+  "$rootScope",
+  "$stateParams",
+  "$state",
+  "quizService",
+  "inviteService",
   function inviteController(
     $scope,
     $rootScope,
@@ -12,138 +18,116 @@
     inviteVm.newInvite = {};
     mainVm.pageName = "invite-page";
 
-    inviteVm.getAllQuizzes = getAllQuizzes;
-    inviteVm.inviteCandidate = inviteCandidate;
-    inviteVm.removeSelectedQuiz = removeSelectedQuiz;
-    inviteVm.setMinDate = setMinDate;
-    inviteVm.resetForm = resetForm;
-    inviteVm.invalidateInput = invalidateInput;
-    inviteVm.preSelectQuiz = preSelectQuiz;
+    setTimeout(
+      () => $("#datePicker").val(new Date().toDateInputValue()),
+      1000,
+    );
 
-    function getAllQuizzes(quizID) {
+    inviteVm.getAllQuizzes = async function getAllQuizzes(quizId) {
       if (!inviteVm.allQuizes) {
-        quizService.getAllQuizzes().then(
-          function(quizzes) {
-            inviteVm.allQuizes = quizzes;
-            preSelectQuiz(quizID);
-          },
-          function(err) {
-            console.error(err);
-          }
-        );
-      } else {
-        preSelectQuiz(quizID);
+        inviteVm.allQuizes = await quizService.getAllQuizzes();
       }
+      inviteVm.preSelectQuiz(quizId);
     }
 
-    function preSelectQuiz(quizID) {
-      if (!quizID) {
+    inviteVm.preSelectQuiz = function preSelectQuiz(quizId) {
+      if (!quizId) {
         return;
       }
-      var qLen = inviteVm.allQuizes.length;
-      var q = inviteVm.allQuizes.find(function(quizz) {
-        return quizz.uid == quizID;
-      })
-      if (q) {
-        inviteVm.newInvite.quiz = q;
-      }
+      inviteVm.newInvite.quiz = inviteVm.allQuizes.find(q => q.uid == quizId);
     }
 
-    function setMinDate() {
+    inviteVm.setMinDate = function setMinDate() {
       setTimeout(
         function() {
           $datePicker = $("#datePicker");
-          var today = new Date();
-          $datePicker.attr("min", formatDate(new Date()));
-
-          inviteVm.newInvite.dates = new Date(
-            today.setDate(today.getDate() + 7)
-          );
+          $datePicker.attr("min", new Date().toISOString());
+          inviteVm.newInvite.validity = sevenDaysFromNow();
         },
         100
       );
     }
 
-    function inviteCandidate() {
-      var invalidateInput = inviteVm.invalidateInput(inviteVm.newInvite);
-
-      if (invalidateInput) {
+    inviteVm.inviteCandidate = async function inviteCandidate() {
+      var validationResult = inviteVm.validateInput(inviteVm.newInvite);
+      if (validationResult) {
         SNACKBAR({
-          message: invalidateInput,
+          message: validationResult,
           messageType: "error"
         });
         return;
       }
 
-      var dateTime = formatDate(inviteVm.newInvite.dates);
-      inviteVm.newInvite.quiz_id = inviteVm.newInvite.quiz.uid;
-      inviteVm.newInvite.validity = dateTime;
+      const quizUid = inviteVm.newInvite.quiz.uid;
 
-      inviteService
-        .alreadyInvited(inviteVm.newInvite.quiz_id, inviteVm.newInvite.emails)
-        .then(function(email) {
-          if (email != "") {
-            SNACKBAR({
-              message: "Candidate with email " +
-                email +
-                " has already been invited.",
-              messageType: "error"
-            });
-            return;
-          } else {
-            inviteService.inviteCandidate(inviteVm.newInvite).then(
-              function(data) {
-                SNACKBAR({
-                  message: data.Message,
-                  messageType: "success"
-                });
-                if (data.Success) {
-                  $state.transitionTo("invite.dashboard", {
-                    quizID: inviteVm.newInvite.quiz_id
-                  });
-                  inviteVm.newInvite = {};
-                }
-              },
-              function(err) {
-                console.error(err);
-              }
-            );
-          }
+      inviteVm.newInvite.quiz_id = quizUid;
+
+      const email = await inviteService.alreadyInvited(
+        quizUid,
+        inviteVm.newInvite.emails,
+      );
+
+      if (email != "") {
+        SNACKBAR({
+          message: `Candidate with email ${email} has already been invited`,
+          messageType: "error",
         });
+        return;
+      }
+
+      try {
+        const data = await inviteService.inviteCandidate(inviteVm.newInvite);
+
+        SNACKBAR({
+          message: data.Message,
+          messageType: "success",
+        });
+
+        if (data.Success) {
+          $state.transitionTo("invite.dashboard", { quizId: quizUid });
+          inviteVm.newInvite = {};
+        }
+      } catch (err) {
+        SNACKBAR({
+          message: JSON.stringify(err),
+          messageType: "error",
+        });
+        console.error(err);
+      }
     }
 
-    function invalidateInput(inputs) {
-      for (var i = 0; i < inputs.emails.length; i++) {
-        if (!isValidEmail(inputs.emails[i])) {
-          return inputs.emails[i] + " isn't a valid email.";
-        }
+    inviteVm.validateInput = function(invite) {
+      const badEmail = invite.emails.find(email => !isValidEmail(email));
+      if (badEmail) {
+        return badEmail + " isn't a valid email.";
       }
-      if (!inputs.dates) {
+
+      if (!invite.validity || invite.validity < Date.now()) {
         return "Please Enter Valid Date";
       }
+
       return false;
     }
 
-    function removeSelectedQuiz() {
+    inviteVm.removeSelectedQuiz = function removeSelectedQuiz() {
       delete inviteVm.newInvite.quiz;
     }
-    $(document).ready(function() {
-      $("#datePicker").val(new Date().toDateInputValue());
-    });
-
-    function resetForm() {
-      inviteVm.removeSelectedQuiz();
-    }
   }
+]);
 
-  function addCandidatesController($state, $stateParams) {
-    acVm = this;
-    var quizID = $state.params.quizID;
-
-    inviteVm.setMinDate();
-    inviteVm.getAllQuizzes(quizID);
+angular.module("GruiApp").controller("addCandidatesController", [
+  "$state",
+  function addCandidatesController($state) {
+    inviteVm.getAllQuizzes($state.params.quizId);
   }
+]);
 
+angular.module("GruiApp").controller("editInviteController",   [
+  "$rootScope",
+  "$stateParams",
+  "$state",
+  "quizService",
+  "inviteService",
   function editInviteController(
     $rootScope,
     $stateParams,
@@ -153,9 +137,8 @@
   ) {
     editInviteVm = this;
     var candidateUID = $stateParams.candidateID;
-    editInviteVm.quizID = $stateParams.quizID;
+    editInviteVm.quizId = $stateParams.quizId;
 
-    //Function Declation
     editInviteVm.editInvite = editInvite;
     editInviteVm.initAllQuiz = initAllQuiz;
     editInviteVm.selectedQuiz = selectedQuiz;
@@ -178,35 +161,17 @@
         editInviteVm.candidateBak = data.data["quiz.candidate"][0];
         editInviteVm.candidate = angular.copy(editInviteVm.candidateBak);
 
-        editInviteVm.candidate.dates = new Date(
-          getDate(editInviteVm.candidate.validity)
-        );
-
         editInviteVm.initAllQuiz();
       });
 
-    function valid(input) {
-      if (!isValidEmail(input.email)) {
-        return input.email + " isn't a valid email.";
-      }
-      if (!input.dates) {
-        return "Please Enter Valid Date";
-      }
-      return true;
-    }
-
-    function editInvite() {
+    async function editInvite() {
       editInviteVm.candidate.id = candidateUID;
       editInviteVm.candidate.quiz_id = "";
       editInviteVm.candidate.old_quiz_id = "";
-      editInviteVm.candidate.validity = formatDate(
-        editInviteVm.candidate.dates
-      );
 
-      var validateInput = valid(editInviteVm.candidate);
-      if (validateInput != true) {
+      if (!isValidEmail(editInviteVm.candidate.email)) {
         SNACKBAR({
-          message: validateInput,
+          message: editInviteVm.candidate.email + " is not a valid email",
           messageType: "error"
         });
         return;
@@ -214,26 +179,7 @@
 
       if (editInviteVm.candidate["candidate.quiz"][0].is_delete) {
         editInviteVm.candidate.quiz_id = editInviteVm.candidate.quiz.uid;
-        editInviteVm.candidate.old_quiz_id = editInviteVm.quizID;
-      }
-
-      var requestData = angular.copy(editInviteVm.candidate);
-
-      function update() {
-        inviteService.editInvite(requestData).then(
-          function(data) {
-            SNACKBAR({
-              message: data.Message,
-              messageType: "success"
-            });
-            $state.transitionTo("invite.dashboard", {
-              quizID: editInviteVm.quizID
-            });
-          },
-          function(err) {
-            console.error(err);
-          }
-        );
+        editInviteVm.candidate.old_quiz_id = editInviteVm.quizId;
       }
 
       // If either the email or the quiz changes, we want to validate that the email
@@ -243,26 +189,30 @@
         editInviteVm.candidate.quiz.uid !=
           editInviteVm.candidateBak["candidate.quiz"][0].uid
       ) {
-        inviteService
-          .alreadyInvited(editInviteVm.candidate.quiz.uid, [
-            editInviteVm.candidate.email
-          ])
-          .then(function(email) {
-            if (email != "") {
-              SNACKBAR({
-                message: "Candidate has already been invited.",
-                messageType: "error"
-              });
-              return;
-            } else {
-              // Not invited yet, update.
-              update();
-            }
+        const email = await inviteService
+            .alreadyInvited(editInviteVm.candidate.quiz.uid, [
+              editInviteVm.candidate.email
+            ])
+
+        if (email !== "") {
+          SNACKBAR({
+            message: "Candidate has already been invited.",
+            messageType: "error"
           });
-        // Both email and quiz are same so maybe validity changed, we update.
-      } else {
-        update();
+          return;
+        }
       }
+
+      const data = await inviteService.editInvite(editInviteVm.candidate);
+
+      SNACKBAR({
+        message: data.Message,
+        messageType: "success"
+      });
+
+      $state.transitionTo("invite.dashboard", {
+        quizId: editInviteVm.quizId
+      });
     }
 
     function initAllQuiz() {
@@ -297,177 +247,159 @@
 
     function goToDashboard() {
       $state.transitionTo("invite.dashboard", {
-        quizID: editInviteVm.quizID
+        quizId: editInviteVm.quizId
       });
     }
-  }
+  },
+]);
 
-  function candidatesController(
-    $scope,
-    $rootScope,
-    $stateParams,
-    $state,
-    $timeout,
-    $templateCache,
-    inviteService
-  ) {
-    var candidatesVm = this;
-    candidatesVm.sortType = "quiz_start";
-    candidatesVm.sortReverse = true;
+  angular.module("GruiApp").controller("candidatesController", [
+    "$scope",
+    "$rootScope",
+    "$stateParams",
+    "$state",
+    "$timeout",
+    "$templateCache",
+    "inviteService",
+    function candidatesController(
+      $scope,
+      $rootScope,
+      $stateParams,
+      $state,
+      $timeout,
+      $templateCache,
+      inviteService
+    ) {
+        var candidatesVm = this;
+        candidatesVm.sortType = "quiz_start";
+        candidatesVm.sortReverse = true;
 
-    candidatesVm.expires = expires;
-    candidatesVm.showCancelModal = showCancelModal;
-    candidatesVm.initiateCancel = initiateCancel;
-    candidatesVm.showDeleteModal = showDeleteModal;
-    candidatesVm.initiateDelete = initiateDelete;
-    candidatesVm.deleteCandFromArray = deleteFromArray;
-    candidatesVm.cancel = cancel;
-    candidatesVm.delete = deleteCand;
-    candidatesVm.percentile = percentile;
+        candidatesVm.expires = expires;
+        candidatesVm.showCancelModal = showCancelModal;
+        candidatesVm.initiateCancel = initiateCancel;
+        candidatesVm.showDeleteModal = showDeleteModal;
+        candidatesVm.initiateDelete = initiateDelete;
+        candidatesVm.cancel = cancel;
+        candidatesVm.delete = deleteCand;
+        candidatesVm.percentile = percentile;
 
-    candidatesVm.quizID = $stateParams.quizID;
+        candidatesVm.quizId = $stateParams.quizId;
 
-    if (!candidatesVm.quizID) {
-      SNACKBAR({
-        message: "Not a valid Quiz",
-        messageType: "error"
-      });
-      $state.transitionTo("invite.add");
-    }
-    inviteService.getInvitedCandidates(candidatesVm.quizID).then(
-      function(data) {
-        var quizCandidates = data.data.quiz[0]["quiz.candidate"];
-
-        if (!quizCandidates) {
+        if (!candidatesVm.quizId) {
           SNACKBAR({
-            message: "Invite Candidate first to see all candidate",
+            message: "Not a valid Quiz",
             messageType: "error"
           });
-          $state.transitionTo("invite.add", {
-            quizID: candidatesVm.quizID
-          });
-        } else {
-          completed = [];
-          notCompleted = [];
-          quizCandidates.forEach(function(candidate) {
-            if (!candidate.complete) {
-              candidate.invite_sent = new Date(
-                Date.parse(candidate.invite_sent)
-              );
-              notCompleted.push(candidate);
-            } else {
-              candidate.quiz_start = new Date(
-                Date.parse(candidate.quiz_start)
-              );
-              candidate.score = parseFloat(candidate.score) || 0.0;
-              completed.push(candidate);
-            }
-          });
+          $state.transitionTo("invite.add");
+        }
 
-          completed.sort(function(c1, c2) {
-            return c1.score - c2.score;
-          });
+        inviteService.getInvitedCandidates(candidatesVm.quizId).then(
+          function(data) {
+            var quizCandidates = data.data.quiz[0]["quiz.candidate"];
 
-          var lastScore = 0.0, lastIdx = 0, idx = 0, i = completed.length;
-          while (i--) {
-            var cand = completed[i];
-            if (cand.score != lastScore) {
-              cand.idx = idx;
-              lastScore = cand.score;
-              lastIdx = idx;
-            } else {
-              cand.idx = lastIdx;
+            if (!quizCandidates) {
+              SNACKBAR({
+                message: "Invite Candidate first to see all candidates",
+                messageType: "error"
+              });
+              $state.transitionTo("invite.add", {
+                quizId: candidatesVm.quizId
+              });
+              return;
             }
-            idx++;
+
+            candidatesVm.completed = quizCandidates
+                .filter(c => c.complete)
+                .map(c => {
+                  c.quiz_start = new Date(c.quiz_start);
+                  c.score = parseFloat(c.score) || 0.0;
+                  return c;
+                });
+
+            candidatesVm.completed.sort((a, b) => a.score - b.score);
+
+            candidatesVm.notCompleted = quizCandidates
+                .filter(c => !c.complete)
+                .map(c => {
+                  c.invite_sent = new Date(c.invite_sent);
+                  return c;
+                });
+
+            candidatesVm.notCompleted
+                .sort((a, b) => a.invite_sent - b.invite_sent);
+
+            scrollToCandidate();
+          },
+          function(err) {
+            console.error(err);
           }
-          candidatesVm.completed = completed;
-          candidatesVm.notCompleted = notCompleted;
-          scrollToCandidate();
+        );
+
+        candidatesVm.copyInviteLink = function(candidate) {
+          console.log(candidate)
         }
-      },
-      function(err) {
-        console.error(err);
-      }
-    );
 
-    candidatesVm.copyInviteLink = function(candidate) {
-      console.log(candidate)
-    }
-
-    function showCancelModal(candidate) {
-      // Timeout to let dirty checking done first then modal content get
-      // updated variable text
-      candidatesVm.currentCancel = {};
-      candidatesVm.currentCancel = candidate;
-      $timeout(
-        function() {
-          mainVm.openModal({
-            template: "cancel-modal-template",
-            showYes: true,
-            hideClose: true,
-            class: "cancel-invite-modal"
-          });
-        },
-        10
-      );
-    }
-
-    function initiateCancel() {
-      if (candidatesVm.currentCancel) {
-        candidatesVm.cancel(candidatesVm.currentCancel);
-      }
-    }
-
-    function showDeleteModal(candidate) {
-      candidatesVm.currentDeleteName = candidate.name;
-      candidatesVm.currentDelete = candidate.uid;
-      $timeout(
-        function() {
-          mainVm.openModal({
-            template: "delete-candidate-template",
-            showYes: true,
-            hideClose: true,
-            class: "delete-candidate-modal"
-          });
-        },
-        10
-      );
-    }
-
-    function initiateDelete() {
-      if (candidatesVm.currentDelete) {
-        candidatesVm.delete(candidatesVm.currentDelete);
-      }
-    }
-
-    function expires(validity) {
-      var validity_date = new Date(validity);
-      var today = new Date();
-      var diff = (validity_date - today) / (1000 * 60 * 60 * 24);
-      var numDays = Math.round(diff);
-      if (numDays <= 0) {
-        return "Expired";
-      }
-      return numDays;
-    }
-
-    function deleteFromArray(candidateID, array) {
-      var idx = -1;
-      for (var i = 0; i < array.length; i++) {
-        if (array[i].uid == candidateID) {
-          idx = i;
-          break;
+        function showCancelModal(candidate) {
+          // Timeout to let dirty checking done first then modal content get
+          // updated variable text
+          candidatesVm.currentCancel = {};
+          candidatesVm.currentCancel = candidate;
+          $timeout(
+            function() {
+              mainVm.openModal({
+                template: "cancel-modal-template",
+                showYes: true,
+                hideClose: true,
+                class: "cancel-invite-modal"
+              });
+            },
+            10
+          );
         }
-      }
-      if (idx >= 0) {
-        array.splice(idx, 1);
-      }
-    }
 
-    function cancel(candidate) {
-      inviteService
-        .cancelInvite(candidate, candidatesVm.quizID)
-        .then(function(cancelled) {
+        function initiateCancel() {
+          if (candidatesVm.currentCancel) {
+            candidatesVm.cancel(candidatesVm.currentCancel);
+          }
+        }
+
+        function showDeleteModal(candidate) {
+          candidatesVm.currentDeleteName = candidate.name;
+          candidatesVm.currentDelete = candidate.uid;
+          $timeout(
+            function() {
+              mainVm.openModal({
+                template: "delete-candidate-template",
+                showYes: true,
+                hideClose: true,
+                class: "delete-candidate-modal"
+              });
+            },
+            10
+          );
+        }
+
+        function initiateDelete() {
+          if (candidatesVm.currentDelete) {
+            candidatesVm.delete(candidatesVm.currentDelete);
+          }
+        }
+
+        function expires(validity) {
+          var validity_date = new Date(validity);
+          var today = new Date();
+          var diff = (validity_date - today) / (1000 * 60 * 60 * 24);
+          var numDays = Math.round(diff);
+
+          return numDays <= 0 ? "Expired" : numDays;
+        }
+
+        async function cancel(candidate) {
+          const cancelled = await inviteService.cancelInvite(
+              candidate,
+              candidatesVm.quizId,
+          );
+
           if (!cancelled) {
             SNACKBAR({
               message: "Invite could not be cancelled.",
@@ -475,89 +407,101 @@
             });
             return;
           }
+
           SNACKBAR({
             message: "Invite cancelled successfully.",
             messageType: "success",
           });
-          deleteFromArray(candidate.uid, candidatesVm.notCompleted);
+
+          candidatesVm.notCompleted = candidatesVm.notCompleted
+              .filter(c => c.uid !== candidateID);
+
           $state.transitionTo("invite.dashboard", {
-            quizID: candidatesVm.quizID
+            quizId: candidatesVm.quizId
           });
 
           candidatesVm.currentCancel = {};
           mainVm.hideModal();
-        });
-    }
+        }
 
-    function deleteCand(candidateId) {
-      inviteService.deleteCand(candidateId).then(
-        function(deleted) {
-          if (!deleted) {
+        function deleteCand(candidateId) {
+          inviteService.deleteCand(candidateId).then(
+            function(deleted) {
+              if (!deleted) {
+                SNACKBAR({
+                  message: "Candidate couldn't be deleted.",
+                  messageType: "error"
+                });
+                return;
+              }
+
+              SNACKBAR({
+                message: "Candidate deleted successfully."
+              });
+
+              candidatesVm.completed = candidatesVm.completed
+                  .filter(c => c.uid !== candidateId);
+
+              $state.transitionTo("invite.dashboard", {
+                quizId: candidatesVm.quizId
+              });
+
+              candidatesVm.currentDelete = "";
+              mainVm.hideModal();
+            },
+            function(err) {
+              SNACKBAR({
+                message: JSON.stringify(err),
+                messageType: "error",
+              });
+              console.error(error);
+              candidatesVm.currentDelete = "";
+              mainVm.hideModal();
+            }
+          );
+        }
+
+        candidatesVm.resend = function resend(candidate) {
+          inviteService.resendInvite(candidate).then(function(response) {
+            if (!response.success) {
+              SNACKBAR({
+                message: response.message,
+                messageType: "error"
+              });
+              return;
+            }
             SNACKBAR({
-              message: "Candidate couldn't be deleted.",
-              messageType: "error"
+              message: response.message
             });
-            return;
-          }
-          SNACKBAR({
-            message: "Candidate deleted successfully."
+            $state.transitionTo("invite.dashboard", {
+              quizId: candidatesVm.quizId
+            });
           });
-
-          deleteFromArray(candidateId, candidatesVm.completed);
-          $state.transitionTo("invite.dashboard", {
-            quizID: candidatesVm.quizID
-          });
-
-          candidatesVm.currentDelete = "";
-          mainVm.hideModal();
-        },
-        function(err) {
-          console.error(error);
-          candidatesVm.currentDelete = "";
-          mainVm.hideModal();
         }
-      );
-    }
 
-    candidatesVm.resend = function resend(candidate) {
-      inviteService.resendInvite(candidate).then(function(response) {
-        if (!response.success) {
-          SNACKBAR({
-            message: response.message,
-            messageType: "error"
-          });
-          return;
+        function scrollToCandidate() {
+          // Scroll page to candidate if his/her report was viewed
+          $timeout(
+            function() {
+              $candidateViewed = $(".report-viewed");
+              if ($candidateViewed.length) {
+                $(".mdl-layout__content").scrollTop(
+                  $candidateViewed.offset().top - 200
+                );
+              }
+            },
+            10
+          );
         }
-        SNACKBAR({
-          message: response.message
-        });
-        $state.transitionTo("invite.dashboard", {
-          quizID: candidatesVm.quizID
-        });
-      });
-    }
 
-    function scrollToCandidate() {
-      // Scroll page to candidate if his/her report was viewed
-      $timeout(
-        function() {
-          $candidateViewed = $(".report-viewed");
-          if ($candidateViewed.length) {
-            $(".mdl-layout__content").scrollTop(
-              $candidateViewed.offset().top - 200
-            );
-          }
-        },
-        10
-      );
-    }
+        function percentile(size, idx) {
+          return (size - idx) / size * 100;
+        }
 
-    function percentile(size, idx) {
-      return (size - idx) / size * 100;
-    }
+        $(".mdl-layout__content").unbind("scroll");
+      },
+]);
 
-    $(".mdl-layout__content").unbind("scroll");
-  }
 
 angular.module("GruiApp").controller("candidateReportController", [
   "$scope",
@@ -851,40 +795,3 @@ angular.module("GruiApp").controller("candidateReportController", [
       $scope.$digest()
     });
   }]);
-
-  angular.module("GruiApp").controller("candidatesController", [
-    "$scope",
-    "$rootScope",
-    "$stateParams",
-    "$state",
-    "$timeout",
-    "$templateCache",
-    "inviteService",
-    candidatesController
-  ]);
-
-  angular.module("GruiApp").controller("addCandidatesController", [
-    "$state",
-    addCandidatesController
-  ]);
-
-  angular.module("GruiApp")
-    .controller("editInviteController",   [
-      "$rootScope",
-      "$stateParams",
-      "$state",
-      "quizService",
-      "inviteService",
-      editInviteController
-    ]);
-
-  angular.module("GruiApp").controller("inviteController", [
-    "$scope",
-    "$rootScope",
-    "$stateParams",
-    "$state",
-    "quizService",
-    "inviteService",
-    inviteController
-  ]);
-})();

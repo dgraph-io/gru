@@ -5,7 +5,7 @@
         <h5>Candidate List for Quiz</h5>
       </div>
       <div class="mdl-cell mdl-cell--6-col mdl-cell--3-col-tablet mdl-cell--1-col-phone text-right mdl-cell--middle">
-        <button class="mdl-button btn-succes bg-green" ng-click="mainVm.goTo('invite.add', {quizID: candidatesVm.quizID})">Invite</button>
+        <button class="mdl-button btn-succes bg-green" ng-click="mainVm.goTo('invite.add', {quizId: candidatesVm.quizId})">Invite</button>
       </div>
     </div>
     <div class="mdl-tabs mdl-js-tabs mdl-js-ripple-effect">
@@ -50,13 +50,16 @@
                   <td class="mdl-data-table__cell--non-numeric">{{candidate.name.split(' ')[0]}}</td>
                   <td class="mdl-data-table__cell--non-numeric">{{candidate.email}}</td>
                   <td class="mdl-data-table__cell--non-numeric">{{candidate.score | number: 2}}</td>
-                  <!-- <td class="mdl-data-table__cell--non-numeric">{{candidate.idx | number: 2}}</td> -->
                   <td class="mdl-data-table__cell--non-numeric">{{candidatesVm.percentile(candidatesVm.completed.length, candidate.idx) | number: 0}}</td>
                   <td class="mdl-data-table__cell--non-numeric">{{candidate.quiz_start | date : 'MMM dd, yyyy'}}</td>
                   <td class="mdl-data-table__cell--non-numeric">
-                    <a ui-sref="invite.report({candidateID: candidate.uid})">VIEW REPORT</a> &nbsp;|&nbsp;
-                    <!-- <a ng-click="candidatesVm.delete(candidate.uid)" href="">DELETE</a> -->
-                    <a ng-click="candidatesVm.showDeleteModal(candidate)" href="">DELETE</a>
+                    <a ui-sref="invite.report({candidateID: candidate.uid})" href="#">
+                      VIEW REPORT
+                    </a>
+                    &nbsp;|&nbsp;
+                    <a ng-click="candidatesVm.showDeleteModal(candidate)" href="#">
+                      DELETE
+                    </a>
                   </td>
                 </tr>
               </tbody>
@@ -106,7 +109,7 @@
                     {{candidatesVm.expires(candidate.validity)}}
                   </td>
                   <td class="mdl-data-table__cell--non-numeric">
-                    <a ui-sref="invite.edit({quizID: candidatesVm.quizID, candidateID: candidate.uid})">
+                    <a ui-sref="invite.edit({quizId: candidatesVm.quizId, candidateID: candidate.uid})">
                       EDIT
                     </a>
                     &nbsp;|&nbsp;

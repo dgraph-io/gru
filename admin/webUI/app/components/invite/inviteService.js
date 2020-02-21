@@ -1,11 +1,9 @@
 angular.module("GruiApp").service("inviteService", [
-  "$q",
-  "$http",
-  "$rootScope",
   "MainService",
-  function inviteService($q, $http, $rootScope, MainService) {
+  function inviteService(MainService) {
     return {
       inviteCandidate: function(data) {
+        console.log('invite candidate', data)
         return MainService.post("/candidate", data);
       },
 
@@ -18,6 +16,7 @@ angular.module("GruiApp").service("inviteService", [
       },
 
       editInvite: function(data) {
+        console.log('edit invite', data)
         return MainService.put("/candidate/" + data.id, data);
       },
 
@@ -65,34 +64,20 @@ angular.module("GruiApp").service("inviteService", [
         });
       },
 
-      resendInvite: function(candidate) {
-        // We update the validity to be 7 days from now on resending the invite.
-        var validity = new Date(Date.now() + 3600 * 24 * 7 * 1000).toISOString();
-        var mutation = "{\n\
-          set {\n\
-            <" + candidate.uid + '> <validity> "' +  validity + '" .\n\
-          }}';
-
-        return MainService.mutateProxy(mutation).then(function(res) {
-          if (!res.data || res.data.code != MainService.dgraphSuccess) {
-            throw {
-              success: false,
-              message: "Validity couldn't be extended."
-            }
-          }
-        }).then(function() {
-          return MainService.post(
-            "/candidate/invite/" + candidate.uid, {
+      resendInvite: async function(candidate) {
+        const res = await MainService.post(
+            `/candidate/invite/${candidate.uid}`,
+            {
               email: candidate.email,
               token: candidate.token,
-              validity: validity,
-            })
-        }).then(function(res) {
-          return {
-            sucess: res.Success,
-            message: res.Message + " " + res.Error
-          }
-        });
+              validity: sevenDaysFromNow().toISOString()
+            }
+        );
+
+        return {
+          sucess: res.Success,
+          message: res.Message + " " + res.Error
+        }
       },
 
       cancelInvite: function(candidate, quizId) {

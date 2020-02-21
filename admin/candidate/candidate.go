@@ -180,7 +180,7 @@ func Edit(w http.ResponseWriter, r *http.Request) {
 	}
 
 	c.Uid = cid
-	c.Validity = t.String()
+	c.Validity = t.UTC().String()
 	// TODO - Validate candidate fields shouldn't be empty.
 	m := edit(c)
 	res, err := dgraph.SendMutation(m)
@@ -257,7 +257,7 @@ func ResendInvite(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	go mail.Send(rr.Email, t.Format("Mon Jan 2 2006"), cid+rr.Token)
+	go mail.Send(rr.Email, t.Format(time.RFC3339Nano), cid+rr.Token)
 
 	sr.Success = true
 	sr.Write(w, "", "Invite has been resent.", http.StatusOK)
