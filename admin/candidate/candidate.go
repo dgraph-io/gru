@@ -86,7 +86,7 @@ func AddCand(quizId, name, email string, validity time.Time) (string, error) {
 	m.SetString("_:c", "email", email)
 	m.SetString("_:c", "name", name)
 	m.SetString("_:c", "token", token)
-	m.SetString("_:c", "validity", validity.UTC().String())
+	m.SetString("_:c", "validity", validity.Format(time.RFC3339Nano))
 	m.SetString("_:c", "invite_sent", time.Now().UTC().String())
 	m.SetString("_:c", "complete", "false")
 
