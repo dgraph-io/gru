@@ -6,36 +6,10 @@
     window.scrollTo = scrollTo;
     window.scrollNavInit = scrollNavInit;
 
-    (function() {
-      setTimeout(function() {
-        $mdl_input = $(".mdl-textfield__input")
-        for (var i = 0; i < $mdl_input.length; i++) {
-          var this_field = $($mdl_input[i]);
-          this_field.removeClass("is-invalid");
-
-          if (this_field.attr('type') == "date") {
-            this_field.parent().addClass("is-focused");
-          }
-        }
-      }, 1000);
-    })();
-
     window.sevenDaysFromNow = function() {
       var now = new Date();
       now.setDate(now.getDate() + 7);
       return now;
-    }
-
-    window.getDate = function(date) {
-      var now = new Date(date);
-
-      var day = ("0" + now.getDate()).slice(-2);
-      var month = ("0" + (now.getMonth() + 1)).slice(-2);
-
-      var today = now.getFullYear() + "-/" + (month) + "/" + (day);
-
-
-      return today;
     }
 
     window.isValidEmail = function(email) {
@@ -43,16 +17,6 @@
       re = /^([\w-]+(?:\.[\w-]+)*)@((?:[\w-]+\.)*\w[\w-]{0,66})\.([a-z]{2,6}(?:\.[a-z]{2})?)$/i;
       return re.test(email);
     };
-
-    window.lsSupported = (function() {
-      return (typeof Storage !== "undefined") ? true : false;
-    })();
-
-    Date.prototype.toDateInputValue = (function() {
-      var local = new Date(this);
-      local.setMinutes(this.getMinutes() - this.getTimezoneOffset());
-      return local.toJSON().slice(0, 10);
-    });
 
     $(document).on("click", ".slide-wrapper .slide-link", function() {
       $this = $(this);
