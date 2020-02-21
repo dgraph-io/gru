@@ -61,10 +61,8 @@ angular.module("GruiApp").controller("inviteController", [
 
       if (email != "") {
         SNACKBAR({
-          message: "Candidate with email " +
-            email +
-            " has already been invited.",
-          messageType: "error"
+          message: `Candidate with email ${email} has already been invited.`,
+          messageType: "error",
         });
         return;
       }
