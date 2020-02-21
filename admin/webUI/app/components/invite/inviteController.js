@@ -1,19 +1,17 @@
 angular.module("GruiApp").controller("inviteController", [
   "$rootScope",
   "$state",
-  "$timeout",
   "quizService",
   "inviteService",
   function inviteController(
     $rootScope,
     $state,
-    $timeout,
     quizService,
     inviteService
   ) {
     inviteVm = this;
 
-    inviteVm.newInvite = {};
+    inviteVm.newInvite = { validity: sevenDaysFromNow() };
     mainVm.pageName = "invite-page";
 
     inviteVm.getAllQuizzes = async function getAllQuizzes(quizId) {
@@ -99,11 +97,6 @@ angular.module("GruiApp").controller("inviteController", [
     inviteVm.removeSelectedQuiz = function removeSelectedQuiz() {
       delete inviteVm.newInvite.quiz;
     }
-
-    $timeout(
-      () => $("#datePicker").val(new Date().toDateInputValue()),
-      500,
-    );
 
     inviteVm.resetForm = function resetForm() {
       inviteVm.removeSelectedQuiz();
@@ -255,14 +248,9 @@ angular.module("GruiApp").controller("editInviteController",   [
 
     function selectedQuiz() {
       var oldQuiz = editInviteVm.candidate["candidate.quiz"][0];
-      var quizLen = editInviteVm.allQuizes.length;
-      for (var i = 0; i < quizLen; i++) {
-        var quiz = editInviteVm.allQuizes[i];
-        if (oldQuiz.uid == quiz.uid) {
-          editInviteVm.candidate.quiz = quiz;
-          break;
-        }
-      }
+
+      editInviteVm.candidate.quiz =
+          editInviteVm.allQuizes.find(q => q.uid === oldQuiz.uid);
     }
 
     function onQuizChange(item, model) {
