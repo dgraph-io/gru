@@ -355,6 +355,16 @@ angular.module("GruiApp").controller("candidatesController", [
 
     candidatesVm.copyInviteLink = function(candidate) {
       console.log(candidate)
+      setTimeout(async () => {
+        const link =
+            `https://gru.dgraph.io/#/quiz/${candidate.uid}${candidate.token}`;
+        console.log('Candidate Link: ', link);
+        await navigator.clipboard.writeText(link);
+        SNACKBAR({
+          message: "Invite Link copied to clipboard.",
+          messageType: "success",
+        });
+      }, 1);
     }
 
     function showCancelModal(candidate) {
